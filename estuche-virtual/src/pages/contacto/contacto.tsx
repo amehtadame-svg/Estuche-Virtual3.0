@@ -21,10 +21,10 @@ export default function Contacto() {
     }
     setEnviado(true);
   };
-
+ 
   const infoContacto = [
     { icono: '📍', titulo: 'Dirección', dato: 'Calle 45 #12-30, Bogotá, Colombia' },
-    { icono: '📞', titulo: 'Teléfono', dato: '+57 300 123 4567' },
+    { icono: '📞', titulo: 'Teléfono', dato: '+57 300 123 4' }, 
     { icono: '✉️', titulo: 'Correo', dato: 'hola@estuchevirtual.com' },
     { icono: '⏰', titulo: 'Horario', dato: 'Lun – Vie: 8 am – 6 pm' },
   ];
@@ -172,12 +172,41 @@ export default function Contacto() {
               <span style={{ fontSize: '28px' }}>{info.icono}</span>
               <div>
                 <p style={{ fontWeight: 600, color: 'var(--text-h)', marginBottom: '4px', fontSize: '14px' }}>
-                  {info.titulo}
+                  {info.titulo}{}
                 </p>
                 <p style={{ color: 'var(--text)', fontSize: '14px' }}>{info.dato}</p>
               </div>
             </div>
           ))}
+          {/* Botones de contacto rápido */}
+<div
+  style={{
+    display: 'flex',
+    gap: '12px',
+    marginTop: '12px',
+    flexWrap: 'wrap'
+  }}
+>
+  <a
+    href="https://wa.me/573204125692?text=Hola,%20quiero%20más%20información%20sobre%20sus%20productos."
+    target="_blank"
+    rel="noopener noreferrer"
+    style={{
+      flex: 1,
+      minWidth: '180px',
+      textAlign: 'center',
+      backgroundColor: '#25D366',
+      color: '#fff',
+      textDecoration: 'none',
+      padding: '14px',
+      borderRadius: '10px',
+      fontWeight: 600,
+      fontSize: '15px'
+    }}
+  >
+    📱 Escríbenos por WhatsApp
+  </a>
+</div>
         </div>
       </div>
     </div>
