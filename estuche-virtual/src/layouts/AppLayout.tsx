@@ -4,9 +4,12 @@ import './AppLayout.css';
 
 const enlaces = [
   { to: '/', label: 'Inicio' },
+  { to: '/nosotros', label: 'Nosotros' },
+  { to: '/productos', label: 'Productos' },
+  { to: '/carrito', label: '🛒 Carrito' },
+  { to: '/contacto', label: 'Contacto' },
   { to: '/usuarios', label: 'Usuarios' },
   { to: '/administradores', label: 'Administradores' },
-  { to: '/productos', label: 'Productos' },
   { to: '/pedidos', label: 'Pedidos' },
   { to: '/facturas', label: 'Facturas' },
   { to: '/detalle-facturas', label: 'Detalle Facturas' },

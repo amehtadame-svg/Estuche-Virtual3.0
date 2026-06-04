@@ -12,6 +12,10 @@ import FacturasList from '../pages/facturas/FacturasList';
 import DetalleFacturasList from '../pages/detalle-facturas/DetalleFacturasList';
 import EnviosList from '../pages/envios/EnviosList';
 import ProveedoresList from '../pages/proveedores/ProveedoresList';
+import Nosotros from '../pages/nosotros/nosotro';
+import Contacto from '../pages/contacto/contacto';
+import Carrito from '../pages/carrito/carrito';
+
 
 export default function AppRoutes() {
   return (
@@ -28,6 +32,9 @@ export default function AppRoutes() {
         <Route path="detalle-facturas" element={<DetalleFacturasList />} />
         <Route path="envios" element={<EnviosList />} />
         <Route path="proveedores" element={<ProveedoresList />} />
+        <Route path="carrito" element={<Carrito />} />
+        <Route path="contacto" element={<Contacto />} />
+        <Route path="nosotros" element={<Nosotros />} />
       </Route>
     </Routes>
   );
