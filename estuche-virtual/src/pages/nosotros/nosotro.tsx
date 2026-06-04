@@ -18,9 +18,9 @@ export default function Nosotros() {
 
   const hitos = [
     { año: '2019', texto: 'Fundación de Estuche Virtual en Bogotá con un pequeño catálogo de 50 productos.' },
-    { año: '2020', texto: 'Lanzamiento de la tienda en línea. Primeros 500 pedidos en el primer mes.' },
-    { año: '2022', texto: 'Expansión a nivel nacional. Más de 10.000 clientes satisfechos.' },
-    { año: '2024', texto: 'Nueva plataforma digital y catálogo de más de 1.000 productos.' },
+    { año: '2020', texto: 'Lanzamiento de la tienda en línea. Primeros 50 pedidos en el primer mes.' },
+    { año: '2022', texto: 'Expansión Más de 100 clientes satisfechos.' },
+    { año: '2024', texto: 'Nueva plataforma digital y catálogo de más de 100 productos.' },
   ];
 
   return (
