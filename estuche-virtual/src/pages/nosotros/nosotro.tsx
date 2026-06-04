@@ -2,9 +2,11 @@ import { Link } from 'react-router-dom';
 
 export default function Nosotros() {
   const equipo = [
-    { nombre: 'Laura Gómez', cargo: 'Fundadora & CEO', icono: '👩‍💼', descripcion: 'Apasionada por el emprendimiento y la educación.' },
-    { nombre: 'Carlos Martínez', cargo: 'Director de Operaciones', icono: '👨‍💻', descripcion: 'Experto en logística y gestión de inventarios.' },
-    { nombre: 'Sofía Rodríguez', cargo: 'Atención al Cliente', icono: '👩‍🎤', descripcion: 'Comprometida con la satisfacción de cada usuario.' },
+    { nombre: 'Ameht Adame', cargo: 'Backend', icono: '🤵', descripcion: 'Apasionado por la implementacion de nuevas tecnologias.' },
+    { nombre: 'Frack Salamanca', cargo: 'Backend', icono: '👨‍💻', descripcion: 'Administrador de ideas y caracterización.' },
+    { nombre: 'Cristian Alvarado', cargo: 'Full stack', icono: '👩‍🎤', descripcion: 'Administrador de la gestion y logistica de la aplicación web.' },
+    { nombre: 'Paula Garces', cargo: 'Frontend', icono: '👩‍🎤', descripcion: 'Encargada de los diseños y fotos de la aplicación web.' },
+    { nombre: 'Isabella Olivares', cargo: 'Frontend', icono: '👩‍🎤', descripcion: 'ilustradora diseño y colores.' },
   ];
 
   const valores = [
