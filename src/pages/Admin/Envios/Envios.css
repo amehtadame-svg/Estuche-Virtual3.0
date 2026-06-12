@@ -1,0 +1,73 @@
+.titulo-envios {
+  color: var(--text-h);
+  margin-bottom: 24px;
+}
+
+.mensaje-envios {
+  background-color: var(--accent-bg);
+  border: 1px solid var(--accent-border);
+  border-radius: 8px;
+  padding: 10px 16px;
+  color: var(--accent);
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+.tabla-envios {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.tabla-envios thead tr {
+  border-bottom: 2px solid var(--border);
+}
+
+.tabla-envios tbody tr {
+  border-bottom: 1px solid var(--border);
+}
+
+.tabla-envios th {
+  padding: 10px;
+  text-align: left;
+  color: var(--text);
+}
+
+.tabla-envios td {
+  padding: 10px;
+  color: var(--text);
+}
+
+.numero-envio {
+  color: var(--accent) !important;
+  font-weight: 500;
+}
+
+.cliente-envio {
+  color: var(--text-h) !important;
+}
+
+.estado-select {
+  padding: 4px 10px;
+  border-radius: 99px;
+  border: none;
+  font-size: 12px;
+  font-weight: 500;
+  color: white;
+  cursor: pointer;
+  outline: none;
+}
+
+.btn-eliminar-envio {
+  background-color: #fff0f0;
+  color: #e74c3c;
+  border: 1px solid #e74c3c;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.btn-eliminar-envio:hover {
+  opacity: 0.9;
+}

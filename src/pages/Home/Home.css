@@ -1,0 +1,273 @@
+/* ── Layout ────────────────────────────────────────── */
+.home-container {
+  padding: 32px 30px 60px;
+}
+
+/* ── Hero ──────────────────────────────────────────── */
+.hero {
+  background: linear-gradient(145deg, #f5eeff 0%, #fdf8ff 60%, #f0e6ff 100%);
+  border: 1px solid rgba(170, 59, 255, 0.35);
+  padding: 80px 40px;
+  border-radius: 24px;
+  text-align: center;
+  margin-bottom: 56px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,.07), 0 1px 3px rgba(0,0,0,.05);
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -80px;
+  right: -80px;
+  width: 340px;
+  height: 340px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(170,59,255,.18) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.hero::after {
+  content: '';
+  position: absolute;
+  bottom: -60px;
+  left: -60px;
+  width: 260px;
+  height: 260px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(170,59,255,.12) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* FIX CLAVE: override del h1 global */
+.hero-title {
+  font-size: 46px !important;
+  font-weight: 800 !important;
+  letter-spacing: -1.2px !important;
+  line-height: 1.15 !important;
+  background: linear-gradient(135deg, #9333ea 0%, #c084fc 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+  color: transparent !important;
+  margin: 0 0 18px !important;
+  position: relative;
+  z-index: 1;
+}
+
+.hero-description {
+  color: var(--text);
+  font-size: 18px;
+  margin-bottom: 36px;
+  max-width: 480px;
+  margin-inline: auto;
+  line-height: 1.6;
+  position: relative;
+  z-index: 1;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  position: relative;
+  z-index: 1;
+}
+
+.welcome-text {
+  width: 100%;
+  color: var(--text-h);
+  font-size: 15px;
+  margin-bottom: 12px;
+}
+
+.hero-button {
+  background: linear-gradient(135deg, #9333ea 0%, #c084fc 100%);
+  color: #fff;
+  text-decoration: none;
+  padding: 13px 28px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 16px;
+  box-shadow: 0 4px 20px rgba(170,59,255,.22);
+  transition: opacity 0.2s, transform 0.18s, box-shadow 0.2s;
+  display: inline-block;
+}
+
+.hero-button:hover {
+  opacity: 0.88;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(170,59,255,.35);
+}
+
+.logout-button {
+  background: #fff;
+  border: 1px solid var(--border);
+  color: var(--text-h);
+  padding: 13px 24px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.18s, color 0.18s, background 0.18s;
+}
+
+.logout-button:hover {
+  border-color: #e74c3c;
+  color: #e74c3c;
+  background: rgba(231,76,60,.05);
+}
+
+/* ── Secciones ─────────────────────────────────────── */
+.section {
+  margin-bottom: 60px;
+}
+
+.section-title {
+  font-size: 26px !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.5px;
+  color: var(--text-h) !important;
+  margin-bottom: 8px !important;
+  -webkit-text-fill-color: var(--text-h) !important;
+}
+
+.section-description {
+  color: var(--text);
+  font-size: 15px;
+  margin-bottom: 28px;
+}
+
+/* ── Cards de ofertas ──────────────────────────────── */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 28px 24px;
+  position: relative;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,.07), 0 1px 3px rgba(0,0,0,.05);
+  transition: transform 0.22s, box-shadow 0.22s, border-color 0.22s;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 30px rgba(0,0,0,.11), 0 3px 10px rgba(0,0,0,.06);
+  border-color: rgba(170, 59, 255, 0.35);
+}
+
+.badge {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: linear-gradient(135deg, #e74c3c, #ff6b6b);
+  color: white;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  box-shadow: 0 2px 8px rgba(231,76,60,.3);
+}
+
+.icon {
+  font-size: 58px;
+  margin-bottom: 16px;
+  display: block;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,.12));
+}
+
+.card h3 {
+  color: var(--text-h);
+  font-size: 17px;
+  font-weight: 600;
+  margin: 0 0 12px;
+}
+
+.old-price {
+  color: var(--text);
+  text-decoration: line-through;
+  font-size: 14px;
+  margin-bottom: 6px;
+  opacity: 0.7;
+}
+
+.price {
+  color: var(--accent);
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  margin-bottom: 22px;
+}
+
+.card-button {
+  width: 100%;
+  background: linear-gradient(135deg, #9333ea 0%, #c084fc 100%);
+  color: white;
+  border: none;
+  border-radius: 11px;
+  padding: 13px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(170,59,255,.22);
+  transition: opacity 0.2s, transform 0.18s;
+}
+
+.card-button:hover {
+  opacity: 0.88;
+  transform: translateY(-2px);
+}
+
+/* ── Razones grid ──────────────────────────────────── */
+.reasons-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.reason-card {
+  background: #faf9fc;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 32px 20px;
+  text-align: center;
+  transition: transform 0.22s, box-shadow 0.22s, background 0.22s, border-color 0.22s;
+}
+
+.reason-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 16px rgba(0,0,0,.09), 0 2px 6px rgba(0,0,0,.05);
+  background: #fff;
+  border-color: rgba(170, 59, 255, 0.35);
+}
+
+.reason-card .icon {
+  font-size: 44px;
+  margin-bottom: 14px;
+  display: block;
+  filter: drop-shadow(0 3px 6px rgba(0,0,0,.1));
+}
+
+.reason-card h3 {
+  color: var(--text-h);
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0 0 10px;
+}
+
+.reason-card p {
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.6;
+}

@@ -1,0 +1,240 @@
+import { useState } from 'react';
+import './Proveedores.css';
+
+const proveedoresIniciales = [
+  { id: 1, nombre: 'Papeleria Nacional', contacto: 'Carlos Perez', correo: 'carlos@pnacional.com', telefono: '3001112222', productos: 'Cuadernos, Carpetas' },
+  { id: 2, nombre: 'Colores y Arte', contacto: 'Maria Gomez', correo: 'maria@coloresarte.com', telefono: '3013334444', productos: 'Colores, Pinturas' },
+  { id: 3, nombre: 'Utiles Express', contacto: 'Jorge Martinez', correo: 'jorge@utilesexpress.com', telefono: '3025556666', productos: 'Lapiceros, Borradores' },
+  { id: 4, nombre: 'Mochilas y Mas', contacto: 'Ana Torres', correo: 'ana@mochilasmas.com', telefono: '3037778888', productos: 'Mochilas, Bolsos' },
+];
+
+export default function Proveedores() {
+  const [proveedores, setProveedores] = useState(proveedoresIniciales);
+  const [formulario, setFormulario] = useState({
+    nombre: '',
+    contacto: '',
+    correo: '',
+    telefono: '',
+    productos: ''
+  });
+
+  const [editandoId, setEditandoId] = useState<number | null>(null);
+  const [mensaje, setMensaje] = useState('');
+
+  const mostrarMensaje = (texto: string) => {
+    setMensaje(texto);
+    setTimeout(() => setMensaje(''), 2500);
+  };
+
+  const handleCambio = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormulario({
+      ...formulario,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const handleGuardar = () => {
+    if (
+      !formulario.nombre ||
+      !formulario.contacto ||
+      !formulario.correo ||
+      !formulario.telefono
+    ) {
+      mostrarMensaje('Por favor completa todos los campos.');
+      return;
+    }
+
+    if (editandoId !== null) {
+      setProveedores(
+        proveedores.map((p) =>
+          p.id === editandoId ? { ...p, ...formulario } : p
+        )
+      );
+
+      mostrarMensaje('Proveedor actualizado.');
+      setEditandoId(null);
+    } else {
+      setProveedores([
+        ...proveedores,
+        {
+          id: Date.now(),
+          ...formulario
+        }
+      ]);
+
+      mostrarMensaje('Proveedor agregado.');
+    }
+
+    setFormulario({
+      nombre: '',
+      contacto: '',
+      correo: '',
+      telefono: '',
+      productos: ''
+    });
+  };
+
+  const handleEditar = (p: typeof proveedoresIniciales[0]) => {
+    setFormulario({
+      nombre: p.nombre,
+      contacto: p.contacto,
+      correo: p.correo,
+      telefono: p.telefono,
+      productos: p.productos
+    });
+
+    setEditandoId(p.id);
+  };
+
+  const handleEliminar = (id: number) => {
+    setProveedores(proveedores.filter((p) => p.id !== id));
+    mostrarMensaje('Proveedor eliminado.');
+  };
+
+  return (
+    <div>
+      <h2 className="titulo-proveedores">
+        Gestion de Proveedores
+      </h2>
+
+      {mensaje && (
+        <div className="mensaje-proveedores">
+          {mensaje}
+        </div>
+      )}
+
+      <div className="contenedor-proveedores">
+
+        <div className="formulario-proveedores">
+
+          <h2 className="subtitulo-proveedores">
+            {editandoId !== null
+              ? 'Editar proveedor'
+              : 'Agregar proveedor'}
+          </h2>
+
+          <p className="label-proveedor">Empresa</p>
+          <input
+            name="nombre"
+            value={formulario.nombre}
+            onChange={handleCambio}
+            placeholder="Nombre de la empresa"
+            className="input-proveedor"
+          />
+
+          <p className="label-proveedor">Contacto</p>
+          <input
+            name="contacto"
+            value={formulario.contacto}
+            onChange={handleCambio}
+            placeholder="Nombre del contacto"
+            className="input-proveedor"
+          />
+
+          <p className="label-proveedor">Correo</p>
+          <input
+            name="correo"
+            value={formulario.correo}
+            onChange={handleCambio}
+            placeholder="correo@empresa.com"
+            className="input-proveedor"
+          />
+
+          <p className="label-proveedor">Telefono</p>
+          <input
+            name="telefono"
+            value={formulario.telefono}
+            onChange={handleCambio}
+            placeholder="Numero de telefono"
+            className="input-proveedor"
+          />
+
+          <p className="label-proveedor">
+            Productos que provee
+          </p>
+
+          <input
+            name="productos"
+            value={formulario.productos}
+            onChange={handleCambio}
+            placeholder="Ej: Cuadernos, Carpetas"
+            className="input-proveedor"
+          />
+
+          <button
+            onClick={handleGuardar}
+            className="btn-guardar-proveedor"
+          >
+            {editandoId !== null
+              ? 'Guardar cambios'
+              : 'Agregar proveedor'}
+          </button>
+
+          {editandoId !== null && (
+            <button
+              onClick={() => {
+                setEditandoId(null);
+                setFormulario({
+                  nombre: '',
+                  contacto: '',
+                  correo: '',
+                  telefono: '',
+                  productos: ''
+                });
+              }}
+              className="btn-cancelar-proveedor"
+            >
+              Cancelar
+            </button>
+          )}
+
+        </div>
+
+        <table className="tabla-proveedores">
+          <thead>
+            <tr>
+              <th>Empresa</th>
+              <th>Contacto</th>
+              <th>Correo</th>
+              <th>Telefono</th>
+              <th>Productos</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {proveedores.map((p) => (
+              <tr key={p.id}>
+                <td className="empresa-proveedor">
+                  {p.nombre}
+                </td>
+
+                <td>{p.contacto}</td>
+                <td>{p.correo}</td>
+                <td>{p.telefono}</td>
+                <td>{p.productos}</td>
+
+                <td>
+                  <button
+                    onClick={() => handleEditar(p)}
+                    className="btn-editar-proveedor"
+                  >
+                    Editar
+                  </button>
+
+                  <button
+                    onClick={() => handleEliminar(p.id)}
+                    className="btn-eliminar-proveedor"
+                  >
+                    Eliminar
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+      </div>
+    </div>
+  );
+}

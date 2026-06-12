@@ -1,0 +1,112 @@
+/* ── FORZAR LIGHT MODE ─────────────────────────────── */
+html {
+  color-scheme: light !important;
+}
+
+html, body {
+  background: #ffffff !important;
+  color: #6b6375 !important;
+}
+
+:root {
+  --text: #6b6375;
+  --text-h: #08060d;
+  --bg: #ffffff;
+  --bg-subtle: #faf9fc;
+  --border: #e5e4e7;
+  --code-bg: #f4f3ec;
+
+  --accent: #aa3bff;
+  --accent-dark: #8b1fe8;
+  --accent-light: #c97bff;
+  --accent-bg: rgba(170, 59, 255, 0.08);
+  --accent-bg-hover: rgba(170, 59, 255, 0.14);
+  --accent-border: rgba(170, 59, 255, 0.35);
+
+  --gradient-accent: linear-gradient(135deg, #9333ea 0%, #c084fc 100%);
+  --gradient-hero: linear-gradient(145deg, #f5eeff 0%, #fdf8ff 60%, #f0e6ff 100%);
+  --gradient-card: linear-gradient(145deg, #ffffff 0%, #fdfcff 100%);
+
+  --shadow-xs: 0 1px 3px rgba(0,0,0,.06);
+  --shadow-sm: 0 2px 8px rgba(0,0,0,.07), 0 1px 3px rgba(0,0,0,.05);
+  --shadow-md: 0 4px 16px rgba(0,0,0,.09), 0 2px 6px rgba(0,0,0,.05);
+  --shadow-lg: 0 8px 30px rgba(0,0,0,.11), 0 3px 10px rgba(0,0,0,.06);
+  --shadow-accent: 0 4px 20px rgba(170, 59, 255, 0.22);
+
+  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --mono: ui-monospace, Consolas, monospace;
+
+  /* Breakpoints de referencia:
+     --bp-sm:  480px  (móvil grande)
+     --bp-md:  768px  (tablet)
+     --bp-lg:  1024px (desktop pequeño) */
+
+  font: 18px/145% var(--sans);
+  letter-spacing: 0.18px;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  width: 1126px;
+  max-width: 100%;
+  margin: 0 auto;
+  text-align: center;
+  border-inline: 1px solid #e5e4e7;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  background: #ffffff;
+}
+
+@media (max-width: 768px) {
+  #root {
+    border-inline: none;
+  }
+}
+
+body {
+  margin: 0;
+  background: #ffffff;
+}
+
+h1, h2 {
+  font-family: var(--heading);
+  font-weight: 700;
+}
+
+h1 {
+  font-size: 56px;
+  letter-spacing: -1.68px;
+  margin: 32px 0;
+}
+
+h2 {
+  font-size: 24px;
+  line-height: 118%;
+  letter-spacing: -0.24px;
+  margin: 0 0 8px;
+}
+
+p { margin: 0; }
+
+code {
+  font-family: var(--mono);
+  font-size: 15px;
+  line-height: 135%;
+  padding: 4px 8px;
+  background: #f4f3ec;
+  border-radius: 4px;
+  color: #08060d;
+}
+
+/* ── Tabla responsive global ───────────────────────── */
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}

@@ -1,0 +1,126 @@
+.titulo-proveedores {
+  color: var(--text-h);
+  margin-bottom: 24px;
+}
+
+.mensaje-proveedores {
+  background-color: var(--accent-bg);
+  border: 1px solid var(--accent-border);
+  border-radius: 8px;
+  padding: 10px 16px;
+  color: var(--accent);
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+.contenedor-proveedores {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 32px;
+}
+
+.formulario-proveedores {
+  background-color: var(--accent-bg);
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid var(--accent-border);
+  height: fit-content;
+}
+
+.subtitulo-proveedores {
+  font-size: 15px;
+  margin-bottom: 16px;
+}
+
+.label-proveedor {
+  margin: 0 0 4px;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.input-proveedor {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  font-size: 14px;
+  outline: none;
+  box-sizing: border-box;
+  margin-bottom: 12px;
+  color: var(--text-h);
+  background-color: var(--bg);
+}
+
+.btn-guardar-proveedor {
+  background-color: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.btn-cancelar-proveedor {
+  background-color: var(--bg);
+  color: var(--accent);
+  border: 1px solid var(--accent-border);
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  width: 100%;
+}
+
+.tabla-proveedores {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.tabla-proveedores thead tr {
+  border-bottom: 2px solid var(--border);
+}
+
+.tabla-proveedores tbody tr {
+  border-bottom: 1px solid var(--border);
+}
+
+.tabla-proveedores th {
+  padding: 10px;
+  text-align: left;
+  color: var(--text);
+}
+
+.tabla-proveedores td {
+  padding: 10px;
+  color: var(--text);
+}
+
+.empresa-proveedor {
+  color: var(--text-h);
+  font-weight: 500;
+}
+
+.btn-editar-proveedor {
+  background-color: var(--accent-bg);
+  color: var(--accent);
+  border: 1px solid var(--accent-border);
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  margin-right: 8px;
+}
+
+.btn-eliminar-proveedor {
+  background-color: #fff0f0;
+  color: #e74c3c;
+  border: 1px solid #e74c3c;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}

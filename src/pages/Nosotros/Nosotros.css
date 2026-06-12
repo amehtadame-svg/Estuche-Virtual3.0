@@ -1,0 +1,242 @@
+.nosotros-container {
+  padding: 0 30px 60px;
+}
+
+/* Hero */
+.nosotros-hero {
+  background: var(--accent-bg, rgba(170,59,255,0.08));
+  border-radius: 12px;
+  padding: 60px 40px;
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.nosotros-hero-titulo {
+  color: var(--accent);
+  font-size: 32px;
+  margin-bottom: 16px;
+}
+
+.nosotros-hero-texto {
+  color: var(--text);
+  font-size: 17px;
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.7;
+}
+
+/* Misión / Visión */
+.nosotros-mision-vision {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 48px;
+}
+
+.nosotros-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 32px;
+}
+
+.nosotros-card-titulo {
+  color: var(--text-h);
+  font-size: 18px;
+  margin-bottom: 16px;
+}
+
+.nosotros-card-texto {
+  color: var(--text);
+  line-height: 1.7;
+  font-size: 15px;
+  margin: 0;
+}
+
+/* Secciones genéricas */
+.nosotros-seccion {
+  margin-bottom: 48px;
+}
+
+.nosotros-seccion-titulo {
+  color: var(--text-h);
+  margin-bottom: 8px;
+}
+
+.nosotros-seccion-subtitulo {
+  color: var(--text);
+  font-size: 15px;
+  margin-bottom: 28px;
+}
+
+/* Valores */
+.nosotros-valores-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.nosotros-valor-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+}
+
+.nosotros-valor-icono {
+  font-size: 36px;
+  margin-bottom: 12px;
+}
+
+.nosotros-valor-titulo {
+  color: var(--text-h);
+  font-size: 15px;
+  margin-bottom: 8px;
+}
+
+.nosotros-valor-texto {
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Hitos */
+.nosotros-hitos {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.nosotros-hito {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.nosotros-hito-año {
+  background: var(--accent);
+  color: white;
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.nosotros-hito-texto {
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.6;
+  padding-top: 4px;
+  margin: 0;
+}
+
+/* Equipo */
+.nosotros-equipo-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.nosotros-persona-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 32px;
+  text-align: center;
+}
+
+.nosotros-persona-avatar {
+  font-size: 40px;
+  background: var(--accent-bg, rgba(170,59,255,0.08));
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+}
+
+.nosotros-persona-nombre {
+  color: var(--text-h);
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+
+.nosotros-persona-cargo {
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 12px;
+}
+
+.nosotros-persona-desc {
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* CTA */
+.nosotros-cta {
+  background: var(--accent-bg, rgba(170,59,255,0.08));
+  border-radius: 12px;
+  padding: 48px 40px;
+  text-align: center;
+}
+
+.nosotros-cta-titulo {
+  color: var(--text-h);
+  margin-bottom: 12px;
+}
+
+.nosotros-cta-texto {
+  color: var(--text);
+  margin-bottom: 28px;
+  font-size: 15px;
+}
+
+.nosotros-cta-botones {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.nosotros-btn-primario {
+  background: var(--accent);
+  color: white;
+  padding: 12px 28px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 15px;
+  transition: opacity 0.2s;
+}
+
+.nosotros-btn-primario:hover {
+  opacity: 0.88;
+  color: white;
+}
+
+.nosotros-btn-secundario {
+  background: transparent;
+  color: var(--accent);
+  padding: 12px 28px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 15px;
+  border: 1px solid var(--accent);
+  transition: opacity 0.2s;
+}
+
+.nosotros-btn-secundario:hover {
+  opacity: 0.88;
+}

@@ -1,0 +1,140 @@
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(145deg, #f5eeff 0%, #fdf8ff 60%, #f0e6ff 100%);
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.login-container::before {
+  content: '';
+  position: absolute;
+  top: -120px;
+  right: -120px;
+  width: 480px;
+  height: 480px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(170,59,255,.15) 0%, transparent 65%);
+  pointer-events: none;
+}
+
+.login-container::after {
+  content: '';
+  position: absolute;
+  bottom: -100px;
+  left: -100px;
+  width: 380px;
+  height: 380px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(170,59,255,.1) 0%, transparent 65%);
+  pointer-events: none;
+}
+
+/* ── Tarjeta ───────────────────────────────────────── */
+.login-card {
+  width: 100%;
+  max-width: 420px;
+  padding: 44px 40px;
+  border-radius: 24px;
+  border: 1px solid rgba(170, 59, 255, 0.25);
+  background: #ffffff;
+  box-shadow: 0 8px 30px rgba(0,0,0,.11), 0 3px 10px rgba(0,0,0,.06);
+  position: relative;
+  z-index: 1;
+}
+
+.login-title {
+  text-align: center;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: #08060d;
+  margin: 0 0 8px;
+}
+
+.login-subtitle {
+  text-align: center;
+  color: #6b6375;
+  font-size: 15px;
+  margin-bottom: 36px;
+  line-height: 1.5;
+}
+
+/* ── Campos ────────────────────────────────────────── */
+.input-label {
+  display: block;
+  text-align: left;
+  margin-bottom: 7px;
+  color: #08060d;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.login-input {
+  width: 100%;
+  padding: 13px 16px;
+  margin-bottom: 20px;
+  border: 1.5px solid #e5e4e7;
+  border-radius: 11px;
+  font-size: 15px;
+  box-sizing: border-box;
+  background: #ffffff;
+  color: #08060d;
+  outline: none;
+  transition: border-color 0.18s, box-shadow 0.18s;
+}
+
+.login-input::placeholder {
+  color: #aaa;
+}
+
+.login-input:focus {
+  border-color: #aa3bff;
+  box-shadow: 0 0 0 3px rgba(170, 59, 255, 0.1);
+}
+
+/* ── Botón submit ──────────────────────────────────── */
+.login-button {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #9333ea 0%, #c084fc 100%);
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 6px;
+  box-shadow: 0 4px 20px rgba(170,59,255,.3);
+  transition: opacity 0.2s, transform 0.18s;
+}
+
+.login-button:hover {
+  opacity: 0.88;
+  transform: translateY(-2px);
+}
+
+.login-button:active {
+  transform: translateY(0);
+}
+
+/* ── Pie ───────────────────────────────────────────── */
+.register-text {
+  text-align: center;
+  margin-top: 26px;
+  color: #6b6375;
+  font-size: 14px;
+}
+
+.register-link {
+  color: #aa3bff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.register-link:hover {
+  opacity: 0.75;
+}

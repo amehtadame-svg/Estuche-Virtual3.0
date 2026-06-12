@@ -1,0 +1,78 @@
+.titulo-facturas {
+  color: var(--text-h);
+  margin-bottom: 24px;
+}
+
+.mensaje-facturas {
+  background-color: var(--accent-bg);
+  border: 1px solid var(--accent-border);
+  border-radius: 8px;
+  padding: 10px 16px;
+  color: var(--accent);
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+.tabla-facturas {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.tabla-facturas thead tr {
+  border-bottom: 2px solid var(--border);
+}
+
+.tabla-facturas tbody tr {
+  border-bottom: 1px solid var(--border);
+}
+
+.tabla-facturas th {
+  padding: 10px;
+  text-align: left;
+  color: var(--text);
+}
+
+.tabla-facturas td {
+  padding: 10px;
+  color: var(--text);
+}
+
+.numero-factura {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.cliente-factura {
+  color: var(--text-h);
+}
+
+.total-factura {
+  color: var(--text-h);
+  font-weight: 500;
+}
+
+.estado-select-factura {
+  padding: 4px 10px;
+  border-radius: 99px;
+  border: none;
+  font-size: 12px;
+  font-weight: 500;
+  color: white;
+  cursor: pointer;
+  outline: none;
+}
+
+.btn-eliminar-factura {
+  background-color: #fff0f0;
+  color: #e74c3c;
+  border: 1px solid #e74c3c;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.btn-eliminar-factura:hover {
+  opacity: 0.9;
+}

@@ -1,0 +1,259 @@
+/* ── Base ──────────────────────────────────────────── */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 30px;
+  height: 64px;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e4e7;
+  box-shadow: 0 1px 0 rgba(0,0,0,.04), 0 1px 3px rgba(0,0,0,.06);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+/* ── Logo ──────────────────────────────────────────── */
+.header-logo {
+  font-size: 20px;
+  font-weight: 700;
+  color: #aa3bff;
+  letter-spacing: -0.4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  flex-shrink: 0;
+  transition: opacity 0.2s;
+}
+
+.header-logo:hover {
+  opacity: 0.8;
+}
+
+/* ── Nav ───────────────────────────────────────────── */
+.header-nav {
+  display: flex;
+  gap: 4px;
+}
+
+.header-nav a {
+  text-decoration: none;
+  color: #3d3d3d;
+  font-weight: 500;
+  font-size: 15px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  transition: background 0.18s, color 0.18s;
+  white-space: nowrap;
+}
+
+.header-nav a:hover {
+  background: rgba(170, 59, 255, 0.08);
+  color: #aa3bff;
+}
+
+/* ── User area ─────────────────────────────────────── */
+.header-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.header-user > span {
+  font-size: 14px;
+  color: #3d3d3d;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* ── Carrito ───────────────────────────────────────── */
+.cart-btn {
+  position: relative;
+  font-size: 22px;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  transition: background 0.18s, transform 0.15s;
+}
+
+.cart-btn:hover {
+  background: rgba(170, 59, 255, 0.08);
+  transform: scale(1.08);
+}
+
+.cart-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: linear-gradient(135deg, #9333ea, #c084fc);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  box-shadow: 0 2px 6px rgba(170,59,255,.35);
+  line-height: 1;
+}
+
+/* ── Botón login ───────────────────────────────────── */
+.login-btn {
+  text-decoration: none;
+  background: linear-gradient(135deg, #9333ea 0%, #c084fc 100%);
+  color: #ffffff !important;
+  padding: 9px 18px;
+  border-radius: 9px;
+  font-weight: 600;
+  font-size: 14px;
+  box-shadow: 0 4px 20px rgba(170,59,255,.22);
+  transition: opacity 0.2s, transform 0.15s;
+  display: inline-block;
+  border: none;
+  white-space: nowrap;
+}
+
+.login-btn:hover {
+  opacity: 0.88;
+  transform: translateY(-1px);
+}
+
+/* ── Botón salir ───────────────────────────────────── */
+.logout-btn {
+  background: #ffffff;
+  border: 1px solid #e5e4e7;
+  color: #3d3d3d;
+  font-size: 14px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: border-color 0.18s, color 0.18s, background 0.18s;
+  white-space: nowrap;
+}
+
+.logout-btn:hover {
+  border-color: #e74c3c;
+  color: #e74c3c;
+  background: rgba(231,76,60,.06);
+}
+
+/* ── Hamburguesa ───────────────────────────────────── */
+.header-menu-toggle {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 36px;
+  height: 36px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 8px;
+  transition: background 0.18s;
+}
+
+.header-menu-toggle:hover {
+  background: rgba(170,59,255,.08);
+}
+
+.header-menu-toggle span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: #3d3d3d;
+  border-radius: 2px;
+  transition: transform 0.25s, opacity 0.25s;
+}
+
+.header-menu-toggle.open span:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+.header-menu-toggle.open span:nth-child(2) {
+  opacity: 0;
+}
+.header-menu-toggle.open span:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+/* ── Responsive tablet ─────────────────────────────── */
+@media (max-width: 768px) {
+  .header {
+    padding: 0 20px;
+    flex-wrap: wrap;
+    height: auto;
+    min-height: 60px;
+  }
+
+  .header-menu-toggle {
+    display: flex;
+  }
+
+  .header-nav,
+  .header-user {
+    display: none;
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 12px 0 16px;
+    gap: 6px;
+    border-top: 1px solid #e5e4e7;
+  }
+
+  .header-nav.open,
+  .header-user.open {
+    display: flex;
+  }
+
+  .header-nav a {
+    width: 100%;
+    padding: 10px 14px;
+    font-size: 16px;
+  }
+
+  .header-user {
+    border-top: none;
+    padding-top: 0;
+    padding-bottom: 16px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .header-user > span {
+    width: 100%;
+    font-size: 13px;
+    color: #6b6375;
+  }
+
+  .login-btn,
+  .logout-btn {
+    flex: 1;
+    text-align: center;
+    padding: 11px;
+  }
+
+  .cart-btn {
+    margin-left: auto;
+  }
+}
+
+/* ── Responsive móvil ──────────────────────────────── */
+@media (max-width: 480px) {
+  .header {
+    padding: 0 16px;
+  }
+
+  .header-logo {
+    font-size: 17px;
+  }
+}

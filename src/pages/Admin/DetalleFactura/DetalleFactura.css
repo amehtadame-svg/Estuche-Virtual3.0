@@ -1,0 +1,135 @@
+.titulo-detalle {
+  color: var(--text-h);
+  margin-bottom: 24px;
+}
+
+.mensaje-detalle {
+  background-color: var(--accent-bg);
+  border: 1px solid var(--accent-border);
+  border-radius: 8px;
+  padding: 10px 16px;
+  color: var(--accent);
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+.contenedor-detalle {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 32px;
+}
+
+.formulario-detalle {
+  background-color: var(--accent-bg);
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid var(--accent-border);
+  height: fit-content;
+}
+
+.subtitulo-detalle {
+  font-size: 15px;
+  margin-bottom: 16px;
+}
+
+.label-detalle {
+  margin: 0 0 4px;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.input-detalle {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  font-size: 14px;
+  outline: none;
+  box-sizing: border-box;
+  margin-bottom: 12px;
+  color: var(--text-h);
+  background-color: var(--bg);
+}
+
+.btn-guardar-detalle {
+  background-color: var(--accent);
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.btn-cancelar-detalle {
+  background-color: var(--bg);
+  color: var(--accent);
+  border: 1px solid var(--accent-border);
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  width: 100%;
+}
+
+.tabla-detalle {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.tabla-detalle thead tr {
+  border-bottom: 2px solid var(--border);
+}
+
+.tabla-detalle tbody tr {
+  border-bottom: 1px solid var(--border);
+}
+
+.tabla-detalle th {
+  padding: 10px;
+  text-align: left;
+  color: var(--text);
+}
+
+.tabla-detalle td {
+  padding: 10px;
+  color: var(--text);
+}
+
+.factura-detalle {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.producto-detalle {
+  color: var(--text-h);
+}
+
+.subtotal-detalle {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.btn-editar-detalle {
+  background-color: var(--accent-bg);
+  color: var(--accent);
+  border: 1px solid var(--accent-border);
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  margin-right: 8px;
+}
+
+.btn-eliminar-detalle {
+  background-color: #fff0f0;
+  color: #e74c3c;
+  border: 1px solid #e74c3c;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}

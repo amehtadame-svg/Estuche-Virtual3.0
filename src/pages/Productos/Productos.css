@@ -1,0 +1,153 @@
+.prod-detalle-container {
+  padding: 0 30px 60px;
+}
+
+.prod-detalle-back {
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 24px;
+  transition: color 0.2s;
+}
+
+.prod-detalle-back:hover {
+  color: var(--accent);
+  border: none;
+}
+
+.prod-detalle-card {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 48px;
+  align-items: center;
+}
+
+.prod-detalle-icono-wrap {
+  background: #f7efff;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+}
+
+.prod-detalle-icono {
+  font-size: 120px;
+}
+
+.prod-detalle-cat {
+  display: inline-block;
+  background: var(--accent-bg, rgba(170,59,255,0.1));
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 999px;
+  margin-bottom: 14px;
+}
+
+.prod-detalle-nombre {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--text-h);
+  margin: 0 0 16px;
+  line-height: 1.2;
+}
+
+.prod-detalle-desc {
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.7;
+  margin-bottom: 24px;
+}
+
+.prod-detalle-meta {
+  margin-bottom: 24px;
+}
+
+.prod-detalle-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.meta-label {
+  font-size: 12px;
+  color: var(--text);
+  font-weight: 500;
+}
+
+.meta-valor {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.stock-ok { color: #10b981; }
+.stock-no { color: #ef4444; }
+
+.prod-detalle-precio {
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--accent);
+  margin: 0 0 10px;
+}
+
+.prod-detalle-en-carrito {
+  font-size: 13px;
+  color: #10b981;
+  font-weight: 600;
+  margin: 0 0 16px;
+}
+
+.prod-detalle-acciones {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.prod-detalle-btn-agregar {
+  flex: 1;
+  padding: 14px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #9c27ff, #b23cff);
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.prod-detalle-btn-agregar:hover {
+  opacity: 0.88;
+  color: white;
+}
+
+.prod-detalle-btn-carrito {
+  padding: 14px 22px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-h);
+  font-size: 15px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.prod-detalle-btn-carrito:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.prod-detalle-vacio {
+  text-align: center;
+  padding: 100px 30px;
+  color: var(--text);
+}
