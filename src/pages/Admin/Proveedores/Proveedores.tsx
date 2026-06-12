@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import Header from '../../../components/Header/Header';
 import './Proveedores.css';
 
 const proveedoresIniciales = [
@@ -92,6 +93,8 @@ export default function Proveedores() {
   };
 
   return (
+    <>
+    <Header />
     <div>
       <h2 className="titulo-proveedores">
         Gestion de Proveedores
@@ -236,5 +239,6 @@ export default function Proveedores() {
 
       </div>
     </div>
+    </>
   );
 }
