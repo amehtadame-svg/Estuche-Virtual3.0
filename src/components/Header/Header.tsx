@@ -9,15 +9,14 @@ export default function Header() {
 
   return (
     <header className="header">
-      <div className="header-logo">
+      <Link to="/nosotros" className="header-logo">
         📚 Estuche Virtual
-      </div>
-
+      </Link>
+    
       <nav className="header-nav">
         <Link to="/">Inicio</Link>
         <Link to="/catalogo">Catálogo</Link>
         <Link to="/contacto">Contacto</Link>
-        <Link to="/nosotros">Nosotros</Link>
 
         {user && (
           <Link to={user.role === 'cliente' ? '/cliente' : '/admin'}>
