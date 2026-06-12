@@ -47,6 +47,13 @@ const INITIAL_USERS: User[] = [
     role: 'administrador',
     password: '123',
   },
+  {
+    id: 3,
+    email: 'francksalamanca54526@gmail.com',
+    name: 'Admin',
+    role: 'administrador',
+    password: '5452629',
+  },
 ];
 
 // Contexto 

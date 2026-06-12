@@ -104,7 +104,7 @@
   padding: 13px;
   border: none;
   border-radius: 8px;
-  background: var(--accent);
+   background: linear-gradient(135deg, #9549db, #c084fc);
   color: white;
   font-size: 15px;
   font-weight: 600;

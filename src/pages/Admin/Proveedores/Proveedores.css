@@ -56,6 +56,7 @@
   color: #fff;
   border: none;
   padding: 10px;
+  background: linear-gradient(135deg, #9333ea, #c084fc);
   border-radius: 8px;
   font-size: 14px;
   cursor: pointer;
