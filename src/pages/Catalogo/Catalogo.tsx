@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Header from '../../components/Header/Header';
 import { useCart } from '../../context/CartContext';
 import './Catalogo.css';
@@ -25,7 +26,9 @@ const todosLosProductos = [
 const categorias = ['Todos', ...Array.from(new Set(todosLosProductos.map((p) => p.categoria)))];
 
 export default function Catalogo() {
+  
   const { agregar, items } = useCart();
+  const navigate = useNavigate();
   const [categoriaActiva, setCategoriaActiva] = useState('Todos');
   const [busqueda, setBusqueda] = useState('');
   const [agregados, setAgregados] = useState<number[]>([]);
@@ -101,6 +104,12 @@ export default function Catalogo() {
                     onClick={() => handleAgregar(prod)}
                   >
                     {recienAgregado ? '✓ Agregado' : '🛒 Agregar al carrito'}
+                  </button>
+                  <button
+                    className="prod-btn-ver"
+                    onClick={() => navigate(`/producto/${prod.id}`)}
+                  >
+                  Ver detalle
                   </button>
                 </div>
               );

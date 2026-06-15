@@ -1,110 +1,173 @@
-/* ── FORZAR LIGHT MODE ─────────────────────────────── */
+/* ── RESET BASE ─────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+/* ── LIGHT MODE ─────────────────────────────────────── */
 html {
-  color-scheme: light !important;
+  color-scheme: light;
 }
 
-html, body {
-  background: #ffffff !important;
-  color: #6b6375 !important;
-}
-
+/* ── VARIABLES ──────────────────────────────────────── */
 :root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #ffffff;
-  --bg-subtle: #faf9fc;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
+  --text:          #6b6375;
+  --text-h:        #08060d;
+  --bg:            #ffffff;
+  --bg-subtle:     #faf9fc;
+  --border:        #e5e4e7;
+  --code-bg:       #f4f3ec;
 
-  --accent: #aa3bff;
-  --accent-dark: #8b1fe8;
-  --accent-light: #c97bff;
-  --accent-bg: rgba(170, 59, 255, 0.08);
+  --accent:        #aa3bff;
+  --accent-dark:   #8b1fe8;
+  --accent-light:  #c97bff;
+  --accent-bg:     rgba(170, 59, 255, 0.08);
   --accent-bg-hover: rgba(170, 59, 255, 0.14);
   --accent-border: rgba(170, 59, 255, 0.35);
 
   --gradient-accent: linear-gradient(135deg, #9333ea 0%, #c084fc 100%);
-  --gradient-hero: linear-gradient(145deg, #f5eeff 0%, #fdf8ff 60%, #f0e6ff 100%);
-  --gradient-card: linear-gradient(145deg, #ffffff 0%, #fdfcff 100%);
+  --gradient-hero:   linear-gradient(145deg, #f5eeff 0%, #fdf8ff 60%, #f0e6ff 100%);
+  --gradient-card:   linear-gradient(145deg, #ffffff 0%, #fdfcff 100%);
 
-  --shadow-xs: 0 1px 3px rgba(0,0,0,.06);
-  --shadow-sm: 0 2px 8px rgba(0,0,0,.07), 0 1px 3px rgba(0,0,0,.05);
-  --shadow-md: 0 4px 16px rgba(0,0,0,.09), 0 2px 6px rgba(0,0,0,.05);
-  --shadow-lg: 0 8px 30px rgba(0,0,0,.11), 0 3px 10px rgba(0,0,0,.06);
+  --shadow-xs:     0 1px 3px rgba(0,0,0,.06);
+  --shadow-sm:     0 2px 8px rgba(0,0,0,.07), 0 1px 3px rgba(0,0,0,.05);
+  --shadow-md:     0 4px 16px rgba(0,0,0,.09), 0 2px 6px rgba(0,0,0,.05);
+  --shadow-lg:     0 8px 30px rgba(0,0,0,.11), 0 3px 10px rgba(0,0,0,.06);
   --shadow-accent: 0 4px 20px rgba(170, 59, 255, 0.22);
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
+  --sans:    system-ui, 'Segoe UI', Roboto, sans-serif;
   --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+  --mono:    ui-monospace, Consolas, monospace;
 
-  /* Breakpoints de referencia:
-     --bp-sm:  480px  (móvil grande)
-     --bp-md:  768px  (tablet)
-     --bp-lg:  1024px (desktop pequeño) */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
 
-  font: 18px/145% var(--sans);
+  font: 16px/1.5 var(--sans);
   letter-spacing: 0.18px;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  color: var(--text);
+  background: #ffffff;
 }
 
+/* ── BODY ───────────────────────────────────────────── */
+body {
+  margin: 0;
+  background: #ffffff;
+  color: #6b6375;
+}
+
+/* ── ROOT ───────────────────────────────────────────── */
 #root {
   width: 1126px;
   max-width: 100%;
   margin: 0 auto;
-  text-align: center;
   border-inline: 1px solid #e5e4e7;
   min-height: 100svh;
   display: flex;
   flex-direction: column;
-  box-sizing: border-box;
   background: #ffffff;
 }
 
 @media (max-width: 768px) {
   #root {
     border-inline: none;
+    width: 100%;
   }
 }
 
-body {
-  margin: 0;
-  background: #ffffff;
-}
-
-h1, h2 {
+/* ── TIPOGRAFÍA ─────────────────────────────────────── */
+h1, h2, h3, h4 {
   font-family: var(--heading);
   font-weight: 700;
+  color: var(--text-h);
+  margin: 0;
 }
 
 h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
+  font-size: clamp(28px, 5vw, 56px);
+  letter-spacing: -1.5px;
+  margin: 24px 0;
 }
 
 h2 {
-  font-size: 24px;
-  line-height: 118%;
+  font-size: clamp(20px, 3vw, 24px);
+  line-height: 1.2;
   letter-spacing: -0.24px;
   margin: 0 0 8px;
 }
 
-p { margin: 0; }
-
-code {
-  font-family: var(--mono);
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: #f4f3ec;
-  border-radius: 4px;
-  color: #08060d;
+h3 {
+  font-size: 18px;
+  line-height: 1.3;
 }
 
-/* ── Tabla responsive global ───────────────────────── */
+p {
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* ── ENLACES ────────────────────────────────────────── */
+a {
+  color: var(--accent);
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+a:hover {
+  opacity: 0.8;
+}
+
+/* ── BOTONES BASE ───────────────────────────────────── */
+button {
+  font-family: var(--sans);
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s;
+  background: none;
+  color: inherit;
+  border: none;
+  padding: 0;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+button:active {
+  transform: scale(0.98);
+  
+}
+
+/* ── INPUTS BASE ────────────────────────────────────── */
+input, select, textarea {
+  font-family: var(--sans);
+  font-size: 14px;
+  color: var(--text-h);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--accent);
+}
+
+/* ── CÓDIGO ─────────────────────────────────────────── */
+code {
+  font-family: var(--mono);
+  font-size: 14px;
+  line-height: 1.4;
+  padding: 3px 7px;
+  background: var(--code-bg);
+  border-radius: var(--radius-sm);
+  color: var(--text-h);
+}
+
+/* ── TABLA RESPONSIVE ───────────────────────────────── */
 .table-wrapper {
   width: 100%;
   overflow-x: auto;

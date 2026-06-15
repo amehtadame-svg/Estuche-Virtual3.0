@@ -1,9 +1,13 @@
-/* ── Layout ────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════
+   HOME — compatible con index.css
+   ═══════════════════════════════════════════════════ */
+
+/* ── Layout ───────────────────────────────────────── */
 .home-container {
   padding: 32px 30px 60px;
 }
 
-/* ── Hero ──────────────────────────────────────────── */
+/* ── Hero ─────────────────────────────────────────── */
 .hero {
   background: linear-gradient(145deg, #f5eeff 0%, #fdf8ff 60%, #f0e6ff 100%);
   border: 1px solid rgba(170, 59, 255, 0.35);
@@ -16,33 +20,32 @@
   box-shadow: 0 2px 8px rgba(0,0,0,.07), 0 1px 3px rgba(0,0,0,.05);
 }
 
-.hero::before {
+.hero::before,
+.hero::after {
   content: '';
   position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.hero::before {
   top: -80px;
   right: -80px;
   width: 340px;
   height: 340px;
-  border-radius: 50%;
   background: radial-gradient(circle, rgba(170,59,255,.18) 0%, transparent 70%);
-  pointer-events: none;
 }
 
 .hero::after {
-  content: '';
-  position: absolute;
   bottom: -60px;
   left: -60px;
   width: 260px;
   height: 260px;
-  border-radius: 50%;
   background: radial-gradient(circle, rgba(170,59,255,.12) 0%, transparent 70%);
-  pointer-events: none;
 }
 
-/* FIX CLAVE: override del h1 global */
 .hero-title {
-  font-size: 46px !important;
+  font-size: clamp(28px, 5vw, 46px) !important;
   font-weight: 800 !important;
   letter-spacing: -1.2px !important;
   line-height: 1.15 !important;
@@ -50,7 +53,6 @@
   -webkit-background-clip: text !important;
   -webkit-text-fill-color: transparent !important;
   background-clip: text !important;
-  color: transparent !important;
   margin: 0 0 18px !important;
   position: relative;
   z-index: 1;
@@ -58,7 +60,7 @@
 
 .hero-description {
   color: var(--text);
-  font-size: 18px;
+  font-size: clamp(15px, 2vw, 18px);
   margin-bottom: 36px;
   max-width: 480px;
   margin-inline: auto;
@@ -86,7 +88,7 @@
 
 .hero-button {
   background: linear-gradient(135deg, #9333ea 0%, #c084fc 100%);
-  color: #fff;
+  color: #ffffff;
   text-decoration: none;
   padding: 13px 28px;
   border-radius: 12px;
@@ -101,17 +103,17 @@
   opacity: 0.88;
   transform: translateY(-2px);
   box-shadow: 0 8px 28px rgba(170,59,255,.35);
+  color: #ffffff;
 }
 
 .logout-button {
-  background: #fff;
-  border: 1px solid var(--border);
-  color: var(--text-h);
+  background: #ffffff;
+  border: 1px solid #e5e4e7;
+  color: #08060d;
   padding: 13px 24px;
   border-radius: 12px;
   font-size: 15px;
   font-weight: 500;
-  cursor: pointer;
   transition: border-color 0.18s, color 0.18s, background 0.18s;
 }
 
@@ -121,18 +123,18 @@
   background: rgba(231,76,60,.05);
 }
 
-/* ── Secciones ─────────────────────────────────────── */
+/* ── Secciones ────────────────────────────────────── */
 .section {
   margin-bottom: 60px;
 }
 
 .section-title {
-  font-size: 26px !important;
+  font-size: clamp(20px, 3vw, 26px) !important;
   font-weight: 700 !important;
   letter-spacing: -0.5px;
-  color: var(--text-h) !important;
+  color: #08060d !important;
+  -webkit-text-fill-color: #08060d !important;
   margin-bottom: 8px !important;
-  -webkit-text-fill-color: var(--text-h) !important;
 }
 
 .section-description {
@@ -141,7 +143,7 @@
   margin-bottom: 28px;
 }
 
-/* ── Cards de ofertas ──────────────────────────────── */
+/* ── Cards ofertas ────────────────────────────────── */
 .cards-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -149,8 +151,8 @@
 }
 
 .card {
-  background: #fff;
-  border: 1px solid var(--border);
+  background: #ffffff;
+  border: 1px solid #e5e4e7;
   border-radius: 20px;
   padding: 28px 24px;
   position: relative;
@@ -170,7 +172,7 @@
   top: 14px;
   right: 14px;
   background: linear-gradient(135deg, #e74c3c, #ff6b6b);
-  color: white;
+  color: #ffffff;
   padding: 5px 12px;
   border-radius: 999px;
   font-size: 11px;
@@ -188,7 +190,7 @@
 }
 
 .card h3 {
-  color: var(--text-h);
+  color: #08060d;
   font-size: 17px;
   font-weight: 600;
   margin: 0 0 12px;
@@ -203,7 +205,7 @@
 }
 
 .price {
-  color: var(--accent);
+  color: #aa3bff;
   font-size: 30px;
   font-weight: 800;
   letter-spacing: -0.5px;
@@ -213,13 +215,12 @@
 .card-button {
   width: 100%;
   background: linear-gradient(135deg, #9333ea 0%, #c084fc 100%);
-  color: white;
+  color: #ffffff;
   border: none;
   border-radius: 11px;
   padding: 13px;
   font-size: 15px;
   font-weight: 600;
-  cursor: pointer;
   box-shadow: 0 4px 20px rgba(170,59,255,.22);
   transition: opacity 0.2s, transform 0.18s;
 }
@@ -227,9 +228,10 @@
 .card-button:hover {
   opacity: 0.88;
   transform: translateY(-2px);
+  color: #ffffff;
 }
 
-/* ── Razones grid ──────────────────────────────────── */
+/* ── Razones ──────────────────────────────────────── */
 .reasons-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -238,7 +240,7 @@
 
 .reason-card {
   background: #faf9fc;
-  border: 1px solid var(--border);
+  border: 1px solid #e5e4e7;
   border-radius: 20px;
   padding: 32px 20px;
   text-align: center;
@@ -248,7 +250,7 @@
 .reason-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 4px 16px rgba(0,0,0,.09), 0 2px 6px rgba(0,0,0,.05);
-  background: #fff;
+  background: #ffffff;
   border-color: rgba(170, 59, 255, 0.35);
 }
 
@@ -260,7 +262,7 @@
 }
 
 .reason-card h3 {
-  color: var(--text-h);
+  color: #08060d;
   font-size: 15px;
   font-weight: 700;
   margin: 0 0 10px;
@@ -270,4 +272,51 @@
   color: var(--text);
   font-size: 13px;
   line-height: 1.6;
+}
+
+/* ═══════════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  .home-container {
+    padding: 24px 20px 48px;
+  }
+
+  .hero {
+    padding: 56px 24px;
+  }
+
+  .cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .reasons-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .home-container {
+    padding: 16px 14px 40px;
+  }
+
+  .hero {
+    padding: 40px 16px;
+    border-radius: 16px;
+  }
+
+  .cards-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .reasons-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-button,
+  .logout-button {
+    width: 100%;
+    text-align: center;
+  }
 }

@@ -159,3 +159,20 @@
   color: var(--text);
   font-size: 18px;
 }
+.prod-btn-ver {
+  width: 100%;
+  padding: 9px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+  cursor: pointer;
+  margin-top: 6px;
+  transition: 0.2s;
+}
+
+.prod-btn-ver:hover {
+  border-color: #aa3bff;
+  color: #aa3bff;
+}

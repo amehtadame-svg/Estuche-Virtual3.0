@@ -1,12 +1,16 @@
+/* ── Fondo ──────────────────────────────────────────── */
 .login-container {
-  min-height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
   background: linear-gradient(145deg, #f5eeff 0%, #fdf8ff 60%, #f0e6ff 100%);
   padding: 24px;
-  position: relative;
-  overflow: hidden;
+  z-index: 999;
 }
 
 .login-container::before {
@@ -33,17 +37,23 @@
   pointer-events: none;
 }
 
-/* ── Tarjeta ───────────────────────────────────────── */
+/* ── Tarjeta ─────────────────────────────────────────── */
 .login-card {
   width: 100%;
   max-width: 420px;
   padding: 44px 40px;
   border-radius: 24px;
-  border: 1px solid rgba(170, 59, 255, 0.25);
+  border: 1px solid var(--accent-border);
   background: #ffffff;
-  box-shadow: 0 8px 30px rgba(0,0,0,.11), 0 3px 10px rgba(0,0,0,.06);
+  box-shadow: var(--shadow-lg);
   position: relative;
   z-index: 1;
+}
+
+@media (max-width: 480px) {
+  .login-card {
+    padding: 32px 24px;
+  }
 }
 
 .login-title {
@@ -57,13 +67,13 @@
 
 .login-subtitle {
   text-align: center;
-  color: #6b6375;
+  color: var(--text);
   font-size: 15px;
   margin-bottom: 36px;
   line-height: 1.5;
 }
 
-/* ── Campos ────────────────────────────────────────── */
+/* ── Campos ──────────────────────────────────────────── */
 .input-label {
   display: block;
   text-align: left;
@@ -80,10 +90,8 @@
   border: 1.5px solid #e5e4e7;
   border-radius: 11px;
   font-size: 15px;
-  box-sizing: border-box;
   background: #ffffff;
   color: #08060d;
-  outline: none;
   transition: border-color 0.18s, box-shadow 0.18s;
 }
 
@@ -96,7 +104,7 @@
   box-shadow: 0 0 0 3px rgba(170, 59, 255, 0.1);
 }
 
-/* ── Botón submit ──────────────────────────────────── */
+/* ── Botón ───────────────────────────────────────────── */
 .login-button {
   width: 100%;
   padding: 14px;
@@ -106,33 +114,31 @@
   color: #ffffff;
   font-size: 16px;
   font-weight: 700;
-  cursor: pointer;
   margin-top: 6px;
-  box-shadow: 0 4px 20px rgba(170,59,255,.3);
-  transition: opacity 0.2s, transform 0.18s;
+  box-shadow:  0 4px 20px rgba(170,59,255,.3);
 }
 
 .login-button:hover {
   opacity: 0.88;
   transform: translateY(-2px);
+  color: #ffffff;
 }
 
 .login-button:active {
   transform: translateY(0);
 }
 
-/* ── Pie ───────────────────────────────────────────── */
+/* ── Pie ─────────────────────────────────────────────── */
 .register-text {
   text-align: center;
   margin-top: 26px;
-  color: #6b6375;
+  color: var(--text);
   font-size: 14px;
 }
 
 .register-link {
   color: #aa3bff;
   font-weight: 700;
-  cursor: pointer;
 }
 
 .register-link:hover {
