@@ -1,5 +1,4 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import Header from '../../components/Header/Header';
 import { useCart } from '../../context/CartContext';
 import './Productos.css';
 
@@ -32,7 +31,6 @@ export default function Producto() {
   if (!producto) {
     return (
       <>
-        <Header />
         <div className="prod-detalle-vacio">
           <p>Producto no encontrado.</p>
           <button onClick={() => navigate('/catalogo')}>Volver al catálogo</button>
@@ -49,7 +47,6 @@ export default function Producto() {
 
   return (
     <>
-      <Header />
       <div className="prod-detalle-container">
 
         <button className="prod-detalle-back" onClick={() => navigate(-1)}>

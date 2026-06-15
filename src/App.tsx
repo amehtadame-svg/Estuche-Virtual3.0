@@ -19,12 +19,15 @@ import Pedidos from './pages/Admin/Pedidos/Pedidos';
 import Proveedores from './pages/Admin/Proveedores/Proveedores';
 import ForgotPassword from './pages/ResetPassword/ForgotPassword';
 import ResetPassword  from './pages/ResetPassword/ResetPassword';
+import Footer from './components/Footer/Footer';
+import Header from './components/Header/Header';
 
 function App() {
   return (
     <AuthProvider>
       <CartProvider>
         <BrowserRouter>
+        <Header />
           <Routes>
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password"  element={<ResetPassword />} />
@@ -51,6 +54,7 @@ function App() {
               <Route path="/admin/detallefacturas" element={<DetalleFacturas />} />
             </Route>
           </Routes>
+          <Footer />
         </BrowserRouter>
       </CartProvider>
     </AuthProvider>

@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom';
-import Header from '../../components/Header/Header';
 import './Nosotros.css';
 
 export default function Nosotros() {
@@ -27,7 +26,6 @@ export default function Nosotros() {
 
   return (
     <>
-      <Header />
       <div className="nosotros-container">
 
         <section className="nosotros-hero">

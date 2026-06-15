@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import Header from '../../components/Header/Header';
 import './Contacto.css';
 
 export default function Contacto() {
@@ -41,7 +40,6 @@ export default function Contacto() {
   if (enviado) {
     return (
       <>
-        <Header />
         <div className="contacto-exito">
           <div className="contacto-exito-icono">📬</div>
           <h1>¡Mensaje enviado!</h1>
@@ -61,7 +59,6 @@ export default function Contacto() {
 
   return (
     <>
-      <Header />
       <div className="contacto-container">
         <h1 className="contacto-titulo">Contáctanos</h1>
         <p className="contacto-subtitulo">¿Tienes alguna pregunta o sugerencia? Estamos para ayudarte.</p>

@@ -1,5 +1,4 @@
 import { useNavigate } from 'react-router-dom';
-import Header from '../../components/Header/Header';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import './Carrito.css';
@@ -12,7 +11,6 @@ export default function Carrito() {
   if (items.length === 0) {
     return (
       <>
-        <Header />
         <div className="carrito-vacio">
           <div className="carrito-vacio-icono">🛒</div>
           <h2>Tu carrito está vacío</h2>
@@ -27,7 +25,6 @@ export default function Carrito() {
 
   return (
     <>
-      <Header />
       <div className="carrito-container">
 
         <div className="carrito-header">

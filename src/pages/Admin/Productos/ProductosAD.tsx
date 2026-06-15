@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import Header from '../../../components/Header/Header';
 import './Productos.css';
 
 const productosIniciales = [
@@ -75,7 +74,6 @@ export default function Productos() {
 
   return (
     <>
-      <Header />
       <div className="productos-page">
 
         <div className="productos-topbar">

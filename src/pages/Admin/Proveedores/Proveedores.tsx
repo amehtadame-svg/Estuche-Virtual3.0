@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import Header from '../../../components/Header/Header';
 import './Proveedores.css';
 
 const proveedoresIniciales = [
@@ -61,7 +60,6 @@ export default function Proveedores() {
 
   return (
     <>
-      <Header />
       <div className="proveedores-container">
 
         <div className="proveedores-topbar">

@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import Header from '../../../components/Header/Header';
 import './DetalleFacturas.css';
 
 const detallesIniciales = [
@@ -73,7 +72,6 @@ export default function DetalleFacturas() {
 
   return (
     <>
-      <Header />
       <div className="detalle-page">
 
         <div className="detalle-topbar">

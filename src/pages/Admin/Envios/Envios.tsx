@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import Header from '../../../components/Header/Header';
 import './Envios.css';
 
 const enviosIniciales = [
@@ -75,7 +74,6 @@ export default function Envios() {
 
   return (
     <>
-      <Header />
       <div className="envios-page">
 
         <div className="envios-topbar">

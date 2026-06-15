@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import Header from '../../components/Header/Header';
 import './ClienteDashboard.css';
 
 const Home = () => {
@@ -37,8 +36,6 @@ const Home = () => {
 
   return (
     <>
-      <Header />
-
       <div className="home-container">
 
         <section className="hero">

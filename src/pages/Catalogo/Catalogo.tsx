@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from '../../components/Header/Header';
 import { useCart } from '../../context/CartContext';
 import './Catalogo.css';
 
@@ -50,7 +49,6 @@ export default function Catalogo() {
 
   return (
     <>
-      <Header />
       <div className="catalogo-container">
 
         <div className="catalogo-header">
