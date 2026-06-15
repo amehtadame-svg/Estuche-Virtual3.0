@@ -61,10 +61,10 @@ body {
 
 /* ── ROOT ───────────────────────────────────────────── */
 #root {
-  width: 1126px;
+  width: 100%;
   max-width: 100%;
   margin: 0 auto;
-  border-inline: 1px solid #e5e4e7;
+  border-inline: none;
   min-height: 100svh;
   display: flex;
   flex-direction: column;

@@ -23,6 +23,7 @@ export default function Envios() {
   const [formulario, setFormulario] = useState(formularioVacio);
   const [editandoId, setEditandoId] = useState<number | null>(null);
   const [mensaje, setMensaje] = useState('');
+  const [modalAbierto, setModalAbierto] = useState(false);
 
   const mostrarMensaje = (texto: string) => {
     setMensaje(texto);
@@ -31,6 +32,12 @@ export default function Envios() {
 
   const handleCambio = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormulario({ ...formulario, [e.target.name]: e.target.value });
+  };
+
+  const cerrarModal = () => {
+    setModalAbierto(false);
+    setEditandoId(null);
+    setFormulario(formularioVacio);
   };
 
   const handleGuardar = () => {
@@ -42,18 +49,18 @@ export default function Envios() {
     if (editandoId !== null) {
       setEnvios(envios.map((e) => e.id === editandoId ? { ...e, ...formulario } : e));
       mostrarMensaje('Envio actualizado.');
-      setEditandoId(null);
     } else {
       setEnvios([...envios, { id: Date.now(), ...formulario }]);
       mostrarMensaje('Envio agregado.');
     }
 
-    setFormulario(formularioVacio);
+    cerrarModal();
   };
 
   const handleEditar = (e: typeof enviosIniciales[0]) => {
     setFormulario({ numero: e.numero, pedido: e.pedido, cliente: e.cliente, direccion: e.direccion, fecha: e.fecha, estado: e.estado });
     setEditandoId(e.id);
+    setModalAbierto(true);
   };
 
   const handleEliminar = (id: number) => {
@@ -68,97 +75,113 @@ export default function Envios() {
 
   return (
     <>
-    <Header />
-    <div>
-      <h2 className="titulo-envios">Gestion de Envios</h2>
+      <Header />
+      <div className="envios-page">
 
-      {mensaje && <div className="mensaje-envios">{mensaje}</div>}
-
-      <div className="contenedor-envios">
-
-        <div className="formulario-envios">
-          <h2 className="subtitulo-envios">
-            {editandoId !== null ? 'Editar envio' : 'Agregar envio'}
-          </h2>
-
-          <p className="label-envio">N° Envio</p>
-          <input className="input-envio" name="numero" value={formulario.numero} onChange={handleCambio} placeholder="ENV-005" />
-
-          <p className="label-envio">N° Pedido</p>
-          <input className="input-envio" name="pedido" value={formulario.pedido} onChange={handleCambio} placeholder="PED-005" />
-
-          <p className="label-envio">Cliente</p>
-          <input className="input-envio" name="cliente" value={formulario.cliente} onChange={handleCambio} placeholder="Nombre del cliente" />
-
-          <p className="label-envio">Dirección</p>
-          <input className="input-envio" name="direccion" value={formulario.direccion} onChange={handleCambio} placeholder="Calle 10 # 5-20, Bogota" />
-
-          <p className="label-envio">Fecha</p>
-          <input className="input-envio" type="date" name="fecha" value={formulario.fecha} onChange={handleCambio} />
-
-          <p className="label-envio">Estado</p>
-          <select className="input-envio" name="estado" value={formulario.estado} onChange={handleCambio}>
-            <option value="Preparando">Preparando</option>
-            <option value="En camino">En camino</option>
-            <option value="Entregado">Entregado</option>
-            <option value="Cancelado">Cancelado</option>
-          </select>
-
-          <button className="btn-guardar-envio" onClick={handleGuardar}>
-            {editandoId !== null ? 'Guardar cambios' : 'Agregar envio'}
+        <div className="envios-topbar">
+          <div>
+            <h2 className="titulo-envios">Gestion de Envios</h2>
+          </div>
+          <button className="btn-nuevo-envio" onClick={() => setModalAbierto(true)}>
+            + Nuevo envio
           </button>
-
-          {editandoId !== null && (
-            <button className="btn-cancelar-envio" onClick={() => { setEditandoId(null); setFormulario(formularioVacio); }}>
-              Cancelar
-            </button>
-          )}
         </div>
 
-        <table className="tabla-envios">
-          <thead>
-            <tr>
-              <th>N° Envio</th>
-              <th>Pedido</th>
-              <th>Cliente</th>
-              <th>Dirección</th>
-              <th>Fecha</th>
-              <th>Estado</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {envios.map((env) => (
-              <tr key={env.id}>
-                <td className="numero-envio">{env.numero}</td>
-                <td>{env.pedido}</td>
-                <td className="cliente-envio">{env.cliente}</td>
-                <td>{env.direccion}</td>
-                <td>{env.fecha}</td>
-                <td>
-                  <select
-                    value={env.estado}
-                    onChange={(e) => cambiarEstado(env.id, e.target.value)}
-                    className="estado-select"
-                    style={{ backgroundColor: estadoColor[env.estado] || '#999' }}
-                  >
-                    <option value="Preparando">Preparando</option>
-                    <option value="En camino">En camino</option>
-                    <option value="Entregado">Entregado</option>
-                    <option value="Cancelado">Cancelado</option>
-                  </select>
-                </td>
-                <td>
-                  <button className="btn-editar-envio" onClick={() => handleEditar(env)}>Editar</button>
-                  <button className="btn-eliminar-envio" onClick={() => handleEliminar(env.id)}>Eliminar</button>
-                </td>
+        {mensaje && <div className="mensaje-envios">{mensaje}</div>}
+
+        <div className="table-wrapper">
+          <table className="tabla-envios">
+            <thead>
+              <tr>
+                <th>N° Envio</th>
+                <th>Pedido</th>
+                <th>Cliente</th>
+                <th>Dirección</th>
+                <th>Fecha</th>
+                <th>Estado</th>
+                <th>Acciones</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {envios.map((env) => (
+                <tr key={env.id}>
+                  <td className="numero-envio">{env.numero}</td>
+                  <td>{env.pedido}</td>
+                  <td className="cliente-envio">{env.cliente}</td>
+                  <td>{env.direccion}</td>
+                  <td>{env.fecha}</td>
+                  <td>
+                    <select
+                      value={env.estado}
+                      onChange={(e) => cambiarEstado(env.id, e.target.value)}
+                      className="estado-select"
+                      style={{ backgroundColor: estadoColor[env.estado] || '#999' }}
+                    >
+                      <option value="Preparando">Preparando</option>
+                      <option value="En camino">En camino</option>
+                      <option value="Entregado">Entregado</option>
+                      <option value="Cancelado">Cancelado</option>
+                    </select>
+                  </td>
+                  <td>
+                    <button className="btn-editar-envio" onClick={() => handleEditar(env)}>Editar</button>
+                    <button className="btn-eliminar-envio" onClick={() => handleEliminar(env.id)}>Eliminar</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Modal */}
+        {modalAbierto && (
+          <div className="modal-overlay-envio" onClick={cerrarModal}>
+            <div className="modal-envios" onClick={(e) => e.stopPropagation()}>
+
+              <div className="modal-header-envio">
+                <h3 className="modal-titulo-envio">
+                  {editandoId !== null ? 'Editar envio' : 'Nuevo envio'}
+                </h3>
+                <button className="modal-cerrar-envio" onClick={cerrarModal}>✕</button>
+              </div>
+
+              <div className="modal-body-envio">
+                <p className="label-envio">N° Envio</p>
+                <input className="input-envio" name="numero" value={formulario.numero} onChange={handleCambio} placeholder="ENV-005" />
+
+                <p className="label-envio">N° Pedido</p>
+                <input className="input-envio" name="pedido" value={formulario.pedido} onChange={handleCambio} placeholder="PED-005" />
+
+                <p className="label-envio">Cliente</p>
+                <input className="input-envio" name="cliente" value={formulario.cliente} onChange={handleCambio} placeholder="Nombre del cliente" />
+
+                <p className="label-envio">Dirección</p>
+                <input className="input-envio" name="direccion" value={formulario.direccion} onChange={handleCambio} placeholder="Calle 10 # 5-20, Bogota" />
+
+                <p className="label-envio">Fecha</p>
+                <input className="input-envio" type="date" name="fecha" value={formulario.fecha} onChange={handleCambio} />
+
+                <p className="label-envio">Estado</p>
+                <select className="input-envio" name="estado" value={formulario.estado} onChange={handleCambio}>
+                  <option value="Preparando">Preparando</option>
+                  <option value="En camino">En camino</option>
+                  <option value="Entregado">Entregado</option>
+                  <option value="Cancelado">Cancelado</option>
+                </select>
+              </div>
+
+              <div className="modal-footer-envio">
+                <button className="btn-cancelar-envio" onClick={cerrarModal}>Cancelar</button>
+                <button className="btn-guardar-envio" onClick={handleGuardar}>
+                  {editandoId !== null ? 'Guardar cambios' : 'Agregar envio'}
+                </button>
+              </div>
+
+            </div>
+          </div>
+        )}
 
       </div>
-    </div>
     </>
   );
 }

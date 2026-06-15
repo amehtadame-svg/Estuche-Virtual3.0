@@ -10,6 +10,7 @@ import Contacto from './pages/Contacto/Contacto';
 import Nosotros from './pages/Nosotros/Nosotros';
 import Producto from './pages/Productos/Productos';
 import ProductosAD from './pages/Admin/Productos/ProductosAD';
+import DetalleFacturas from './pages/Admin/DetalleFactura/DetalleFacturas';
 import ClienteDashboard from './pages/Clientes/ClienteDashboard';
 import AdminDashboard from './pages/Admin/AdminDashboard';
 import Envios from './pages/Admin/Envios/Envios';
@@ -45,8 +46,9 @@ function App() {
               <Route path="/admin/envios" element={<Envios />} />
               <Route path="/admin/facturas" element={<Facturas />} />
               <Route path="/admin/pedidos" element={<Pedidos />} />
-              <Route path="/admin/productosAD" element={<ProductosAD />} />
+              <Route path="/admin/productos" element={<ProductosAD />} />
               <Route path="/admin/proveedores" element={<Proveedores />} />
+              <Route path="/admin/detallefacturas" element={<DetalleFacturas />} />
             </Route>
           </Routes>
         </BrowserRouter>

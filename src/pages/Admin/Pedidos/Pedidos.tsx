@@ -24,6 +24,7 @@ export default function Pedidos() {
   const [formulario, setFormulario] = useState(formularioVacio);
   const [editandoId, setEditandoId] = useState<number | null>(null);
   const [mensaje, setMensaje] = useState('');
+  const [modalAbierto, setModalAbierto] = useState(false);
 
   const mostrarMensaje = (texto: string) => {
     setMensaje(texto);
@@ -34,29 +35,39 @@ export default function Pedidos() {
     setFormulario({ ...formulario, [e.target.name]: e.target.value });
   };
 
+  const abrirModalNuevo = () => {
+    setFormulario(formularioVacio);
+    setEditandoId(null);
+    setModalAbierto(true);
+  };
+
+  const cerrarModal = () => {
+    setModalAbierto(false);
+    setEditandoId(null);
+    setFormulario(formularioVacio);
+  };
+
   const handleGuardar = () => {
     if (!formulario.numero || !formulario.cliente || !formulario.fecha || !formulario.total) {
       mostrarMensaje('Por favor completa todos los campos.');
       return;
     }
-
     if (editandoId !== null) {
       setPedidos(pedidos.map((p) =>
         p.id === editandoId ? { ...p, ...formulario, total: Number(formulario.total) } : p
       ));
       mostrarMensaje('Pedido actualizado.');
-      setEditandoId(null);
     } else {
       setPedidos([...pedidos, { id: Date.now(), ...formulario, total: Number(formulario.total) }]);
       mostrarMensaje('Pedido agregado.');
     }
-
-    setFormulario(formularioVacio);
+    cerrarModal();
   };
 
   const handleEditar = (p: typeof pedidosIniciales[0]) => {
     setFormulario({ numero: p.numero, cliente: p.cliente, fecha: p.fecha, total: String(p.total), estado: p.estado });
     setEditandoId(p.id);
+    setModalAbierto(true);
   };
 
   const handleEliminar = (id: number) => {
@@ -71,49 +82,17 @@ export default function Pedidos() {
 
   return (
     <>
-    <Header />
-    <div>
-      <h2 className="titulo-pedidos">Gestion de Pedidos</h2>
+      <Header />
+      <div className="pedidos-page">
 
-      {mensaje && <div className="mensaje-pedidos">{mensaje}</div>}
-
-      <div className="contenedor-pedidos">
-
-        <div className="formulario-pedidos">
-          <h2 className="subtitulo-pedidos">
-            {editandoId !== null ? 'Editar pedido' : 'Agregar pedido'}
-          </h2>
-
-          <p className="label-pedido">N° Pedido</p>
-          <input className="input-pedido" name="numero" value={formulario.numero} onChange={handleCambio} placeholder="PED-006" />
-
-          <p className="label-pedido">Cliente</p>
-          <input className="input-pedido" name="cliente" value={formulario.cliente} onChange={handleCambio} placeholder="Nombre del cliente" />
-
-          <p className="label-pedido">Fecha</p>
-          <input className="input-pedido" type="date" name="fecha" value={formulario.fecha} onChange={handleCambio} />
-
-          <p className="label-pedido">Total</p>
-          <input className="input-pedido" type="number" name="total" value={formulario.total} onChange={handleCambio} placeholder="85000" />
-
-          <p className="label-pedido">Estado</p>
-          <select className="input-pedido" name="estado" value={formulario.estado} onChange={handleCambio}>
-            <option value="Procesando">Procesando</option>
-            <option value="En camino">En camino</option>
-            <option value="Entregado">Entregado</option>
-            <option value="Cancelado">Cancelado</option>
-          </select>
-
-          <button className="btn-guardar-pedido" onClick={handleGuardar}>
-            {editandoId !== null ? 'Guardar cambios' : 'Agregar pedido'}
+        <div className="pedidos-topbar">
+          <h2 className="titulo-pedidos">Gestion de Pedidos</h2>
+          <button className="btn-nuevo-pedido" onClick={abrirModalNuevo}>
+            + Nuevo pedido
           </button>
-
-          {editandoId !== null && (
-            <button className="btn-cancelar-pedido" onClick={() => { setEditandoId(null); setFormulario(formularioVacio); }}>
-              Cancelar
-            </button>
-          )}
         </div>
+
+        {mensaje && <div className="mensaje-pedidos">{mensaje}</div>}
 
         <table className="tabla-pedidos">
           <thead>
@@ -154,9 +133,56 @@ export default function Pedidos() {
             ))}
           </tbody>
         </table>
-
       </div>
-    </div>
+
+      {modalAbierto && (
+        <div
+          className="modal-overlay-pedido"
+          onClick={(e) => { if (e.target === e.currentTarget) cerrarModal(); }}
+        >
+          <div className="modal-pedidos">
+
+            <div className="modal-header-pedido">
+              <h2 className="modal-titulo-pedido">
+                {editandoId !== null ? 'Editar pedido' : 'Nuevo pedido'}
+              </h2>
+              <button className="modal-cerrar-pedido" onClick={cerrarModal}>✕</button>
+            </div>
+
+            <div className="modal-body-pedido">
+              <label className="label-pedido">N° Pedido</label>
+              <input className="input-pedido" name="numero" value={formulario.numero} onChange={handleCambio} placeholder="PED-006" />
+
+              <label className="label-pedido">Cliente</label>
+              <input className="input-pedido" name="cliente" value={formulario.cliente} onChange={handleCambio} placeholder="Nombre del cliente" />
+
+              <label className="label-pedido">Fecha</label>
+              <input className="input-pedido" type="date" name="fecha" value={formulario.fecha} onChange={handleCambio} />
+
+              <label className="label-pedido">Total</label>
+              <input className="input-pedido" type="number" name="total" value={formulario.total} onChange={handleCambio} placeholder="85000" />
+
+              <label className="label-pedido">Estado</label>
+              <select className="input-pedido" name="estado" value={formulario.estado} onChange={handleCambio}>
+                <option value="Procesando">Procesando</option>
+                <option value="En camino">En camino</option>
+                <option value="Entregado">Entregado</option>
+                <option value="Cancelado">Cancelado</option>
+              </select>
+            </div>
+
+            <div className="modal-footer-pedido">
+              <button className="btn-guardar-pedido" onClick={handleGuardar}>
+                {editandoId !== null ? 'Guardar cambios' : 'Agregar pedido'}
+              </button>
+              <button className="btn-cancelar-pedido" onClick={cerrarModal}>
+                Cancelar
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
     </>
   );
 }

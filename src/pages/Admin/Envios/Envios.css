@@ -1,18 +1,59 @@
+/* ═══════════════════════════════════════════════════════
+   ENVIOS
+═══════════════════════════════════════════════════════ */
+
+/* ── Página ──────────────────────────────────────────── */
+.envios-page {
+  padding: 0 30px 50px;
+}
+
+.envios-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 32px;
+  padding-top: 10px;
+}
+
+/* ── Encabezado ──────────────────────────────────────── */
 .titulo-envios {
+  font-size: 28px;
+  font-weight: 700;
   color: var(--text-h);
-  margin-bottom: 24px;
+  margin: 0 0 4px;
 }
 
 .mensaje-envios {
-  background-color: var(--accent-bg);
+  background: var(--accent-bg);
   border: 1px solid var(--accent-border);
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   padding: 10px 16px;
   color: var(--accent);
   font-size: 14px;
   margin-bottom: 20px;
 }
 
+/* ── Botón nuevo ─────────────────────────────────────── */
+.btn-nuevo-envio {
+  flex-shrink: 0;
+  background: var(--gradient-accent);
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s;
+  box-shadow: var(--shadow-accent);
+}
+
+.btn-nuevo-envio:hover {
+  opacity: 0.88;
+}
+
+/* ── Tabla ───────────────────────────────────────────── */
 .tabla-envios {
   width: 100%;
   border-collapse: collapse;
@@ -25,12 +66,19 @@
 
 .tabla-envios tbody tr {
   border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+}
+
+.tabla-envios tbody tr:hover {
+  background: var(--bg-subtle);
 }
 
 .tabla-envios th {
   padding: 10px;
   text-align: left;
   color: var(--text);
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 .tabla-envios td {
@@ -39,106 +87,233 @@
 }
 
 .numero-envio {
-  color: var(--accent) !important;
-  font-weight: 500;
+  font-weight: 600;
+  color: var(--accent);
 }
 
 .cliente-envio {
-  color: var(--text-h) !important;
+  font-weight: 500;
+  color: var(--text-h);
 }
 
+/* ── Select estado ───────────────────────────────────── */
 .estado-select {
-  padding: 4px 10px;
-  border-radius: 99px;
+  color: #fff;
   border: none;
-  font-size: 12px;
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
   font-weight: 500;
-  color: white;
   cursor: pointer;
   outline: none;
 }
 
+/* ── Acciones tabla ──────────────────────────────────── */
+.btn-editar-envio,
 .btn-eliminar-envio {
-  background-color: #fff0f0;
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s;
+}
+
+.btn-editar-envio {
+  background: var(--accent-bg);
+  color: var(--accent);
+  border: 1px solid var(--accent-border);
+  margin-right: 8px;
+}
+
+.btn-eliminar-envio {
+  background: #fff0f0;
   color: #e74c3c;
   border: 1px solid #e74c3c;
-  padding: 6px 14px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 13px;
 }
 
+.btn-editar-envio:hover,
 .btn-eliminar-envio:hover {
-  opacity: 0.9;
-}
-.contenedor-envios {
-  display: grid;
-  grid-template-columns: 280px 1fr;
-  gap: 32px;
+  opacity: 0.8;
 }
 
-.formulario-envios {
-  background-color: var(--accent-bg);
-  border-radius: 12px;
-  padding: 20px;
-  border: 1px solid var(--accent-border);
-  height: fit-content;
-}
-
-.subtitulo-envios {
-  font-size: 15px;
-  margin-bottom: 16px;
-}
-
+/* ── Formulario (modal) ──────────────────────────────── */
 .label-envio {
-  margin: 0 0 4px;
+  display: block;
   font-size: 13px;
   color: var(--text);
+  margin: 0 0 4px;
 }
 
 .input-envio {
   width: 100%;
   padding: 8px 12px;
-  border-radius: 8px;
   border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
   font-size: 14px;
-  outline: none;
-  box-sizing: border-box;
-  margin-bottom: 12px;
   color: var(--text-h);
-  background-color: var(--bg);
+  background: var(--bg);
+  margin-bottom: 12px;
+  transition: border-color 0.2s;
+}
+
+.input-envio:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.btn-guardar-envio,
+.btn-cancelar-envio {
+  flex: 1;
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s;
 }
 
 .btn-guardar-envio {
-  background-color: var(--accent);
+  background: var(--gradient-accent);
   color: #fff;
   border: none;
-  padding: 10px;
-  border-radius: 8px;
-  font-size: 14px;
-  cursor: pointer;
-  width: 100%;
-  margin-bottom: 8px;
 }
 
 .btn-cancelar-envio {
-  background-color: var(--bg);
+  background: var(--bg);
   color: var(--accent);
   border: 1px solid var(--accent-border);
-  padding: 10px;
-  border-radius: 8px;
-  font-size: 14px;
-  cursor: pointer;
-  width: 100%;
 }
 
-.btn-editar-envio {
-  background-color: var(--accent-bg);
-  color: var(--accent);
-  border: 1px solid var(--accent-border);
-  padding: 6px 14px;
-  border-radius: 6px;
+.btn-guardar-envio:hover,
+.btn-cancelar-envio:hover {
+  opacity: 0.85;
+}
+
+/* ── Modal ───────────────────────────────────────────── */
+.modal-overlay-envio {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+  animation: fadeInEnvio 0.18s ease;
+}
+
+@keyframes fadeInEnvio {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.modal-envios {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 460px;
+  box-shadow: var(--shadow-lg);
+  animation: slideUpEnvio 0.2s ease;
+}
+
+@keyframes slideUpEnvio {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.modal-header-envio {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.modal-titulo-envio {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-h);
+  margin: 0;
+}
+
+.modal-cerrar-envio {
+  font-size: 16px;
+  color: var(--text);
   cursor: pointer;
-  font-size: 13px;
-  margin-right: 8px;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  transition: background 0.15s, color 0.15s;
+}
+
+.modal-cerrar-envio:hover {
+  background: var(--accent-bg);
+  color: var(--accent);
+  opacity: 1;
+}
+
+.modal-body-envio {
+  padding: 20px 24px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.modal-footer-envio {
+  display: flex;
+  gap: 10px;
+  padding: 16px 24px 20px;
+  border-top: 1px solid var(--border);
+}
+
+/* ═══════════════════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════════════════ */
+
+@media (max-width: 900px) {
+  .tabla-envios td:nth-child(4) {
+    max-width: 160px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+@media (max-width: 600px) {
+  .envios-page {
+    padding: 0 16px 40px;
+  }
+
+  .envios-topbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .btn-nuevo-envio {
+    width: 100%;
+    text-align: center;
+  }
+
+  .tabla-envios thead {
+    display: none;
+  }
+
+  .tabla-envios tbody tr {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tabla-envios td {
+    padding: 2px 0;
+  }
+
+  .tabla-envios td:last-child {
+    padding-top: 8px;
+  }
+
+  .btn-editar-envio {
+    margin-right: 6px;
+  }
 }

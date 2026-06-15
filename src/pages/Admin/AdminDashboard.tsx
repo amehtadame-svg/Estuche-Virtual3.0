@@ -50,6 +50,13 @@ const AdminDashboard = () => {
       route: '/admin/proveedores',
       accent: '#ec4899',
     },
+    {
+      title: 'DetalleFacturas',
+      description: 'Gestiona los detalles de las facturas.',
+      icon: '🧾',
+      route: '/admin/DetalleFacturas',
+      accent: '#10b981',
+    },
   ];
 
   const recentActivity = [

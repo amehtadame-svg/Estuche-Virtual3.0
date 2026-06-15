@@ -1,80 +1,111 @@
+/* ═══════════════════════════════════════════════════════
+   PROVEEDORES
+═══════════════════════════════════════════════════════ */
+.proveedores-page {
+  padding: 0 30px 50px;
+}
+
+.proveedores-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 32px;
+  padding-top: 10px;
+}
+/* ── Encabezado ──────────────────────────────────────── */
 .titulo-proveedores {
   color: var(--text-h);
   margin-bottom: 24px;
 }
 
 .mensaje-proveedores {
-  background-color: var(--accent-bg);
+  background: var(--accent-bg);
   border: 1px solid var(--accent-border);
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   padding: 10px 16px;
   color: var(--accent);
   font-size: 14px;
   margin-bottom: 20px;
 }
 
+/* ── Layout ──────────────────────────────────────────── */
 .contenedor-proveedores {
   display: grid;
   grid-template-columns: 280px 1fr;
   gap: 32px;
+  align-items: start;
 }
 
+/* ── Formulario ──────────────────────────────────────── */
 .formulario-proveedores {
-  background-color: var(--accent-bg);
-  border-radius: 12px;
-  padding: 20px;
+  background: var(--accent-bg);
   border: 1px solid var(--accent-border);
+  border-radius: var(--radius-md);
+  padding: 20px;
   height: fit-content;
 }
 
 .subtitulo-proveedores {
   font-size: 15px;
-  margin-bottom: 16px;
+  font-weight: 600;
+  color: var(--text-h);
+  margin: 0 0 16px;
 }
 
 .label-proveedor {
-  margin: 0 0 4px;
+  display: block;
   font-size: 13px;
   color: var(--text);
+  margin: 0 0 4px;
 }
 
 .input-proveedor {
   width: 100%;
   padding: 8px 12px;
-  border-radius: 8px;
   border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
   font-size: 14px;
-  outline: none;
-  box-sizing: border-box;
-  margin-bottom: 12px;
   color: var(--text-h);
-  background-color: var(--bg);
+  background: var(--bg);
+  margin-bottom: 12px;
+  transition: border-color 0.2s;
+}
+
+.input-proveedor:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.btn-guardar-proveedor,
+.btn-cancelar-proveedor {
+  width: 100%;
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s;
 }
 
 .btn-guardar-proveedor {
-  background-color: var(--accent);
+  background: var(--gradient-accent);
   color: #fff;
   border: none;
-  padding: 10px;
-  background: linear-gradient(135deg, #9333ea, #c084fc);
-  border-radius: 8px;
-  font-size: 14px;
-  cursor: pointer;
-  width: 100%;
   margin-bottom: 8px;
 }
 
 .btn-cancelar-proveedor {
-  background-color: var(--bg);
+  background: var(--bg);
   color: var(--accent);
   border: 1px solid var(--accent-border);
-  padding: 10px;
-  border-radius: 8px;
-  font-size: 14px;
-  cursor: pointer;
-  width: 100%;
 }
 
+.btn-guardar-proveedor:hover,
+.btn-cancelar-proveedor:hover {
+  opacity: 0.85;
+}
+
+/* ── Tabla ───────────────────────────────────────────── */
 .tabla-proveedores {
   width: 100%;
   border-collapse: collapse;
@@ -87,12 +118,19 @@
 
 .tabla-proveedores tbody tr {
   border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+}
+
+.tabla-proveedores tbody tr:hover {
+  background: var(--bg-subtle);
 }
 
 .tabla-proveedores th {
   padding: 10px;
   text-align: left;
   color: var(--text);
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 .tabla-proveedores td {
@@ -101,27 +139,178 @@
 }
 
 .empresa-proveedor {
-  color: var(--text-h);
   font-weight: 500;
+  color: var(--text-h);
+}
+
+/* ── Acciones tabla ──────────────────────────────────── */
+.btn-editar-proveedor,
+.btn-eliminar-proveedor {
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s;
 }
 
 .btn-editar-proveedor {
-  background-color: var(--accent-bg);
+  background: var(--accent-bg);
   color: var(--accent);
   border: 1px solid var(--accent-border);
-  padding: 6px 14px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 13px;
   margin-right: 8px;
 }
 
 .btn-eliminar-proveedor {
-  background-color: #fff0f0;
+  background: #fff0f0;
   color: #e74c3c;
   border: 1px solid #e74c3c;
-  padding: 6px 14px;
-  border-radius: 6px;
+}
+
+.btn-editar-proveedor:hover,
+.btn-eliminar-proveedor:hover {
+  opacity: 0.8;
+}
+
+/* ═══════════════════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════════════════ */
+
+/* ── Tablet ≤ 900px ──────────────────────────────────── */
+@media (max-width: 900px) {
+  .contenedor-proveedores {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .formulario-proveedores {
+    width: 100%;
+  }
+}
+
+/* ── Mobile ≤ 600px ──────────────────────────────────── */
+@media (max-width: 600px) {
+  .tabla-proveedores thead {
+    display: none;
+  }
+
+  .tabla-proveedores tbody tr {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tabla-proveedores td {
+    padding: 2px 0;
+  }
+
+  .tabla-proveedores td:last-child {
+    padding-top: 8px;
+  }
+
+  .btn-editar-proveedor {
+    margin-right: 6px;
+  }
+}
+
+/* ── Botón nuevo ─────────────────────────────────────── */
+.btn-nuevo-proveedor {
+  flex-shrink: 0;
+  background: var(--gradient-accent);
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
-  font-size: 13px;
+  transition: opacity 0.2s, transform 0.15s;
+  box-shadow: var(--shadow-accent);
+}
+
+.btn-nuevo-proveedor:hover {
+  opacity: 0.88;
+}
+
+/* ── Modal overlay ───────────────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+  animation: fadeIn 0.18s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Modal box ───────────────────────────────────────── */
+.modal-proveedores {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 460px;
+  box-shadow: var(--shadow-lg);
+  animation: slideUp 0.2s ease;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.modal-titulo {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-h);
+  margin: 0;
+}
+
+.modal-cerrar {
+  font-size: 16px;
+  color: var(--text);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  transition: background 0.15s, color 0.15s;
+}
+
+.modal-cerrar:hover {
+  background: var(--accent-bg);
+  color: var(--accent);
+  opacity: 1;
+}
+
+.modal-body {
+  padding: 20px 24px;
+}
+
+.modal-footer {
+  display: flex;
+  gap: 10px;
+  padding: 16px 24px 20px;
+  border-top: 1px solid var(--border);
+}
+
+.modal-footer .btn-cancelar-proveedor,
+.modal-footer .btn-guardar-proveedor {
+  flex: 1;
+  margin: 0;
 }
