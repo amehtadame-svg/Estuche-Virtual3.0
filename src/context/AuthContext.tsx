@@ -21,6 +21,7 @@ interface AuthContextType {
   user: Omit<User, 'password'> | null;
   login: (email: string, password: string) => boolean;
   logout: () => void;
+  register: (name: string, email: string, password: string) => { success: boolean; message: string };
   generateResetToken: (email: string) => string | null;
   validateResetToken: (token: string) => {
     valid: boolean;
@@ -79,6 +80,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = () => {
     setUser(null);
     localStorage.removeItem('user');
+  };
+
+  // Registro
+  const register = (name: string, email: string, password: string): { success: boolean; message: string } => {
+    const exists = users.find(u => u.email === email);
+    if (exists) return { success: false, message: 'Este correo ya está registrado.' };
+
+    const newUser: User = {
+      id: Date.now(),
+      email,
+      name,
+      role: 'cliente',
+      password,
+    };
+
+        setUsers(prev => [...prev, newUser]);
+
+    const { password: _, ...safeUser } = newUser;
+    setUser(safeUser);
+    localStorage.setItem('user', JSON.stringify(safeUser));
+
+    return { success: true, message: '¡Cuenta creada exitosamente!' };
   };
 
   // Generar token 
@@ -148,7 +171,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, login, logout, generateResetToken, validateResetToken, resetPassword }}
+      value={{ user, login, logout, register, generateResetToken, validateResetToken, resetPassword }}
     >
       {children}
     </AuthContext.Provider>
