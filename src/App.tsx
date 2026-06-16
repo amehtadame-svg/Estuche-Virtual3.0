@@ -3,6 +3,7 @@ import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login/Login';
+import Register from './pages/Register/Register';
 import Home from './pages/Home/Home';
 import Carrito from './pages/Carrito/Carrito';
 import Catalogo from './pages/Catalogo/Catalogo';
@@ -32,6 +33,7 @@ function App() {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password"  element={<ResetPassword />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
             <Route path="/" element={<Home />} />
             <Route path="/carrito" element={<Carrito />} />
             <Route path="/catalogo" element={<Catalogo />} />
