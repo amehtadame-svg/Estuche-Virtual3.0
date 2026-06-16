@@ -10,12 +10,12 @@ const Login = () => {
   const { login } = useAuth();  
   const navigate                = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
     //  ahora esta en AuthContext 
-    const success = login(email, password);
+    const success = await login(email, password);
 
     if (!success) {
       setError('Correo o contraseña incorrectos.');

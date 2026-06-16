@@ -1,4 +1,5 @@
-import { useParams, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useCart } from '../../context/CartContext';
 import './Productos.css';
 
@@ -25,6 +26,8 @@ export default function Producto() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { agregar, items } = useCart();
+  const [cantidad, setCantidad] = useState(1);
+  const [agregado, setAgregado] = useState(false);
 
   const producto = productos.find((p) => p.id === Number(id));
 
@@ -40,18 +43,19 @@ export default function Producto() {
   }
 
   const enCarrito = items.find((i) => i.id === producto.id)?.cantidad ?? 0;
+  const relacionados = productos.filter((p) => p.categoria === producto.categoria && p.id !== producto.id).slice(0, 4);
 
   const handleAgregar = () => {
-    agregar({ id: producto.id, nombre: producto.nombre, precio: producto.precio, categoria: producto.categoria, icono: producto.icono });
+    for (let i = 0; i < cantidad; i++) {
+      agregar({ id: producto.id, nombre: producto.nombre, precio: producto.precio, categoria: producto.categoria, icono: producto.icono });
+    }
+    setAgregado(true);
+    setTimeout(() => setAgregado(false), 2000);
   };
 
   return (
     <>
       <div className="prod-detalle-container">
-
-        <button className="prod-detalle-back" onClick={() => navigate(-1)}>
-          ← Volver
-        </button>
 
         <div className="prod-detalle-card">
 
@@ -79,9 +83,34 @@ export default function Producto() {
               <p className="prod-detalle-en-carrito">✓ {enCarrito} en tu carrito</p>
             )}
 
+            {/* Selector de cantidad */}
+            <div className="prod-cantidad-wrap">
+              <span className="prod-cantidad-label">Cantidad</span>
+              <div className="prod-cantidad-control">
+                <button
+                  className="prod-cantidad-btn"
+                  onClick={() => setCantidad((c) => Math.max(1, c - 1))}
+                  disabled={cantidad <= 1}
+                >−</button>
+                <span className="prod-cantidad-num">{cantidad}</span>
+                <button
+                  className="prod-cantidad-btn"
+                  onClick={() => setCantidad((c) => Math.min(producto.stock, c + 1))}
+                  disabled={cantidad >= producto.stock}
+                >+</button>
+              </div>
+              <span className="prod-cantidad-subtotal">
+                Subtotal: <strong>${(producto.precio * cantidad).toLocaleString()}</strong>
+              </span>
+            </div>
+
             <div className="prod-detalle-acciones">
-              <button className="prod-detalle-btn-agregar" onClick={handleAgregar}>
-                🛒 Agregar al carrito
+              <button
+                className={`prod-detalle-btn-agregar ${agregado ? 'agregado' : ''}`}
+                onClick={handleAgregar}
+                disabled={producto.stock === 0}
+              >
+                {agregado ? '✓ Agregado' : '🛒 Agregar al carrito'}
               </button>
               <button className="prod-detalle-btn-carrito" onClick={() => navigate('/carrito')}>
                 Ver carrito
@@ -90,6 +119,23 @@ export default function Producto() {
           </div>
 
         </div>
+
+        {/* Productos relacionados */}
+        {relacionados.length > 0 && (
+          <div className="prod-relacionados">
+            <h2 className="prod-relacionados-titulo">Productos relacionados</h2>
+            <div className="prod-relacionados-grid">
+              {relacionados.map((p) => (
+                <Link key={p.id} to={`/producto/${p.id}`} className="prod-rel-card">
+                  <span className="prod-rel-icono">{p.icono}</span>
+                  <p className="prod-rel-nombre">{p.nombre}</p>
+                  <p className="prod-rel-precio">${p.precio.toLocaleString()}</p>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
       </div>
     </>
   );
