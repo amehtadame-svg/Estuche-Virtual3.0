@@ -13,7 +13,7 @@ export default function ResetPassword() {
   const [error, setError]           = useState('');
   const [success, setSuccess]       = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit  = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -35,7 +35,7 @@ export default function ResetPassword() {
     }
 
     // Ejecutar el cambio de contraseña
-    const ok = resetPassword(token.toUpperCase(), password);
+    const ok  = await resetPassword(token.toUpperCase(), password);
     if (ok) {
       setSuccess(true);
       setTimeout(() => navigate('/login'), 3000);

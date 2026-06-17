@@ -21,10 +21,9 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<boolean>;
   register: (name: string, email: string, password: string) => Promise<boolean>;
   logout: () => void;
-  register: (name: string, email: string, password: string) => { success: boolean; message: string };
   generateResetToken: (email: string) => string | null;
   validateResetToken: (token: string) => { valid: boolean; email: string | null; reason?: string };
-  resetPassword: (token: string, newPassword: string) => boolean;
+  resetPassword: (token: string, newPassword: string) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -33,7 +32,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const stored = localStorage.getItem('user');
   const [user, setUser] = useState<User | null>(stored ? JSON.parse(stored) : null);
 
-  // Login real
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
       const res = await fetch(`${API}/login`, {
@@ -52,7 +50,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Register real
   const register = async (name: string, email: string, password: string): Promise<boolean> => {
     try {
       const res = await fetch(`${API}/register`, {
@@ -71,36 +68,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Logout
   const logout = () => {
     setUser(null);
     localStorage.removeItem('user');
     localStorage.removeItem('token');
   };
 
-  // Registro
-  const register = (name: string, email: string, password: string): { success: boolean; message: string } => {
-    const exists = users.find(u => u.email === email);
-    if (exists) return { success: false, message: 'Este correo ya está registrado.' };
-
-    const newUser: User = {
-      id: Date.now(),
-      email,
-      name,
-      role: 'cliente',
-      password,
-    };
-
-        setUsers(prev => [...prev, newUser]);
-
-    const { password: _, ...safeUser } = newUser;
-    setUser(safeUser);
-    localStorage.setItem('user', JSON.stringify(safeUser));
-
-    return { success: true, message: '¡Cuenta creada exitosamente!' };
-  };
-
-  // Reset password (se mantiene local por ahora)
   const generateResetToken = (email: string): string | null => {
     const token = Math.floor(100000 + Math.random() * 900000).toString();
     localStorage.setItem('reset_token', JSON.stringify({
@@ -114,14 +87,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!raw) return { valid: false, email: null, reason: 'No hay ningún token activo.' };
     const data: ResetToken = JSON.parse(raw);
     if (data.token !== token) return { valid: false, email: null, reason: 'Token incorrecto.' };
-    if (data.used)            return { valid: false, email: null, reason: 'Este token ya fue utilizado.' };
+    if (data.used) return { valid: false, email: null, reason: 'Este token ya fue utilizado.' };
     if (Date.now() - data.createdAt > 600000) return { valid: false, email: null, reason: 'El token expiró.' };
     return { valid: true, email: data.email };
   };
 
-  const resetPassword = (token: string, _newPassword: string): boolean => {
+  const resetPassword = async (token: string, newPassword: string): Promise<boolean> => {
     const { valid, email } = validateResetToken(token);
     if (!valid || !email) return false;
+
+    try {
+      const res = await fetch(`${API}/reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, newPassword }),
+      });
+      if (!res.ok) return false;
+    } catch {
+      return false;
+    }
+
     const raw = localStorage.getItem('reset_token');
     if (raw) {
       const data: ResetToken = JSON.parse(raw);
@@ -131,9 +116,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider
-      value={{ user, login, logout, generateResetToken, validateResetToken, resetPassword }}
-    >
+    <AuthContext.Provider value={{ user, login, register, logout, generateResetToken, validateResetToken, resetPassword }}>
       {children}
     </AuthContext.Provider>
   );

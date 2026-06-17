@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 const prisma = new PrismaClient();
 
@@ -11,8 +13,10 @@ export const login = async (req: Request, res: Response) => {
   const user = await prisma.usuarios.findUnique({ where: { email } });
   if (!user) return res.status(401).json({ message: 'Credenciales inválidas' });
 
-  // Las contraseñas actuales son texto plano (123456), comparamos directo
   const valid = password === user.password || await bcrypt.compare(password, user.password);
+  console.log('password ingresada:', password);
+  console.log('hash en BD:', user.password);
+  console.log('valid:', valid);
   if (!valid) return res.status(401).json({ message: 'Credenciales inválidas' });
 
   const token = jwt.sign(
@@ -49,4 +53,18 @@ export const register = async (req: Request, res: Response) => {
     token,
     user: { id: newUser.id_usuario, name: newUser.nombre, email: newUser.email, role: newUser.rol }
   });
+};
+
+export const resetPassword = async (req: Request, res: Response) => {
+  const { email, newPassword } = req.body;
+  console.log('email recibido:', email);
+  console.log('newPassword recibido:', newPassword);
+
+  const user = await prisma.usuarios.findUnique({ where: { email } });
+  if (!user) return res.status(404).json({ message: 'Usuario no encontrado' });
+
+  const hashed = await bcrypt.hash(newPassword, 10);
+  await prisma.usuarios.update({ where: { email }, data: { password: hashed } });
+
+  return res.json({ message: 'Contraseña actualizada correctamente' });
 };
