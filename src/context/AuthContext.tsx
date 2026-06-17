@@ -1,4 +1,5 @@
-import { createContext, useState, useContext, type ReactNode } from 'react';
+import { createContext, useState, useContext, useEffect, type ReactNode } from 'react';
+
 
 const API = 'https://curly-winner-4j4rwwgw4wxp37pqp-4000.app.github.dev/api/auth';
 
@@ -31,6 +32,26 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const stored = localStorage.getItem('user');
   const [user, setUser] = useState<User | null>(stored ? JSON.parse(stored) : null);
+  useEffect(() => {
+  const token = localStorage.getItem('token');
+  if (!token) return;
+
+  fetch(`${API}/me`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+    .then(res => {
+      if (!res.ok) {
+        setUser(null);
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+      }
+    })
+    .catch(() => {
+      setUser(null);
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+    });
+}, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {

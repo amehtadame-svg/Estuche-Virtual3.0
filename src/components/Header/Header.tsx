@@ -22,6 +22,7 @@ export default function Header() {
             <Link to="/admin/facturas">Facturas</Link>
             <Link to="/admin/envios">Envíos</Link>
             <Link to="/admin/proveedores">Proveedores</Link>
+            <Link to="/admin/usuarios">Usuarios</Link>
           </>
         ) : (
           <>

@@ -85,6 +85,7 @@ export default function Pedidos() {
 
         <div className="pedidos-topbar">
           <h2 className="titulo-pedidos">Gestion de Pedidos</h2>
+          <p className="subtitulo-usuarios">Administra los Pedidos registrados</p>
           <button className="btn-nuevo-pedido" onClick={abrirModalNuevo}>
             + Nuevo pedido
           </button>

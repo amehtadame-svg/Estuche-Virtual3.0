@@ -79,6 +79,7 @@ export default function Envios() {
         <div className="envios-topbar">
           <div>
             <h2 className="titulo-envios">Gestion de Envios</h2>
+            <p className="subtitulo-usuarios">Administra los Envios registrados</p>
           </div>
           <button className="btn-nuevo-envio" onClick={() => setModalAbierto(true)}>
             + Nuevo envio

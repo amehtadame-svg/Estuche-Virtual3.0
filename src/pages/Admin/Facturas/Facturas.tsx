@@ -84,6 +84,7 @@ export default function Facturas() {
 
         <div className="facturas-topbar">
           <h2 className="titulo-facturas">Gestion de Facturas</h2>
+          <p className="subtitulo-usuarios">Administra las Facturas registradas</p>
           <button className="btn-nuevo-factura" onClick={abrirModalNuevo}>
             + Nueva factura
           </button>

@@ -78,6 +78,7 @@ export default function Productos() {
 
         <div className="productos-topbar">
           <h2 className="titulo-productos">Gestion de Productos</h2>
+          <p className="subtitulo-usuarios">Administra los Productos registrados</p>
           <button className="btn-nuevo-producto" onClick={abrirModalNuevo}>
             + Nuevo producto
           </button>

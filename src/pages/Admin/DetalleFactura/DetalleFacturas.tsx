@@ -76,6 +76,7 @@ export default function DetalleFacturas() {
 
         <div className="detalle-topbar">
           <h2 className="titulo-detalle">Detalle de Facturas</h2>
+          <p className="subtitulo-usuarios">Administra los Detalles de las Facturas registradas</p>
           <button className="btn-nuevo-detalle" onClick={abrirModalNuevo}>
             + Nuevo detalle
           </button>

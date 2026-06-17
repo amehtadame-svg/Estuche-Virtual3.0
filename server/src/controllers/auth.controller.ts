@@ -68,3 +68,6 @@ export const resetPassword = async (req: Request, res: Response) => {
 
   return res.json({ message: 'Contraseña actualizada correctamente' });
 };
+export const getMe = (req: Request, res: Response) => {
+  return res.json((req as any).user);
+};

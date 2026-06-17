@@ -65,6 +65,7 @@ export default function Proveedores() {
         <div className="proveedores-topbar">
           <div>
             <h2 className="titulo-proveedores">Gestion de Proveedores</h2>
+            <p className="subtitulo-usuarios">Administra los Proveedores registrados</p>
           </div>
           <button className="btn-nuevo-proveedor" onClick={() => setModalAbierto(true)}>
             + Nuevo proveedor
@@ -94,7 +95,7 @@ export default function Proveedores() {
                   <td>{p.telefono}</td>
                   <td>{p.productos}</td>
                   <td>
-                    <button onClick={() => handleEditar(p)} className="btn-editar-proveedor">Editar</button>
+                    <button onClick={() => handleEditar(p)} className="btn-editar-proveedor">✏️ Editar</button>
                     <button onClick={() => handleEliminar(p.id)} className="btn-eliminar-proveedor">Eliminar</button>
                   </td>
                 </tr>

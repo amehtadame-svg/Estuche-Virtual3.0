@@ -54,6 +54,7 @@ const AdminDashboard = () => {
           <div>
             <h1 className="admin-title">Panel de administración</h1>
             <p className="admin-subtitle">Bienvenido de nuevo, <strong>{user?.name}</strong></p>
+            <p className="subtitulo-usuarios">Listo para administrar tu pagina?</p>
           </div>
         </div>
 
