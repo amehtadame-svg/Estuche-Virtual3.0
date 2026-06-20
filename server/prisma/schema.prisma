@@ -31,6 +31,7 @@ model pedidos {
   envios         envios[]
   clientes       usuarios?        @relation("PedidoCliente", fields: [id_cliente], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction)
   empleados      usuarios?        @relation("PedidoEmpleado", fields: [id_empleado], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction)
+  estado String? @default("Procesando") @db.VarChar(50)
 }
 
 model productos {
@@ -59,6 +60,8 @@ model proveedores {
   telefono     String?     @db.VarChar(20)
   email        String?     @db.VarChar(100)
   direccion    String?     @db.VarChar(150)
+  contacto          String? @db.VarChar(100)
+  productos_que_provee String? @db.VarChar(255)
   productos    productos[]
 }
 

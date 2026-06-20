@@ -1,14 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Modal from '../../../components/Modal/Modal';
 import './Pedidos.css';
 
-const pedidosIniciales = [
-  { id: 1, numero: 'PED-001', cliente: 'Valentina Lopez', fecha: '2025-01-10', total: 85000, estado: 'Entregado' },
-  { id: 2, numero: 'PED-002', cliente: 'Isabella Garcia', fecha: '2025-01-12', total: 47000, estado: 'En camino' },
-  { id: 3, numero: 'PED-003', cliente: 'Camila Rodriguez', fecha: '2025-01-14', total: 120000, estado: 'Entregado' },
-  { id: 4, numero: 'PED-004', cliente: 'Lucia Torres', fecha: '2025-01-16', total: 35000, estado: 'Procesando' },
-  { id: 5, numero: 'PED-005', cliente: 'Antonella Ramirez', fecha: '2025-01-18', total: 53000, estado: 'Cancelado' },
-];
+const API = '/api/pedidos';
 
 const estadoColor: Record<string, string> = {
   Entregado: '#27ae60',
@@ -17,14 +11,34 @@ const estadoColor: Record<string, string> = {
   Cancelado: '#e74c3c',
 };
 
-const formularioVacio = { numero: '', cliente: '', fecha: '', total: '', estado: 'Procesando' };
+const formularioVacio = { id_cliente: '', id_empleado: '', fecha: '', total: '', estado: 'Procesando' };
+
+interface Pedido {
+  id_pedido: number;
+  id_cliente: number | null;
+  id_empleado: number | null;
+  fecha: string | null;
+  total: number | null;
+  estado: string | null;
+  clientes?: { nombre: string } | null;
+}
 
 export default function Pedidos() {
-  const [pedidos, setPedidos] = useState(pedidosIniciales);
+  const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [formulario, setFormulario] = useState(formularioVacio);
   const [editandoId, setEditandoId] = useState<number | null>(null);
   const [mensaje, setMensaje] = useState('');
   const [modalAbierto, setModalAbierto] = useState(false);
+  const [cargando, setCargando] = useState(true);
+
+  const cargarPedidos = () => {
+    fetch(`${API}`)
+      .then(r => r.json())
+      .then(data => { setPedidos(data); setCargando(false); })
+      .catch(() => { mostrarMensaje('Error al cargar pedidos.'); setCargando(false); });
+  };
+
+  useEffect(() => { cargarPedidos(); }, []);
 
   const mostrarMensaje = (texto: string) => {
     setMensaje(texto);
@@ -47,36 +61,65 @@ export default function Pedidos() {
     setFormulario(formularioVacio);
   };
 
-  const handleGuardar = () => {
-    if (!formulario.numero || !formulario.cliente || !formulario.fecha || !formulario.total) {
+  const handleGuardar = async () => {
+    if (!formulario.id_cliente || !formulario.fecha || !formulario.total) {
       mostrarMensaje('Por favor completa todos los campos.');
       return;
     }
+
+    const body = {
+      id_cliente: Number(formulario.id_cliente),
+      id_empleado: formulario.id_empleado ? Number(formulario.id_empleado) : null,
+      fecha: formulario.fecha,
+      total: Number(formulario.total),
+      estado: formulario.estado,
+    };
+
     if (editandoId !== null) {
-      setPedidos(pedidos.map((p) =>
-        p.id === editandoId ? { ...p, ...formulario, total: Number(formulario.total) } : p
-      ));
+      await fetch(`${API}/pedidos/${editandoId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
       mostrarMensaje('Pedido actualizado.');
     } else {
-      setPedidos([...pedidos, { id: Date.now(), ...formulario, total: Number(formulario.total) }]);
+      await fetch(`${API}/pedidos`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
       mostrarMensaje('Pedido agregado.');
     }
+
+    cargarPedidos();
     cerrarModal();
   };
 
-  const handleEditar = (p: typeof pedidosIniciales[0]) => {
-    setFormulario({ numero: p.numero, cliente: p.cliente, fecha: p.fecha, total: String(p.total), estado: p.estado });
-    setEditandoId(p.id);
+  const handleEditar = (p: Pedido) => {
+    setFormulario({
+      id_cliente: String(p.id_cliente ?? ''),
+      id_empleado: String(p.id_empleado ?? ''),
+      fecha: p.fecha ? p.fecha.split('T')[0] : '',
+      total: String(p.total ?? ''),
+      estado: p.estado ?? 'Procesando',
+    });
+    setEditandoId(p.id_pedido);
     setModalAbierto(true);
   };
 
-  const handleEliminar = (id: number) => {
-    setPedidos(pedidos.filter((p) => p.id !== id));
+  const handleEliminar = async (id: number) => {
+    await fetch(`${API}/pedidos/${id}`, { method: 'DELETE' });
+    setPedidos(pedidos.filter(p => p.id_pedido !== id));
     mostrarMensaje('Pedido eliminado.');
   };
 
-  const cambiarEstado = (id: number, nuevoEstado: string) => {
-    setPedidos(pedidos.map((p) => p.id === id ? { ...p, estado: nuevoEstado } : p));
+  const cambiarEstado = async (id: number, nuevoEstado: string) => {
+    await fetch(`${API}/pedidos/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ estado: nuevoEstado }),
+    });
+    setPedidos(pedidos.map(p => p.id_pedido === id ? { ...p, estado: nuevoEstado } : p));
     mostrarMensaje('Estado actualizado.');
   };
 
@@ -94,45 +137,49 @@ export default function Pedidos() {
 
         {mensaje && <div className="mensaje-pedidos">{mensaje}</div>}
 
-        <table className="tabla-pedidos">
-          <thead>
-            <tr>
-              <th>N° Pedido</th>
-              <th>Cliente</th>
-              <th>Fecha</th>
-              <th>Total</th>
-              <th>Estado</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {pedidos.map((ped) => (
-              <tr key={ped.id}>
-                <td className="numero-pedido">{ped.numero}</td>
-                <td className="cliente-pedido">{ped.cliente}</td>
-                <td>{ped.fecha}</td>
-                <td className="total-pedido">${ped.total.toLocaleString()}</td>
-                <td>
-                  <select
-                    value={ped.estado}
-                    onChange={(e) => cambiarEstado(ped.id, e.target.value)}
-                    className="estado-select-pedido"
-                    style={{ backgroundColor: estadoColor[ped.estado] || '#999' }}
-                  >
-                    <option value="Procesando">Procesando</option>
-                    <option value="En camino">En camino</option>
-                    <option value="Entregado">Entregado</option>
-                    <option value="Cancelado">Cancelado</option>
-                  </select>
-                </td>
-                <td>
-                  <button className="btn-editar-pedido" onClick={() => handleEditar(ped)}>Editar</button>
-                  <button className="btn-eliminar-pedido" onClick={() => handleEliminar(ped.id)}>Eliminar</button>
-                </td>
+        {cargando ? (
+          <p style={{ color: 'var(--text)', padding: '20px 0' }}>Cargando pedidos...</p>
+        ) : (
+          <table className="tabla-pedidos">
+            <thead>
+              <tr>
+                <th>N° Pedido</th>
+                <th>Cliente</th>
+                <th>Fecha</th>
+                <th>Total</th>
+                <th>Estado</th>
+                <th>Acciones</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {pedidos.map((ped) => (
+                <tr key={ped.id_pedido}>
+                  <td className="numero-pedido">PED-{String(ped.id_pedido).padStart(3, '0')}</td>
+                  <td className="cliente-pedido">{ped.clientes?.nombre ?? `Cliente #${ped.id_cliente}`}</td>
+                  <td>{ped.fecha ? ped.fecha.split('T')[0] : '—'}</td>
+                  <td className="total-pedido">${Number(ped.total).toLocaleString()}</td>
+                  <td>
+                    <select
+                      value={ped.estado ?? 'Procesando'}
+                      onChange={(e) => cambiarEstado(ped.id_pedido, e.target.value)}
+                      className="estado-select-pedido"
+                      style={{ backgroundColor: estadoColor[ped.estado ?? ''] || '#999' }}
+                    >
+                      <option value="Procesando">Procesando</option>
+                      <option value="En camino">En camino</option>
+                      <option value="Entregado">Entregado</option>
+                      <option value="Cancelado">Cancelado</option>
+                    </select>
+                  </td>
+                  <td>
+                    <button className="btn-editar-pedido" onClick={() => handleEditar(ped)}>Editar</button>
+                    <button className="btn-eliminar-pedido" onClick={() => handleEliminar(ped.id_pedido)}>Eliminar</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
 
       {modalAbierto && (
@@ -148,11 +195,11 @@ export default function Pedidos() {
             </>
           }
         >
-          <label className="label-pedido">N° Pedido</label>
-          <input className="input-pedido" name="numero" value={formulario.numero} onChange={handleCambio} placeholder="PED-006" />
+          <label className="label-pedido">ID Cliente</label>
+          <input className="input-pedido" name="id_cliente" type="number" value={formulario.id_cliente} onChange={handleCambio} placeholder="ID del cliente" />
 
-          <label className="label-pedido">Cliente</label>
-          <input className="input-pedido" name="cliente" value={formulario.cliente} onChange={handleCambio} placeholder="Nombre del cliente" />
+          <label className="label-pedido">ID Empleado (opcional)</label>
+          <input className="input-pedido" name="id_empleado" type="number" value={formulario.id_empleado} onChange={handleCambio} placeholder="ID del empleado" />
 
           <label className="label-pedido">Fecha</label>
           <input className="input-pedido" type="date" name="fecha" value={formulario.fecha} onChange={handleCambio} />

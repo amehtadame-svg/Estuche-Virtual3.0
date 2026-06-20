@@ -15,8 +15,10 @@
 }
 /* ── Encabezado ──────────────────────────────────────── */
 .titulo-proveedores {
+  font-size: 28px;
+  font-weight: 700;
   color: var(--text-h);
-  margin-bottom: 24px;
+  margin: 0 0 4px;
 }
 
 .mensaje-proveedores {
