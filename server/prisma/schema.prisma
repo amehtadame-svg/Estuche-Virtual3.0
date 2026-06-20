@@ -1,5 +1,5 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
@@ -7,38 +7,30 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
-model usuarios {
-  id_usuario  Int       @id @default(autoincrement())
-  nombre      String    @db.VarChar(100)
-  email       String    @unique @db.VarChar(100)
-  password    String    @db.VarChar(255)
-  rol         String?   @default("cliente") @db.VarChar(20)
-  id_cliente  Int?
-  clientes    clientes? @relation(fields: [id_cliente], references: [id_cliente])
-}
 
-model clientes {
-  id_cliente  Int        @id @default(autoincrement())
-  nombre      String     @db.VarChar(100)
-  telefono    String?    @db.VarChar(20)
-  direccion   String?    @db.VarChar(150)
-  email       String?    @db.VarChar(100)
-  usuarios    usuarios[]
-  pedidos     pedidos[]
+model usuarios {
+  id_usuario        Int       @id @default(autoincrement())
+  nombre            String    @db.VarChar(100)
+  email             String    @unique @db.VarChar(100)
+  password          String    @db.VarChar(255)
+  telefono          String?   @db.VarChar(20)
+  direccion         String?   @db.VarChar(150)
+  rol               String?   @default("cliente") @db.VarChar(20)
+  envios            envios[]
+  pedidos_cliente   pedidos[] @relation("PedidoCliente")
+  pedidos_empleado  pedidos[] @relation("PedidoEmpleado")
 }
 
 model pedidos {
-  id_pedido      Int                  @id @default(autoincrement())
+  id_pedido      Int              @id @default(autoincrement())
   id_cliente     Int?
   id_empleado    Int?
-  id_caja        Int?
-  fecha          DateTime?            @db.Date
-  total          Decimal?             @db.Decimal(10, 2)
-  clientes       clientes?            @relation(fields: [id_cliente], references: [id_cliente])
-  empleados      empleados?           @relation(fields: [id_empleado], references: [id_empleado])
-  cajas          cajas_registradoras? @relation(fields: [id_caja], references: [id_caja])
+  fecha          DateTime?        @db.Date
+  total          Decimal?         @db.Decimal(10, 2)
   detalle_pedido detalle_pedido[]
   envios         envios[]
+  clientes       usuarios?        @relation("PedidoCliente", fields: [id_cliente], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction)
+  empleados      usuarios?        @relation("PedidoEmpleado", fields: [id_empleado], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model productos {
@@ -48,11 +40,11 @@ model productos {
   precio                 Decimal                  @db.Decimal(10, 2)
   id_categoria           Int?
   id_proveedor           Int?
-  categorias             categorias?              @relation(fields: [id_categoria], references: [id_categoria])
-  proveedores            proveedores?             @relation(fields: [id_proveedor], references: [id_proveedor])
-  inventario             inventario?
   detalle_pedido         detalle_pedido[]
+  inventario             inventario?
   movimientos_inventario movimientos_inventario[]
+  categorias             categorias?              @relation(fields: [id_categoria], references: [id_categoria], onDelete: NoAction, onUpdate: NoAction)
+  proveedores            proveedores?             @relation(fields: [id_proveedor], references: [id_proveedor], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model categorias {
@@ -74,7 +66,7 @@ model inventario {
   id_inventario   Int        @id @default(autoincrement())
   id_producto     Int?       @unique
   cantidad_actual Int
-  productos       productos? @relation(fields: [id_producto], references: [id_producto])
+  productos       productos? @relation(fields: [id_producto], references: [id_producto], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model detalle_pedido {
@@ -83,46 +75,18 @@ model detalle_pedido {
   id_producto     Int?
   cantidad        Int
   precio_unitario Decimal?   @db.Decimal(10, 2)
-  pedidos         pedidos?   @relation(fields: [id_pedido], references: [id_pedido])
-  productos       productos? @relation(fields: [id_producto], references: [id_producto])
+  pedidos         pedidos?   @relation(fields: [id_pedido], references: [id_pedido], onDelete: NoAction, onUpdate: NoAction)
+  productos       productos? @relation(fields: [id_producto], references: [id_producto], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model envios {
-  id_envio      Int        @id @default(autoincrement())
+  id_envio      Int       @id @default(autoincrement())
   id_pedido     Int?
   id_repartidor Int?
-  direccion     String?    @db.VarChar(150)
-  estado        String?    @db.VarChar(50)
-  pedidos       pedidos?   @relation(fields: [id_pedido], references: [id_pedido])
-  empleados     empleados? @relation(fields: [id_repartidor], references: [id_empleado])
-}
-
-model empleados {
-  id_empleado Int                  @id @default(autoincrement())
-  nombre      String               @db.VarChar(100)
-  telefono    String?              @db.VarChar(20)
-  email       String?              @db.VarChar(100)
-  id_cargo    Int?
-  id_caja     Int?
-  cargos      cargos?              @relation(fields: [id_cargo], references: [id_cargo])
-  cajas       cajas_registradoras? @relation(fields: [id_caja], references: [id_caja])
-  pedidos     pedidos[]
-  envios      envios[]
-}
-
-model cargos {
-  id_cargo  Int         @id @default(autoincrement())
-  nombre    String      @db.VarChar(50)
-  empleados empleados[]
-}
-
-model cajas_registradoras {
-  id_caja     Int         @id @default(autoincrement())
-  numero_caja Int
-  ubicacion   String?     @db.VarChar(100)
-  estado      String?     @db.VarChar(20)
-  empleados   empleados[]
-  pedidos     pedidos[]
+  direccion     String?   @db.VarChar(150)
+  estado        String?   @db.VarChar(50)
+  pedidos       pedidos?  @relation(fields: [id_pedido], references: [id_pedido], onDelete: NoAction, onUpdate: NoAction)
+  empleados     usuarios? @relation(fields: [id_repartidor], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model movimientos_inventario {
@@ -130,6 +94,6 @@ model movimientos_inventario {
   id_producto     Int?
   tipo_movimiento String?    @db.VarChar(20)
   cantidad        Int
-  fecha           DateTime?  @default(now())
-  productos       productos? @relation(fields: [id_producto], references: [id_producto])
+  fecha           DateTime?  @default(now()) @db.Timestamp(6)
+  productos       productos? @relation(fields: [id_producto], references: [id_producto], onDelete: NoAction, onUpdate: NoAction)
 }

@@ -1,7 +1,7 @@
 import { createContext, useState, useContext, useEffect, type ReactNode } from 'react';
 
 
-const API = 'https://curly-winner-4j4rwwgw4wxp37pqp-4000.app.github.dev/api/auth';
+const API = '/api/auth';
 
 interface User {
   id: number;
