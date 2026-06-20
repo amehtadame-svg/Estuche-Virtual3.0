@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import Modal from '../../../components/Modal/Modal';
 import './Envios.css';
 
 const enviosIniciales = [
@@ -31,6 +32,12 @@ export default function Envios() {
 
   const handleCambio = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormulario({ ...formulario, [e.target.name]: e.target.value });
+  };
+
+  const abrirModalNuevo = () => {
+    setFormulario(formularioVacio);
+    setEditandoId(null);
+    setModalAbierto(true);
   };
 
   const cerrarModal = () => {
@@ -132,52 +139,42 @@ export default function Envios() {
           </table>
         </div>
 
-        {/* Modal */}
         {modalAbierto && (
-          <div className="modal-overlay-envio" onClick={cerrarModal}>
-            <div className="modal-envios" onClick={(e) => e.stopPropagation()}>
-
-              <div className="modal-header-envio">
-                <h3 className="modal-titulo-envio">
-                  {editandoId !== null ? 'Editar envio' : 'Nuevo envio'}
-                </h3>
-                <button className="modal-cerrar-envio" onClick={cerrarModal}>✕</button>
-              </div>
-
-              <div className="modal-body-envio">
-                <p className="label-envio">N° Envio</p>
-                <input className="input-envio" name="numero" value={formulario.numero} onChange={handleCambio} placeholder="ENV-005" />
-
-                <p className="label-envio">N° Pedido</p>
-                <input className="input-envio" name="pedido" value={formulario.pedido} onChange={handleCambio} placeholder="PED-005" />
-
-                <p className="label-envio">Cliente</p>
-                <input className="input-envio" name="cliente" value={formulario.cliente} onChange={handleCambio} placeholder="Nombre del cliente" />
-
-                <p className="label-envio">Dirección</p>
-                <input className="input-envio" name="direccion" value={formulario.direccion} onChange={handleCambio} placeholder="Calle 10 # 5-20, Bogota" />
-
-                <p className="label-envio">Fecha</p>
-                <input className="input-envio" type="date" name="fecha" value={formulario.fecha} onChange={handleCambio} />
-
-                <p className="label-envio">Estado</p>
-                <select className="input-envio" name="estado" value={formulario.estado} onChange={handleCambio}>
-                  <option value="Preparando">Preparando</option>
-                  <option value="En camino">En camino</option>
-                  <option value="Entregado">Entregado</option>
-                  <option value="Cancelado">Cancelado</option>
-                </select>
-              </div>
-
-              <div className="modal-footer-envio">
+          <Modal
+            titulo={editandoId !== null ? 'Editar envio' : 'Nuevo envio'}
+            onClose={cerrarModal}
+            footer={
+              <>
                 <button className="btn-cancelar-envio" onClick={cerrarModal}>Cancelar</button>
                 <button className="btn-guardar-envio" onClick={handleGuardar}>
                   {editandoId !== null ? 'Guardar cambios' : 'Agregar envio'}
                 </button>
-              </div>
+              </>
+            }
+          >
+            <p className="label-envio">N° Envio</p>
+            <input className="input-envio" name="numero" value={formulario.numero} onChange={handleCambio} placeholder="ENV-005" />
 
-            </div>
-          </div>
+            <p className="label-envio">N° Pedido</p>
+            <input className="input-envio" name="pedido" value={formulario.pedido} onChange={handleCambio} placeholder="PED-005" />
+
+            <p className="label-envio">Cliente</p>
+            <input className="input-envio" name="cliente" value={formulario.cliente} onChange={handleCambio} placeholder="Nombre del cliente" />
+
+            <p className="label-envio">Dirección</p>
+            <input className="input-envio" name="direccion" value={formulario.direccion} onChange={handleCambio} placeholder="Calle 10 # 5-20, Bogota" />
+
+            <p className="label-envio">Fecha</p>
+            <input className="input-envio" type="date" name="fecha" value={formulario.fecha} onChange={handleCambio} />
+
+            <p className="label-envio">Estado</p>
+            <select className="input-envio" name="estado" value={formulario.estado} onChange={handleCambio}>
+              <option value="Preparando">Preparando</option>
+              <option value="En camino">En camino</option>
+              <option value="Entregado">Entregado</option>
+              <option value="Cancelado">Cancelado</option>
+            </select>
+          </Modal>
         )}
 
       </div>

@@ -1,0 +1,118 @@
+/* ── Modal overlay ───────────────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+  animation: fadeInModal 0.18s ease;
+}
+
+@keyframes fadeInModal {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Modal box ───────────────────────────────────────── */
+.modal-box {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 460px;
+  box-shadow: var(--shadow-lg);
+  animation: slideUpModal 0.2s ease;
+}
+
+@keyframes slideUpModal {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.modal-titulo {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-h);
+  margin: 0;
+}
+
+.modal-cerrar {
+  font-size: 16px;
+  color: var(--text);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  background: none;
+  border: none;
+  transition: background 0.15s, color 0.15s;
+}
+
+.modal-cerrar:hover {
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+.modal-body {
+  padding: 20px 24px;
+  max-height: 60vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.modal-body label,
+.modal-body p.campo-label {
+  display: block;
+  font-size: 13px;
+  color: var(--text);
+  margin: 0 0 4px;
+}
+
+.modal-body input,
+.modal-body select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  color: var(--text-h);
+  background: var(--bg);
+  margin-bottom: 12px;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.modal-body input:focus,
+.modal-body select:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.modal-footer {
+  display: flex;
+  gap: 10px;
+  padding: 16px 24px 20px;
+  border-top: 1px solid var(--border);
+}
+
+.modal-footer button {
+  flex: 1;
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}

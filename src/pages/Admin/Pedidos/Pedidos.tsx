@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import Modal from '../../../components/Modal/Modal';
 import './Pedidos.css';
 
 const pedidosIniciales = [
@@ -135,54 +136,39 @@ export default function Pedidos() {
       </div>
 
       {modalAbierto && (
-        <div
-          className="modal-overlay-pedido"
-          onClick={(e) => { if (e.target === e.currentTarget) cerrarModal(); }}
-        >
-          <div className="modal-pedidos">
-
-            <div className="modal-header-pedido">
-              <h2 className="modal-titulo-pedido">
-                {editandoId !== null ? 'Editar pedido' : 'Nuevo pedido'}
-              </h2>
-              <button className="modal-cerrar-pedido" onClick={cerrarModal}>✕</button>
-            </div>
-
-            <div className="modal-body-pedido">
-              <label className="label-pedido">N° Pedido</label>
-              <input className="input-pedido" name="numero" value={formulario.numero} onChange={handleCambio} placeholder="PED-006" />
-
-              <label className="label-pedido">Cliente</label>
-              <input className="input-pedido" name="cliente" value={formulario.cliente} onChange={handleCambio} placeholder="Nombre del cliente" />
-
-              <label className="label-pedido">Fecha</label>
-              <input className="input-pedido" type="date" name="fecha" value={formulario.fecha} onChange={handleCambio} />
-
-              <label className="label-pedido">Total</label>
-              <input className="input-pedido" type="number" name="total" value={formulario.total} onChange={handleCambio} placeholder="85000" />
-
-              <label className="label-pedido">Estado</label>
-              <select className="input-pedido" name="estado" value={formulario.estado} onChange={handleCambio}>
-                <option value="Procesando">Procesando</option>
-                <option value="En camino">En camino</option>
-                <option value="Entregado">Entregado</option>
-                <option value="Cancelado">Cancelado</option>
-              </select>
-            </div>
-
-            <div className="modal-footer-pedido">
+        <Modal
+          titulo={editandoId !== null ? 'Editar pedido' : 'Nuevo pedido'}
+          onClose={cerrarModal}
+          footer={
+            <>
+              <button className="btn-cancelar-pedido" onClick={cerrarModal}>Cancelar</button>
               <button className="btn-guardar-pedido" onClick={handleGuardar}>
                 {editandoId !== null ? 'Guardar cambios' : 'Agregar pedido'}
               </button>
-              <button className="btn-cancelar-pedido" onClick={cerrarModal}>
-                Cancelar
-              </button>
-            </div>
+            </>
+          }
+        >
+          <label className="label-pedido">N° Pedido</label>
+          <input className="input-pedido" name="numero" value={formulario.numero} onChange={handleCambio} placeholder="PED-006" />
 
-          </div>
-        </div>
+          <label className="label-pedido">Cliente</label>
+          <input className="input-pedido" name="cliente" value={formulario.cliente} onChange={handleCambio} placeholder="Nombre del cliente" />
+
+          <label className="label-pedido">Fecha</label>
+          <input className="input-pedido" type="date" name="fecha" value={formulario.fecha} onChange={handleCambio} />
+
+          <label className="label-pedido">Total</label>
+          <input className="input-pedido" type="number" name="total" value={formulario.total} onChange={handleCambio} placeholder="85000" />
+
+          <label className="label-pedido">Estado</label>
+          <select className="input-pedido" name="estado" value={formulario.estado} onChange={handleCambio}>
+            <option value="Procesando">Procesando</option>
+            <option value="En camino">En camino</option>
+            <option value="Entregado">Entregado</option>
+            <option value="Cancelado">Cancelado</option>
+          </select>
+        </Modal>
       )}
     </>
   );
 }
-      

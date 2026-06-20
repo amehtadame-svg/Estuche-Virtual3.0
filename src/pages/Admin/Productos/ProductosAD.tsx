@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import Modal from '../../../components/Modal/Modal';
 import './Productos.css';
 
 const productosIniciales = [
@@ -114,49 +115,35 @@ export default function Productos() {
       </div>
 
       {modalAbierto && (
-        <div
-          className="modal-overlay-producto"
-          onClick={(e) => { if (e.target === e.currentTarget) cerrarModal(); }}
-        >
-          <div className="modal-productos">
-
-            <div className="modal-header-producto">
-              <h2 className="modal-titulo-producto">
-                {editandoId !== null ? 'Editar producto' : 'Nuevo producto'}
-              </h2>
-              <button className="modal-cerrar-producto" onClick={cerrarModal}>✕</button>
-            </div>
-
-            <div className="modal-body-producto">
-              <label className="label-producto">Nombre</label>
-              <input className="input-producto" name="nombre" value={formulario.nombre} onChange={handleCambio} placeholder="Nombre del producto" />
-
-              <label className="label-producto">Precio</label>
-              <input className="input-producto" type="number" name="precio" value={formulario.precio} onChange={handleCambio} placeholder="Precio en pesos" />
-
-              <label className="label-producto">Stock</label>
-              <input className="input-producto" type="number" name="stock" value={formulario.stock} onChange={handleCambio} placeholder="Cantidad disponible" />
-
-              <label className="label-producto">Categoria</label>
-              <select className="input-producto" name="categoria" value={formulario.categoria} onChange={handleCambio}>
-                <option value="">Selecciona una categoria</option>
-                {categorias.map((cat) => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="modal-footer-producto">
+        <Modal
+          titulo={editandoId !== null ? 'Editar producto' : 'Nuevo producto'}
+          onClose={cerrarModal}
+          footer={
+            <>
+              <button className="btn-cancelar-producto" onClick={cerrarModal}>Cancelar</button>
               <button className="btn-guardar-producto" onClick={handleGuardar}>
                 {editandoId !== null ? 'Guardar cambios' : 'Agregar producto'}
               </button>
-              <button className="btn-cancelar-producto" onClick={cerrarModal}>
-                Cancelar
-              </button>
-            </div>
+            </>
+          }
+        >
+          <label className="label-producto">Nombre</label>
+          <input className="input-producto" name="nombre" value={formulario.nombre} onChange={handleCambio} placeholder="Nombre del producto" />
 
-          </div>
-        </div>
+          <label className="label-producto">Precio</label>
+          <input className="input-producto" type="number" name="precio" value={formulario.precio} onChange={handleCambio} placeholder="Precio en pesos" />
+
+          <label className="label-producto">Stock</label>
+          <input className="input-producto" type="number" name="stock" value={formulario.stock} onChange={handleCambio} placeholder="Cantidad disponible" />
+
+          <label className="label-producto">Categoria</label>
+          <select className="input-producto" name="categoria" value={formulario.categoria} onChange={handleCambio}>
+            <option value="">Selecciona una categoria</option>
+            {categorias.map((cat) => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
+          </select>
+        </Modal>
       )}
     </>
   );

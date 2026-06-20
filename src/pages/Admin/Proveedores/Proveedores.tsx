@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import Modal from '../../../components/Modal/Modal';
 import './Proveedores.css';
 
 const proveedoresIniciales = [
@@ -104,44 +105,34 @@ export default function Proveedores() {
           </table>
         </div>
 
-        {/* Modal */}
         {modalAbierto && (
-          <div className="modal-overlay" onClick={cerrarModal}>
-            <div className="modal-proveedores" onClick={(e) => e.stopPropagation()}>
-
-              <div className="modal-header">
-                <h3 className="modal-titulo">
-                  {editandoId !== null ? 'Editar proveedor' : 'Nuevo proveedor'}
-                </h3>
-                <button className="modal-cerrar" onClick={cerrarModal}>✕</button>
-              </div>
-
-              <div className="modal-body">
-                <p className="label-proveedor">Empresa</p>
-                <input name="nombre" value={formulario.nombre} onChange={handleCambio} placeholder="Nombre de la empresa" className="input-proveedor" />
-
-                <p className="label-proveedor">Contacto</p>
-                <input name="contacto" value={formulario.contacto} onChange={handleCambio} placeholder="Nombre del contacto" className="input-proveedor" />
-
-                <p className="label-proveedor">Correo</p>
-                <input name="correo" value={formulario.correo} onChange={handleCambio} placeholder="correo@empresa.com" className="input-proveedor" />
-
-                <p className="label-proveedor">Telefono</p>
-                <input name="telefono" value={formulario.telefono} onChange={handleCambio} placeholder="Numero de telefono" className="input-proveedor" />
-
-                <p className="label-proveedor">Productos que provee</p>
-                <input name="productos" value={formulario.productos} onChange={handleCambio} placeholder="Ej: Cuadernos, Carpetas" className="input-proveedor" />
-              </div>
-
-              <div className="modal-footer">
+          <Modal
+            titulo={editandoId !== null ? 'Editar proveedor' : 'Nuevo proveedor'}
+            onClose={cerrarModal}
+            footer={
+              <>
                 <button onClick={cerrarModal} className="btn-cancelar-proveedor">Cancelar</button>
                 <button onClick={handleGuardar} className="btn-guardar-proveedor">
                   {editandoId !== null ? 'Guardar cambios' : 'Agregar proveedor'}
                 </button>
-              </div>
+              </>
+            }
+          >
+            <p className="label-proveedor">Empresa</p>
+            <input name="nombre" value={formulario.nombre} onChange={handleCambio} placeholder="Nombre de la empresa" className="input-proveedor" />
 
-            </div>
-          </div>
+            <p className="label-proveedor">Contacto</p>
+            <input name="contacto" value={formulario.contacto} onChange={handleCambio} placeholder="Nombre del contacto" className="input-proveedor" />
+
+            <p className="label-proveedor">Correo</p>
+            <input name="correo" value={formulario.correo} onChange={handleCambio} placeholder="correo@empresa.com" className="input-proveedor" />
+
+            <p className="label-proveedor">Telefono</p>
+            <input name="telefono" value={formulario.telefono} onChange={handleCambio} placeholder="Numero de telefono" className="input-proveedor" />
+
+            <p className="label-proveedor">Productos que provee</p>
+            <input name="productos" value={formulario.productos} onChange={handleCambio} placeholder="Ej: Cuadernos, Carpetas" className="input-proveedor" />
+          </Modal>
         )}
 
       </div>
