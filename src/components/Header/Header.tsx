@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
@@ -7,6 +8,23 @@ export default function Header() {
   const { user, logout } = useAuth();
   const { totalItems } = useCart();
   const navigate = useNavigate();
+  
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  useEffect(() => {
+    if (localStorage.getItem('theme') === 'dark') {
+      document.body.classList.add('dark-mode');
+      setIsDarkMode(true);
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    const nextMode = !isDarkMode;
+    document.body.classList.toggle('dark-mode');
+    localStorage.setItem('theme', nextMode ? 'dark' : 'light');
+    setIsDarkMode(nextMode);
+  };
+
   return (
     <header className="header">
       <Link to="/" className="header-logo">
@@ -34,6 +52,10 @@ export default function Header() {
       </nav>
 
       <div className="header-user">
+        <button className="theme-toggle-btn" onClick={toggleTheme}>
+          {isDarkMode ? '☀️' : '🌙'}
+        </button>
+
         {user?.role !== 'administrador' && (
           <Link to="/carrito" className="carrito-link">
             🛒
@@ -46,9 +68,9 @@ export default function Header() {
         {user ? (
           <>
             <span>Hola, {user.name}</span>
-          <button className="logout-btn" onClick={() => { logout(); navigate('/'); }}>
-            Salir
-          </button>
+            <button className="logout-btn" onClick={() => { logout(); navigate('/'); }}>
+              Salir
+            </button>
           </>
         ) : (
           <Link className="login-btn" to="/login">
