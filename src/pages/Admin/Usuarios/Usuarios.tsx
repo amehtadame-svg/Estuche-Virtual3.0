@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import './Usuarios.css';
 
-const API = 'https://curly-winner-4j4rwwgw4wxp37pqp-4000.app.github.dev/api/usuarios';
+const API = '/api/usuarios';
 
 interface Usuario {
   id_usuario: number;
@@ -21,6 +21,7 @@ export default function Usuarios() {
   const [form, setForm]             = useState({ ...EMPTY });
   const [editId, setEditId]         = useState<number | null>(null);
   const [confirmDel, setConfirmDel] = useState<number | null>(null);
+  const [previewDel, setPreviewDel] = useState<any | null>(null);
   const [error, setError]           = useState('');
 
   const cargar = () => {
@@ -75,9 +76,22 @@ export default function Usuarios() {
     cargar();
   };
 
+  const pedirConfirmacionEliminar = async (id: number) => {
+    setConfirmDel(id);
+    setPreviewDel(null);
+    try {
+      const res = await fetch(`${API}/${id}/preview-delete`);
+      const data = await res.json();
+      setPreviewDel(data);
+    } catch {
+      setPreviewDel(null);
+    }
+  };
+
   const handleEliminar = async (id: number) => {
     await fetch(`${API}/${id}`, { method: 'DELETE' });
     setConfirmDel(null);
+    setPreviewDel(null);
     cargar();
   };
 
@@ -117,7 +131,7 @@ export default function Usuarios() {
                     <td>
                       <div className="usr-acciones">
                         <button className="usr-btn-editar" onClick={() => abrirEditar(u)}>Editar</button>
-                        <button className="usr-btn-eliminar" onClick={() => setConfirmDel(u.id_usuario)}>Eliminar</button>
+                        <button className="usr-btn-eliminar" onClick={() => pedirConfirmacionEliminar(u.id_usuario)}>Eliminar</button>
                       </div>
                     </td>
                   </tr>
@@ -174,20 +188,45 @@ export default function Usuarios() {
 
       {/* Confirmar eliminar */}
       {confirmDel && (
-        <div className="usr-overlay" onClick={() => setConfirmDel(null)}>
+        <div className="usr-overlay" onClick={() => { setConfirmDel(null); setPreviewDel(null); }}>
           <div className="usr-modal usr-confirm" onClick={e => e.stopPropagation()}>
 
             <div className="usr-modal-header">
               <h2 className="usr-modal-titulo">¿Eliminar usuario?</h2>
-              <button className="usr-modal-cerrar" onClick={() => setConfirmDel(null)}>✕</button>
+              <button className="usr-modal-cerrar" onClick={() => { setConfirmDel(null); setPreviewDel(null); }}>✕</button>
             </div>
 
             <div className="usr-modal-body">
               <p className="usr-confirm">Esta acción no se puede deshacer.</p>
+              {previewDel ? (
+                (previewDel.pedidos_como_cliente > 0 || previewDel.pedidos_como_empleado > 0 || previewDel.envios_como_repartidor > 0) ? (
+                  <ul style={{ fontSize: 13, color: 'var(--text)', marginTop: 8, paddingLeft: 18 }}>
+                    {previewDel.pedidos_como_cliente > 0 && (
+                      <li>{previewDel.pedidos_como_cliente} pedido(s) como cliente — se eliminarán</li>
+                    )}
+                    {previewDel.detalle_pedido > 0 && (
+                      <li>{previewDel.detalle_pedido} detalle(s) de esos pedidos — se eliminarán</li>
+                    )}
+                    {previewDel.envios_de_esos_pedidos > 0 && (
+                      <li>{previewDel.envios_de_esos_pedidos} envío(s) de esos pedidos — se eliminarán</li>
+                    )}
+                    {previewDel.pedidos_como_empleado > 0 && (
+                      <li>{previewDel.pedidos_como_empleado} pedido(s) donde figura como empleado — quedarán sin empleado asignado</li>
+                    )}
+                    {previewDel.envios_como_repartidor > 0 && (
+                      <li>{previewDel.envios_como_repartidor} envío(s) donde figura como repartidor — quedarán sin repartidor asignado</li>
+                    )}
+                  </ul>
+                ) : (
+                  <p style={{ fontSize: 13, color: 'var(--text)', marginTop: 8 }}>Este usuario no tiene datos relacionados.</p>
+                )
+              ) : (
+                <p style={{ fontSize: 13, color: 'var(--text)', marginTop: 8 }}>Revisando datos relacionados...</p>
+              )}
             </div>
 
             <div className="usr-modal-footer">
-              <button className="usr-btn-cancelar" onClick={() => setConfirmDel(null)}>Cancelar</button>
+              <button className="usr-btn-cancelar" onClick={() => { setConfirmDel(null); setPreviewDel(null); }}>Cancelar</button>
               <button className="usr-btn-eliminar-confirm" onClick={() => handleEliminar(confirmDel)}>Eliminar</button>
             </div>
 

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import Modal from '../../../components/Modal/Modal';
 import './DetalleFacturas.css';
 
 const detallesIniciales = [
@@ -114,44 +115,30 @@ export default function DetalleFacturas() {
       </div>
 
       {modalAbierto && (
-        <div
-          className="modal-overlay-detalle"
-          onClick={(e) => { if (e.target === e.currentTarget) cerrarModal(); }}
-        >
-          <div className="modal-detalle">
-
-            <div className="modal-header-detalle">
-              <h2 className="modal-titulo-detalle">
-                {editandoId !== null ? 'Editar detalle' : 'Nuevo detalle'}
-              </h2>
-              <button className="modal-cerrar-detalle" onClick={cerrarModal}>✕</button>
-            </div>
-
-            <div className="modal-body-detalle">
-              <label className="label-detalle">N° Factura</label>
-              <input className="input-detalle" name="factura" value={formulario.factura} onChange={handleCambio} placeholder="Ej: FAC-001" />
-
-              <label className="label-detalle">Producto</label>
-              <input className="input-detalle" name="producto" value={formulario.producto} onChange={handleCambio} placeholder="Nombre del producto" />
-
-              <label className="label-detalle">Cantidad</label>
-              <input className="input-detalle" type="number" name="cantidad" value={formulario.cantidad} onChange={handleCambio} placeholder="Cantidad" />
-
-              <label className="label-detalle">Precio unitario</label>
-              <input className="input-detalle" type="number" name="precioUnitario" value={formulario.precioUnitario} onChange={handleCambio} placeholder="Precio en pesos" />
-            </div>
-
-            <div className="modal-footer-detalle">
+        <Modal
+          titulo={editandoId !== null ? 'Editar detalle' : 'Nuevo detalle'}
+          onClose={cerrarModal}
+          footer={
+            <>
+              <button className="btn-cancelar-detalle" onClick={cerrarModal}>Cancelar</button>
               <button className="btn-guardar-detalle" onClick={handleGuardar}>
                 {editandoId !== null ? 'Guardar cambios' : 'Agregar detalle'}
               </button>
-              <button className="btn-cancelar-detalle" onClick={cerrarModal}>
-                Cancelar
-              </button>
-            </div>
+            </>
+          }
+        >
+          <label className="label-detalle">N° Factura</label>
+          <input className="input-detalle" name="factura" value={formulario.factura} onChange={handleCambio} placeholder="Ej: FAC-001" />
 
-          </div>
-        </div>
+          <label className="label-detalle">Producto</label>
+          <input className="input-detalle" name="producto" value={formulario.producto} onChange={handleCambio} placeholder="Nombre del producto" />
+
+          <label className="label-detalle">Cantidad</label>
+          <input className="input-detalle" type="number" name="cantidad" value={formulario.cantidad} onChange={handleCambio} placeholder="Cantidad" />
+
+          <label className="label-detalle">Precio unitario</label>
+          <input className="input-detalle" type="number" name="precioUnitario" value={formulario.precioUnitario} onChange={handleCambio} placeholder="Precio en pesos" />
+        </Modal>
       )}
     </>
   );

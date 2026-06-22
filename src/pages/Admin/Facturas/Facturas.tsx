@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import Modal from '../../../components/Modal/Modal';
 import './Facturas.css';
 
 const facturasIniciales = [
@@ -133,51 +134,37 @@ export default function Facturas() {
       </div>
 
       {modalAbierto && (
-        <div
-          className="modal-overlay-factura"
-          onClick={(e) => { if (e.target === e.currentTarget) cerrarModal(); }}
-        >
-          <div className="modal-facturas">
-
-            <div className="modal-header-factura">
-              <h2 className="modal-titulo-factura">
-                {editandoId !== null ? 'Editar factura' : 'Nueva factura'}
-              </h2>
-              <button className="modal-cerrar-factura" onClick={cerrarModal}>✕</button>
-            </div>
-
-            <div className="modal-body-factura">
-              <label className="label-factura">N° Factura</label>
-              <input className="input-factura" name="numero" value={formulario.numero} onChange={handleCambio} placeholder="FAC-006" />
-
-              <label className="label-factura">Cliente</label>
-              <input className="input-factura" name="cliente" value={formulario.cliente} onChange={handleCambio} placeholder="Nombre del cliente" />
-
-              <label className="label-factura">Fecha</label>
-              <input className="input-factura" type="date" name="fecha" value={formulario.fecha} onChange={handleCambio} />
-
-              <label className="label-factura">Total</label>
-              <input className="input-factura" type="number" name="total" value={formulario.total} onChange={handleCambio} placeholder="85000" />
-
-              <label className="label-factura">Estado</label>
-              <select className="input-factura" name="estado" value={formulario.estado} onChange={handleCambio}>
-                <option value="Pendiente">Pendiente</option>
-                <option value="Pagada">Pagada</option>
-                <option value="Anulada">Anulada</option>
-              </select>
-            </div>
-
-            <div className="modal-footer-factura">
+        <Modal
+          titulo={editandoId !== null ? 'Editar factura' : 'Nueva factura'}
+          onClose={cerrarModal}
+          footer={
+            <>
+              <button className="btn-cancelar-factura" onClick={cerrarModal}>Cancelar</button>
               <button className="btn-guardar-factura" onClick={handleGuardar}>
                 {editandoId !== null ? 'Guardar cambios' : 'Agregar factura'}
               </button>
-              <button className="btn-cancelar-factura" onClick={cerrarModal}>
-                Cancelar
-              </button>
-            </div>
+            </>
+          }
+        >
+          <label className="label-factura">N° Factura</label>
+          <input className="input-factura" name="numero" value={formulario.numero} onChange={handleCambio} placeholder="FAC-006" />
 
-          </div>
-        </div>
+          <label className="label-factura">Cliente</label>
+          <input className="input-factura" name="cliente" value={formulario.cliente} onChange={handleCambio} placeholder="Nombre del cliente" />
+
+          <label className="label-factura">Fecha</label>
+          <input className="input-factura" type="date" name="fecha" value={formulario.fecha} onChange={handleCambio} />
+
+          <label className="label-factura">Total</label>
+          <input className="input-factura" type="number" name="total" value={formulario.total} onChange={handleCambio} placeholder="85000" />
+
+          <label className="label-factura">Estado</label>
+          <select className="input-factura" name="estado" value={formulario.estado} onChange={handleCambio}>
+            <option value="Pendiente">Pendiente</option>
+            <option value="Pagada">Pagada</option>
+            <option value="Anulada">Anulada</option>
+          </select>
+        </Modal>
       )}
     </>
   );
