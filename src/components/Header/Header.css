@@ -257,3 +257,28 @@
     font-size: 17px;
   }
 }
+
+/* ── MODO OSCURO HEADER ─────────────────────────────── */
+body.dark-mode .header {
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+
+body.dark-mode .header-nav a { color: var(--text); }
+body.dark-mode .header-user > span { color: var(--text); }
+body.dark-mode .header-menu-toggle span { background: var(--text); }
+body.dark-mode .logout-btn {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+.theme-toggle-btn {
+  background: none;
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--text);
+  margin-right: 10px;
+}

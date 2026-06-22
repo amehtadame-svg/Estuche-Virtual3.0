@@ -173,3 +173,53 @@ code {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
+
+/* ── MODO OSCURO GLOBAL ─────────────────────────────── */
+body.dark-mode {
+  --bg: #121212;
+  --bg-subtle: #1e1e1e;
+  --text: #e0e0e0;
+  --text-h: #ffffff;
+  --border: #333333;
+}
+
+body.dark-mode, 
+body.dark-mode #root {
+  background: var(--bg);
+  color: var(--text);
+}
+
+body.dark-mode h1, 
+body.dark-mode h2, 
+body.dark-mode h3, 
+body.dark-mode h4 {
+  color: var(--text-h);
+}
+
+body.dark-mode input, 
+body.dark-mode select, 
+body.dark-mode textarea {
+  background: var(--bg);
+  color: var(--text-h);
+  border-color: var(--border);
+}
+
+/* ── ANULAR DEGRADADO DEL HERO EN MODO OSCURO ── */
+body.dark-mode .hero {
+    background: #1a1a1a !important; /* Forzamos color sólido, ignorando el gradiente */
+    background-image: none !important; /* Eliminamos el gradiente por completo */
+    border: 1px solid #333 !important;
+}
+
+body.dark-mode .hero h1,
+body.dark-mode .hero p,
+body.dark-mode .hero .hero-title,
+body.dark-mode .hero .hero-description {
+    color: #ffffff !important;
+}
+
+/* Esto es intocable para el navegador */
+body.dark-mode #titulo-ofertas,
+body.dark-mode #titulo-razones {
+    color: #ffffff !important;
+}

@@ -241,3 +241,41 @@
 .nosotros-btn-secundario:hover {
   opacity: 0.88;
 }
+
+/* ── MODO OSCURO ─────────────────── */
+
+body.dark-mode .nosotros-card,
+body.dark-mode .nosotros-valor-card,
+body.dark-mode .nosotros-hito,
+body.dark-mode .nosotros-persona-card {
+  background-color: var(--bg-subtle) !important;
+  border: 1px solid var(--border) !important;
+}
+
+body.dark-mode .nosotros-hero-titulo,
+body.dark-mode .nosotros-card-titulo,
+body.dark-mode .nosotros-seccion-titulo,
+body.dark-mode .nosotros-valor-titulo,
+body.dark-mode .nosotros-persona-nombre,
+body.dark-mode .nosotros-cta-titulo {
+  color: var(--text-h) !important;
+}
+
+body.dark-mode .nosotros-hero-texto,
+body.dark-mode .nosotros-card-texto,
+body.dark-mode .nosotros-valor-texto,
+body.dark-mode .nosotros-hito-texto,
+body.dark-mode .nosotros-persona-desc,
+body.dark-mode .nosotros-seccion-subtitulo,
+body.dark-mode .nosotros-cta-texto {
+  color: var(--text) !important;
+}
+
+body.dark-mode .nosotros-persona-avatar {
+  background-color: rgba(192, 132, 252, 0.15) !important;
+}
+
+body.dark-mode .nosotros-btn-secundario {
+  color: var(--accent);
+  border: 1px solid var(--accent);
+}

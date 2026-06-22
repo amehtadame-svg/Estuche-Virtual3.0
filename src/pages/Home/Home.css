@@ -320,3 +320,81 @@
     text-align: center;
   }
 }
+/* ==========================================================================
+   CONFIGURACIÓN GENERAL: MODO OSCURO (DARK MODE)
+   ========================================================================== */
+
+/* Fondo principal de la aplicación */
+body.dark-mode {
+    background-color: #08060d !important;
+}
+/* Contenedores: Tarjetas y secciones hero */
+body.dark-mode .card,
+body.dark-mode .reason-card,
+body.dark-mode .nosotros-card,
+body.dark-mode .hero {
+    background-color: #1a1a1a !important;
+    border: 1px solid #333 !important;
+    box-shadow: none !important;
+}
+/* ==========================================================================
+   TIPOGRAFÍA Y TEXTOS: MODO OSCURO
+   ========================================================================== */
+
+/* Títulos principales y de sección */
+body.dark-mode h2,
+body.dark-mode .section-title {
+    color: #ffffff !important;
+}
+/* Descripciones, subtítulos y textos generales */
+body.dark-mode .hero h1,
+body.dark-mode .hero p,
+body.dark-mode .card h3,
+body.dark-mode .card p,
+body.dark-mode .reason-card h3,
+body.dark-mode .reason-card p,
+body.dark-mode .hero-title,
+body.dark-mode .hero-description,
+body.dark-mode .section-description {
+    color: #ffffff !important;
+}
+/* ==========================================================================
+   COMPONENTES ESPECÍFICOS
+   ========================================================================== */
+
+/* Precios: Color morado constante */
+.price {
+    color: #aa3bff !important;
+    font-weight: bold !important;
+}
+/* Botón: Tarjetas */
+body.dark-mode .card-button {
+    background: #aa3bff !important;
+    color: #ffffff !important;
+    border: none !important;
+    height: 38px !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    width: 100% !important; 
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+}
+/* Botón: Banner */
+body.dark-mode .hero .hero-button {
+    background: #aa3bff !important;
+    color: #ffffff !important;
+    border: none !important;
+    width: fit-content !important;
+    padding: 12px 40px !important;
+    display: block !important;
+    margin: 40px auto 40px auto !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    text-align: center !important;
+    text-decoration: none !important;
+}
+
+
+
+
