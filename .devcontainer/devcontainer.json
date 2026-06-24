@@ -7,5 +7,6 @@
     "5173": {
       "visibility": "public"
     }
-  }
+  },
+  "postCreateCommand": "npm install && cd server && npm install && npx prisma generate"
 }
