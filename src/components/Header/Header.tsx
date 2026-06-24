@@ -46,7 +46,6 @@ export default function Header() {
           <>
             <Link to="/">Inicio</Link>
             <Link to="/catalogo">Catálogo</Link>
-            <Link to="/nosotros">Nosotros</Link>
           </>
         )}
       </nav>
