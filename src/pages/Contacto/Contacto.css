@@ -258,3 +258,40 @@
     min-width: 100%;
   }
 }
+
+/* ═══════════════════════════════════════════════════
+   MODO OSCURO (DARK MODE)
+   ═══════════════════════════════════════════════════ */
+
+body.dark-mode .contacto-titulo,
+body.dark-mode .contacto-form-titulo,
+body.dark-mode .contacto-label,
+body.dark-mode .contacto-info-banner h2,
+body.dark-mode .contacto-info-titulo,
+body.dark-mode .contacto-exito h1 { color: #ffffff !important; }
+
+body.dark-mode .contacto-subtitulo,
+body.dark-mode .contacto-info-banner p,
+body.dark-mode .contacto-info-dato,
+body.dark-mode .contacto-exito p { color: #cccccc !important; }
+
+body.dark-mode .contacto-form-card,
+body.dark-mode .contacto-info-item,
+body.dark-mode .contacto-exito {
+  background: #1a1a1a !important;
+  border: 1px solid #333 !important;
+}
+
+body.dark-mode .contacto-input,
+body.dark-mode .contacto-textarea {
+  background: #08060d !important;
+  border: 1.5px solid #333 !important;
+  color: #ffffff !important;
+}
+
+body.dark-mode .contacto-info-banner { background: rgba(170, 59, 255, 0.15) !important; }
+body.dark-mode .contacto-error { background: #3d1b1b !important; color: #ff8e8e !important; border: 1px solid #662b2b !important; }
+
+/* ── Responsive ───────────────────────────────────── */
+@media (max-width: 768px) { .contacto-container { padding: 0 20px 48px; } .contacto-grid { grid-template-columns: 1fr; gap: 28px; } }
+@media (max-width: 480px) { .contacto-container { padding: 0 14px 40px; } .contacto-form-card { padding: 24px 18px; } }

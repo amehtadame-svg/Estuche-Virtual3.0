@@ -347,3 +347,27 @@
   font-weight: 500;
   color: #fff;
 }
+
+/* ═══════════════════════════════════════════════════════
+   TOOLTIP GRÁFICO — MODO OSCURO (SOLO CSS)
+   ═══════════════════════════════════════════════════════ */
+
+/* Esto obliga al contenedor del tooltip a ser oscuro */
+body.dark-mode .recharts-tooltip-wrapper .recharts-default-tooltip {
+    background-color: #1a1a1a !important;
+    border: 1px solid #333 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
+}
+
+/* Esto obliga al texto (Ventas) a ser blanco */
+body.dark-mode .recharts-tooltip-wrapper .recharts-tooltip-label,
+body.dark-mode .recharts-tooltip-wrapper .recharts-tooltip-item {
+    color: #c778db !important;
+}
+
+/* Esto obliga al nombre del mes (ej: Nov) a ser visible */
+body.dark-mode .recharts-tooltip-wrapper .recharts-tooltip-label {
+    color: #ffffff !important;
+    font-weight: 600 !important;
+}
