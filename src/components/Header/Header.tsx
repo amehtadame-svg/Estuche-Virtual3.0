@@ -53,7 +53,7 @@ export default function Header() {
 
       <div className="header-user">
         <button className="theme-toggle-btn" onClick={toggleTheme}>
-          {isDarkMode ? '☀️' : '🌙'}
+          {isDarkMode ? '🌙' : '☀️'}
         </button>
 
         {user?.role !== 'administrador' && (
