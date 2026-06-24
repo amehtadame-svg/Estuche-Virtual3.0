@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import './Usuarios.css';
 
-const API = '/api/usuarios';
+import { API } from '../../../api';
 
 interface Usuario {
   id_usuario: number;
@@ -26,7 +26,7 @@ export default function Usuarios() {
 
   const cargar = () => {
     setLoading(true);
-    fetch(API)
+    fetch(API.usuarios)
       .then(r => r.json())
       .then(data => { setUsuarios(data); setLoading(false); })
       .catch(() => setLoading(false));
@@ -54,7 +54,7 @@ export default function Usuarios() {
     if (!form.nombre || !form.email) { setError('Nombre y email son obligatorios.'); return; }
     if (modal === 'crear' && !form.password) { setError('La contraseña es obligatoria.'); return; }
 
-    const url    = modal === 'crear' ? API : `${API}/${editId}`;
+    const url    = modal === 'crear' ? API.usuarios : `${API}/${editId}`;
     const method = modal === 'crear' ? 'POST' : 'PUT';
     const body   = modal === 'crear'
       ? { nombre: form.nombre, email: form.email, password: form.password, rol: form.rol }
@@ -80,7 +80,7 @@ export default function Usuarios() {
     setConfirmDel(id);
     setPreviewDel(null);
     try {
-      const res = await fetch(`${API}/${id}/preview-delete`);
+      const res = await fetch(`${API.usuarios}/${id}/preview-delete`);
       const data = await res.json();
       setPreviewDel(data);
     } catch {
@@ -89,7 +89,7 @@ export default function Usuarios() {
   };
 
   const handleEliminar = async (id: number) => {
-    await fetch(`${API}/${id}`, { method: 'DELETE' });
+    await fetch(`${API.usuarios}/${id}`, { method: 'DELETE' });
     setConfirmDel(null);
     setPreviewDel(null);
     cargar();

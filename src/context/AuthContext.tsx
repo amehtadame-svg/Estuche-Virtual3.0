@@ -1,7 +1,7 @@
 import { createContext, useState, useContext, useEffect, type ReactNode } from 'react';
 
 
-const API = '/api/auth';
+import { API } from '../api';
 
 interface User {
   id: number;
@@ -36,7 +36,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const token = localStorage.getItem('token');
   if (!token) return;
 
-  fetch(`${API}/me`, {
+  fetch(`${API.auth}/me`, {
     headers: { Authorization: `Bearer ${token}` },
   })
     .then(res => {
@@ -55,7 +55,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      const res = await fetch(`${API}/login`, {
+      const res = await fetch(`${API.auth}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -73,7 +73,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const register = async (name: string, email: string, password: string): Promise<boolean> => {
     try {
-      const res = await fetch(`${API}/register`, {
+      const res = await fetch(`${API.auth}/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, password }),
@@ -118,7 +118,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!valid || !email) return false;
 
     try {
-      const res = await fetch(`${API}/reset-password`, {
+      const res = await fetch(`${API.auth}/reset-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, newPassword }),

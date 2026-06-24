@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import Modal from '../../../components/Modal/Modal';
 import './Proveedores.css';
 
-const API = '/api/proveedores';
+import { API } from '../../../api';
 
 const formularioVacio = { nombre: '', contacto: '', correo: '', telefono: '', productos: '' };
 
@@ -25,7 +25,7 @@ export default function Proveedores() {
   const [cargando, setCargando] = useState(true);
 
   const cargarProveedores = () => {
-    fetch(`${API}`)
+    fetch(`${API.proveedores}`)
       .then(r => r.json())
       .then(data => { setProveedores(data); setCargando(false); })
       .catch(() => { mostrarMensaje('Error al cargar proveedores.'); setCargando(false); });
@@ -63,14 +63,14 @@ export default function Proveedores() {
     };
 
     if (editandoId !== null) {
-      await fetch(`${API}/proveedores/${editandoId}`, {
+      await fetch(`${API.proveedores}/${editandoId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
       mostrarMensaje('Proveedor actualizado.');
     } else {
-      await fetch(`${API}/proveedores`, {
+      await fetch(`${API.proveedores}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -95,7 +95,7 @@ export default function Proveedores() {
   };
 
   const handleEliminar = async (id: number) => {
-    await fetch(`${API}/proveedores/${id}`, { method: 'DELETE' });
+    await fetch(`${API.proveedores}/${id}`, { method: 'DELETE' });
     setProveedores(proveedores.filter(p => p.id_proveedor !== id));
     mostrarMensaje('Proveedor eliminado.');
   };
