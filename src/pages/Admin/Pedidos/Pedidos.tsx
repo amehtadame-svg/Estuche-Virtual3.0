@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import Modal from '../../../components/Modal/Modal';
 import './Pedidos.css';
 
-const API = '/api/pedidos';
+import { API } from '../../../api';
 
 const estadoColor: Record<string, string> = {
   Entregado: '#27ae60',
@@ -32,7 +32,7 @@ export default function Pedidos() {
   const [cargando, setCargando] = useState(true);
 
   const cargarPedidos = () => {
-    fetch(`${API}`)
+    fetch(`${API.pedidos}`)
       .then(r => r.json())
       .then(data => { setPedidos(data); setCargando(false); })
       .catch(() => { mostrarMensaje('Error al cargar pedidos.'); setCargando(false); });
@@ -76,14 +76,14 @@ export default function Pedidos() {
     };
 
     if (editandoId !== null) {
-      await fetch(`${API}/pedidos/${editandoId}`, {
+      await fetch(`${API.pedidos}/${editandoId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
       mostrarMensaje('Pedido actualizado.');
     } else {
-      await fetch(`${API}/pedidos`, {
+      await fetch(`${API.pedidos}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -108,13 +108,13 @@ export default function Pedidos() {
   };
 
   const handleEliminar = async (id: number) => {
-    await fetch(`${API}/pedidos/${id}`, { method: 'DELETE' });
+    await fetch(`${API.pedidos}/${id}`, { method: 'DELETE' });
     setPedidos(pedidos.filter(p => p.id_pedido !== id));
     mostrarMensaje('Pedido eliminado.');
   };
 
   const cambiarEstado = async (id: number, nuevoEstado: string) => {
-    await fetch(`${API}/pedidos/${id}`, {
+    await fetch(`${API.pedidos}/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ estado: nuevoEstado }),
