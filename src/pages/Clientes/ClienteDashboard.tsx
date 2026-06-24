@@ -3,7 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import './ClienteDashboard.css';
 
 const Home = () => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
 
   const ofertas = [
     { nombre: 'Cuaderno universitario', precio: 8500, precioAntes: 12000, icono: '📓' },
@@ -59,13 +59,6 @@ const Home = () => {
               >
                 Ir a tu panel
               </Link>
-
-              <button
-                className="logout-button"
-                onClick={logout}
-              >
-                Cerrar sesión
-              </button>
             </div>
           ) : (
             <Link className="hero-button" to="/Catalogo">
