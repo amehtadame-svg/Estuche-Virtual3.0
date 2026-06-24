@@ -144,3 +144,43 @@
 .register-link:hover {
   opacity: 0.75;
 }
+
+/* --- ESTILOS BASE --- */
+.login-container {
+  position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+  display: flex; justify-content: center; align-items: center;
+  background: linear-gradient(145deg, #f5eeff 0%, #fdf8ff 60%, #f0e6ff 100%);
+  padding: 24px; z-index: 999;
+}
+
+.login-card {
+  width: 100%; max-width: 420px; padding: 44px 40px; border-radius: 24px;
+  border: 1px solid #e5e4e7; background: #ffffff; box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+}
+
+.login-title { text-align: center; font-size: 26px; font-weight: 800; color: #08060d; margin: 0 0 8px; }
+.login-subtitle { text-align: center; color: #666; font-size: 15px; margin-bottom: 36px; }
+
+.input-label { display: block; margin-bottom: 7px; color: #08060d; font-size: 13px; font-weight: 600; }
+.login-input { 
+  width: 100%; padding: 13px 16px; margin-bottom: 20px; border: 1.5px solid #e5e4e7;
+  border-radius: 11px; background: #ffffff; color: #08060d;
+}
+
+.login-button { 
+  width: 100%; padding: 14px; border: none; border-radius: 12px;
+  background: linear-gradient(135deg, #9333ea 0%, #c084fc 100%); color: #ffffff; font-weight: 700;
+}
+
+.register-text { text-align: center; margin-top: 26px; color: #666; font-size: 14px; }
+.register-link { color: #aa3bff; font-weight: 700; }
+
+/* --- MODO OSCURO INTEGRADO --- */
+body.dark-mode .login-container { background: linear-gradient(145deg, #08060d 0%, #1a1624 100%) !important; }
+body.dark-mode .login-card { background: #1a1a1a !important; border: 1px solid #333 !important; }
+body.dark-mode .login-title { color: #ffffff !important; }
+body.dark-mode .login-subtitle, body.dark-mode .register-text { color: #cccccc !important; }
+body.dark-mode .input-label { color: #ffffff !important; }
+body.dark-mode .login-input { background: #08060d !important; border: 1.5px solid #333 !important; color: #ffffff !important; }
+body.dark-mode .register-link { color: #aa3bff !important; }
+
