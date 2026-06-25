@@ -309,3 +309,44 @@
     gap: 12px;
   }
 }
+
+/* ═══════════════════════════════════════════════════
+   CARRITO — MODO OSCURO
+   ═══════════════════════════════════════════════════ */
+
+body.dark-mode .cart-container,
+body.dark-mode .cart-item-card,
+body.dark-mode .cart-summary {
+    background-color: var(--bg) !important;
+    border: 1px solid var(--border) !important;
+}
+
+/* Ajuste para las tarjetas de producto dentro del carrito */
+body.dark-mode .cart-item {
+    background-color: #1a1a1a !important;
+    border: 1px solid #333 !important;
+    color: #ffffff !important;
+}
+
+/* Ajuste de los textos (Título, precio, etc.) */
+body.dark-mode .cart-item-title,
+body.dark-mode .cart-total-text {
+    color: #ffffff !important;
+}
+
+/* Ajuste para los botones de cantidad y el botón principal */
+body.dark-mode .quantity-btn {
+    background-color: #333 !important;
+    color: #ffffff !important;
+}
+
+body.dark-mode .checkout-button {
+    background: linear-gradient(135deg, #7e22ce 0%, #a855f7 100%) !important;
+    color: #ffffff !important;
+}
+
+/* Ajuste para el fondo general del carrito */
+body.dark-mode .cart-page-wrapper {
+    background-color: #08060d !important;
+}
+
