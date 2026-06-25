@@ -27,11 +27,12 @@ model pedidos {
   id_empleado    Int?
   fecha          DateTime?        @db.Date
   total          Decimal?         @db.Decimal(10, 2)
+  estado         String?          @default("Procesando") @db.VarChar(50)
+  metodo_pago    String?          @db.VarChar(20)
   detalle_pedido detalle_pedido[]
   envios         envios[]
   clientes       usuarios?        @relation("PedidoCliente", fields: [id_cliente], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction)
   empleados      usuarios?        @relation("PedidoEmpleado", fields: [id_empleado], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction)
-  estado String? @default("Procesando") @db.VarChar(50)
 }
 
 model productos {

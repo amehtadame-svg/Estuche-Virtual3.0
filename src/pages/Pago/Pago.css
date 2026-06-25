@@ -1,0 +1,74 @@
+.pago-container {
+  max-width: 600px;
+  margin: 40px auto;
+  padding: 24px;
+}
+
+.pago-titulo {
+  font-size: 1.6rem;
+  margin-bottom: 20px;
+}
+
+.pago-resumen {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 24px;
+}
+
+.pago-linea {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+}
+
+.pago-total {
+  display: flex;
+  justify-content: space-between;
+  font-weight: bold;
+  border-top: 1px solid #ddd;
+  margin-top: 10px;
+  padding-top: 10px;
+}
+
+.pago-metodo {
+  margin-bottom: 24px;
+}
+
+.pago-opcion {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0;
+  cursor: pointer;
+}
+
+.pago-metodo-fijo {
+  color: #555;
+}
+
+.pago-error {
+  color: #c0392b;
+  margin-bottom: 16px;
+}
+
+.pago-btn-confirmar {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  background: #2e7d32;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.pago-btn-confirmar:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.pago-vacio {
+  text-align: center;
+  margin: 60px auto;
+}
