@@ -16,20 +16,41 @@ export const getProductos = async (_req: Request, res: Response) => {
 };
 
 export const crearProducto = async (req: Request, res: Response) => {
-  const { nombre, descripcion, precio, id_categoria, id_proveedor } = req.body;
+  const { nombre, descripcion, precio, categoria, stock } = req.body;
+
+  const cat = categoria ? await prisma.categorias.findFirst({ where: { nombre: categoria } }) : null;
+
   const producto = await prisma.productos.create({
-    data: { nombre, descripcion, precio, id_categoria, id_proveedor },
+    data: {
+      nombre,
+      descripcion,
+      precio,
+      id_categoria: cat?.id_categoria ?? null,
+      inventario: stock ? { create: { cantidad_actual: Number(stock) } } : undefined,
+    },
   });
   return res.status(201).json(producto);
 };
 
 export const editarProducto = async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { nombre, descripcion, precio, id_categoria, id_proveedor } = req.body;
+  const { nombre, descripcion, precio, categoria, stock } = req.body;
+
+  const cat = categoria ? await prisma.categorias.findFirst({ where: { nombre: categoria } }) : null;
+
   const producto = await prisma.productos.update({
     where: { id_producto: Number(id) },
-    data: { nombre, descripcion, precio, id_categoria, id_proveedor },
+    data: { nombre, descripcion, precio, id_categoria: cat?.id_categoria ?? null },
   });
+
+  if (stock !== undefined) {
+    await prisma.inventario.upsert({
+      where: { id_producto: Number(id) },
+      update: { cantidad_actual: Number(stock) },
+      create: { id_producto: Number(id), cantidad_actual: Number(stock) },
+    });
+  }
+
   return res.json(producto);
 };
 

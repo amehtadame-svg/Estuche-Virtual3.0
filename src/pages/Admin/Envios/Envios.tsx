@@ -1,13 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Modal from '../../../components/Modal/Modal';
+import { API } from '../../../api';
 import './Envios.css';
-
-const enviosIniciales = [
-  { id: 1, numero: 'ENV-001', pedido: 'PED-001', cliente: 'Valentina Lopez', direccion: 'Calle 10 # 5-20, Bogota', fecha: '2025-01-11', estado: 'Entregado' },
-  { id: 2, numero: 'ENV-002', pedido: 'PED-002', cliente: 'Isabella Garcia', direccion: 'Carrera 7 # 45-30, Medellin', fecha: '2025-01-13', estado: 'En camino' },
-  { id: 3, numero: 'ENV-003', pedido: 'PED-003', cliente: 'Camila Rodriguez', direccion: 'Av 6N # 23-15, Cali', fecha: '2025-01-15', estado: 'Entregado' },
-  { id: 4, numero: 'ENV-004', pedido: 'PED-004', cliente: 'Lucia Torres', direccion: 'Calle 5 # 12-40, Barranquilla', fecha: '2025-01-17', estado: 'Preparando' },
-];
 
 const estadoColor: Record<string, string> = {
   Entregado: '#27ae60',
@@ -16,14 +10,35 @@ const estadoColor: Record<string, string> = {
   Cancelado: '#e74c3c',
 };
 
-const formularioVacio = { numero: '', pedido: '', cliente: '', direccion: '', fecha: '', estado: 'Preparando' };
+const formularioVacio = { id_pedido: '', id_repartidor: '', direccion: '', fecha: '', estado: 'Preparando' };
+
+interface Envio {
+  id_envio: number;
+  id_pedido: number | null;
+  id_repartidor: number | null;
+  direccion: string | null;
+  fecha: string | null;
+  estado: string | null;
+  pedidos: { id_pedido: number; clientes: { nombre: string } | null } | null;
+  empleados: { nombre: string } | null;
+}
 
 export default function Envios() {
-  const [envios, setEnvios] = useState(enviosIniciales);
+  const [envios, setEnvios] = useState<Envio[]>([]);
   const [formulario, setFormulario] = useState(formularioVacio);
   const [editandoId, setEditandoId] = useState<number | null>(null);
   const [mensaje, setMensaje] = useState('');
   const [modalAbierto, setModalAbierto] = useState(false);
+  const [cargando, setCargando] = useState(true);
+
+  const cargarEnvios = () => {
+    fetch(API.envios)
+      .then(r => r.json())
+      .then(data => { setEnvios(data); setCargando(false); })
+      .catch(() => { mostrarMensaje('Error al cargar envios.'); setCargando(false); });
+  };
+
+  useEffect(() => { cargarEnvios(); }, []);
 
   const mostrarMensaje = (texto: string) => {
     setMensaje(texto);
@@ -46,36 +61,65 @@ export default function Envios() {
     setFormulario(formularioVacio);
   };
 
-  const handleGuardar = () => {
-    if (!formulario.numero || !formulario.pedido || !formulario.cliente || !formulario.direccion || !formulario.fecha) {
+  const handleGuardar = async () => {
+    if (!formulario.id_pedido || !formulario.direccion || !formulario.fecha) {
       mostrarMensaje('Por favor completa todos los campos.');
       return;
     }
 
+    const body = {
+      id_pedido: Number(formulario.id_pedido),
+      id_repartidor: formulario.id_repartidor ? Number(formulario.id_repartidor) : null,
+      direccion: formulario.direccion,
+      fecha: formulario.fecha,
+      estado: formulario.estado,
+    };
+
     if (editandoId !== null) {
-      setEnvios(envios.map((e) => e.id === editandoId ? { ...e, ...formulario } : e));
+      await fetch(`${API.envios}/${editandoId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
       mostrarMensaje('Envio actualizado.');
     } else {
-      setEnvios([...envios, { id: Date.now(), ...formulario }]);
+      await fetch(API.envios, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
       mostrarMensaje('Envio agregado.');
     }
 
+    cargarEnvios();
     cerrarModal();
   };
 
-  const handleEditar = (e: typeof enviosIniciales[0]) => {
-    setFormulario({ numero: e.numero, pedido: e.pedido, cliente: e.cliente, direccion: e.direccion, fecha: e.fecha, estado: e.estado });
-    setEditandoId(e.id);
+  const handleEditar = (env: Envio) => {
+    setFormulario({
+      id_pedido: String(env.id_pedido ?? ''),
+      id_repartidor: String(env.id_repartidor ?? ''),
+      direccion: env.direccion ?? '',
+      fecha: env.fecha ? env.fecha.split('T')[0] : '',
+      estado: env.estado ?? 'Preparando',
+    });
+    setEditandoId(env.id_envio);
     setModalAbierto(true);
   };
 
-  const handleEliminar = (id: number) => {
-    setEnvios(envios.filter((e) => e.id !== id));
+  const handleEliminar = async (id: number) => {
+    await fetch(`${API.envios}/${id}`, { method: 'DELETE' });
+    setEnvios(envios.filter(e => e.id_envio !== id));
     mostrarMensaje('Envio eliminado.');
   };
 
-  const cambiarEstado = (id: number, nuevoEstado: string) => {
-    setEnvios(envios.map((e) => e.id === id ? { ...e, estado: nuevoEstado } : e));
+  const cambiarEstado = async (id: number, nuevoEstado: string) => {
+    await fetch(`${API.envios}/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ estado: nuevoEstado }),
+    });
+    setEnvios(envios.map(e => e.id_envio === id ? { ...e, estado: nuevoEstado } : e));
     mostrarMensaje('Estado actualizado.');
   };
 
@@ -88,56 +132,60 @@ export default function Envios() {
             <h2 className="titulo-envios">Gestion de Envios</h2>
             <p className="subtitulo-usuarios">Administra los Envios registrados</p>
           </div>
-          <button className="btn-nuevo-envio" onClick={() => setModalAbierto(true)}>
+          <button className="btn-nuevo-envio" onClick={abrirModalNuevo}>
             + Nuevo envio
           </button>
         </div>
 
         {mensaje && <div className="mensaje-envios">{mensaje}</div>}
 
-        <div className="table-wrapper">
-          <table className="tabla-envios">
-            <thead>
-              <tr>
-                <th>N° Envio</th>
-                <th>Pedido</th>
-                <th>Cliente</th>
-                <th>Dirección</th>
-                <th>Fecha</th>
-                <th>Estado</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {envios.map((env) => (
-                <tr key={env.id}>
-                  <td className="numero-envio">{env.numero}</td>
-                  <td>{env.pedido}</td>
-                  <td className="cliente-envio">{env.cliente}</td>
-                  <td>{env.direccion}</td>
-                  <td>{env.fecha}</td>
-                  <td>
-                    <select
-                      value={env.estado}
-                      onChange={(e) => cambiarEstado(env.id, e.target.value)}
-                      className="estado-select"
-                      style={{ backgroundColor: estadoColor[env.estado] || '#999' }}
-                    >
-                      <option value="Preparando">Preparando</option>
-                      <option value="En camino">En camino</option>
-                      <option value="Entregado">Entregado</option>
-                      <option value="Cancelado">Cancelado</option>
-                    </select>
-                  </td>
-                  <td>
-                    <button className="btn-editar-envio" onClick={() => handleEditar(env)}>Editar</button>
-                    <button className="btn-eliminar-envio" onClick={() => handleEliminar(env.id)}>Eliminar</button>
-                  </td>
+        {cargando ? (
+          <p style={{ color: 'var(--text)', padding: '20px 0' }}>Cargando envios...</p>
+        ) : (
+          <div className="table-wrapper">
+            <table className="tabla-envios">
+              <thead>
+                <tr>
+                  <th>N° Envio</th>
+                  <th>Pedido</th>
+                  <th>Cliente</th>
+                  <th>Dirección</th>
+                  <th>Fecha</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {envios.map((env) => (
+                  <tr key={env.id_envio}>
+                    <td className="numero-envio">ENV-{String(env.id_envio).padStart(3, '0')}</td>
+                    <td>PED-{String(env.id_pedido).padStart(3, '0')}</td>
+                    <td className="cliente-envio">{env.pedidos?.clientes?.nombre ?? `Cliente #${env.pedidos?.id_pedido}`}</td>
+                    <td>{env.direccion ?? '—'}</td>
+                    <td>{env.fecha ? env.fecha.split('T')[0] : '—'}</td>
+                    <td>
+                      <select
+                        value={env.estado ?? 'Preparando'}
+                        onChange={(e) => cambiarEstado(env.id_envio, e.target.value)}
+                        className="estado-select"
+                        style={{ backgroundColor: estadoColor[env.estado ?? ''] || '#999' }}
+                      >
+                        <option value="Preparando">Preparando</option>
+                        <option value="En camino">En camino</option>
+                        <option value="Entregado">Entregado</option>
+                        <option value="Cancelado">Cancelado</option>
+                      </select>
+                    </td>
+                    <td>
+                      <button className="btn-editar-envio" onClick={() => handleEditar(env)}>Editar</button>
+                      <button className="btn-eliminar-envio" onClick={() => handleEliminar(env.id_envio)}>Eliminar</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         {modalAbierto && (
           <Modal
@@ -152,14 +200,11 @@ export default function Envios() {
               </>
             }
           >
-            <p className="label-envio">N° Envio</p>
-            <input className="input-envio" name="numero" value={formulario.numero} onChange={handleCambio} placeholder="ENV-005" />
+            <p className="label-envio">N° Pedido (ID)</p>
+            <input className="input-envio" type="number" name="id_pedido" value={formulario.id_pedido} onChange={handleCambio} placeholder="ID del pedido" />
 
-            <p className="label-envio">N° Pedido</p>
-            <input className="input-envio" name="pedido" value={formulario.pedido} onChange={handleCambio} placeholder="PED-005" />
-
-            <p className="label-envio">Cliente</p>
-            <input className="input-envio" name="cliente" value={formulario.cliente} onChange={handleCambio} placeholder="Nombre del cliente" />
+            <p className="label-envio">ID Repartidor (opcional)</p>
+            <input className="input-envio" type="number" name="id_repartidor" value={formulario.id_repartidor} onChange={handleCambio} placeholder="ID del repartidor" />
 
             <p className="label-envio">Dirección</p>
             <input className="input-envio" name="direccion" value={formulario.direccion} onChange={handleCambio} placeholder="Calle 10 # 5-20, Bogota" />
@@ -176,7 +221,6 @@ export default function Envios() {
             </select>
           </Modal>
         )}
-
       </div>
     </>
   );

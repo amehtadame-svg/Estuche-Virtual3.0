@@ -8,6 +8,8 @@ import productosRoutes from './routes/productos.routes';
 import proveedoresRoutes from './routes/proveedores.routes';
 import enviosRoutes from './routes/envios.routes';
 import detallePedidoRoutes from './routes/detallepedido.routes';
+import facturasRoutes from './routes/facturas.routes';
+
 
 dotenv.config();
 
@@ -26,6 +28,7 @@ app.use('/api/productos', productosRoutes);
 app.use('/api/proveedores', proveedoresRoutes);
 app.use('/api/envios', enviosRoutes);
 app.use('/api/detalle-pedido', detallePedidoRoutes);
+app.use('/api/facturas', facturasRoutes);
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));

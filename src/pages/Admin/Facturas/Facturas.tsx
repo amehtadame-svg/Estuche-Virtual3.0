@@ -1,14 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Modal from '../../../components/Modal/Modal';
+import { API } from '../../../api';
 import './Facturas.css';
-
-const facturasIniciales = [
-  { id: 1, numero: 'FAC-001', cliente: 'Valentina Lopez', fecha: '2025-01-10', total: 85000, estado: 'Pagada' },
-  { id: 2, numero: 'FAC-002', cliente: 'Isabella Garcia', fecha: '2025-01-12', total: 47000, estado: 'Pendiente' },
-  { id: 3, numero: 'FAC-003', cliente: 'Camila Rodriguez', fecha: '2025-01-14', total: 120000, estado: 'Pagada' },
-  { id: 4, numero: 'FAC-004', cliente: 'Lucia Torres', fecha: '2025-01-16', total: 35000, estado: 'Pendiente' },
-  { id: 5, numero: 'FAC-005', cliente: 'Antonella Ramirez', fecha: '2025-01-18', total: 53000, estado: 'Anulada' },
-];
 
 const estadoColor: Record<string, string> = {
   Pagada: '#27ae60',
@@ -16,14 +9,33 @@ const estadoColor: Record<string, string> = {
   Anulada: '#e74c3c',
 };
 
-const formularioVacio = { numero: '', cliente: '', fecha: '', total: '', estado: 'Pendiente' };
+const formularioVacio = { id_cliente: '', fecha: '', total: '', estado: 'Pendiente' };
+
+interface Factura {
+  id_factura: number;
+  id_cliente: number | null;
+  fecha: string | null;
+  total: number | null;
+  estado: string | null;
+  clientes: { nombre: string } | null;
+}
 
 export default function Facturas() {
-  const [facturas, setFacturas] = useState(facturasIniciales);
+  const [facturas, setFacturas] = useState<Factura[]>([]);
   const [formulario, setFormulario] = useState(formularioVacio);
   const [editandoId, setEditandoId] = useState<number | null>(null);
   const [mensaje, setMensaje] = useState('');
   const [modalAbierto, setModalAbierto] = useState(false);
+  const [cargando, setCargando] = useState(true);
+
+  const cargarFacturas = () => {
+    fetch(API.facturas)
+      .then(r => r.json())
+      .then(data => { setFacturas(data); setCargando(false); })
+      .catch(() => { mostrarMensaje('Error al cargar facturas.'); setCargando(false); });
+  };
+
+  useEffect(() => { cargarFacturas(); }, []);
 
   const mostrarMensaje = (texto: string) => {
     setMensaje(texto);
@@ -46,36 +58,63 @@ export default function Facturas() {
     setFormulario(formularioVacio);
   };
 
-  const handleGuardar = () => {
-    if (!formulario.numero || !formulario.cliente || !formulario.fecha || !formulario.total) {
+  const handleGuardar = async () => {
+    if (!formulario.id_cliente || !formulario.fecha || !formulario.total) {
       mostrarMensaje('Por favor completa todos los campos.');
       return;
     }
+
+    const body = {
+      id_cliente: Number(formulario.id_cliente),
+      fecha: formulario.fecha,
+      total: Number(formulario.total),
+      estado: formulario.estado,
+    };
+
     if (editandoId !== null) {
-      setFacturas(facturas.map((f) =>
-        f.id === editandoId ? { ...f, ...formulario, total: Number(formulario.total) } : f
-      ));
+      await fetch(`${API.facturas}/${editandoId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
       mostrarMensaje('Factura actualizada.');
     } else {
-      setFacturas([...facturas, { id: Date.now(), ...formulario, total: Number(formulario.total) }]);
+      await fetch(API.facturas, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
       mostrarMensaje('Factura agregada.');
     }
+
+    cargarFacturas();
     cerrarModal();
   };
 
-  const handleEditar = (f: typeof facturasIniciales[0]) => {
-    setFormulario({ numero: f.numero, cliente: f.cliente, fecha: f.fecha, total: String(f.total), estado: f.estado });
-    setEditandoId(f.id);
+  const handleEditar = (f: Factura) => {
+    setFormulario({
+      id_cliente: String(f.id_cliente ?? ''),
+      fecha: f.fecha ? f.fecha.split('T')[0] : '',
+      total: String(f.total ?? ''),
+      estado: f.estado ?? 'Pendiente',
+    });
+    setEditandoId(f.id_factura);
     setModalAbierto(true);
   };
 
-  const handleEliminar = (id: number) => {
-    setFacturas(facturas.filter((f) => f.id !== id));
+  const handleEliminar = async (id: number) => {
+    await fetch(`${API.facturas}/${id}`, { method: 'DELETE' });
+    setFacturas(facturas.filter(f => f.id_factura !== id));
     mostrarMensaje('Factura eliminada.');
   };
 
-  const cambiarEstado = (id: number, nuevoEstado: string) => {
-    setFacturas(facturas.map((f) => f.id === id ? { ...f, estado: nuevoEstado } : f));
+  const cambiarEstado = async (id: number, nuevoEstado: string) => {
+    await fetch(`${API.facturas}/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ estado: nuevoEstado }),
+    });
+    setFacturas(facturas.map(f => f.id_factura === id ? { ...f, estado: nuevoEstado } : f));
     mostrarMensaje('Estado actualizado.');
   };
 
@@ -93,44 +132,48 @@ export default function Facturas() {
 
         {mensaje && <div className="mensaje-facturas">{mensaje}</div>}
 
-        <table className="tabla-facturas">
-          <thead>
-            <tr>
-              <th>N° Factura</th>
-              <th>Cliente</th>
-              <th>Fecha</th>
-              <th>Total</th>
-              <th>Estado</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {facturas.map((fac) => (
-              <tr key={fac.id}>
-                <td className="numero-factura">{fac.numero}</td>
-                <td className="cliente-factura">{fac.cliente}</td>
-                <td>{fac.fecha}</td>
-                <td className="total-factura">${fac.total.toLocaleString()}</td>
-                <td>
-                  <select
-                    value={fac.estado}
-                    onChange={(e) => cambiarEstado(fac.id, e.target.value)}
-                    className="estado-select-factura"
-                    style={{ backgroundColor: estadoColor[fac.estado] || '#999' }}
-                  >
-                    <option value="Pendiente">Pendiente</option>
-                    <option value="Pagada">Pagada</option>
-                    <option value="Anulada">Anulada</option>
-                  </select>
-                </td>
-                <td>
-                  <button className="btn-editar-factura" onClick={() => handleEditar(fac)}>Editar</button>
-                  <button className="btn-eliminar-factura" onClick={() => handleEliminar(fac.id)}>Eliminar</button>
-                </td>
+        {cargando ? (
+          <p style={{ color: 'var(--text)', padding: '20px 0' }}>Cargando facturas...</p>
+        ) : (
+          <table className="tabla-facturas">
+            <thead>
+              <tr>
+                <th>N° Factura</th>
+                <th>Cliente</th>
+                <th>Fecha</th>
+                <th>Total</th>
+                <th>Estado</th>
+                <th>Acciones</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {facturas.map((fac) => (
+                <tr key={fac.id_factura}>
+                  <td className="numero-factura">FAC-{String(fac.id_factura).padStart(3, '0')}</td>
+                  <td className="cliente-factura">{fac.clientes?.nombre ?? `Cliente #${fac.id_cliente}`}</td>
+                  <td>{fac.fecha ? fac.fecha.split('T')[0] : '—'}</td>
+                  <td className="total-factura">${Number(fac.total).toLocaleString()}</td>
+                  <td>
+                    <select
+                      value={fac.estado ?? 'Pendiente'}
+                      onChange={(e) => cambiarEstado(fac.id_factura, e.target.value)}
+                      className="estado-select-factura"
+                      style={{ backgroundColor: estadoColor[fac.estado ?? ''] || '#999' }}
+                    >
+                      <option value="Pendiente">Pendiente</option>
+                      <option value="Pagada">Pagada</option>
+                      <option value="Anulada">Anulada</option>
+                    </select>
+                  </td>
+                  <td>
+                    <button className="btn-editar-factura" onClick={() => handleEditar(fac)}>Editar</button>
+                    <button className="btn-eliminar-factura" onClick={() => handleEliminar(fac.id_factura)}>Eliminar</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
 
       {modalAbierto && (
@@ -146,11 +189,8 @@ export default function Facturas() {
             </>
           }
         >
-          <label className="label-factura">N° Factura</label>
-          <input className="input-factura" name="numero" value={formulario.numero} onChange={handleCambio} placeholder="FAC-006" />
-
-          <label className="label-factura">Cliente</label>
-          <input className="input-factura" name="cliente" value={formulario.cliente} onChange={handleCambio} placeholder="Nombre del cliente" />
+          <label className="label-factura">ID Cliente</label>
+          <input className="input-factura" type="number" name="id_cliente" value={formulario.id_cliente} onChange={handleCambio} placeholder="ID del cliente" />
 
           <label className="label-factura">Fecha</label>
           <input className="input-factura" type="date" name="fecha" value={formulario.fecha} onChange={handleCambio} />
