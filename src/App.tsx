@@ -6,6 +6,7 @@ import Header            from './components/Header/Header';
 import Footer            from './components/Footer/Footer';
 
 // Páginas públicas
+import Pago          from './pages/Pago/Pago';
 import Home          from './pages/Home/Home';
 import Login         from './pages/Login/Login';
 import Register      from './pages/Register/Register';
@@ -50,9 +51,14 @@ function App() {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password"  element={<ResetPassword />} />
 
-            {/* Cliente */}
-            <Route element={<ProtectedRoute allowedRoles={['cliente']} />}>
-              <Route path="/cliente" element={<ClienteDashboard />} />
+            {/* Cliente y Empleado */}
+            <Route element={<ProtectedRoute allowedRoles={['cliente', 'empleado']} />}>
+            <Route path="/cliente" element={<ClienteDashboard />} />
+            </Route>
+
+            {/* Pago */}
+            <Route element={<ProtectedRoute />}>
+            <Route path="/Pago" element={<Pago />} />
             </Route>
 
             {/* Admin */}
