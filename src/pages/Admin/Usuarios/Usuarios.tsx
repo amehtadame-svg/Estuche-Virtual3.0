@@ -54,7 +54,7 @@ export default function Usuarios() {
     if (!form.nombre || !form.email) { setError('Nombre y email son obligatorios.'); return; }
     if (modal === 'crear' && !form.password) { setError('La contraseña es obligatoria.'); return; }
 
-    const url    = modal === 'crear' ? API.usuarios : `${API}/${editId}`;
+    const url    = modal === 'crear' ? API.usuarios : `${API.usuarios}/${editId}`;
     const method = modal === 'crear' ? 'POST' : 'PUT';
     const body   = modal === 'crear'
       ? { nombre: form.nombre, email: form.email, password: form.password, rol: form.rol }
