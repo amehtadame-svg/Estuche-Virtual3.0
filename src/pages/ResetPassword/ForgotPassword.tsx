@@ -4,7 +4,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import emailjs from '@emailjs/browser';
 import './ForgotPassword.css';
 
-const SERVICE_ID  = 'service_fb7741d';
+const SERVICE_ID  = 'service_cpk14dk'; 
 const TEMPLATE_ID = 'template_iw2ub0s';
 const PUBLIC_KEY  = 'ysKRVpX_AojrEDk-x';
 
