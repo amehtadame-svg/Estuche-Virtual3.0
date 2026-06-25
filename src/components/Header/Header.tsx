@@ -41,6 +41,7 @@ export default function Header() {
             <Link to="/admin/envios">Envíos</Link>
             <Link to="/admin/proveedores">Proveedores</Link>
             <Link to="/admin/usuarios">Usuarios</Link>
+            <Link to="/admin/detalle-pedidos">Detalle Pedidos</Link>
           </>
         ) : (
           <>
