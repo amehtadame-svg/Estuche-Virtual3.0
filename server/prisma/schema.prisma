@@ -19,6 +19,7 @@ model usuarios {
   envios            envios[]
   pedidos_cliente   pedidos[] @relation("PedidoCliente")
   pedidos_empleado  pedidos[] @relation("PedidoEmpleado")
+  facturas    facturas[]
 }
 
 model pedidos {
@@ -89,6 +90,7 @@ model envios {
   direccion     String?   @db.VarChar(150)
   estado        String?   @db.VarChar(50)
   pedidos       pedidos?  @relation(fields: [id_pedido], references: [id_pedido], onDelete: NoAction, onUpdate: NoAction)
+  fecha DateTime? @db.Date
   empleados     usuarios? @relation(fields: [id_repartidor], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction)
 }
 
@@ -99,4 +101,12 @@ model movimientos_inventario {
   cantidad        Int
   fecha           DateTime?  @default(now()) @db.Timestamp(6)
   productos       productos? @relation(fields: [id_producto], references: [id_producto], onDelete: NoAction, onUpdate: NoAction)
+}
+model facturas {
+  id_factura Int      @id @default(autoincrement())
+  id_cliente Int?
+  fecha      DateTime? @db.Date
+  total      Decimal?  @db.Decimal(10, 2)
+  estado     String?   @default("Pendiente") @db.VarChar(50)
+  clientes   usuarios? @relation(fields: [id_cliente], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction)
 }

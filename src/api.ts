@@ -15,4 +15,5 @@ export const API = {
   productos:   `${BASE}/api/productos`,
   envios:      `${BASE}/api/envios`,
   detalle:     `${BASE}/api/detalle-pedido`,
+  facturas: `${BASE}/api/facturas`,
 };

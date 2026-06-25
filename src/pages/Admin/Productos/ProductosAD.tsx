@@ -1,26 +1,38 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Modal from '../../../components/Modal/Modal';
+import { API } from '../../../api';
 import './Productos.css';
 
-const productosIniciales = [
-  { id: 1, nombre: 'Cuaderno universitario', precio: 8500, stock: 50, categoria: 'Cuadernos' },
-  { id: 2, nombre: 'Set de colores x12', precio: 12000, stock: 30, categoria: 'Colores' },
-  { id: 3, nombre: 'Carpeta argollada', precio: 9500, stock: 40, categoria: 'Carpetas' },
-  { id: 4, nombre: 'Lapicero azul x10', precio: 5000, stock: 100, categoria: 'Lapiceros' },
-  { id: 5, nombre: 'Mochila escolar', precio: 45000, stock: 15, categoria: 'Mochilas' },
-  { id: 6, nombre: 'Tijeras punta redonda', precio: 6500, stock: 60, categoria: 'Tijeras' },
-];
-
 const categorias = ['Cuadernos', 'Colores', 'Carpetas', 'Lapiceros', 'Mochilas', 'Tijeras'];
+const formularioVacio = { nombre: '', precio: '', stock: '', categoria: '', descripcion: '' };
 
-const formularioVacio = { nombre: '', precio: '', stock: '', categoria: '' };
+interface Producto {
+  id_producto: number;
+  nombre: string;
+  precio: number;
+  descripcion: string | null;
+  id_categoria: number | null;
+  id_proveedor: number | null;
+  categorias: { nombre: string } | null;
+  inventario: { cantidad_actual: number } | null;
+}
 
 export default function Productos() {
-  const [productos, setProductos] = useState(productosIniciales);
+  const [productos, setProductos] = useState<Producto[]>([]);
   const [formulario, setFormulario] = useState(formularioVacio);
   const [editandoId, setEditandoId] = useState<number | null>(null);
   const [mensaje, setMensaje] = useState('');
   const [modalAbierto, setModalAbierto] = useState(false);
+  const [cargando, setCargando] = useState(true);
+
+  const cargarProductos = () => {
+    fetch(API.productos)
+      .then(r => r.json())
+      .then(data => { setProductos(data); setCargando(false); })
+      .catch(() => { mostrarMensaje('Error al cargar productos.'); setCargando(false); });
+  };
+
+  useEffect(() => { cargarProductos(); }, []);
 
   const mostrarMensaje = (texto: string) => {
     setMensaje(texto);
@@ -43,33 +55,55 @@ export default function Productos() {
     setFormulario(formularioVacio);
   };
 
-  const handleGuardar = () => {
-    if (!formulario.nombre || !formulario.precio || !formulario.stock || !formulario.categoria) {
+  const handleGuardar = async () => {
+    if (!formulario.nombre || !formulario.precio || !formulario.stock) {
       mostrarMensaje('Por favor completa todos los campos.');
       return;
     }
+
+    const body = {
+      nombre: formulario.nombre,
+      precio: Number(formulario.precio),
+      stock: Number(formulario.stock),
+      descripcion: formulario.descripcion,
+      categoria: formulario.categoria,
+    };
+
     if (editandoId !== null) {
-      setProductos(productos.map((p) =>
-        p.id === editandoId
-          ? { ...p, nombre: formulario.nombre, precio: Number(formulario.precio), stock: Number(formulario.stock), categoria: formulario.categoria }
-          : p
-      ));
+      await fetch(`${API.productos}/${editandoId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
       mostrarMensaje('Producto actualizado.');
     } else {
-      setProductos([...productos, { id: Date.now(), nombre: formulario.nombre, precio: Number(formulario.precio), stock: Number(formulario.stock), categoria: formulario.categoria }]);
+      await fetch(API.productos, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
       mostrarMensaje('Producto agregado.');
     }
+
+    cargarProductos();
     cerrarModal();
   };
 
-  const handleEditar = (prod: typeof productosIniciales[0]) => {
-    setFormulario({ nombre: prod.nombre, precio: String(prod.precio), stock: String(prod.stock), categoria: prod.categoria });
-    setEditandoId(prod.id);
+  const handleEditar = (prod: Producto) => {
+    setFormulario({
+      nombre: prod.nombre,
+      precio: String(prod.precio),
+      stock: String(prod.inventario?.cantidad_actual ?? 0),
+      categoria: prod.categorias?.nombre ?? '',
+      descripcion: prod.descripcion ?? '',
+    });
+    setEditandoId(prod.id_producto);
     setModalAbierto(true);
   };
 
-  const handleEliminar = (id: number) => {
-    setProductos(productos.filter((p) => p.id !== id));
+  const handleEliminar = async (id: number) => {
+    await fetch(`${API.productos}/${id}`, { method: 'DELETE' });
+    setProductos(productos.filter(p => p.id_producto !== id));
     mostrarMensaje('Producto eliminado.');
   };
 
@@ -87,31 +121,35 @@ export default function Productos() {
 
         {mensaje && <div className="mensaje-productos">{mensaje}</div>}
 
-        <table className="tabla-productos">
-          <thead>
-            <tr>
-              <th>Producto</th>
-              <th>Categoria</th>
-              <th>Precio</th>
-              <th>Stock</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {productos.map((prod) => (
-              <tr key={prod.id}>
-                <td className="nombre-producto">{prod.nombre}</td>
-                <td>{prod.categoria}</td>
-                <td className="precio-producto">${prod.precio.toLocaleString()}</td>
-                <td>{prod.stock}</td>
-                <td>
-                  <button className="btn-editar-producto" onClick={() => handleEditar(prod)}>Editar</button>
-                  <button className="btn-eliminar-producto" onClick={() => handleEliminar(prod.id)}>Eliminar</button>
-                </td>
+        {cargando ? (
+          <p style={{ color: 'var(--text)', padding: '20px 0' }}>Cargando productos...</p>
+        ) : (
+          <table className="tabla-productos">
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th>Categoria</th>
+                <th>Precio</th>
+                <th>Stock</th>
+                <th>Acciones</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {productos.map((prod) => (
+                <tr key={prod.id_producto}>
+                  <td className="nombre-producto">{prod.nombre}</td>
+                  <td>{prod.categorias?.nombre ?? '—'}</td>
+                  <td className="precio-producto">${Number(prod.precio).toLocaleString()}</td>
+                  <td>{prod.inventario?.cantidad_actual ?? 0}</td>
+                  <td>
+                    <button className="btn-editar-producto" onClick={() => handleEditar(prod)}>Editar</button>
+                    <button className="btn-eliminar-producto" onClick={() => handleEliminar(prod.id_producto)}>Eliminar</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
 
       {modalAbierto && (
@@ -129,6 +167,9 @@ export default function Productos() {
         >
           <label className="label-producto">Nombre</label>
           <input className="input-producto" name="nombre" value={formulario.nombre} onChange={handleCambio} placeholder="Nombre del producto" />
+
+          <label className="label-producto">Descripcion</label>
+          <input className="input-producto" name="descripcion" value={formulario.descripcion} onChange={handleCambio} placeholder="Descripcion del producto" />
 
           <label className="label-producto">Precio</label>
           <input className="input-producto" type="number" name="precio" value={formulario.precio} onChange={handleCambio} placeholder="Precio en pesos" />
