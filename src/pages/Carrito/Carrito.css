@@ -311,42 +311,42 @@
 }
 
 /* ═══════════════════════════════════════════════════
-   CARRITO — MODO OSCURO
+   CARRITO — MODO OSCURO (DARK MODE)
    ═══════════════════════════════════════════════════ */
 
-body.dark-mode .cart-container,
-body.dark-mode .cart-item-card,
-body.dark-mode .cart-summary {
-    background-color: var(--bg) !important;
-    border: 1px solid var(--border) !important;
+body.dark-mode .carrito-titulo,
+body.dark-mode .carrito-item-nombre,
+body.dark-mode .qty-btn,
+body.dark-mode .qty-num,
+body.dark-mode .resumen-titulo,
+body.dark-mode .resumen-total,
+body.dark-mode .carrito-vacio h2 {
+    color: #ffffff !important;
 }
 
-/* Ajuste para las tarjetas de producto dentro del carrito */
-body.dark-mode .cart-item {
+body.dark-mode .carrito-item,
+body.dark-mode .carrito-resumen,
+body.dark-mode .carrito-btn-vaciar,
+body.dark-mode .resumen-btn-seguir {
     background-color: #1a1a1a !important;
-    border: 1px solid #333 !important;
+    border-color: #333 !important;
     color: #ffffff !important;
 }
 
-/* Ajuste de los textos (Título, precio, etc.) */
-body.dark-mode .cart-item-title,
-body.dark-mode .cart-total-text {
-    color: #ffffff !important;
+body.dark-mode .carrito-item-cantidad {
+    border-color: #333 !important;
 }
 
-/* Ajuste para los botones de cantidad y el botón principal */
-body.dark-mode .quantity-btn {
-    background-color: #333 !important;
-    color: #ffffff !important;
+body.dark-mode .carrito-item-quitar:hover {
+    background: #333 !important;
 }
 
-body.dark-mode .checkout-button {
-    background: linear-gradient(135deg, #7e22ce 0%, #a855f7 100%) !important;
-    color: #ffffff !important;
+/* Ajuste para los botones */
+body.dark-mode .carrito-btn-vaciar:hover {
+    background: #333 !important;
+    border-color: #ef4444 !important;
 }
 
-/* Ajuste para el fondo general del carrito */
-body.dark-mode .cart-page-wrapper {
-    background-color: #08060d !important;
+body.dark-mode .resumen-btn-seguir:hover {
+    border-color: #aa3bff !important;
 }
-
