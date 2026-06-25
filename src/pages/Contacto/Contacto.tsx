@@ -133,16 +133,10 @@ export default function Contacto() {
                 </div>
               </div>
             ))}
-
-            <div className="contacto-acciones-rapidas">
-              <button className="contacto-btn-whatsapp" onClick={handleWhatsApp}>
-                📱 Escríbenos por WhatsApp
-              </button>
-            </div>
           </div>
-
         </div>
       </div>
     </>
   );
 }
+

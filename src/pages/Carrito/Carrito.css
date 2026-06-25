@@ -309,3 +309,44 @@
     gap: 12px;
   }
 }
+
+/* ═══════════════════════════════════════════════════
+   CARRITO — MODO OSCURO (DARK MODE)
+   ═══════════════════════════════════════════════════ */
+
+body.dark-mode .carrito-titulo,
+body.dark-mode .carrito-item-nombre,
+body.dark-mode .qty-btn,
+body.dark-mode .qty-num,
+body.dark-mode .resumen-titulo,
+body.dark-mode .resumen-total,
+body.dark-mode .carrito-vacio h2 {
+    color: #ffffff !important;
+}
+
+body.dark-mode .carrito-item,
+body.dark-mode .carrito-resumen,
+body.dark-mode .carrito-btn-vaciar,
+body.dark-mode .resumen-btn-seguir {
+    background-color: #1a1a1a !important;
+    border-color: #333 !important;
+    color: #ffffff !important;
+}
+
+body.dark-mode .carrito-item-cantidad {
+    border-color: #333 !important;
+}
+
+body.dark-mode .carrito-item-quitar:hover {
+    background: #333 !important;
+}
+
+/* Ajuste para los botones */
+body.dark-mode .carrito-btn-vaciar:hover {
+    background: #333 !important;
+    border-color: #ef4444 !important;
+}
+
+body.dark-mode .resumen-btn-seguir:hover {
+    border-color: #aa3bff !important;
+}
