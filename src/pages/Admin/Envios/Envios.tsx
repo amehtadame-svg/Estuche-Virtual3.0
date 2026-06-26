@@ -177,8 +177,8 @@ export default function Envios() {
                       </select>
                     </td>
                     <td>
-                      <button className="btn-editar-envio" onClick={() => handleEditar(env)}>Editar</button>
-                      <button className="btn-eliminar-envio" onClick={() => handleEliminar(env.id_envio)}>Eliminar</button>
+                      <button className="btn-editar-envio" onClick={() => handleEditar(env)}> Editar</button>
+                      <button className="btn-eliminar-envio" onClick={() => handleEliminar(env.id_envio)}> Eliminar</button>
                     </td>
                   </tr>
                 ))}

@@ -23,7 +23,7 @@ export default function DetallePedidos() {
   const [cargando, setCargando] = useState(true);
 
   // Asume que tienes configurado API.detallePedidos o lo concatenas manualmente
-  const endpointBase = API.detallePedidos || `${API.pedidos}/detalles`;
+  const endpointBase = API.detalle || `${API.detalle}/pedido`;
 
   const cargarDetalles = () => {
     fetch(`${endpointBase}`)

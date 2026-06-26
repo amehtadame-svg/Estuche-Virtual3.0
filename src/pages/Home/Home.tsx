@@ -28,12 +28,6 @@ const Home = () => {
         {user ? (
           <div className="hero-actions">
             <p className="welcome-text">Hola, {user.name}. Rol: {user.role}</p>
-            <Link className="hero-button" to={user.role === 'cliente' ? '/cliente' : '/admin'}>
-              Ir a tu panel
-            </Link>
-            <button className="logout-button" onClick={logout}>
-              Cerrar sesión
-            </button>
           </div>
         ) : (
           <Link className="hero-button" to="/Catalogo">

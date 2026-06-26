@@ -327,3 +327,56 @@
   color: var(--accent);
   margin: 0;
 }
+
+/* ==========================================================================
+    MODO OSCURO PRODUCTOS.CSS
+   ========================================================================== */
+
+body.dark-mode .prod-detalle-container {
+    background-color: #08060d !important;
+    color: #ffffff !important;
+}
+
+body.dark-mode .prod-detalle-card,
+body.dark-mode .prod-rel-card {
+    background-color: #1a1a1a !important;
+    border: 1px solid #333 !important;
+}
+
+body.dark-mode .prod-detalle-nombre,
+body.dark-mode .prod-detalle-desc,
+body.dark-mode .prod-cantidad-label,
+body.dark-mode .prod-relacionados-titulo,
+body.dark-mode .prod-rel-nombre,
+body.dark-mode .prod-cantidad-num {
+    color: #ffffff !important;
+}
+
+body.dark-mode .prod-cantidad-control {
+    border-color: #444 !important;
+}
+
+body.dark-mode .prod-cantidad-btn {
+    background: #333 !important;
+    color: #fff !important;
+}
+
+body.dark-mode .prod-detalle-btn-carrito {
+    background: #1a1a1a !important;
+    border-color: #444 !important;
+    color: #ffffff !important;
+}
+
+body.dark-mode .prod-detalle-btn-carrito:hover {
+    border-color: #aa3bff !important;
+    color: #aa3bff !important;
+}
+
+body.dark-mode .prod-detalle-icono-wrap {
+    background-color: #333 !important; 
+    border: 1px solid #444 !important;
+}
+
+body.dark-mode .prod-detalle-icono {
+    filter: brightness(0.9) contrast(1.2); /* Esto ayuda a que el emoji se vea mejor en fondo oscuro */
+}

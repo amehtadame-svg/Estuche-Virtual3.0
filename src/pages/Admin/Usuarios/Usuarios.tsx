@@ -130,8 +130,8 @@ export default function Usuarios() {
                     <td><span className={`rol-badge ${u.rol}`}>{u.rol}</span></td>
                     <td>
                       <div className="usr-acciones">
-                        <button className="usr-btn-editar" onClick={() => abrirEditar(u)}>Editar</button>
-                        <button className="usr-btn-eliminar" onClick={() => pedirConfirmacionEliminar(u.id_usuario)}>Eliminar</button>
+                        <button className="usr-btn-editar" onClick={() => abrirEditar(u)}> Editar</button>
+                        <button className="usr-btn-eliminar" onClick={() => pedirConfirmacionEliminar(u.id_usuario)}> Eliminar</button>
                       </div>
                     </td>
                   </tr>

@@ -140,8 +140,8 @@ export default function Proveedores() {
                     <td>{p.telefono ?? '—'}</td>
                     <td>{p.productos_que_provee ?? '—'}</td>
                     <td>
-                      <button onClick={() => handleEditar(p)} className="btn-editar-proveedor">✏️ Editar</button>
-                      <button onClick={() => handleEliminar(p.id_proveedor)} className="btn-eliminar-proveedor">Eliminar</button>
+                      <button onClick={() => handleEditar(p)} className="btn-editar-proveedor"> Editar</button>
+                      <button onClick={() => handleEliminar(p.id_proveedor)} className="btn-eliminar-proveedor"> Eliminar</button>
                     </td>
                   </tr>
                 ))}

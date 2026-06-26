@@ -316,3 +316,29 @@
   flex: 1;
   margin: 0;
 }
+
+/* ==========================================================================
+   MODO OSCURO: BOTONES PROVEEDORES (EDITAR Y ELIMINAR)
+   ========================================================================== */
+
+body.dark-mode .btn-eliminar-proveedor {
+    background-color: #551e66 !important;
+    color: #fca5a5 !important;
+    border: 1px solid #671d6e !important;
+}
+
+body.dark-mode .btn-eliminar-proveedor:hover {
+    background-color: #671d6e !important;
+    color: #ffffff !important;
+}
+
+body.dark-mode .btn-editar-proveedor {
+    background-color: #1e293b !important;
+    border: 1px solid #334155 !important;
+    color: #94a3b8 !important;
+}
+
+body.dark-mode .btn-editar-proveedor:hover {
+    background-color: #334155 !important;
+    color: #ffffff !important;
+}
