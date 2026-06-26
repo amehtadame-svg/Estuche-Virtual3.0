@@ -315,3 +315,31 @@
     margin-right: 6px;
   }
 }
+
+/* ==========================================================================
+   MODO OSCURO: DISEÑO DE BOTONES (PEDIDOS)
+   ========================================================================== */
+
+/* --- BOTONES ELIMINAR --- */
+body.dark-mode .btn-eliminar-pedido {
+    background-color: #551e66 !important;
+    color: #fca5a5 !important;
+    border: 1px solid #671d6e !important;
+}
+
+body.dark-mode .btn-eliminar-pedido:hover {
+    background-color: #671d6e !important;
+    color: #ffffff !important;
+}
+
+/* --- BOTONES EDITAR --- */
+body.dark-mode .btn-editar-pedido {
+    background-color: #1e293b !important;
+    border: 1px solid #334155 !important;
+    color: #94a3b8 !important;
+}
+
+body.dark-mode .btn-editar-pedido:hover {
+    background-color: #334155 !important;
+    color: #ffffff !important;
+}
