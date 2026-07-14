@@ -1,0 +1,103 @@
+.reportes-page {
+  padding: 0 30px 50px;
+}
+
+.reportes-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 32px;
+  padding-top: 10px;
+}
+
+.titulo-reportes {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-h);
+  margin: 0;
+}
+
+/* ── Stats ───────────────────────────────────────────── */
+.reportes-stats {
+  grid-template-columns: repeat(3, 1fr);
+  margin-bottom: 32px;
+}
+
+/* ── Gráficas ────────────────────────────────────────── */
+.reportes-graficas {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+/* ── Tabla ───────────────────────────────────────────── */
+.reportes-tabla-section {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 22px;
+}
+
+.tabla-reportes {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.tabla-reportes thead tr { border-bottom: 2px solid var(--border); }
+
+.tabla-reportes tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+}
+
+.tabla-reportes tbody tr:hover { background: var(--bg-subtle); }
+
+.tabla-reportes th {
+  padding: 10px;
+  text-align: left;
+  color: var(--text);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.tabla-reportes td { padding: 10px; color: var(--text); }
+
+.fecha-reporte        { font-weight: 600; color: var(--text-h); }
+.vendido-reporte      { font-weight: 600; color: var(--accent); }
+.entregados-reporte   { color: #10b981; font-weight: 500; }
+.cancelados-reporte   { color: #e74c3c; font-weight: 500; }
+.reembolsado-reporte  { color: #3b82f6; font-weight: 500; }
+
+/* ═══════════════════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════════════════ */
+
+@media (max-width: 1024px) {
+  .reportes-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .reportes-page  { padding: 0 16px 40px; }
+  .reportes-stats { grid-template-columns: repeat(2, 1fr); }
+
+  .tabla-reportes thead { display: none; }
+
+  .tabla-reportes tbody tr {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tabla-reportes td { padding: 2px 0; }
+}
+
+@media (max-width: 380px) {
+  .reportes-stats { grid-template-columns: 1fr; }
+}

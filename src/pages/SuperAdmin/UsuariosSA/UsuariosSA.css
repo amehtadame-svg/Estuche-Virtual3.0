@@ -1,0 +1,263 @@
+.usuariossa-page {
+  padding: 0 30px 50px;
+}
+
+.usuariossa-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding-top: 10px;
+}
+
+.titulo-usuariossa {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-h);
+  margin: 0;
+}
+
+.mensaje-usuariossa {
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius-sm);
+  padding: 10px 16px;
+  color: var(--accent);
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+/* ── Botón nuevo ─────────────────────────────────────── */
+.btn-nuevo-usuariossa {
+  flex-shrink: 0;
+  background: var(--gradient-accent);
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s;
+  box-shadow: var(--shadow-accent);
+}
+
+.btn-nuevo-usuariossa:hover { opacity: 0.88; }
+
+/* ── Controles ───────────────────────────────────────── */
+.usuariossa-controles {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.busqueda-usuariossa {
+  width: 100%;
+  max-width: 360px;
+  padding: 9px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  color: var(--text-h);
+  background: var(--bg);
+  transition: border-color 0.2s;
+}
+
+.busqueda-usuariossa:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.filtros-rol {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btn-filtro-rol {
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-filtro-rol:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  opacity: 1;
+}
+
+.btn-filtro-rol-activo {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.btn-filtro-rol-activo:hover {
+  opacity: 0.88;
+  color: #fff;
+}
+
+/* ── Tabla ───────────────────────────────────────────── */
+.tabla-usuariossa {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.tabla-usuariossa thead tr { border-bottom: 2px solid var(--border); }
+
+.tabla-usuariossa tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+}
+
+.tabla-usuariossa tbody tr:hover { background: var(--bg-subtle); }
+
+.tabla-usuariossa th {
+  padding: 10px;
+  text-align: left;
+  color: var(--text);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.tabla-usuariossa td { padding: 10px; color: var(--text); }
+
+.id-usuariossa     { font-weight: 700; color: var(--accent); }
+.nombre-usuariossa { font-weight: 500; color: var(--text-h); }
+.email-usuariossa  { font-size: 13px; }
+
+/* ── Badge rol ───────────────────────────────────────── */
+.badge-rol {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #fff;
+  white-space: nowrap;
+}
+
+/* ── Select rol ──────────────────────────────────────── */
+.select-rol-usuariossa {
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  font-size: 13px;
+  color: var(--text-h);
+  background: var(--bg);
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.select-rol-usuariossa:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+/* ── Acciones ────────────────────────────────────────── */
+.acciones-usuariossa { display: flex; gap: 8px; }
+
+.btn-editar-usuariossa,
+.btn-eliminar-usuariossa {
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.btn-editar-usuariossa {
+  background: var(--accent-bg);
+  color: var(--accent);
+  border: 1px solid var(--accent-border);
+}
+
+.btn-eliminar-usuariossa {
+  background: #fff0f0;
+  color: #e74c3c;
+  border: 1px solid #e74c3c;
+}
+
+.btn-editar-usuariossa:hover,
+.btn-eliminar-usuariossa:hover { opacity: 0.8; }
+
+/* ── Botones modal ───────────────────────────────────── */
+.btn-guardar-sa {
+  background: var(--gradient-accent);
+  color: #fff;
+  border: none;
+}
+
+.btn-cancelar-sa {
+  background: var(--bg);
+  color: var(--accent);
+  border: 1px solid var(--accent-border);
+}
+
+.btn-guardar-sa:hover,
+.btn-cancelar-sa:hover { opacity: 0.85; }
+
+.btn-eliminar-confirm-sa {
+  background: #e74c3c;
+  color: #fff;
+  border: none;
+}
+
+.btn-eliminar-confirm-sa:hover { opacity: 0.85; }
+
+/* ── Eliminar warning ────────────────────────────────── */
+.eliminar-warning {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.eliminar-warning p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-h);
+}
+
+.eliminar-warning-sub {
+  font-size: 13px;
+  color: #e74c3c;
+}
+
+/* ═══════════════════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════════════════ */
+
+@media (max-width: 900px) {
+  .usuariossa-topbar { flex-direction: column; align-items: flex-start; }
+  .btn-nuevo-usuariossa { width: 100%; text-align: center; }
+}
+
+@media (max-width: 600px) {
+  .usuariossa-page { padding: 0 16px 40px; }
+  .busqueda-usuariossa { max-width: 100%; }
+
+  .tabla-usuariossa thead { display: none; }
+
+  .tabla-usuariossa tbody tr {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tabla-usuariossa td { padding: 2px 0; }
+  .tabla-usuariossa td:last-child { padding-top: 8px; }
+
+  .acciones-usuariossa { flex-wrap: wrap; }
+  .filtros-rol { width: 100%; }
+  .btn-filtro-rol { flex: 1; text-align: center; }
+}

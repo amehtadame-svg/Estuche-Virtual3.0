@@ -1,0 +1,288 @@
+.descuentos-page {
+  padding: 0 30px 50px;
+}
+
+.descuentos-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 32px;
+  padding-top: 10px;
+}
+
+.titulo-descuentos {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-h);
+  margin: 0;
+}
+
+.mensaje-descuentos {
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius-sm);
+  padding: 10px 16px;
+  color: var(--accent);
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+/* ── Botón nuevo ─────────────────────────────────────── */
+.btn-nuevo-descuento {
+  flex-shrink: 0;
+  background: var(--gradient-accent);
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s;
+  box-shadow: var(--shadow-accent);
+}
+
+.btn-nuevo-descuento:hover { opacity: 0.88; }
+
+/* ── Tabla ───────────────────────────────────────────── */
+.tabla-descuentos {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.tabla-descuentos thead tr { border-bottom: 2px solid var(--border); }
+
+.tabla-descuentos tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+}
+
+.tabla-descuentos tbody tr:hover { background: var(--bg-subtle); }
+
+.tabla-descuentos th {
+  padding: 10px;
+  text-align: left;
+  color: var(--text);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.tabla-descuentos td { padding: 10px; color: var(--text); }
+
+.codigo-descuento {
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.5px;
+}
+
+.vigencia-descuento { font-size: 13px; }
+
+/* ── Badges estado ───────────────────────────────────── */
+.badge-estado {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.badge-activo   { background: #d1fae5; color: #065f46; }
+.badge-inactivo { background: #fee2e2; color: #991b1b; }
+
+/* ── Acciones ────────────────────────────────────────── */
+.acciones-descuento { display: flex; gap: 6px; align-items: center; }
+
+.btn-toggle-descuento,
+.btn-editar-descuento,
+.btn-eliminar-descuento {
+  padding: 5px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s;
+  white-space: nowrap;
+}
+
+.btn-toggle-descuento {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+.btn-editar-descuento {
+  background: var(--accent-bg);
+  color: var(--accent);
+  border: 1px solid var(--accent-border);
+}
+
+.btn-eliminar-descuento {
+  background: #fff0f0;
+  color: #e74c3c;
+  border: 1px solid #e74c3c;
+}
+
+.btn-toggle-descuento:hover,
+.btn-editar-descuento:hover,
+.btn-eliminar-descuento:hover { opacity: 0.8; }
+
+/* ── Formulario modal ────────────────────────────────── */
+.label-descuento {
+  display: block;
+  font-size: 13px;
+  color: var(--text);
+  margin: 0 0 4px;
+}
+
+.required { color: #e74c3c; }
+
+.input-descuento {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  color: var(--text-h);
+  background: var(--bg);
+  margin-bottom: 12px;
+  transition: border-color 0.2s;
+}
+
+.input-descuento:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+/* ── Modal ───────────────────────────────────────────── */
+.modal-overlay-descuento {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+  animation: fadeInDesc 0.18s ease;
+}
+
+@keyframes fadeInDesc {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.modal-descuentos {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 480px;
+  box-shadow: var(--shadow-lg);
+  animation: slideUpDesc 0.2s ease;
+}
+
+@keyframes slideUpDesc {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.modal-header-descuento {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.modal-titulo-descuento {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-h);
+  margin: 0;
+}
+
+.modal-cerrar-descuento {
+  font-size: 16px;
+  color: var(--text);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  transition: background 0.15s, color 0.15s;
+}
+
+.modal-cerrar-descuento:hover {
+  background: var(--accent-bg);
+  color: var(--accent);
+  opacity: 1;
+}
+
+.modal-body-descuento {
+  padding: 20px 24px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.modal-footer-descuento {
+  display: flex;
+  gap: 10px;
+  padding: 16px 24px 20px;
+  border-top: 1px solid var(--border);
+}
+
+.btn-guardar-descuento,
+.btn-cancelar-descuento {
+  flex: 1;
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s;
+}
+
+.btn-guardar-descuento {
+  background: var(--gradient-accent);
+  color: #fff;
+  border: none;
+}
+
+.btn-cancelar-descuento {
+  background: var(--bg);
+  color: var(--accent);
+  border: 1px solid var(--accent-border);
+}
+
+.btn-guardar-descuento:hover,
+.btn-cancelar-descuento:hover { opacity: 0.85; }
+
+/* ═══════════════════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════════════════ */
+
+@media (max-width: 900px) {
+  .tabla-descuentos td:nth-child(5) {
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 600px) {
+  .descuentos-page   { padding: 0 16px 40px; }
+  .descuentos-topbar { flex-direction: column; align-items: flex-start; }
+  .btn-nuevo-descuento { width: 100%; text-align: center; }
+
+  .tabla-descuentos thead { display: none; }
+
+  .tabla-descuentos tbody tr {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tabla-descuentos td { padding: 2px 0; }
+  .tabla-descuentos td:last-child { padding-top: 8px; }
+
+  .acciones-descuento { flex-wrap: wrap; }
+}

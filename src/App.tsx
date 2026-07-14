@@ -6,15 +6,15 @@ import Header            from './components/Header/Header';
 import Footer            from './components/Footer/Footer';
 
 // Páginas públicas
-import Pago          from './pages/Pago/Pago';
-import Home          from './pages/Home/Home';
-import Login         from './pages/Login/Login';
-import Register      from './pages/Register/Register';
-import Catalogo      from './pages/Catalogo/Catalogo';
-import Producto      from './pages/Productos/Productos';
-import Carrito       from './pages/Carrito/Carrito';
-import Contacto      from './pages/Contacto/Contacto';
-import Nosotros      from './pages/Nosotros/Nosotros';
+import Pago           from './pages/Pago/Pago';
+import Home           from './pages/Home/Home';
+import Login          from './pages/Login/Login';
+import Register       from './pages/Register/Register';
+import Catalogo       from './pages/Catalogo/Catalogo';
+import Producto       from './pages/Productos/Productos';
+import Carrito        from './pages/Carrito/Carrito';
+import Contacto       from './pages/Contacto/Contacto';
+import Nosotros       from './pages/Nosotros/Nosotros';
 import ForgotPassword from './pages/ResetPassword/ForgotPassword';
 import ResetPassword  from './pages/ResetPassword/ResetPassword';
 
@@ -31,6 +31,14 @@ import Envios          from './pages/Admin/Envios/Envios';
 import Proveedores     from './pages/Admin/Proveedores/Proveedores';
 import Usuarios        from './pages/Admin/Usuarios/Usuarios';
 
+// SuperAdmin
+//import SuperAdminDashboard from './pages/SuperAdmin/SuperAdminDashboard';
+import Descuentos          from './pages/SuperAdmin/Descuentos/Descuentos';
+import Pagos               from './pages/SuperAdmin/Pagos/Pagos';
+import Devoluciones        from './pages/SuperAdmin/Devoluciones/Devoluciones';
+import Reportes            from './pages/SuperAdmin/Reportes/Reportes';
+import UsuariosSA          from './pages/SuperAdmin/UsuariosSA/UsuariosSA';
+
 function App() {
   return (
     <AuthProvider>
@@ -39,7 +47,7 @@ function App() {
           <Header />
           <Routes>
 
-            {/* Públicas */}
+            {/* ── Públicas ─────────────────────────────── */}
             <Route path="/"                element={<Home />} />
             <Route path="/login"           element={<Login />} />
             <Route path="/register"        element={<Register />} />
@@ -51,26 +59,36 @@ function App() {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password"  element={<ResetPassword />} />
 
-            {/* Cliente y Empleado */}
+            {/* ── Cliente ──────────────────────────────── */}
             <Route element={<ProtectedRoute allowedRoles={['cliente', 'empleado']} />}>
-            <Route path="/cliente" element={<ClienteDashboard />} />
+              <Route path="/cliente" element={<ClienteDashboard />} />
             </Route>
 
-            {/* Pago */}
+            {/* ── Pago ─────────────────────────────────── */}
             <Route element={<ProtectedRoute />}>
-            <Route path="/Pago" element={<Pago />} />
+              <Route path="/Pago" element={<Pago />} />
             </Route>
 
-            {/* Admin */}
-            <Route element={<ProtectedRoute allowedRoles={['administrador']} />}>
-              <Route path="/admin"                   element={<AdminDashboard />} />
-              <Route path="/admin/productos"         element={<ProductosAD />} />
-              <Route path="/admin/pedidos"           element={<Pedidos />} />
-              <Route path="/admin/facturas"          element={<Facturas />} />
-              <Route path="/admin/detallefacturas"   element={<DetalleFacturas />} />
-              <Route path="/admin/envios"            element={<Envios />} />
-              <Route path="/admin/proveedores"       element={<Proveedores />} />
-              <Route path="/admin/usuarios"          element={<Usuarios />} />
+            {/* ── Admin ────────────────────────────────── */}
+            <Route element={<ProtectedRoute allowedRoles={['administrador', 'superadmin']} />}>
+              <Route path="/admin"                 element={<AdminDashboard />} />
+              <Route path="/admin/productos"       element={<ProductosAD />} />
+              <Route path="/admin/pedidos"         element={<Pedidos />} />
+              <Route path="/admin/facturas"        element={<Facturas />} />
+              <Route path="/admin/detallefacturas" element={<DetalleFacturas />} />
+              <Route path="/admin/envios"          element={<Envios />} />
+              <Route path="/admin/proveedores"     element={<Proveedores />} />
+              <Route path="/admin/usuarios"        element={<Usuarios />} />
+            </Route>
+
+            {/* ── SuperAdmin ───────────────────────────── */}
+            <Route element={<ProtectedRoute allowedRoles={['superadmin']} />}>
+              {/*<Route path="/superadmin"                element={<SuperAdminDashboard />} />*/}
+              <Route path="/superadmin/usuarios"       element={<UsuariosSA />} />
+              <Route path="/superadmin/descuentos"     element={<Descuentos />} />
+              <Route path="/superadmin/pagos"          element={<Pagos />} />
+              <Route path="/superadmin/devoluciones"   element={<Devoluciones />} />
+              <Route path="/superadmin/reportes"       element={<Reportes />} />
             </Route>
 
           </Routes>

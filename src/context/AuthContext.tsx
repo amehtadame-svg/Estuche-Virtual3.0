@@ -7,7 +7,7 @@ interface User {
   id: number;
   email: string;
   name: string;
-  role: 'cliente' | 'administrador' | 'empleado';
+  role: 'cliente' | 'administrador' | 'empleado' | 'repartidor' | 'superadmin';
 }
 
 interface ResetToken {

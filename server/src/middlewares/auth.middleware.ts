@@ -1,3 +1,4 @@
+
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
@@ -14,4 +15,20 @@ export const verifyToken = (req: Request, res: Response, next: NextFunction) => 
   } catch {
     return res.status(401).json({ message: 'Token inválido o expirado' });
   }
+};
+
+// Solo administrador o superadmin
+export const verifyAdmin = (req: Request, res: Response, next: NextFunction) => {
+  const role = (req as any).user?.role;
+  if (role !== 'administrador' && role !== 'superadmin')
+    return res.status(403).json({ message: 'Acceso restringido a administradores' });
+  next();
+};
+
+// Solo superadmin
+export const verifySuperAdmin = (req: Request, res: Response, next: NextFunction) => {
+  const role = (req as any).user?.role;
+  if (role !== 'superadmin')
+    return res.status(403).json({ message: 'Acceso restringido a superadmin' });
+  next();
 };

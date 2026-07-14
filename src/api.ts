@@ -8,12 +8,16 @@ const getBaseURL = () => {
 
 export const BASE = getBaseURL();
 export const API = {
-  auth:      `${BASE}/api/auth`,
-  usuarios:  `${BASE}/api/usuarios`,
-  pedidos:   `${BASE}/api/pedidos`,
-  proveedores: `${BASE}/api/proveedores`,
-  productos:   `${BASE}/api/productos`,
-  envios:      `${BASE}/api/envios`,
-  detalle:     `${BASE}/api/detalle-pedido`,
-  facturas: `${BASE}/api/facturas`,
+  auth:         `${BASE}/api/auth`,
+  usuarios:     `${BASE}/api/usuarios`,
+  pedidos:      `${BASE}/api/pedidos`,
+  proveedores:  `${BASE}/api/proveedores`,
+  productos:    `${BASE}/api/productos`,
+  envios:       `${BASE}/api/envios`,
+  detalle:      `${BASE}/api/detalle-pedido`,
+  facturas:     `${BASE}/api/facturas`,
+  descuentos:   `${BASE}/api/descuentos`,
+  pagos:        `${BASE}/api/pagos`,
+  devoluciones: `${BASE}/api/devoluciones`,
+  reportes:     `${BASE}/api/reportes`,
 };

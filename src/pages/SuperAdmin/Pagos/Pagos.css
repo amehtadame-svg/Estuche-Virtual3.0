@@ -1,0 +1,186 @@
+.pagos-page {
+  padding: 0 30px 50px;
+}
+
+.pagos-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding-top: 10px;
+  flex-wrap: wrap;
+}
+
+.titulo-pagos {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-h);
+  margin: 0;
+}
+
+.mensaje-pagos {
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius-sm);
+  padding: 10px 16px;
+  color: var(--accent);
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+/* ── Filtros ─────────────────────────────────────────── */
+.pagos-filtros {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btn-filtro-pago {
+  padding: 7px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-filtro-pago:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  opacity: 1;
+}
+
+.btn-filtro-activo {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.btn-filtro-activo:hover {
+  opacity: 0.88;
+  color: #fff;
+}
+
+/* ── Resumen ─────────────────────────────────────────── */
+.pagos-resumen {
+  margin-bottom: 16px;
+}
+
+.pagos-resumen-texto {
+  font-size: 14px;
+  color: var(--text);
+}
+
+/* ── Tabla ───────────────────────────────────────────── */
+.tabla-pagos {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.tabla-pagos thead tr { border-bottom: 2px solid var(--border); }
+
+.tabla-pagos tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+}
+
+.tabla-pagos tbody tr:hover { background: var(--bg-subtle); }
+
+.tabla-pagos th {
+  padding: 10px;
+  text-align: left;
+  color: var(--text);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.tabla-pagos td { padding: 10px; color: var(--text); }
+
+.id-pago {
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.cliente-pago-nombre {
+  font-weight: 500;
+  color: var(--text-h);
+  margin: 0 0 2px;
+  font-size: 13px;
+}
+
+.cliente-pago-email {
+  font-size: 12px;
+  color: var(--text);
+  margin: 0;
+}
+
+.transaccion-pago {
+  font-size: 12px;
+  font-family: var(--mono);
+  color: var(--text);
+}
+
+.monto-pago {
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+/* ── Badge estado ────────────────────────────────────── */
+.badge-pago {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #fff;
+  white-space: nowrap;
+}
+
+/* ── Select estado ───────────────────────────────────── */
+.select-estado-pago {
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  font-size: 13px;
+  color: var(--text-h);
+  background: var(--bg);
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.select-estado-pago:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+/* ═══════════════════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════════════════ */
+
+@media (max-width: 900px) {
+  .pagos-topbar { flex-direction: column; align-items: flex-start; }
+}
+
+@media (max-width: 600px) {
+  .pagos-page { padding: 0 16px 40px; }
+
+  .tabla-pagos thead { display: none; }
+
+  .tabla-pagos tbody tr {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tabla-pagos td { padding: 2px 0; }
+  .tabla-pagos td:last-child { padding-top: 8px; }
+
+  .pagos-filtros { width: 100%; }
+  .btn-filtro-pago { flex: 1; text-align: center; }
+}
