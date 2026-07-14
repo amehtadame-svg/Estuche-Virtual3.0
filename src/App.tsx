@@ -32,7 +32,7 @@ import Proveedores     from './pages/Admin/Proveedores/Proveedores';
 import Usuarios        from './pages/Admin/Usuarios/Usuarios';
 
 // SuperAdmin
-//import SuperAdminDashboard from './pages/SuperAdmin/SuperAdminDashboard';
+import SuperAdminDashboard from './pages/SuperAdmin/SuperAdminDashboard';
 import Descuentos          from './pages/SuperAdmin/Descuentos/Descuentos';
 import Pagos               from './pages/SuperAdmin/Pagos/Pagos';
 import Devoluciones        from './pages/SuperAdmin/Devoluciones/Devoluciones';
@@ -83,7 +83,7 @@ function App() {
 
             {/* ── SuperAdmin ───────────────────────────── */}
             <Route element={<ProtectedRoute allowedRoles={['superadmin']} />}>
-              {/*<Route path="/superadmin"                element={<SuperAdminDashboard />} />*/}
+              <Route path="/superadmin"                element={<SuperAdminDashboard />} />
               <Route path="/superadmin/usuarios"       element={<UsuariosSA />} />
               <Route path="/superadmin/descuentos"     element={<Descuentos />} />
               <Route path="/superadmin/pagos"          element={<Pagos />} />
