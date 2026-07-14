@@ -32,7 +32,16 @@ export default function Header() {
       </Link>
     
       <nav className="header-nav">
-        {user?.role === 'administrador' ? (
+        {user?.role === 'superadmin' ? (
+          <>
+            <Link to="/superadmin">Inicio</Link>
+            <Link to="/superadmin/usuarios">Usuarios</Link>
+            <Link to="/superadmin/descuentos">Descuentos</Link>
+            <Link to="/superadmin/pagos">Pagos</Link>
+            <Link to="/superadmin/devoluciones">Devoluciones</Link>
+            <Link to="/superadmin/reportes">Reportes</Link>
+          </>
+        ) : user?.role === 'administrador' ? (
           <>
             <Link to="/admin">Inicio</Link>
             <Link to="/admin/productos">Productos</Link>
@@ -41,7 +50,6 @@ export default function Header() {
             <Link to="/admin/envios">Envíos</Link>
             <Link to="/admin/proveedores">Proveedores</Link>
             <Link to="/admin/usuarios">Usuarios</Link>
-            <Link to="/admin/detalle-pedidos">Detalle Pedidos</Link>
           </>
         ) : (
           <>

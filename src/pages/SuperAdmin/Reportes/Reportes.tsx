@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import Header from '../../../components/Header/Header';
 import { API } from '../../../api';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -60,7 +59,6 @@ export default function Reportes() {
 
   return (
     <>
-      <Header />
       <div className="reportes-page">
 
         <div className="reportes-topbar">

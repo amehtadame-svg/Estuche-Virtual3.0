@@ -1,6 +1,5 @@
 // UsuariosSA.tsx
 import { useState, useEffect } from 'react';
-import Header from '../../../components/Header/Header';
 import Modal from '../../../components/Modal/Modal';
 import { API } from '../../../api';
 import './UsuariosSA.css';
@@ -123,7 +122,6 @@ export default function UsuariosSA() {
 
   return (
     <>
-      <Header />
       <div className="usuariossa-page">
 
         <div className="usuariossa-topbar">

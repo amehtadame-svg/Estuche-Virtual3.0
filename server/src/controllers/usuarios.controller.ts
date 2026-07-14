@@ -28,10 +28,17 @@ export const updateRol = async (req: Request, res: Response) => {
  
 export const crearUsuario = async (req: Request, res: Response) => {
   const { nombre, email, password, rol } = req.body;
- 
+  const rolSolicitante = (req as any).user?.role;
+
+  // Admin no puede crear superadmin ni administrador
+  if (rolSolicitante === 'administrador' &&
+     (rol === 'superadmin' || rol === 'administrador')) {
+    return res.status(403).json({ message: 'No puedes crear usuarios con ese rol.' });
+  }
+
   const existe = await prisma.usuarios.findUnique({ where: { email } });
   if (existe) return res.status(400).json({ message: 'El correo ya está registrado' });
- 
+
   const hashed = await bcrypt.hash(password, 10);
   const usuario = await prisma.usuarios.create({
     data: { nombre, email, password: hashed, rol: rol || 'cliente' },
@@ -78,13 +85,19 @@ export const previewEliminarUsuario = async (req: Request, res: Response) => {
  
 export const eliminarUsuario = async (req: Request, res: Response) => {
   const id = Number(req.params.id);
- 
+  const rolSolicitante = (req as any).user?.role;
+
+  // Solo superadmin puede eliminar
+  if (rolSolicitante !== 'superadmin') {
+    return res.status(403).json({ message: 'No tienes permisos para eliminar usuarios.' });
+  }
+
   const pedidosComoCliente = await prisma.pedidos.findMany({
     where:  { id_cliente: id },
     select: { id_pedido: true },
   });
   const idsPedidos = pedidosComoCliente.map(p => p.id_pedido);
- 
+
   await prisma.$transaction(async (tx) => {
     if (idsPedidos.length) {
       await tx.detalle_pedido.deleteMany({ where: { id_pedido: { in: idsPedidos } } });
@@ -92,14 +105,14 @@ export const eliminarUsuario = async (req: Request, res: Response) => {
       await tx.facturas.deleteMany({ where: { id_pedido: { in: idsPedidos } } });
       await tx.pedidos.deleteMany({ where: { id_pedido: { in: idsPedidos } } });
     }
- 
+
     await tx.pedidos.updateMany({
       where: { id_repartidor: id },
       data:  { id_repartidor: null },
     });
- 
+
     await tx.usuarios.delete({ where: { id_usuario: id } });
   });
- 
+
   return res.status(204).send();
 };

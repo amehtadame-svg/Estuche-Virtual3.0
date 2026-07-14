@@ -1,6 +1,4 @@
-// Devoluciones.tsx
 import { useState, useEffect } from 'react';
-import Header from '../../../components/Header/Header';
 import { API } from '../../../api';
 import './Devoluciones.css';
 
@@ -14,7 +12,7 @@ interface Devolucion {
   reembolso:        number;
   fecha_solicitud:  string;
   fecha_resolucion: string | null;
-  clientes:         { nombre: string; email: string };
+  usuarios:         { nombre: string; email: string };
   productos:        { nombre: string };
   pedidos:          { id_pedido: number };
 }
@@ -98,7 +96,6 @@ export default function Devoluciones() {
 
   return (
     <>
-      <Header />
       <div className="devoluciones-page">
 
         <div className="devoluciones-topbar">
@@ -139,8 +136,8 @@ export default function Devoluciones() {
                 <tr key={d.id_devolucion}>
                   <td className="id-devolucion">#{d.id_devolucion}</td>
                   <td>
-                    <p className="cliente-dev-nombre">{d.clientes.nombre}</p>
-                    <p className="cliente-dev-email">{d.clientes.email}</p>
+                    <p className="cliente-dev-nombre">{d.usuarios.nombre}</p>
+                    <p className="cliente-dev-email">{d.usuarios.email}</p>
                   </td>
                   <td className="producto-dev">{d.productos.nombre}</td>
                   <td>{d.cantidad}</td>
@@ -190,7 +187,7 @@ export default function Devoluciones() {
               <div className="modal-body-dev">
 
                 <div className="dev-info-card">
-                  <p><strong>Cliente:</strong> {seleccionada.clientes.nombre}</p>
+                  <p><strong>Cliente:</strong> {seleccionada.usuarios.nombre}</p>
                   <p><strong>Producto:</strong> {seleccionada.productos.nombre}</p>
                   <p><strong>Cantidad:</strong> {seleccionada.cantidad}</p>
                   <p><strong>Motivo:</strong> {seleccionada.motivo}</p>

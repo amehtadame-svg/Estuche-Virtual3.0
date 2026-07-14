@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import Header from '../../../components/Header/Header';
 import { API } from '../../../api';
 import './Pagos.css';
 
@@ -61,7 +60,6 @@ export default function Pagos() {
 
   return (
     <>
-      <Header />
       <div className="pagos-page">
 
         <div className="pagos-topbar">

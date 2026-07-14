@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 export const getDevoluciones = async (_req: Request, res: Response) => {
   const devoluciones = await prisma.devoluciones.findMany({
     include: {
-      clientes:  { select: { nombre: true, email: true } },
+      usuarios:  { select: { nombre: true, email: true } },
       productos: { select: { nombre: true } },
       pedidos:   { select: { id_pedido: true } },
     },
@@ -19,7 +19,7 @@ export const getDevolucionById = async (req: Request, res: Response) => {
   const devolucion = await prisma.devoluciones.findUnique({
     where: { id_devolucion: Number(req.params.id) },
     include: {
-      clientes:  { select: { nombre: true, email: true } },
+      usuarios:  { select: { nombre: true, email: true } },
       productos: { select: { nombre: true, precio: true } },
       pedidos:   { select: { id_pedido: true, total: true } },
     },

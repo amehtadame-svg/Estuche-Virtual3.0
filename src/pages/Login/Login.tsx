@@ -24,7 +24,10 @@ const Login = () => {
       return;
     }
     const saved = JSON.parse(localStorage.getItem('user') || '{}');
-    navigate(saved.role === 'cliente' ? '/cliente' : '/admin');
+    const role = saved.role;
+    if (role === 'cliente') navigate('/cliente');
+    else if (role === 'superadmin') navigate('/superadmin');
+    else navigate('/admin');
   };
 
   return (

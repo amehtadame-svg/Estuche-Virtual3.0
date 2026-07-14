@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import Header from '../../components/Header/Header';
 import { useAuth } from '../../context/AuthContext';
 import { API } from '../../api';
 import {
@@ -94,7 +93,6 @@ export default function SuperAdminDashboard() {
 
   return (
     <>
-      <Header />
       <div className="sa-dashboard">
 
         {/* Topbar */}

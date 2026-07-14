@@ -1,10 +1,17 @@
 import { useState, useEffect } from 'react';
 import Modal from '../../../components/Modal/Modal';
 import './Proveedores.css';
-
 import { API } from '../../../api';
 
-const formularioVacio = { nombre: '', contacto: '', correo: '', telefono: '', productos: '' };
+const formularioVacio = { nombre: '', correo: '', telefono: '', direccion: '' };
+
+interface Categoria {
+  nombre: string;
+}
+
+interface ProveedorCategoria {
+  categorias: Categoria;
+}
 
 interface Proveedor {
   id_proveedor: number;
@@ -13,7 +20,7 @@ interface Proveedor {
   email: string | null;
   direccion: string | null;
   contacto: string | null;
-  productos_que_provee: string | null;
+  proveedor_categoria: ProveedorCategoria[];
 }
 
 export default function Proveedores() {
@@ -25,7 +32,7 @@ export default function Proveedores() {
   const [cargando, setCargando] = useState(true);
 
   const cargarProveedores = () => {
-    fetch(`${API.proveedores}`)
+    fetch(API.proveedores)
       .then(r => r.json())
       .then(data => { setProveedores(data); setCargando(false); })
       .catch(() => { mostrarMensaje('Error al cargar proveedores.'); setCargando(false); });
@@ -49,17 +56,16 @@ export default function Proveedores() {
   };
 
   const handleGuardar = async () => {
-    if (!formulario.nombre || !formulario.contacto || !formulario.correo || !formulario.telefono) {
+    if (!formulario.nombre || !formulario.correo || !formulario.telefono) {
       mostrarMensaje('Por favor completa todos los campos.');
       return;
     }
 
     const body = {
       nombre: formulario.nombre,
-      contacto: formulario.contacto,
       email: formulario.correo,
       telefono: formulario.telefono,
-      productos_que_provee: formulario.productos,
+      direccion: formulario.direccion,
     };
 
     if (editandoId !== null) {
@@ -70,7 +76,7 @@ export default function Proveedores() {
       });
       mostrarMensaje('Proveedor actualizado.');
     } else {
-      await fetch(`${API.proveedores}`, {
+      await fetch(API.proveedores, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -85,10 +91,9 @@ export default function Proveedores() {
   const handleEditar = (p: Proveedor) => {
     setFormulario({
       nombre: p.nombre,
-      contacto: p.contacto ?? '',
       correo: p.email ?? '',
       telefono: p.telefono ?? '',
-      productos: p.productos_que_provee ?? '',
+      direccion: p.direccion ?? '',
     });
     setEditandoId(p.id_proveedor);
     setModalAbierto(true);
@@ -124,10 +129,10 @@ export default function Proveedores() {
               <thead>
                 <tr>
                   <th>Empresa</th>
-                  <th>Contacto</th>
                   <th>Correo</th>
                   <th>Telefono</th>
-                  <th>Productos</th>
+                  <th>Direccion</th>
+                  <th>Categorias que provee</th>
                   <th>Acciones</th>
                 </tr>
               </thead>
@@ -135,13 +140,17 @@ export default function Proveedores() {
                 {proveedores.map((p) => (
                   <tr key={p.id_proveedor}>
                     <td className="empresa-proveedor">{p.nombre}</td>
-                    <td>{p.contacto ?? '—'}</td>
                     <td>{p.email ?? '—'}</td>
                     <td>{p.telefono ?? '—'}</td>
-                    <td>{p.productos_que_provee ?? '—'}</td>
+                    <td>{p.direccion ?? '—'}</td>
                     <td>
-                      <button onClick={() => handleEditar(p)} className="btn-editar-proveedor"> Editar</button>
-                      <button onClick={() => handleEliminar(p.id_proveedor)} className="btn-eliminar-proveedor"> Eliminar</button>
+                      {p.proveedor_categoria && p.proveedor_categoria.length > 0
+                        ? p.proveedor_categoria.map(pc => pc.categorias.nombre).join(', ')
+                        : '—'}
+                    </td>
+                    <td>
+                      <button onClick={() => handleEditar(p)} className="btn-editar-proveedor">Editar</button>
+                      <button onClick={() => handleEliminar(p.id_proveedor)} className="btn-eliminar-proveedor">Eliminar</button>
                     </td>
                   </tr>
                 ))}
@@ -166,17 +175,14 @@ export default function Proveedores() {
             <p className="label-proveedor">Empresa</p>
             <input name="nombre" value={formulario.nombre} onChange={handleCambio} placeholder="Nombre de la empresa" className="input-proveedor" />
 
-            <p className="label-proveedor">Contacto</p>
-            <input name="contacto" value={formulario.contacto} onChange={handleCambio} placeholder="Nombre del contacto" className="input-proveedor" />
-
             <p className="label-proveedor">Correo</p>
             <input name="correo" value={formulario.correo} onChange={handleCambio} placeholder="correo@empresa.com" className="input-proveedor" />
 
             <p className="label-proveedor">Telefono</p>
             <input name="telefono" value={formulario.telefono} onChange={handleCambio} placeholder="Numero de telefono" className="input-proveedor" />
 
-            <p className="label-proveedor">Productos que provee</p>
-            <input name="productos" value={formulario.productos} onChange={handleCambio} placeholder="Ej: Cuadernos, Carpetas" className="input-proveedor" />
+            <p className="label-proveedor">Direccion</p>
+            <input name="direccion" value={formulario.direccion} onChange={handleCambio} placeholder="Direccion de la empresa" className="input-proveedor" />
           </Modal>
         )}
 

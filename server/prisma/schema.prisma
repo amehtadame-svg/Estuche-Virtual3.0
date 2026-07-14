@@ -83,19 +83,21 @@ model productos {
 }
 
 model categorias {
-  id_categoria Int         @id @default(autoincrement())
-  nombre       String      @db.VarChar(100)
-  descripcion  String?
-  productos    productos[]
+  id_categoria        Int                   @id @default(autoincrement())
+  nombre              String                @db.VarChar(100)
+  descripcion         String?
+  productos           productos[]
+  proveedor_categoria proveedor_categoria[]
 }
 
 model proveedores {
-  id_proveedor Int         @id @default(autoincrement())
-  nombre       String      @db.VarChar(100)
-  telefono     String?     @db.VarChar(20)
-  email        String?     @db.VarChar(100)
-  direccion    String?
-  productos    productos[]
+  id_proveedor        Int                   @id @default(autoincrement())
+  nombre              String                @db.VarChar(100)
+  telefono            String?               @db.VarChar(20)
+  email               String?               @db.VarChar(100)
+  direccion           String?
+  productos           productos[]
+  proveedor_categoria proveedor_categoria[]
 }
 
 model detalle_pedido {
@@ -353,4 +355,14 @@ model rese_as {
   @@unique([id_producto, id_usuario])
   @@index([id_producto], map: "idx_reseñas_producto")
   @@map("reseñas")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model proveedor_categoria {
+  id_proveedor Int
+  id_categoria Int
+  categorias   categorias  @relation(fields: [id_categoria], references: [id_categoria], onDelete: NoAction, onUpdate: NoAction)
+  proveedores  proveedores @relation(fields: [id_proveedor], references: [id_proveedor], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([id_proveedor, id_categoria])
 }

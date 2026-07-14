@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import Header from '../../../components/Header/Header';
 import { API } from '../../../api';
 import './Descuentos.css';
 
@@ -106,7 +105,6 @@ export default function Descuentos() {
 
   return (
     <>
-      <Header />
       <div className="descuentos-page">
 
         <div className="descuentos-topbar">

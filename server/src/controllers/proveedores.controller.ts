@@ -5,6 +5,13 @@ const prisma = new PrismaClient();
  
 export const getProveedores = async (_req: Request, res: Response) => {
   const proveedores = await prisma.proveedores.findMany({
+    include: {
+      proveedor_categoria: {
+        include: {
+          categorias: { select: { nombre: true } }
+        }
+      }
+    },
     orderBy: { id_proveedor: 'desc' },
   });
   return res.json(proveedores);
