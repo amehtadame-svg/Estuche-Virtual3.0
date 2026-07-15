@@ -325,3 +325,72 @@ body.dark-mode .btn-editar-producto:hover {
     background-color: #334155 !important;
     color: #ffffff !important;
 }
+
+.productos-filtros {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.productos-busqueda,
+.productos-filtro-cat {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #e5e4e7;
+  font-size: 14px;
+  color: #08060d;
+  background: #ffffff;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.productos-busqueda {
+  flex: 1;
+  min-width: 200px;
+}
+
+.productos-busqueda:focus,
+.productos-filtro-cat:focus {
+  border-color: #aa3bff;
+}
+
+.stock-badge {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.stock-ok {
+  background: rgba(39, 174, 96, 0.1);
+  color: #27ae60;
+}
+
+.stock-bajo {
+  background: rgba(231, 76, 60, 0.1);
+  color: #e74c3c;
+}
+
+.desc-producto {
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.productos-vacio {
+  text-align: center;
+  padding: 40px;
+  color: var(--text);
+}
+.input-producto textarea,
+textarea.input-producto {
+  background: #ffffff;
+  color: #08060d;
+  resize: vertical;
+  font-family: inherit;
+  min-height: 80px;
+}

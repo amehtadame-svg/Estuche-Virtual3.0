@@ -4,20 +4,23 @@ import { API } from '../../../api';
 import './Facturas.css';
 
 const estadoColor: Record<string, string> = {
-  Pagada: '#27ae60',
-  Pendiente: '#f39c12',
-  Anulada: '#e74c3c',
+  pagado: '#27ae60',
+  pendiente: '#f39c12',
+  rechazado: '#e74c3c',
+  reembolsado: '#3498db',
 };
 
-const formularioVacio = { id_cliente: '', fecha: '', total: '', estado: 'Pendiente' };
+const formularioVacio = { id_cliente: '', fecha: '', total: '', estado: 'pendiente' };
 
 interface Factura {
   id_factura: number;
   id_cliente: number | null;
+  id_empleado: number | null;
   fecha: string | null;
   total: number | null;
-  estado: string | null;
-  clientes: { nombre: string } | null;
+  estado_pago: string | null;
+  usuarios_facturas_id_empleadoTousuarios: { nombre: string } | null;
+  pedidos: { id_pedido: number; total: number } | null;
 }
 
 export default function Facturas() {
@@ -96,7 +99,7 @@ export default function Facturas() {
       id_cliente: String(f.id_cliente ?? ''),
       fecha: f.fecha ? f.fecha.split('T')[0] : '',
       total: String(f.total ?? ''),
-      estado: f.estado ?? 'Pendiente',
+      estado: f.estado_pago ?? 'pendiente',
     });
     setEditandoId(f.id_factura);
     setModalAbierto(true);
@@ -109,13 +112,19 @@ export default function Facturas() {
   };
 
   const cambiarEstado = async (id: number, nuevoEstado: string) => {
-    await fetch(`${API.facturas}/${id}`, {
+    const res = await fetch(`${API.facturas}/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ estado: nuevoEstado }),
     });
-    setFacturas(facturas.map(f => f.id_factura === id ? { ...f, estado: nuevoEstado } : f));
-    mostrarMensaje('Estado actualizado.');
+    if (res.ok) {
+      setFacturas(facturas.map(f =>
+        f.id_factura === id ? { ...f, estado_pago: nuevoEstado } : f
+      ));
+      mostrarMensaje('Estado actualizado.');
+    } else {
+      mostrarMensaje('Error al actualizar el estado.');
+    }
   };
 
   return (
@@ -139,10 +148,11 @@ export default function Facturas() {
             <thead>
               <tr>
                 <th>N° Factura</th>
-                <th>Cliente</th>
+                <th>Pedido</th>
                 <th>Fecha</th>
                 <th>Total</th>
-                <th>Estado</th>
+                <th>Empleado</th>
+                <th>Pago</th>
                 <th>Acciones</th>
               </tr>
             </thead>
@@ -150,19 +160,21 @@ export default function Facturas() {
               {facturas.map((fac) => (
                 <tr key={fac.id_factura}>
                   <td className="numero-factura">FAC-{String(fac.id_factura).padStart(3, '0')}</td>
-                  <td className="cliente-factura">{fac.clientes?.nombre ?? `Cliente #${fac.id_cliente}`}</td>
+                  <td>{fac.pedidos ? `PED-${String(fac.pedidos.id_pedido).padStart(3, '0')}` : '—'}</td>
                   <td>{fac.fecha ? fac.fecha.split('T')[0] : '—'}</td>
                   <td className="total-factura">${Number(fac.total).toLocaleString()}</td>
+                  <td>{fac.usuarios_facturas_id_empleadoTousuarios?.nombre ?? '—'}</td>
                   <td>
                     <select
-                      value={fac.estado ?? 'Pendiente'}
+                      value={fac.estado_pago ?? 'pendiente'}
                       onChange={(e) => cambiarEstado(fac.id_factura, e.target.value)}
                       className="estado-select-factura"
-                      style={{ backgroundColor: estadoColor[fac.estado ?? ''] || '#999' }}
+                      style={{ backgroundColor: estadoColor[fac.estado_pago ?? ''] || '#999', color: '#fff' }}
                     >
-                      <option value="Pendiente">Pendiente</option>
-                      <option value="Pagada">Pagada</option>
-                      <option value="Anulada">Anulada</option>
+                      <option value="pendiente" style={{ backgroundColor: '#fff', color: '#1E2761' }}>Pendiente</option>
+                      <option value="pagado" style={{ backgroundColor: '#fff', color: '#1E2761' }}>Pagado</option>
+                      <option value="rechazado" style={{ backgroundColor: '#fff', color: '#1E2761' }}>Rechazado</option>
+                      <option value="reembolsado" style={{ backgroundColor: '#fff', color: '#1E2761' }}>Reembolsado</option>
                     </select>
                   </td>
                   <td>

@@ -29,7 +29,7 @@ app.use('/api/pedidos',        pedidosRoutes);
 app.use('/api/productos',      productosRoutes);
 app.use('/api/proveedores',    proveedoresRoutes);
 app.use('/api/envios',         enviosRoutes);
-app.use('/api/detalle-pedido', detallePedidoRoutes);
+app.use('/api/detallePedidos', detallePedidoRoutes);
 app.use('/api/facturas',       facturasRoutes);
 
 // ── SuperAdmin ────────────────────────────────────────

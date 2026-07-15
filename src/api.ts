@@ -20,4 +20,6 @@ export const API = {
   pagos:        `${BASE}/api/pagos`,
   devoluciones: `${BASE}/api/devoluciones`,
   reportes:     `${BASE}/api/reportes`,
+  detallePedidos:`${BASE}/api/detallePedidos`,
+
 };

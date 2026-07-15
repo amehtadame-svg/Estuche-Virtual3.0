@@ -26,10 +26,10 @@ import AdminDashboard  from './pages/Admin/AdminDashboard';
 import ProductosAD     from './pages/Admin/Productos/ProductosAD';
 import Pedidos         from './pages/Admin/Pedidos/Pedidos';
 import Facturas        from './pages/Admin/Facturas/Facturas';
-import DetalleFacturas from './pages/Admin/DetalleFactura/DetalleFacturas';
 import Envios          from './pages/Admin/Envios/Envios';
 import Proveedores     from './pages/Admin/Proveedores/Proveedores';
 import Usuarios        from './pages/Admin/Usuarios/Usuarios';
+import DetallePedidos from './pages/Admin/DetallePedidos/Detallepedidos';
 
 // SuperAdmin
 import SuperAdminDashboard from './pages/SuperAdmin/SuperAdminDashboard';
@@ -75,10 +75,10 @@ function App() {
               <Route path="/admin/productos"       element={<ProductosAD />} />
               <Route path="/admin/pedidos"         element={<Pedidos />} />
               <Route path="/admin/facturas"        element={<Facturas />} />
-              <Route path="/admin/detallefacturas" element={<DetalleFacturas />} />
               <Route path="/admin/envios"          element={<Envios />} />
               <Route path="/admin/proveedores"     element={<Proveedores />} />
               <Route path="/admin/usuarios"        element={<Usuarios />} />
+              <Route path="/admin/detallepedidos"  element={<DetallePedidos />} />
             </Route>
 
             {/* ── SuperAdmin ───────────────────────────── */}

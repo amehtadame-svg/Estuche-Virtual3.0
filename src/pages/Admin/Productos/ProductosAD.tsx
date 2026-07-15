@@ -4,42 +4,69 @@ import { API } from '../../../api';
 import './Productos.css';
 
 const categorias = ['Cuadernos', 'Colores', 'Carpetas', 'Lapiceros', 'Mochilas', 'Tijeras'];
-const formularioVacio = { nombre: '', precio: '', stock: '', categoria: '', descripcion: '' };
+const formularioVacio = { nombre: '', precio: '', stock: '', stock_minimo: '', categoria: '', descripcion: '' };
 
 interface Producto {
-  id_producto: number;
-  nombre: string;
-  precio: number;
-  descripcion: string | null;
+  id_producto:  number;
+  nombre:       string;
+  precio:       number;
+  descripcion:  string | null;
+  stock:        number;
+  stock_minimo: number;
   id_categoria: number | null;
   id_proveedor: number | null;
-  categorias: { nombre: string } | null;
-  inventario: { cantidad_actual: number } | null;
+  categorias:   { nombre: string } | null;
+  proveedores:  { nombre: string } | null;
 }
 
 export default function Productos() {
-  const [productos, setProductos] = useState<Producto[]>([]);
-  const [formulario, setFormulario] = useState(formularioVacio);
-  const [editandoId, setEditandoId] = useState<number | null>(null);
-  const [mensaje, setMensaje] = useState('');
+  const [productos, setProductos]       = useState<Producto[]>([]);
+  const [filtrados, setFiltrados]       = useState<Producto[]>([]);
+  const [formulario, setFormulario]     = useState(formularioVacio);
+  const [editandoId, setEditandoId]     = useState<number | null>(null);
+  const [mensaje, setMensaje]           = useState('');
   const [modalAbierto, setModalAbierto] = useState(false);
-  const [cargando, setCargando] = useState(true);
+  const [cargando, setCargando]         = useState(true);
+  const [busqueda, setBusqueda]         = useState('');
+  const [categoriaFiltro, setCategoriaFiltro] = useState('');
 
   const cargarProductos = () => {
     fetch(API.productos)
       .then(r => r.json())
-      .then(data => { setProductos(data); setCargando(false); })
+      .then(data => {
+        setProductos(data);
+        setFiltrados(data);
+        setCargando(false);
+      })
       .catch(() => { mostrarMensaje('Error al cargar productos.'); setCargando(false); });
   };
 
   useEffect(() => { cargarProductos(); }, []);
+
+  useEffect(() => {
+    let resultado = productos;
+
+    if (busqueda) {
+      resultado = resultado.filter(p =>
+        p.nombre.toLowerCase().includes(busqueda.toLowerCase())
+      );
+    }
+
+    if (categoriaFiltro) {
+      resultado = resultado.filter(p =>
+        p.categorias?.nombre === categoriaFiltro
+      );
+    }
+
+    setFiltrados(resultado);
+  }, [busqueda, categoriaFiltro, productos]);
 
   const mostrarMensaje = (texto: string) => {
     setMensaje(texto);
     setTimeout(() => setMensaje(''), 2500);
   };
 
-  const handleCambio = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleCambio = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setFormulario({ ...formulario, [e.target.name]: e.target.value });
   };
 
@@ -62,25 +89,26 @@ export default function Productos() {
     }
 
     const body = {
-      nombre: formulario.nombre,
-      precio: Number(formulario.precio),
-      stock: Number(formulario.stock),
-      descripcion: formulario.descripcion,
-      categoria: formulario.categoria,
+      nombre:       formulario.nombre,
+      precio:       Number(formulario.precio),
+      stock:        Number(formulario.stock),
+      stock_minimo: Number(formulario.stock_minimo) || 5,
+      descripcion:  formulario.descripcion,
+      categoria:    formulario.categoria,
     };
 
     if (editandoId !== null) {
       await fetch(`${API.productos}/${editandoId}`, {
-        method: 'PUT',
+        method:  'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+        body:    JSON.stringify(body),
       });
       mostrarMensaje('Producto actualizado.');
     } else {
       await fetch(API.productos, {
-        method: 'POST',
+        method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+        body:    JSON.stringify(body),
       });
       mostrarMensaje('Producto agregado.');
     }
@@ -91,11 +119,12 @@ export default function Productos() {
 
   const handleEditar = (prod: Producto) => {
     setFormulario({
-      nombre: prod.nombre,
-      precio: String(prod.precio),
-      stock: String(prod.inventario?.cantidad_actual ?? 0),
-      categoria: prod.categorias?.nombre ?? '',
-      descripcion: prod.descripcion ?? '',
+      nombre:       prod.nombre,
+      precio:       String(prod.precio),
+      stock:        String(prod.stock ?? 0),
+      stock_minimo: String(prod.stock_minimo ?? 5),
+      categoria:    prod.categorias?.nombre ?? '',
+      descripcion:  prod.descripcion ?? '',
     });
     setEditandoId(prod.id_producto);
     setModalAbierto(true);
@@ -107,16 +136,39 @@ export default function Productos() {
     mostrarMensaje('Producto eliminado.');
   };
 
+  const stockBajo = (prod: Producto) => prod.stock <= prod.stock_minimo;
+
   return (
     <>
       <div className="productos-page">
 
         <div className="productos-topbar">
-          <h2 className="titulo-productos">Gestion de Productos</h2>
-          <p className="subtitulo-usuarios">Administra los Productos registrados</p>
+          <div>
+            <h2 className="titulo-productos">Gestion de Productos</h2>
+            <p className="subtitulo-usuarios">Administra los Productos registrados</p>
+          </div>
           <button className="btn-nuevo-producto" onClick={abrirModalNuevo}>
             + Nuevo producto
           </button>
+        </div>
+
+        <div className="productos-filtros">
+          <input
+            className="productos-busqueda"
+            placeholder="🔍 Buscar producto..."
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+          />
+          <select
+            className="productos-filtro-cat"
+            value={categoriaFiltro}
+            onChange={(e) => setCategoriaFiltro(e.target.value)}
+          >
+            <option value="">Todas las categorías</option>
+            {categorias.map(cat => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
+          </select>
         </div>
 
         {mensaje && <div className="mensaje-productos">{mensaje}</div>}
@@ -128,21 +180,30 @@ export default function Productos() {
             <thead>
               <tr>
                 <th>Producto</th>
-                <th>Categoria</th>
-                <th>Precio</th>
+                <th>Descripción</th>
+                <th>Categoría</th>
+                <th>Proveedor</th>
+                <th>Precio C/U</th>
                 <th>Stock</th>
                 <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
-              {productos.map((prod) => (
+              {filtrados.map((prod) => (
                 <tr key={prod.id_producto}>
                   <td className="nombre-producto">{prod.nombre}</td>
+                  <td className="desc-producto">{prod.descripcion ?? '—'}</td>
                   <td>{prod.categorias?.nombre ?? '—'}</td>
+                  <td>{prod.proveedores?.nombre ?? '—'}</td>
                   <td className="precio-producto">${Number(prod.precio).toLocaleString()}</td>
-                  <td>{prod.inventario?.cantidad_actual ?? 0}</td>
                   <td>
-                    <button className="btn-editar-producto" onClick={() => handleEditar(prod)}>Editar</button>
+                    <span className={`stock-badge ${stockBajo(prod) ? 'stock-bajo' : 'stock-ok'}`}>
+                      {prod.stock ?? 0}
+                      {stockBajo(prod) && ' ⚠ bajo'}
+                    </span>
+                  </td>
+                  <td>
+                    <button className="btn-editar-producto"   onClick={() => handleEditar(prod)}>Editar</button>
                     <button className="btn-eliminar-producto" onClick={() => handleEliminar(prod.id_producto)}>Eliminar</button>
                   </td>
                 </tr>
@@ -150,6 +211,11 @@ export default function Productos() {
             </tbody>
           </table>
         )}
+
+        {filtrados.length === 0 && !cargando && (
+          <p className="productos-vacio">No se encontraron productos.</p>
+        )}
+
       </div>
 
       {modalAbierto && (
@@ -159,27 +225,69 @@ export default function Productos() {
           footer={
             <>
               <button className="btn-cancelar-producto" onClick={cerrarModal}>Cancelar</button>
-              <button className="btn-guardar-producto" onClick={handleGuardar}>
+              <button className="btn-guardar-producto"  onClick={handleGuardar}>
                 {editandoId !== null ? 'Guardar cambios' : 'Agregar producto'}
               </button>
             </>
           }
         >
           <label className="label-producto">Nombre</label>
-          <input className="input-producto" name="nombre" value={formulario.nombre} onChange={handleCambio} placeholder="Nombre del producto" />
+          <input
+            className="input-producto"
+            name="nombre"
+            value={formulario.nombre}
+            onChange={handleCambio}
+            placeholder="Nombre del producto"
+          />
 
-          <label className="label-producto">Descripcion</label>
-          <input className="input-producto" name="descripcion" value={formulario.descripcion} onChange={handleCambio} placeholder="Descripcion del producto" />
+          <label className="label-producto">Descripción</label>
+          <textarea
+            className="input-producto"
+            name="descripcion"
+            value={formulario.descripcion}
+            onChange={handleCambio}
+            placeholder="Descripción del producto"
+            rows={3}
+          />
 
           <label className="label-producto">Precio</label>
-          <input className="input-producto" type="number" name="precio" value={formulario.precio} onChange={handleCambio} placeholder="Precio en pesos" />
+          <input
+            className="input-producto"
+            type="number"
+            name="precio"
+            value={formulario.precio}
+            onChange={handleCambio}
+            placeholder="Precio en pesos"
+          />
 
-          <label className="label-producto">Stock</label>
-          <input className="input-producto" type="number" name="stock" value={formulario.stock} onChange={handleCambio} placeholder="Cantidad disponible" />
+          <label className="label-producto">Stock actual</label>
+          <input
+            className="input-producto"
+            type="number"
+            name="stock"
+            value={formulario.stock}
+            onChange={handleCambio}
+            placeholder="Cantidad disponible"
+          />
 
-          <label className="label-producto">Categoria</label>
-          <select className="input-producto" name="categoria" value={formulario.categoria} onChange={handleCambio}>
-            <option value="">Selecciona una categoria</option>
+          <label className="label-producto">Stock mínimo</label>
+          <input
+            className="input-producto"
+            type="number"
+            name="stock_minimo"
+            value={formulario.stock_minimo}
+            onChange={handleCambio}
+            placeholder="Cantidad mínima antes de reabastecer"
+          />
+
+          <label className="label-producto">Categoría</label>
+          <select
+            className="input-producto"
+            name="categoria"
+            value={formulario.categoria}
+            onChange={handleCambio}
+          >
+            <option value="">Selecciona una categoría</option>
             {categorias.map((cat) => (
               <option key={cat} value={cat}>{cat}</option>
             ))}
