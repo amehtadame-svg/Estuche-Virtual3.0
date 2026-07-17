@@ -68,7 +68,7 @@ const Home = () => {
         </section>
 
         <section className="section">
-          <h2 className="section-title">
+          <h2 className="cliente-section-title">
             Ofertas y promociones
           </h2>
           <p className="section-description">Aprovecha estos descuentos por tiempo limitado</p>

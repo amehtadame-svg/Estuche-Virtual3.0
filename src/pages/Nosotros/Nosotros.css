@@ -5,7 +5,7 @@
 
 /* Hero */
 .nosotros-hero {
-  background-color: rgba(170, 59, 255, 0.08) !important;
+  background-color: var(--accent-bg);
   border-radius: 12px;
   padding: 60px 40px;
   text-align: center;
@@ -13,7 +13,7 @@
 }
 
 .nosotros-hero-titulo {
-  color: #aa3bff !important;
+  color: var(--accent);
   font-size: 32px;
   margin-bottom: 16px;
 }
@@ -35,14 +35,14 @@
 }
 
 .nosotros-card {
-  background-color: #ffffff !important;
-  border: 1px solid #e5e4e7 !important;
+  background-color: var(--bg);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 32px;
 }
 
 .nosotros-card-titulo {
-  color: #08060d !important;
+  color: var(--text-h);
   font-size: 18px;
   margin-bottom: 16px;
 }
@@ -60,7 +60,7 @@
 }
 
 .nosotros-seccion-titulo {
-  color: #08060d !important;
+  color: var(--text-h);
   margin-bottom: 8px;
 }
 
@@ -78,8 +78,8 @@
 }
 
 .nosotros-valor-card {
-  background-color: #ffffff !important;
-  border: 1px solid #e5e4e7 !important;
+  background-color: var(--bg);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 24px;
   text-align: center;
@@ -91,7 +91,7 @@
 }
 
 .nosotros-valor-titulo {
-  color: #08060d !important;
+  color: var(--text-h);
   font-size: 15px;
   margin-bottom: 8px;
 }
@@ -114,15 +114,15 @@
   display: flex;
   align-items: flex-start;
   gap: 20px;
-  background-color: #ffffff !important;
-  border: 1px solid #e5e4e7 !important;
+  background-color: var(--bg);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 20px;
 }
 
 .nosotros-hito-año {
-  background-color: #aa3bff !important;
-  color: white !important;
+  background-color: var(--accent);
+  color: var(--bg);
   border-radius: 8px;
   padding: 6px 14px;
   font-size: 14px;
@@ -147,8 +147,8 @@
 }
 
 .nosotros-persona-card {
-  background-color: #ffffff !important;
-  border: 1px solid #e5e4e7 !important;
+  background-color: var(--bg);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 32px;
   text-align: center;
@@ -156,7 +156,7 @@
 
 .nosotros-persona-avatar {
   font-size: 40px;
-  background-color: rgba(170, 59, 255, 0.08) !important;
+  background-color: var(--accent-bg);
   width: 80px;
   height: 80px;
   border-radius: 50%;
@@ -167,13 +167,13 @@
 }
 
 .nosotros-persona-nombre {
-  color: #08060d !important;
+  color: var(--text-h);
   font-size: 16px;
   margin-bottom: 4px;
 }
 
 .nosotros-persona-cargo {
-  color: #aa3bff !important;
+  color: var(--accent);
   font-size: 13px;
   font-weight: 500;
   margin-bottom: 12px;
@@ -188,14 +188,14 @@
 
 /* CTA */
 .nosotros-cta {
-  background-color: rgba(170, 59, 255, 0.08) !important;
+  background-color: var(--accent-bg);
   border-radius: 12px;
   padding: 48px 40px;
   text-align: center;
 }
 
 .nosotros-cta-titulo {
-  color: #08060d !important;
+  color: var(--text-h);
   margin-bottom: 12px;
 }
 
@@ -242,40 +242,3 @@
   opacity: 0.88;
 }
 
-/* ── MODO OSCURO ─────────────────── */
-
-body.dark-mode .nosotros-card,
-body.dark-mode .nosotros-valor-card,
-body.dark-mode .nosotros-hito,
-body.dark-mode .nosotros-persona-card {
-  background-color: var(--bg-subtle) !important;
-  border: 1px solid var(--border) !important;
-}
-
-body.dark-mode .nosotros-hero-titulo,
-body.dark-mode .nosotros-card-titulo,
-body.dark-mode .nosotros-seccion-titulo,
-body.dark-mode .nosotros-valor-titulo,
-body.dark-mode .nosotros-persona-nombre,
-body.dark-mode .nosotros-cta-titulo {
-  color: var(--text-h) !important;
-}
-
-body.dark-mode .nosotros-hero-texto,
-body.dark-mode .nosotros-card-texto,
-body.dark-mode .nosotros-valor-texto,
-body.dark-mode .nosotros-hito-texto,
-body.dark-mode .nosotros-persona-desc,
-body.dark-mode .nosotros-seccion-subtitulo,
-body.dark-mode .nosotros-cta-texto {
-  color: var(--text) !important;
-}
-
-body.dark-mode .nosotros-persona-avatar {
-  background-color: rgba(192, 132, 252, 0.15) !important;
-}
-
-body.dark-mode .nosotros-btn-secundario {
-  color: var(--accent);
-  border: 1px solid var(--accent);
-}

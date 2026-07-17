@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════
-   HOME — compatible con index.css
+   HOME — compatible con index.css + dark mode
    ═══════════════════════════════════════════════════ */
 
 /* ── Layout ───────────────────────────────────────── */
@@ -18,6 +18,7 @@
   position: relative;
   overflow: hidden;
   box-shadow: var(--shadow-sm);
+  transition: background 0.3s, border-color 0.3s;
 }
 
 .hero::before,
@@ -45,15 +46,15 @@
 }
 
 .hero-title {
-  font-size: clamp(28px, 5vw, 46px) !important;
-  font-weight: 800 !important;
-  letter-spacing: -1.2px !important;
-  line-height: 1.15 !important;
-  background: var(--gradient-accent) !important;
-  -webkit-background-clip: text !important;
-  -webkit-text-fill-color: transparent !important;
-  background-clip: text !important;
-  margin: 0 0 18px !important;
+  font-size: clamp(28px, 5vw, 46px);
+  font-weight: 800;
+  letter-spacing: -1.2px;
+  line-height: 1.15;
+  background: var(--gradient-accent);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0 0 18px;
   position: relative;
   z-index: 1;
 }
@@ -88,7 +89,7 @@
 
 .hero-button {
   background: var(--gradient-accent);
-  color: #fff;
+  color: var(--text-h);
   text-decoration: none;
   padding: 13px 28px;
   border-radius: 12px;
@@ -103,17 +104,18 @@
   opacity: 0.88;
   transform: translateY(-2px);
   box-shadow: 0 8px 28px rgba(170,59,255,.35);
-  color: #fff;
+  color: #ffffff;
 }
 
 .logout-button {
-  background: #fff;
+  background: var(--bg);
   border: 1px solid var(--border);
   color: var(--text-h);
   padding: 13px 24px;
   border-radius: 12px;
   font-size: 15px;
   font-weight: 500;
+  transition: border-color 0.18s, color 0.18s, background 0.18s;
 }
 
 .logout-button:hover {
@@ -128,12 +130,11 @@
 }
 
 .section-title {
-  font-size: clamp(20px, 3vw, 26px) !important;
-  font-weight: 700 !important;
+  font-size: clamp(20px, 3vw, 26px);
+  font-weight: 700;
   letter-spacing: -0.5px;
-  color: #08060d !important;
-  -webkit-text-fill-color: #08060d !important;
-  margin-bottom: 8px !important;
+  color: var(--text-h);
+  margin-bottom: 8px;
 }
 
 .section-description {
@@ -150,14 +151,14 @@
 }
 
 .card {
-  background: #fff;
+  background: var(--bg-subtle);
   border: 1px solid var(--border);
   border-radius: 20px;
   padding: 28px 24px;
   position: relative;
   text-align: center;
   box-shadow: var(--shadow-sm);
-  transition: transform 0.22s, box-shadow 0.22s, border-color 0.22s;
+  transition: transform 0.22s, box-shadow 0.22s, border-color 0.22s, background 0.3s;
 }
 
 .card:hover {
@@ -171,7 +172,7 @@
   top: 14px;
   right: 14px;
   background: linear-gradient(135deg, #e74c3c, #ff6b6b);
-  color: white;
+  color: #ffffff;
   padding: 5px 12px;
   border-radius: 999px;
   font-size: 11px;
@@ -204,7 +205,7 @@
 }
 
 .price {
-  color: #aa3bff;
+  color: var(--accent);
   font-size: 30px;
   font-weight: 800;
   letter-spacing: -0.5px;
@@ -214,7 +215,7 @@
 .card-button {
   width: 100%;
   background: var(--gradient-accent);
-  color: white;
+  color: #ffffff;
   border: none;
   border-radius: 11px;
   padding: 13px;
@@ -226,7 +227,7 @@
 .card-button:hover {
   opacity: 0.88;
   transform: translateY(-2px);
-  color: white;
+  color: #ffffff;
 }
 
 /* ── Razones ──────────────────────────────────────── */
@@ -237,7 +238,7 @@
 }
 
 .reason-card {
-  background: #faf9fc;
+  background: var(--bg-subtle);
   border: 1px solid var(--border);
   border-radius: 20px;
   padding: 32px 20px;
@@ -248,7 +249,6 @@
 .reason-card:hover {
   transform: translateY(-4px);
   box-shadow: var(--shadow-md);
-  background: #fff;
   border-color: var(--accent-border);
 }
 
@@ -276,114 +276,18 @@
    RESPONSIVE
    ═══════════════════════════════════════════════════ */
 
-/* Tablet */
 @media (max-width: 768px) {
-  .home-container {
-    padding: 24px 20px 48px;
-  }
-
-  .hero {
-    padding: 56px 24px;
-  }
-
-  .cards-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .reasons-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+  .home-container { padding: 24px 20px 48px; }
+  .hero           { padding: 56px 24px; }
+  .cards-grid     { grid-template-columns: repeat(2, 1fr); }
+  .reasons-grid   { grid-template-columns: repeat(2, 1fr); }
 }
 
-/* Móvil */
 @media (max-width: 480px) {
-  .home-container {
-    padding: 16px 14px 40px;
-  }
-
-  .hero {
-    padding: 40px 16px;
-    border-radius: 16px;
-  }
-
-  .cards-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .reasons-grid {
-    grid-template-columns: 1fr;
-  }
-
+  .home-container { padding: 16px 14px 40px; }
+  .hero           { padding: 40px 16px; border-radius: 16px; }
+  .cards-grid     { grid-template-columns: 1fr; }
+  .reasons-grid   { grid-template-columns: 1fr; }
   .hero-button,
-  .logout-button {
-    width: 100%;
-    text-align: center;
-  }
-}
-/* ==========================================================================
-   CONFIGURACIÓN GENERAL: MODO OSCURO (DARK MODE)
-   ========================================================================== */
-
-/* Fondo principal de la aplicación */
-body.dark-mode {
-    background-color: #08060d !important;
-}
-/* Contenedores: Tarjetas y secciones hero */
-body.dark-mode .card,
-body.dark-mode .reason-card,
-body.dark-mode .nosotros-card,
-body.dark-mode .hero {
-    background-color: #1a1a1a !important;
-    border: 1px solid #333 !important;
-    box-shadow: none !important;
-}
-
-/* ==========================================================================
-   TIPOGRAFÍA Y TEXTOS: MODO CLARO Y OSCURO (REEMPLAZA LO ANTERIOR)
-   ========================================================================== */
-
-/* 1. Títulos: Oscuros en modo claro, blancos en modo oscuro */
-h2, .section-title {
-    color: #374151 !important;
-    transition: color 0.3s ease;
-}
-
-body.dark-mode h2,
-body.dark-mode .section-title {
-    color: #ffffff !important;
-}
-
-/* 2. Textos de tarjetas y descripciones */
-.hero-description,
-.section-description,
-.card h3,
-.card p,
-.reason-card h3,
-.reason-card p {
-    color: #4a4a4a !important; /* Gris oscuro para modo claro */
-    transition: color 0.3s ease;
-}
-
-body.dark-mode .hero-description,
-body.dark-mode .section-description,
-body.dark-mode .card h3,
-body.dark-mode .card p,
-body.dark-mode .reason-card h3,
-body.dark-mode .reason-card p {
-    color: #ffffff !important; /* Blanco para modo oscuro */
-}
-
-/* 3.Estilos de botones y precios  */
-.price {
-    color: #aa3bff !important;
-    font-weight: bold !important;
-}
-
-body.dark-mode .card-button,
-body.dark-mode .hero .hero-button {
-    background: #aa3bff !important;
-    color: #ffffff !important;
-    border: none !important;
-    border-radius: 8px !important;
-    font-weight: 600 !important;
+  .logout-button  { width: 100%; text-align: center; }
 }

@@ -128,12 +128,12 @@
   margin-bottom: 60px;
 }
 
-.section-title {
+.cliente-section-title {
   font-size: clamp(20px, 3vw, 26px) !important;
   font-weight: 700 !important;
   letter-spacing: -0.5px;
   color: #08060d !important;
-  -webkit-text-fill-color: #08060d !important;
+  -webkit-text-fill-color: #08060d ;
   margin-bottom: 8px !important;
 }
 

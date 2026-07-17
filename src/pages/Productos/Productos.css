@@ -1,5 +1,7 @@
 .prod-detalle-container {
   padding: 0 30px 60px;
+  background: var(--bg);
+  min-height: 100vh;
 }
 
 .prod-detalle-back {
@@ -19,8 +21,8 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 48px;
-  background: #ffffff;
-  border: 1px solid #e5e4e7;
+  background: var(--bg);          
+  border: 1px solid var(--border);
   border-radius: 20px;
   padding: 48px;
   align-items: center;
@@ -35,7 +37,7 @@
 }
 
 .prod-detalle-icono-wrap {
-  background: #f7efff;
+  background: var(--accent-bg); 
   border-radius: 20px;
   display: flex;
   align-items: center;
@@ -49,8 +51,8 @@
 
 .prod-detalle-cat {
   display: inline-block;
-  background: rgba(170, 59, 255, 0.08);
-  color: #aa3bff;
+  background: var(--accent-bg);
+  color: var(--accent);
   font-size: 12px;
   font-weight: 600;
   padding: 4px 12px;
@@ -61,7 +63,7 @@
 .prod-detalle-nombre {
   font-size: clamp(22px, 4vw, 32px);
   font-weight: 700;
-  color: #08060d;
+  color: var(--text-h);
   margin: 0 0 16px;
   line-height: 1.2;
 }
@@ -100,7 +102,7 @@
 .prod-detalle-precio {
   font-size: clamp(24px, 4vw, 36px);
   font-weight: 700;
-  color: #aa3bff;
+  color: var(--accent);
   margin: 0 0 10px;
 }
 
@@ -122,8 +124,8 @@
   padding: 14px;
   border: none;
   border-radius: 10px;
-  background: linear-gradient(90deg, #9c27ff, #b23cff);
-  color: white;
+  background: var(--gradient-accent);
+  color: var(--bg);
   font-size: 15px;
   font-weight: 600;
   box-shadow: 0 4px 12px rgba(156, 39, 255, 0.3);
@@ -131,30 +133,29 @@
 }
 
 .prod-detalle-btn-agregar:hover {
-  color: white;
+  color: var(--bg);
   box-shadow: 0 6px 20px rgba(156, 39, 255, 0.45);
   transform: translateY(-2px);
 }
 
 .prod-detalle-btn-agregar:active {
   transform: translateY(0) scale(0.97);
-  box-shadow: 0 2px 8px rgba(156, 39, 255, 0.3);
+  box-shadow: 0 2px 8px var(--shadow-accent);
 }
 
 .prod-detalle-btn-carrito {
   padding: 14px 22px;
   border-radius: 10px;
-  border: 1px solid #e5e4e7;
-  background: #ffffff;
-  color: #08060d;
-  font-size: 15px;
+  background: var(--bg);    
+  color: var(--text-h);     
+  border: 1px solid var(--border);
   font-size: 15px;
   transition: border-color 0.2s, color 0.2s, transform 0.15s;
 }
 
 .prod-detalle-btn-carrito:hover {
-  border-color: #aa3bff;
-  color: #aa3bff;
+  border-color: var(--accent);
+  color: var(--accent);
   transform: translateY(-2px);
 }
 
@@ -223,7 +224,7 @@
 .prod-cantidad-control {
   display: flex;
   align-items: center;
-  border: 1px solid #e5e4e7;
+border: 1px solid var(--border);
   border-radius: 10px;
   overflow: hidden;
 }
@@ -232,10 +233,10 @@
   width: 36px;
   height: 36px;
   border: none;
-  background: #f7f7f7;
+  background: var(--bg-subtle);
   font-size: 18px;
   font-weight: 600;
-  color: #444;
+  color: var(--text-h); 
   cursor: pointer;
   transition: background 0.2s;
   display: flex;
@@ -252,8 +253,8 @@
   font-size: 15px;
   font-weight: 700;
   color: var(--text-h);
-  border-left: 1px solid #e5e4e7;
-  border-right: 1px solid #e5e4e7;
+  border-left: 1px solid var(--border);  
+  border-right: 1px solid var(--border);
   line-height: 36px;
 }
 
@@ -292,8 +293,8 @@
 }
 
 .prod-rel-card {
-  background: #fff;
-  border: 1px solid #e5e4e7;
+  background: var(--bg);           
+  border: 1px solid var(--border);
   border-radius: 14px;
   padding: 20px 16px;
   text-decoration: none;
@@ -307,7 +308,7 @@
 
 .prod-rel-card:hover {
   border-color: var(--accent);
-  box-shadow: 0 4px 16px rgba(170, 59, 255, 0.12);
+  box-shadow: 0 4px 16px var(--shadow-accent);
   transform: translateY(-3px);
 }
 
@@ -328,55 +329,3 @@
   margin: 0;
 }
 
-/* ==========================================================================
-    MODO OSCURO PRODUCTOS.CSS
-   ========================================================================== */
-
-body.dark-mode .prod-detalle-container {
-    background-color: #08060d !important;
-    color: #ffffff !important;
-}
-
-body.dark-mode .prod-detalle-card,
-body.dark-mode .prod-rel-card {
-    background-color: #1a1a1a !important;
-    border: 1px solid #333 !important;
-}
-
-body.dark-mode .prod-detalle-nombre,
-body.dark-mode .prod-detalle-desc,
-body.dark-mode .prod-cantidad-label,
-body.dark-mode .prod-relacionados-titulo,
-body.dark-mode .prod-rel-nombre,
-body.dark-mode .prod-cantidad-num {
-    color: #ffffff !important;
-}
-
-body.dark-mode .prod-cantidad-control {
-    border-color: #444 !important;
-}
-
-body.dark-mode .prod-cantidad-btn {
-    background: #333 !important;
-    color: #fff !important;
-}
-
-body.dark-mode .prod-detalle-btn-carrito {
-    background: #1a1a1a !important;
-    border-color: #444 !important;
-    color: #ffffff !important;
-}
-
-body.dark-mode .prod-detalle-btn-carrito:hover {
-    border-color: #aa3bff !important;
-    color: #aa3bff !important;
-}
-
-body.dark-mode .prod-detalle-icono-wrap {
-    background-color: #333 !important; 
-    border: 1px solid #444 !important;
-}
-
-body.dark-mode .prod-detalle-icono {
-    filter: brightness(0.9) contrast(1.2); /* Esto ayuda a que el emoji se vea mejor en fondo oscuro */
-}

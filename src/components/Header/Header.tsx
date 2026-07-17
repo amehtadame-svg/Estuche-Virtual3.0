@@ -9,21 +9,26 @@ export default function Header() {
   const { totalItems } = useCart();
   const navigate = useNavigate();
   
-  const [isDarkMode, setIsDarkMode] = useState(false);
+const [isDarkMode, setIsDarkMode] = useState(true);
 
-  useEffect(() => {
-    if (localStorage.getItem('theme') === 'dark') {
-      document.body.classList.add('dark-mode');
-      setIsDarkMode(true);
-    }
-  }, []);
+useEffect(() => {
+  const saved = localStorage.getItem('theme');
+  if (saved === 'light') {
+    document.body.classList.remove('dark-mode');
+    setIsDarkMode(false);
+  } else {
+    document.body.classList.add('dark-mode');
+    setIsDarkMode(true);
+    localStorage.setItem('theme', 'dark');
+  }
+}, []);
 
-  const toggleTheme = () => {
-    const nextMode = !isDarkMode;
-    document.body.classList.toggle('dark-mode');
-    localStorage.setItem('theme', nextMode ? 'dark' : 'light');
-    setIsDarkMode(nextMode);
-  };
+const toggleTheme = () => {
+  const nextMode = !isDarkMode;
+  document.body.classList.toggle('dark-mode');
+  localStorage.setItem('theme', nextMode ? 'dark' : 'light');
+  setIsDarkMode(nextMode);
+};
 
   return (
     <header className="header">

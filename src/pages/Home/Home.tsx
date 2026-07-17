@@ -3,25 +3,25 @@ import { useAuth } from '../../context/AuthContext';
 import './Home.css';
 
 const Home = () => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
 
   const ofertas = [
-    { nombre: 'Cuaderno universitario', precio: 8500, precioAntes: 12000, icono: '📓' },
-    { nombre: 'Set de colores x12', precio: 9000, precioAntes: 12000, icono: '🎨' },
-    { nombre: 'Mochila escolar', precio: 35000, precioAntes: 45000, icono: '🎒' },
+    { nombre: 'Cuaderno universitario', precio: 8500,  precioAntes: 12000, icono: '📓' },
+    { nombre: 'Set de colores x12',     precio: 9000,  precioAntes: 12000, icono: '🎨' },
+    { nombre: 'Mochila escolar',        precio: 35000, precioAntes: 45000, icono: '🎒' },
   ];
 
   const razones = [
-    { icono: '🚀', titulo: 'Envío rápido', descripcion: 'Recibe tus productos en la puerta de tu casa en el menor tiempo posible.' },
+    { icono: '🚀', titulo: 'Envío rápido',    descripcion: 'Recibe tus productos en la puerta de tu casa en el menor tiempo posible.' },
     { icono: '💰', titulo: 'Mejores precios', descripcion: 'Ofrecemos los precios más competitivos del mercado sin sacrificar calidad.' },
-    { icono: '🔒', titulo: 'Compra segura', descripcion: 'Tu información y pagos están protegidos en todo momento.' },
-    { icono: '📦', titulo: 'Gran variedad', descripcion: 'Encuentra todo lo que necesitas para el colegio y la oficina en un solo lugar.' },
+    { icono: '🔒', titulo: 'Compra segura',   descripcion: 'Tu información y pagos están protegidos en todo momento.' },
+    { icono: '📦', titulo: 'Gran variedad',   descripcion: 'Encuentra todo lo que necesitas para el colegio y la oficina en un solo lugar.' },
   ];
 
   return (
     <div className="home-container">
-      {/* Añadimos la clase 'dark-banner' para el modo oscuro */}
-      <section className="hero dark-banner">
+
+      <section className="hero">
         <h1 className="hero-title">Todo lo que necesitas, en un solo lugar</h1>
         <p className="hero-description">Útiles escolares y de oficina al mejor precio, entregados en tu puerta.</p>
 
@@ -30,16 +30,14 @@ const Home = () => {
             <p className="welcome-text">Hola, {user.name}. Rol: {user.role}</p>
           </div>
         ) : (
-          <Link className="hero-button" to="/Catalogo">
+          <Link className="hero-button" to="/catalogo">
             Ver productos
           </Link>
         )}
       </section>
 
       <section className="section">
-        <h2 style={{ color: document.body.classList.contains('dark-mode') ? '#ffffff' : '#000000' }}>
-          Ofertas y promociones
-        </h2>
+        <h2 className="section-title">Ofertas y promociones</h2>
         <p className="section-description">Aprovecha estos descuentos por tiempo limitado</p>
 
         <div className="cards-grid">
@@ -49,9 +47,7 @@ const Home = () => {
               <div className="icon">{prod.icono}</div>
               <h3>{prod.nombre}</h3>
               <p className="old-price">${prod.precioAntes.toLocaleString()}</p>
-              <p className="price"><span style={{ color: '#aa3bff' }}>${prod.precio.toLocaleString()}</span></p>
-              
-
+              <p className="price">${prod.precio.toLocaleString()}</p>
               <Link className="card-button" to="/catalogo">
                 Ver producto
               </Link>
@@ -61,9 +57,7 @@ const Home = () => {
       </section>
 
       <section className="section">
-        <h2 style={{ color: document.body.classList.contains('dark-mode') ? '#ffffff' : '#000000' }}>
-        Por qué elegirnos
-        </h2>
+        <h2 className="section-title">Por qué elegirnos</h2>
         <p className="section-description">Estas son las razones por las que nuestros clientes nos prefieren</p>
 
         <div className="reasons-grid">
@@ -76,6 +70,7 @@ const Home = () => {
           ))}
         </div>
       </section>
+
     </div>
   );
 };
