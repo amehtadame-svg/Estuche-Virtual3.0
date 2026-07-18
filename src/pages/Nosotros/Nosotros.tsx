@@ -7,7 +7,6 @@ export default function Nosotros() {
     { nombre: 'Frack Salamanca', cargo: 'Backend', icono: '🧑‍💻', descripcion: 'Administrador de ideas y caracterización.' },
     { nombre: 'Cristian Alvarado', cargo: 'Full stack', icono: '🧑‍💻', descripcion: 'Administrador de la gestion y logistica de la aplicación web.' },
     { nombre: 'Paula Garces', cargo: 'Frontend', icono: '👩‍🎤', descripcion: 'Encargada de los diseños y fotos de la aplicación web.' },
-    { nombre: 'Isabella Olivares', cargo: 'Frontend', icono: '👩‍💻', descripcion: 'ilustradora diseño y colores.' },
   ];
 
   const valores = [

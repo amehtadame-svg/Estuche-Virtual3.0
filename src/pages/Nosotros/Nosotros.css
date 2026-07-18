@@ -1,29 +1,69 @@
 .nosotros-container {
-  padding: 0 30px 60px;
+  padding: 32px 30px 60px;
   text-align: left;
 }
 
 /* Hero */
 .nosotros-hero {
-  background-color: var(--accent-bg);
-  border-radius: 12px;
-  padding: 60px 40px;
+  background: var(--gradient-hero);
+  border: 1px solid var(--accent-border);
+  padding: 80px 40px;
+  border-radius: 24px;
   text-align: center;
-  margin-bottom: 48px;
+  margin-bottom: 56px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: background 0.3s, border-color 0.3s;
+}
+
+.nosotros-hero::before,
+.nosotros-hero::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.nosotros-hero::before {
+  top: -80px;
+  right: -80px;
+  width: 340px;
+  height: 340px;
+  background: radial-gradient(circle, rgba(170,59,255,.18) 0%, transparent 70%);
+}
+
+.nosotros-hero::after {
+  bottom: -60px;
+  left: -60px;
+  width: 260px;
+  height: 260px;
+  background: radial-gradient(circle, rgba(170,59,255,.12) 0%, transparent 70%);
 }
 
 .nosotros-hero-titulo {
-  color: var(--accent);
-  font-size: 32px;
-  margin-bottom: 16px;
+  font-size: clamp(28px, 5vw, 46px);
+  font-weight: 800;
+  letter-spacing: -1.2px;
+  line-height: 1.15;
+  background: var(--gradient-accent);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0 0 18px;
+  position: relative;
+  z-index: 1;
 }
 
 .nosotros-hero-texto {
   color: var(--text);
-  font-size: 17px;
-  max-width: 600px;
-  margin: 0 auto;
-  line-height: 1.7;
+  font-size: clamp(15px, 2vw, 18px);
+  margin-bottom: 36px;
+  max-width: 480px;
+  margin-inline: auto;
+  line-height: 1.6;
+  position: relative;
+  z-index: 1;
 }
 
 /* Misión / Visión */
@@ -35,8 +75,8 @@
 }
 
 .nosotros-card {
-  background-color: var(--bg);
-  border: 1px solid var(--border);
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--accent-border);
   border-radius: 12px;
   padding: 32px;
 }
@@ -78,8 +118,8 @@
 }
 
 .nosotros-valor-card {
-  background-color: var(--bg);
-  border: 1px solid var(--border);
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--accent-border);
   border-radius: 12px;
   padding: 24px;
   text-align: center;
@@ -114,21 +154,25 @@
   display: flex;
   align-items: flex-start;
   gap: 20px;
-  background-color: var(--bg);
-  border: 1px solid var(--border);
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--accent-border);
   border-radius: 12px;
   padding: 20px;
 }
 
 .nosotros-hito-año {
-  background-color: var(--accent);
-  color: var(--bg);
-  border-radius: 8px;
-  padding: 6px 14px;
+  text-decoration: none;
+  background: var(--gradient-accent);
+  color: #ffffff ;
+  padding: 9px 18px;
+  border-radius: 9px;
+  font-weight: 600;
   font-size: 14px;
-  font-weight: 700;
+  box-shadow: 0 4px 20px rgba(170,59,255,.22);
+  transition: opacity 0.2s, transform 0.15s;
+  display: inline-block;
+  border: none;
   white-space: nowrap;
-  flex-shrink: 0;
 }
 
 .nosotros-hito-texto {
@@ -147,8 +191,8 @@
 }
 
 .nosotros-persona-card {
-  background-color: var(--bg);
-  border: 1px solid var(--border);
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--accent-border);
   border-radius: 12px;
   padding: 32px;
   text-align: center;
@@ -188,10 +232,40 @@
 
 /* CTA */
 .nosotros-cta {
-  background-color: var(--accent-bg);
-  border-radius: 12px;
-  padding: 48px 40px;
+  background: var(--gradient-hero);
+  border: 1px solid var(--accent-border);
+  padding: 80px 40px;
+  border-radius: 24px;
   text-align: center;
+  margin-bottom: 56px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: background 0.3s, border-color 0.3s;
+}
+
+.nosotros-cta::before,
+.nosotros-cta::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.nosotros-cta::before {
+  top: -80px;
+  right: -80px;
+  width: 340px;
+  height: 340px;
+  background: radial-gradient(circle, rgba(170,59,255,.18) 0%, transparent 70%);
+}
+
+.nosotros-cta::after {
+  bottom: -60px;
+  left: -60px;
+  width: 260px;
+  height: 260px;
+  background: radial-gradient(circle, rgba(170,59,255,.12) 0%, transparent 70%);
 }
 
 .nosotros-cta-titulo {
@@ -213,32 +287,36 @@
 }
 
 .nosotros-btn-primario {
-  background: #aa3bff;
-  color: white;
-  padding: 12px 28px;
-  border-radius: 8px;
   text-decoration: none;
-  font-size: 15px;
-  transition: opacity 0.2s;
+  background: var(--gradient-accent);
+  color: var(--bg-subtle) ;
+  padding: 12px 28px ;
+  border-radius: 9px;
+  font-weight: 600;
+  font-size: 14px;
+  box-shadow: var(--shadow-accent);
+  transition: opacity 0.2s, transform 0.15s;
+  display: inline-block;
+  border: none;
+  white-space: nowrap;
 }
 
 .nosotros-btn-primario:hover {
   opacity: 0.88;
-  color: white;
+  color: var(--bg);
 }
 
 .nosotros-btn-secundario {
   background: transparent;
-  color: #aa3bff;
+  color: var(--accent);
   padding: 12px 28px;
   border-radius: 8px;
   text-decoration: none;
   font-size: 15px;
-  border: 1px solid #aa3bff;
+  border: 1px solid var(--accent);
   transition: opacity 0.2s;
 }
 
 .nosotros-btn-secundario:hover {
   opacity: 0.88;
 }
-

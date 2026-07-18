@@ -37,7 +37,7 @@
 }
 
 .catalogo-busqueda:focus {
-  border-color: var(--accent);
+  border: 1px solid var(--accent-border);
 }
 
 .catalogo-categorias {
@@ -50,7 +50,7 @@
 .cat-btn {
   padding: 8px 18px;
   border-radius: 999px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--accent-border);
   background: var(--bg);
   color: var(--text);
   font-size: 13px;
@@ -65,8 +65,8 @@
 
 .cat-btn-activa {
   background: var(--accent);
-  color: white !important;
-  border-color: var(--accent) !important;
+  color: white ;
+  border-color: var(--accent);
 }
 
 .catalogo-grid {
@@ -76,8 +76,8 @@
 }
 
 .prod-card {
-  background: var(--bg);
-  border: 1px solid var(--border);
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--accent-border);
   border-radius: 16px;
   padding: 24px 20px;
   text-align: center;
@@ -130,17 +130,18 @@
 }
 
 .prod-btn-agregar {
-  width: 100%;
-  padding: 11px;
-  border: none;
+  text-decoration: none;
+  background: var(--gradient-accent);
+  color: white ;
+  padding: 12px 28px ;
   border-radius: 10px;
-  background: linear-gradient(90deg, #9c27ff, #b23cff);
-  color: white;
-  font-size: 13px;
   font-weight: 600;
-  cursor: pointer;
-  transition: 0.2s;
-  margin-top: 4px;
+  font-size: 14px;
+  box-shadow: var(--shadow-accent);
+  transition: opacity 0.2s, transform 0.15s;
+  display: inline-block;
+  border: none;
+  white-space: nowrap;
 }
 
 .prod-btn-agregar:hover {
@@ -161,13 +162,13 @@
 }
 .prod-btn-ver {
   width: 100%;
-  padding: 9px;
+  padding: 12px 28px;
   border-radius: 10px;
-  border: 1px solid var(--border);
-  background: var(--bg);
-  color: var(--text);
-  font-size: 13px;
-  cursor: pointer;
+  border: 1px solid var(--accent-border);
+  background: transparent;
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 600;
   margin-top: 6px;
   transition: 0.2s;
 }

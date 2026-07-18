@@ -109,8 +109,8 @@
 /* ── Botón login ───────────────────────────────────── */
 .login-btn {
   text-decoration: none;
-  background: linear-gradient(135deg, #9333ea 0%, #c084fc 100%);
-  color: #ffffff !important;
+  background: var(--gradient-accent);
+  color: #ffffff ;
   padding: 9px 18px;
   border-radius: 9px;
   font-weight: 600;
