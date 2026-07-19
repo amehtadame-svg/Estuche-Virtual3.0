@@ -115,15 +115,21 @@
   margin-right: 8px;
 }
 
-.btn-eliminar-detalle-pedido {
-  background: #fff0f0;
-  color: #e74c3c;
-  border: 1px solid #e74c3c;
+.btn-editar-detalle-pedido:hover {
+  opacity: 0.85;
 }
 
-.btn-editar-detalle-pedido:hover,
+.btn-eliminar-detalle-pedido {
+  border: 1px solid var(--accent-border);
+  background: transparent;
+  color: var(--accent);
+}
+
+
 .btn-eliminar-detalle-pedido:hover {
-  opacity: 0.8;
+  border-color: #e74c3c;
+  color: #e74c3c;
+  background: rgba(231,76,60,.06);
 }
 
 /* Formulario (modal)*/  
@@ -167,6 +173,9 @@
   color: #fff;
   border: none;
 }
+.btn-guardar-detalle-pedido:hover {
+  opacity: 0.85;
+}
 
 .btn-cancelar-detalle-pedido {
   background: var(--bg);
@@ -174,9 +183,11 @@
   border: 1px solid var(--accent-border);
 }
 
-.btn-guardar-detalle-pedido:hover,
+
 .btn-cancelar-detalle-pedido:hover {
-  opacity: 0.85;
+  border-color: #e74c3c;
+  color: #e74c3c;
+  background: rgba(231,76,60,.06);
 }
 
 

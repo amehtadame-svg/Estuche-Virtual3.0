@@ -1,7 +1,3 @@
-/* ═══════════════════════════════════════════════════════
-   PEDIDOS
-═══════════════════════════════════════════════════════ */
-
 /* ── Página ──────────────────────────────────────────── */
 .pedidos-page {
   padding: 0 30px 50px;
@@ -130,15 +126,22 @@
   margin-right: 8px;
 }
 
-.btn-eliminar-pedido {
-  background: #fff0f0;
-  color: #e74c3c;
-  border: 1px solid #e74c3c;
+.btn-editar-pedido:hover {
+  opacity: 0.8;
 }
 
-.btn-editar-pedido:hover,
+
+.btn-eliminar-pedido {
+  border: 1px solid var(--accent-border);
+  background: transparent;
+  color: var(--accent);
+}
+
+
 .btn-eliminar-pedido:hover {
-  opacity: 0.8;
+  border-color: #e74c3c;
+  color: #e74c3c;
+  background: rgba(231,76,60,.06);
 }
 
 /* ── Formulario (modal) ──────────────────────────────── */
@@ -182,6 +185,10 @@
   color: #fff;
   border: none;
 }
+.btn-guardar-pedido:hover {
+  opacity: 0.85;
+}
+
 
 .btn-cancelar-pedido {
   background: var(--bg);
@@ -189,9 +196,11 @@
   border: 1px solid var(--accent-border);
 }
 
-.btn-guardar-pedido:hover,
+
 .btn-cancelar-pedido:hover {
-  opacity: 0.85;
+  border-color: #e74c3c;
+  color: #e74c3c;
+  background: rgba(231,76,60,.06);
 }
 
 /* ── Modal ───────────────────────────────────────────── */
@@ -314,32 +323,4 @@
   .btn-editar-pedido {
     margin-right: 6px;
   }
-}
-
-/* ==========================================================================
-   MODO OSCURO: DISEÑO DE BOTONES (PEDIDOS)
-   ========================================================================== */
-
-/* --- BOTONES ELIMINAR --- */
-body.dark-mode .btn-eliminar-pedido {
-    background-color: #551e66 !important;
-    color: #fca5a5 !important;
-    border: 1px solid #671d6e !important;
-}
-
-body.dark-mode .btn-eliminar-pedido:hover {
-    background-color: #671d6e !important;
-    color: #ffffff !important;
-}
-
-/* --- BOTONES EDITAR --- */
-body.dark-mode .btn-editar-pedido {
-    background-color: #1e293b !important;
-    border: 1px solid #334155 !important;
-    color: #94a3b8 !important;
-}
-
-body.dark-mode .btn-editar-pedido:hover {
-    background-color: #334155 !important;
-    color: #ffffff !important;
 }

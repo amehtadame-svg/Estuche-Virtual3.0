@@ -8,34 +8,34 @@ export default function Header() {
   const { user, logout } = useAuth();
   const { totalItems } = useCart();
   const navigate = useNavigate();
-  
-const [isDarkMode, setIsDarkMode] = useState(true);
 
-useEffect(() => {
-  const saved = localStorage.getItem('theme');
-  if (saved === 'light') {
-    document.body.classList.remove('dark-mode');
-    setIsDarkMode(false);
-  } else {
-    document.body.classList.add('dark-mode');
-    setIsDarkMode(true);
-    localStorage.setItem('theme', 'dark');
-  }
-}, []);
+  const [isDarkMode, setIsDarkMode] = useState(true);
 
-const toggleTheme = () => {
-  const nextMode = !isDarkMode;
-  document.body.classList.toggle('dark-mode');
-  localStorage.setItem('theme', nextMode ? 'dark' : 'light');
-  setIsDarkMode(nextMode);
-};
+  useEffect(() => {
+    const saved = localStorage.getItem('theme');
+    if (saved === 'light') {
+      document.body.classList.remove('dark-mode');
+      setIsDarkMode(false);
+    } else {
+      document.body.classList.add('dark-mode');
+      setIsDarkMode(true);
+      localStorage.setItem('theme', 'dark');
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    const nextMode = !isDarkMode;
+    document.body.classList.toggle('dark-mode');
+    localStorage.setItem('theme', nextMode ? 'dark' : 'light');
+    setIsDarkMode(nextMode);
+  };
 
   return (
     <header className="header">
       <Link to="/" className="header-logo">
         📚 Estuche Virtual
       </Link>
-    
+
       <nav className="header-nav">
         {user?.role === 'superadmin' ? (
           <>
@@ -71,12 +71,9 @@ const toggleTheme = () => {
         </button>
 
         {user?.role !== 'administrador' && (
-          <Link to="/carrito" className="carrito-link">
+          <button className="cart-btn" onClick={() => navigate('/carrito')}>
             🛒
-            {totalItems > 0 && (
-              <span className="carrito-badge">{totalItems}</span>
-            )}
-          </Link>
+          </button>
         )}
 
         {user ? (

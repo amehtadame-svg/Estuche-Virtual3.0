@@ -122,13 +122,13 @@ a:hover {
 
 /* ── BOTONES BASE ───────────────────────────────────── */
 button {
-  font-family: var(--sans);
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-h);
   cursor: pointer;
-  transition: opacity 0.2s, transform 0.15s;
-  background: none;
-  color: inherit;
-  border: none;
-  padding: 0;
+  transition: 0.3s;
 }
 
 button:hover {

@@ -343,31 +343,3 @@
     padding-top: 8px;
   }
 }
-
-/* ==========================================================================
-   MODO OSCURO: DISEÑO DE BOTONES 
-   ========================================================================== */
-
-/* --- BOTONES ELIMINAR  --- */
-body.dark-mode .usr-btn-eliminar {
-    background-color: #551e66 !important;
-    color: #fca5a5 !important;
-    border: 1px solid #671d6e !important;
-}
-
-body.dark-mode .usr-btn-eliminar:hover {
-    background-color: #671d6e !important;
-    color: #ffffff !important;
-}
-
-/* --- BOTONES EDITAR  --- */
-body.dark-mode .usr-btn-editar {
-    background-color: #1e293b !important;
-    border: 1px solid #334155 !important;
-    color: #94a3b8 !important;
-}
-
-body.dark-mode .usr-btn-editar:hover {
-    background-color: #334155 !important;
-    color: #ffffff !important;
-}

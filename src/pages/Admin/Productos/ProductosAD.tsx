@@ -164,7 +164,7 @@ export default function Productos() {
             value={categoriaFiltro}
             onChange={(e) => setCategoriaFiltro(e.target.value)}
           >
-            <option value="">Todas las categorías</option>
+            <option value="">categorías</option>
             {categorias.map(cat => (
               <option key={cat} value={cat}>{cat}</option>
             ))}

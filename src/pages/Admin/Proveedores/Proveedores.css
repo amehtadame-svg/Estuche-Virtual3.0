@@ -1,6 +1,3 @@
-/* ═══════════════════════════════════════════════════════
-   PROVEEDORES
-═══════════════════════════════════════════════════════ */
 .proveedores-page {
   padding: 0 30px 50px;
 }
@@ -41,11 +38,11 @@
 
 /* ── Formulario ──────────────────────────────────────── */
 .formulario-proveedores {
-  background: var(--accent-bg);
-  border: 1px solid var(--accent-border);
-  border-radius: var(--radius-md);
-  padding: 20px;
-  height: fit-content;
+background: var(--accent-bg);
+border: 1px solid var(--accent-border);
+border-radius: var(--radius-md);
+padding: 20px;
+height: fit-content;
 }
 
 .subtitulo-proveedores {
@@ -65,7 +62,7 @@
 .input-proveedor {
   width: 100%;
   padding: 8px 12px;
-  border: 1px solid var(--border);
+  border-bottom: 1px solid var(--accent-border);
   border-radius: var(--radius-sm);
   font-size: 14px;
   color: var(--text-h);
@@ -89,6 +86,12 @@
   transition: opacity 0.2s, transform 0.15s;
 }
 
+.btn-cancelar-proveedor:hover {
+  border-color: #e74c3c;
+  color: #e74c3c;
+  background: rgba(231,76,60,.06);
+}
+
 .btn-guardar-proveedor {
   background: var(--gradient-accent);
   color: #fff;
@@ -96,15 +99,13 @@
   margin-bottom: 8px;
 }
 
+.btn-guardar-proveedor :hover {
+  opacity: 0.88;
+}
 .btn-cancelar-proveedor {
   background: var(--bg);
   color: var(--accent);
   border: 1px solid var(--accent-border);
-}
-
-.btn-guardar-proveedor:hover,
-.btn-cancelar-proveedor:hover {
-  opacity: 0.85;
 }
 
 /* ── Tabla ───────────────────────────────────────────── */
@@ -163,9 +164,15 @@
 }
 
 .btn-eliminar-proveedor {
-  background: #fff0f0;
+  border: 1px solid var(--accent-border);
+  background: transparent;
+  color: var(--accent);
+}
+
+.btn-eliminar-proveedor:hover {
+  border-color: #e74c3c;
   color: #e74c3c;
-  border: 1px solid #e74c3c;
+  background: rgba(231,76,60,.06);
 }
 
 .btn-editar-proveedor:hover,
@@ -275,7 +282,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 20px 24px 16px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--accent-border);
 }
 
 .modal-titulo {
@@ -308,37 +315,11 @@
   display: flex;
   gap: 10px;
   padding: 16px 24px 20px;
-  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--accent-border);
 }
 
 .modal-footer .btn-cancelar-proveedor,
 .modal-footer .btn-guardar-proveedor {
   flex: 1;
   margin: 0;
-}
-
-/* ==========================================================================
-   MODO OSCURO: BOTONES PROVEEDORES (EDITAR Y ELIMINAR)
-   ========================================================================== */
-
-body.dark-mode .btn-eliminar-proveedor {
-    background-color: #551e66 !important;
-    color: #fca5a5 !important;
-    border: 1px solid #671d6e !important;
-}
-
-body.dark-mode .btn-eliminar-proveedor:hover {
-    background-color: #671d6e !important;
-    color: #ffffff !important;
-}
-
-body.dark-mode .btn-editar-proveedor {
-    background-color: #1e293b !important;
-    border: 1px solid #334155 !important;
-    color: #94a3b8 !important;
-}
-
-body.dark-mode .btn-editar-proveedor:hover {
-    background-color: #334155 !important;
-    color: #ffffff !important;
 }

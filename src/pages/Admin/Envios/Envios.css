@@ -1,7 +1,3 @@
-/* ═══════════════════════════════════════════════════════
-   ENVIOS
-═══════════════════════════════════════════════════════ */
-
 /* ── Página ──────────────────────────────────────────── */
 .envios-page {
   padding: 0 30px 50px;
@@ -125,15 +121,20 @@
   margin-right: 8px;
 }
 
-.btn-eliminar-envio {
-  background: #fff0f0;
-  color: #e74c3c;
-  border: 1px solid #e74c3c;
+.btn-editar-envio:hover {
+  opacity: 0.85;
 }
 
-.btn-editar-envio:hover,
+.btn-eliminar-envio {
+  border: 1px solid var(--accent-border);
+  background: transparent;
+  color: var(--accent);
+}
+
 .btn-eliminar-envio:hover {
-  opacity: 0.8;
+  border-color: #e74c3c;
+  color: #e74c3c;
+  background: rgba(231,76,60,.06);
 }
 
 /* ── Formulario (modal) ──────────────────────────────── */
@@ -177,15 +178,20 @@
   border: none;
 }
 
+.btn-guardar-envio:hover{
+  opacity: 0.85;
+}
+
 .btn-cancelar-envio {
   background: var(--bg);
   color: var(--accent);
   border: 1px solid var(--accent-border);
 }
 
-.btn-guardar-envio:hover,
 .btn-cancelar-envio:hover {
-  opacity: 0.85;
+  border-color: #e74c3c;
+  color: #e74c3c;
+  background: rgba(231,76,60,.06);
 }
 
 /* ── Modal ───────────────────────────────────────────── */
@@ -316,31 +322,4 @@
   .btn-editar-envio {
     margin-right: 6px;
   }
-}
-/* ==========================================================================
-   MODO OSCURO: DISEÑO DE BOTONES (ENVÍOS)
-   ========================================================================== */
-
-/* --- BOTONES ELIMINAR (Estilo Morado Oscuro) --- */
-body.dark-mode .btn-eliminar-envio {
-    background-color: #551e66 !important;
-    color: #fca5a5 !important;
-    border: 1px solid #671d6e !important;
-}
-
-body.dark-mode .btn-eliminar-envio:hover {
-    background-color: #671d6e !important;
-    color: #ffffff !important;
-}
-
-/* --- BOTONES EDITAR (Estilo Gris Oscuro/Azulado) --- */
-body.dark-mode .btn-editar-envio {
-    background-color: #1e293b !important;
-    border: 1px solid #334155 !important;
-    color: #94a3b8 !important;
-}
-
-body.dark-mode .btn-editar-envio:hover {
-    background-color: #334155 !important;
-    color: #ffffff !important;
 }
