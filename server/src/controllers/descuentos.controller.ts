@@ -43,3 +43,59 @@ export const eliminarDescuento = async (req: Request, res: Response) => {
   await prisma.descuentos.delete({ where: { id_descuento: Number(req.params.id) } });
   return res.status(204).send();
 };
+
+export const validarDescuento = async (req: Request, res: Response) => {
+  const { codigo, total } = req.body;
+
+  if (!codigo) return res.status(400).json({ message: 'Código requerido' });
+
+  const descuento = await prisma.descuentos.findFirst({
+    where: { codigo: codigo.trim() },
+  });
+
+  if (!descuento) {
+    return res.status(404).json({ message: 'Código inválido' });
+  }
+
+  if (!descuento.activo) {
+    return res.status(400).json({ message: 'Este código ya no está activo' });
+  }
+
+  const ahora = new Date();
+  if (descuento.fecha_inicio && ahora < descuento.fecha_inicio) {
+    return res.status(400).json({ message: 'Este código aún no está disponible' });
+  }
+  if (descuento.fecha_fin && ahora > descuento.fecha_fin) {
+    return res.status(400).json({ message: 'Este código ha expirado' });
+  }
+
+  if (descuento.minimo_compra && total < descuento.minimo_compra) {
+    return res.status(400).json({
+      message: `Compra mínima de $${descuento.minimo_compra.toLocaleString()} requerida`,
+    });
+  }
+  if (descuento.usos_maximos !== null && descuento.usos_actuales !== null) {
+  if (descuento.usos_actuales >= descuento.usos_maximos) {
+    return res.status(400).json({ message: 'Este código alcanzó su límite de usos' });
+  }
+}
+
+  return res.json(descuento);
+};
+
+export const aplicarDescuento = async (req: Request, res: Response) => {
+  const { codigo } = req.body;
+
+  const descuento = await prisma.descuentos.findFirst({
+    where: { codigo: codigo.trim() },
+  });
+
+  if (!descuento) return res.status(404).json({ message: 'Código inválido' });
+
+  await prisma.descuentos.update({
+    where: { id_descuento: descuento.id_descuento },
+    data:  { usos_actuales: { increment: 1 } },
+  });
+
+  return res.json({ id_descuento: descuento.id_descuento });
+};

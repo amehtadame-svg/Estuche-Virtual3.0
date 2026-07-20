@@ -14,6 +14,7 @@ import descuentosRoutes   from './routes/descuentos.routes';
 import pagosRoutes        from './routes/pagos.routes';
 import devolucionesRoutes from './routes/devoluciones.routes';
 import reportesRoutes     from './routes/reportes.routes';
+import carritoRoutes from './routes/carrito.routes';
 
 dotenv.config();
 
@@ -31,6 +32,7 @@ app.use('/api/proveedores',    proveedoresRoutes);
 app.use('/api/envios',         enviosRoutes);
 app.use('/api/detallePedidos', detallePedidoRoutes);
 app.use('/api/facturas',       facturasRoutes);
+app.use('/api/carrito', carritoRoutes);
 
 // ── SuperAdmin ────────────────────────────────────────
 app.use('/api/descuentos',     descuentosRoutes);

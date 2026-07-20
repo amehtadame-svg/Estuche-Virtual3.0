@@ -21,5 +21,6 @@ export const API = {
   devoluciones: `${BASE}/api/devoluciones`,
   reportes:     `${BASE}/api/reportes`,
   detallePedidos:`${BASE}/api/detallePedidos`,
+  carrito:      `${BASE}/api/carrito`,
 
 };

@@ -8,6 +8,6 @@ router.get('/:id', getPedidoById);
 router.post('/', verifyToken, crearPedido);
 router.put('/:id', editarPedido);
 router.delete('/:id', eliminarPedido);
-router.post('/:id/descuento', verifyToken, aplicarDescuento);
+router.patch('/:id/aplicar-descuento', verifyToken, aplicarDescuento);
 
 export default router;

@@ -14,9 +14,6 @@ export const login = async (req: Request, res: Response) => {
   if (!user) return res.status(401).json({ message: 'Credenciales inválidas' });
 
   const valid = password === user.password || await bcrypt.compare(password, user.password);
-  console.log('password ingresada:', password);
-  console.log('hash en BD:', user.password);
-  console.log('valid:', valid);
   if (!valid) return res.status(401).json({ message: 'Credenciales inválidas' });
 
   const token = jwt.sign(
