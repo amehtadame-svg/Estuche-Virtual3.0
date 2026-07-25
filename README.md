@@ -1,4 +1,5 @@
-# React + TypeScript + Vite
+# documentacion del proyecto: https://trello.com/invite/b/69f1619700802e14bd2536f2/ATTI0ff1d9d9ead7c20f2975dd19ffeb99810E943C7C/estuche-virtual
+##React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
