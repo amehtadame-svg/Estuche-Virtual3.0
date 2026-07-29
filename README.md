@@ -3,7 +3,11 @@
 ## Sena ADSO
 
 ## Plataforma E-commerce de Papelería y Útiles Escolares con Gestión de Inventario y Pedidos
-
+![Version](https://img.shields.io/badge/version-1.0.0-blue)
+![Node.js](https://img.shields.io/badge/Node.js-20.x-green)
+![React](https://img.shields.io/badge/React-18.x-61DAFB)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791)
+![License](https://img.shields.io/badge/license-MIT-yellow)
 ---
 
 ##  Tabla de Contenidos
