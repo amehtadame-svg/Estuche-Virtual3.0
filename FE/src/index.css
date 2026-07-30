@@ -219,3 +219,12 @@ body.dark-mode code {
   background: var(--code-bg);
   color: var(--text-h);
 }
+
+/* ── Logo adaptable al tema ───────────────────────── */
+.header-logo { display: flex; align-items: center; }
+.logo-img { height: 42px; width: auto; }
+
+.logo-dark { display: none; }                 /* modo claro: solo logo normal */
+
+body.dark-mode .logo_estuche_limpio { display: none; } /* modo oscuro: solo logo blanco */
+body.dark-mode .logo-dark  { display: block; }
