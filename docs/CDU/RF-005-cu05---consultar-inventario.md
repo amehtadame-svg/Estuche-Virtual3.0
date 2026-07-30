@@ -2,16 +2,26 @@
 
 ## Descripción
 
-Pendiente de completar.
+Ver productos disponibles
 
 ## Actores
 
-- 
+- Administrador
 
-## Flujo principal
+## Precondiciones
 
-1. 
+- El usuario debe haber iniciado sesión.
 
-## Flujo alternativo
+## Postcondiciones
 
-- 
+- La información queda registrada en el sistema.
+
+## Flujo principal (Secuencia Normal)
+
+1. **Acción (actor):** Acceder módulo inventario  
+   **Reacción (sistema):** El sistema procesa: Acceder módulo inventario
+
+## Flujo alternativo (Excepciones)
+
+1. **Acción (actor):** Sin datos  
+   **Reacción (sistema):** El sistema muestra: Sin datos
