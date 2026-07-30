@@ -222,7 +222,7 @@ body.dark-mode code {
 
 /* ── Logo adaptable al tema ───────────────────────── */
 .header-logo { display: flex; align-items: center; }
-.logo-img { height: 42px; width: auto; }
+.logo-img { height: 55px; width: auto; }
 
 .logo-dark { display: none; }                 /* modo claro: solo logo normal */
 

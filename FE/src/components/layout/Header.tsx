@@ -31,8 +31,8 @@ export default function Header() {
   return (
     <header className="header">
       <Link to="/" className="header-logo">
-        <img src="/logo.png" alt="Estuche Virtual" className="logo-img logo_estuche_limpio" />
-        <img src="/logo-dark.png" alt="Estuche Virtual" className="logo-img logo-dark" />
+        <img src="/logo-light.png" alt="Estuche Virtual" className="logo-img logo_estuche_limpio" />
+        <img src="/logo-dark.png"  alt="Estuche Virtual" className="logo-img logo-dark" />
       </Link>
 
       <nav className="header-nav">
