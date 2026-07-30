@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getFacturas, crearFactura, editarFactura, eliminarFactura } from '../controllers/facturas.controller';
+import { getFacturas, crearFactura, editarFactura, eliminarFactura } from './facturas.controller';
 
 const router = Router();
 router.get('/', getFacturas);

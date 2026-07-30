@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { verifyToken } from '../middlewares/auth.middleware';
-import { getUsuarios, getUsuarioById, actualizarPerfil, updateRol, crearUsuario, editarUsuario, eliminarUsuario, previewEliminarUsuario } from '../controllers/usuarios.controller';
+import { verifyToken } from '../../middlewares/auth.middleware';
+import { getUsuarios, getUsuarioById, actualizarPerfil, updateRol, crearUsuario, editarUsuario, eliminarUsuario, previewEliminarUsuario } from './usuarios.controller';
 
 const router = Router();
 

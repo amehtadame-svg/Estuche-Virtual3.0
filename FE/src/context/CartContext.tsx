@@ -1,6 +1,6 @@
-import { createContext, useState, useContext, useEffect, useCallback, type ReactNode } from 'react';
-import { useAuth } from './AuthContext';
-import { API } from '../api';
+import { createContext, useState, useEffect, useCallback, type ReactNode } from 'react';
+import { useAuth } from '../hooks/useAuth';
+import { API } from '../api/api';
 
 export interface CartItem {
   id: number;
@@ -22,7 +22,7 @@ interface CartContextType {
   cargando: boolean;
 }
 
-const CartContext = createContext<CartContextType | undefined>(undefined);
+export const CartContext = createContext<CartContextType | undefined>(undefined);
 
 const headers = () => ({
   'Content-Type': 'application/json',
@@ -134,10 +134,4 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       {children}
     </CartContext.Provider>
   );
-};
-
-export const useCart = () => {
-  const ctx = useContext(CartContext);
-  if (!ctx) throw new Error('useCart debe usarse dentro de CartProvider');
-  return ctx;
 };

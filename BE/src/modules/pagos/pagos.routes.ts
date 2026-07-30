@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { getPagos, getPagoById, actualizarEstadoPago } from '../controllers/pagos.controller';
-import { verifyToken, verifySuperAdmin } from '../middlewares/auth.middleware';
+import { getPagos, getPagoById, actualizarEstadoPago } from './pagos.controller';
+import { verifyToken, verifySuperAdmin } from '../../middlewares/auth.middleware';
 
 const router = Router();
 

@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { getReportes, getResumenGeneral } from '../controllers/reportes.controller';
-import { verifyToken, verifySuperAdmin } from '../middlewares/auth.middleware';
+import { getReportes, getResumenGeneral } from './reportes.controller';
+import { verifyToken, verifySuperAdmin } from '../../middlewares/auth.middleware';
 
 const router = Router();
 

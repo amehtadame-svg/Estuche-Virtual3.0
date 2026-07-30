@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getDetallePedidos, crearDetalle, editarDetalle, eliminarDetalle } from '../controllers/detallepedido.controller';
+import { getDetallePedidos, crearDetalle, editarDetalle, eliminarDetalle } from './detallepedido.controller';
 
 const router = Router();
 router.get('/', getDetallePedidos);

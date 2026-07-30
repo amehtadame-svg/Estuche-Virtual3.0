@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import './Usuarios.css';
-import { API } from '../../../api';
+import { API } from '../../../api/api';
 
 interface Usuario {
   id_usuario: number;

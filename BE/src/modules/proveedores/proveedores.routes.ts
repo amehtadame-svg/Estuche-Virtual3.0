@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getProveedores, crearProveedor, editarProveedor, eliminarProveedor } from '../controllers/proveedores.controller';
+import { getProveedores, crearProveedor, editarProveedor, eliminarProveedor } from './proveedores.controller';
 
 const router = Router();
 router.get('/', getProveedores);

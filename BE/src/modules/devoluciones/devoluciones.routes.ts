@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { getDevoluciones, getDevolucionById, resolverDevolucion } from '../controllers/devoluciones.controller';
-import { verifyToken, verifySuperAdmin } from '../middlewares/auth.middleware';
+import { getDevoluciones, getDevolucionById, resolverDevolucion } from './devoluciones.controller';
+import { verifyToken, verifySuperAdmin } from '../../middlewares/auth.middleware';
 
 const router = Router();
 

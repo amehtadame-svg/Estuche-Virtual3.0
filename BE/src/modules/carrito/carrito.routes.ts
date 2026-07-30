@@ -5,8 +5,8 @@ import {
   actualizarCantidad,
   quitarDelCarrito,
   vaciarCarrito,
-} from '../controllers/carrito.controller';
-import { verifyToken } from '../middlewares/auth.middleware';
+} from './carrito.controller';
+import { verifyToken } from '../../middlewares/auth.middleware';
 
 const router = Router();
 

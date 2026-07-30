@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useCart } from '../../context/CartContext';
-import { useAuth } from '../../context/AuthContext';
-import { API } from '../../api';
-import Modal from '../../components/Modal/Modal';
+import { useCart } from '../../hooks/useCart';
+import { useAuth } from '../../hooks/useAuth';
+import { API } from '../../api/api';
+import Modal from '../../components/ui/Modal';
 import './Pago.css';
 
 type MetodoPago = 'tarjeta' | 'nequi' | 'daviplata' | 'transferencia' | 'efectivo';

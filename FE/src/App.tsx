@@ -1,9 +1,9 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider }  from './context/AuthContext';
 import { CartProvider }  from './context/CartContext';
-import ProtectedRoute    from './components/ProtectedRoute';
-import Header            from './components/Header/Header';
-import Footer            from './components/Footer/Footer';
+import ProtectedRoute    from './components/ui/ProtectedRoute';
+import Header            from './components/layout/Header';
+import Footer            from './components/layout/Footer';
 
 // Páginas públicas
 import Pago           from './pages/Pago/Pago';

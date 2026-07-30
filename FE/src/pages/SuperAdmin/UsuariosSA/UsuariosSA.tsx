@@ -1,7 +1,7 @@
 // UsuariosSA.tsx
 import { useState, useEffect } from 'react';
-import Modal from '../../../components/Modal/Modal';
-import { API } from '../../../api';
+import Modal from '../../../components/ui/Modal';
+import { API } from '../../../api/api';
 import './UsuariosSA.css';
 
 interface Usuario {

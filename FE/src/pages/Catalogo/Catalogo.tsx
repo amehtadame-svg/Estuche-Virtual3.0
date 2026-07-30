@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useCart } from '../../context/CartContext';
-import { API } from '../../api';
+import { useCart } from '../../hooks/useCart';
+import { API } from '../../api/api';
 import './Catalogo.css';
 
 const iconosPorCategoria: Record<string, string> = {

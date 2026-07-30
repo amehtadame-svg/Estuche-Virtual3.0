@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { API } from '../../../api';
+import { API } from '../../../api/api';
 import './Descuentos.css';
 
 interface Descuento {

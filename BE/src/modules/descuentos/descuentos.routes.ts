@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { getDescuentos, aplicarDescuento, crearDescuento, editarDescuento, toggleDescuento, eliminarDescuento, validarDescuento } from '../controllers/descuentos.controller';
-import { verifyToken, verifySuperAdmin } from '../middlewares/auth.middleware';
+import { getDescuentos, aplicarDescuento, crearDescuento, editarDescuento, toggleDescuento, eliminarDescuento, validarDescuento } from './descuentos.controller';
+import { verifyToken, verifySuperAdmin } from '../../middlewares/auth.middleware';
 
 const router = Router();
 

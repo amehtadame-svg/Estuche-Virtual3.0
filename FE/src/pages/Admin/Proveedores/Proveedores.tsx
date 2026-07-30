@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import Modal from '../../../components/Modal/Modal';
+import Modal from '../../../components/ui/Modal';
 import './Proveedores.css';
-import { API } from '../../../api';
+import { API } from '../../../api/api';
 
 const formularioVacio = { nombre: '', correo: '', telefono: '', direccion: '' };
 

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import Modal from '../../../components/Modal/Modal';
-import { API } from '../../../api';
+import Modal from '../../../components/ui/Modal';
+import { API } from '../../../api/api';
 import './Productos.css';
 
 const categorias = ['Cuadernos', 'Colores', 'Carpetas', 'Lapiceros', 'Mochilas', 'Tijeras'];
