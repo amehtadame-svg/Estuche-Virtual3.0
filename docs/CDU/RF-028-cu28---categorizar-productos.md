@@ -2,16 +2,26 @@
 
 ## Descripción
 
-Pendiente de completar.
+Como administrador quiero categorizar productos para organización.
 
 ## Actores
 
-- 
+- Administrador
 
-## Flujo principal
+## Precondiciones
 
-1. 
+- El administrador debe haber iniciado sesión.
 
-## Flujo alternativo
+## Postcondiciones
 
-- 
+- La información queda registrada correctamente.
+
+## Flujo principal (Secuencia Normal)
+
+1. **Acción (actor):** Categorizar productos  
+   **Reacción (sistema):** El sistema permite agrupar productos por tipo.
+
+## Flujo alternativo (Excepciones)
+
+1. **Acción (actor):** Si no hay categorías creadas, el sistema solicita crear una.  
+   **Reacción (sistema):** El sistema muestra mensaje de advertencia.

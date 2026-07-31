@@ -2,16 +2,26 @@
 
 ## Descripción
 
-Pendiente de completar.
+Ranking productos
 
 ## Actores
 
-- 
+- Administrador
 
-## Flujo principal
+## Precondiciones
 
-1. 
+- El usuario debe haber iniciado sesión.
 
-## Flujo alternativo
+## Postcondiciones
 
-- 
+- La información queda registrada en el sistema.
+
+## Flujo principal (Secuencia Normal)
+
+1. **Acción (actor):** Generar reporte  
+   **Reacción (sistema):** El sistema procesa: Generar reporte
+
+## Flujo alternativo (Excepciones)
+
+1. **Acción (actor):** N/A  
+   **Reacción (sistema):** El sistema muestra: N/A

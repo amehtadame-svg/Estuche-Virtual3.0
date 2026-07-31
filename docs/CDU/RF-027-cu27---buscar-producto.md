@@ -2,16 +2,26 @@
 
 ## Descripción
 
-Pendiente de completar.
+Buscar productos
 
 ## Actores
 
-- 
+- Administrador
 
-## Flujo principal
+## Precondiciones
 
-1. 
+- El usuario debe haber iniciado sesión.
 
-## Flujo alternativo
+## Postcondiciones
 
-- 
+- La información queda registrada en el sistema.
+
+## Flujo principal (Secuencia Normal)
+
+1. **Acción (actor):** Ingresar nombre  
+   **Reacción (sistema):** El sistema procesa: Ingresar nombre
+
+## Flujo alternativo (Excepciones)
+
+1. **Acción (actor):** Sin resultados  
+   **Reacción (sistema):** El sistema muestra: Sin resultados

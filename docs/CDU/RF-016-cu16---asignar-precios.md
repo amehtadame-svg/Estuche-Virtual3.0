@@ -2,16 +2,28 @@
 
 ## Descripción
 
-Pendiente de completar.
+Modificar precios
 
 ## Actores
 
-- 
+- Administrador
 
-## Flujo principal
+## Precondiciones
 
-1. 
+- El usuario debe haber iniciado sesión.
 
-## Flujo alternativo
+## Postcondiciones
 
-- 
+- La información queda registrada en el sistema.
+
+## Flujo principal (Secuencia Normal)
+
+1. **Acción (actor):** Editar producto  
+   **Reacción (sistema):** El sistema procesa: Editar producto
+2. **Acción (actor):** Guardar  
+   **Reacción (sistema):** El sistema procesa: Guardar
+
+## Flujo alternativo (Excepciones)
+
+1. **Acción (actor):** Error  
+   **Reacción (sistema):** El sistema muestra: Error

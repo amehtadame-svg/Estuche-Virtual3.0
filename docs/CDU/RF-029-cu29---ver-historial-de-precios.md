@@ -2,16 +2,26 @@
 
 ## Descripción
 
-Pendiente de completar.
+Como administrador quiero ver historial de precios para control financiero.
 
 ## Actores
 
-- 
+- Administrador
 
-## Flujo principal
+## Precondiciones
 
-1. 
+- El administrador debe haber iniciado sesión.
 
-## Flujo alternativo
+## Postcondiciones
 
-- 
+- La información queda registrada correctamente.
+
+## Flujo principal (Secuencia Normal)
+
+1. **Acción (actor):** Consultar historial de precios  
+   **Reacción (sistema):** El sistema muestra cambios de precios.
+
+## Flujo alternativo (Excepciones)
+
+1. **Acción (actor):** Si no existen registros, el sistema informa que no hay historial.  
+   **Reacción (sistema):** El sistema muestra mensaje de advertencia.
