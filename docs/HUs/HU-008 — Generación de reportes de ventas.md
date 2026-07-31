@@ -1,7 +1,15 @@
 # HU-008 — Generación de reportes de ventas
 
 ## Identificación
-CampoValor**ID**HU-008**Título**Generación de reportes de ventas**Módulo**Reportes**Prioridad**Alta**Estado**Por Implementar**RF asociados**RF-008
+
+| Campo | Valor |
+|-------|-------|
+| **ID** | HU-008 |
+| **Título** | Generación de reportes de ventas |
+| **Módulo** | Reportes |
+| **Prioridad** | Alta |
+| **Estado** | Por Implementar |
+| **RF asociados** | RF-008 |
 
 ---
 
@@ -29,7 +37,10 @@ CampoValor**ID**HU-008**Título**Generación de reportes de ventas**Módulo**Rep
 ---
 
 ## Endpoints
-MétodoRutaDescripciónGET`/api/v1/reports/sales`Retorna el resumen consolidado de ventas
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/api/v1/reports/sales` | Retorna el reporte de ventas por rango de fechas |
 
 ---
 

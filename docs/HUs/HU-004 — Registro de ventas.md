@@ -1,7 +1,15 @@
 # HU-004 — Registro de ventas
 
 ## Identificación
-CampoValor**ID**HU-004**Título**Registro de ventas**Módulo**Ventas**Prioridad**Alta**Estado**Por Implementar**RF asociados**RF-004
+
+| Campo | Valor |
+|-------|-------|
+| **ID** | HU-004 |
+| **Título** | Registro de ventas |
+| **Módulo** | Ventas |
+| **Prioridad** | Alta |
+| **Estado** | Por Implementar |
+| **RF asociados** | RF-004 |
 
 ---
 
@@ -35,7 +43,10 @@ CampoValor**ID**HU-004**Título**Registro de ventas**Módulo**Ventas**Prioridad*
 ---
 
 ## Endpoints
-MétodoRutaDescripciónPOST`/api/v1/sales`Procesa la venta, genera orden y ajusta stock
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| POST | `/api/v1/sales` | Registra la venta y actualiza inventario |
 
 ---
 

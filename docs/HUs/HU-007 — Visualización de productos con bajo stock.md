@@ -1,12 +1,16 @@
 # HU-007 — Visualización de productos con bajo stock
 
 ## Identificación
-- **ID:** HU-007
-- **Título:** Visualización de productos con bajo stock
-- **Módulo:** Inventario
-- **Prioridad:** Media
-- **Estado:** Por Implementar
-- **RF asociados:** RF-007
+
+| Campo | Valor |
+|-------|-------|
+| **ID** | HU-007 |
+| **Título** | Visualización de productos con bajo stock |
+| **Módulo** | Inventario |
+| **Prioridad** | Media |
+| **Estado** | Por Implementar |
+| **RF asociados** | RF-007 |
+
 
 ## Historia
 **Como** administrador,
@@ -26,9 +30,10 @@
 - **entonces** el registro se resalta en color de advertencia (ej. amarillo/naranja) indicando las unidades restantes.
 
 ## Endpoints
-- **Método:** GET
-- **Ruta:** `/api/v1/inventory/low-stock`
-- **Descripción:** Retorna productos con `stock <= min_stock`
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/api/v1/inventory/low-stock` | Consulta productos por debajo del umbral mínimo |
 
 ## Notas técnicas
 - Consulta SQL: `SELECT * FROM products WHERE stock <= min_stock AND stock > 0 AND is_active = true`.

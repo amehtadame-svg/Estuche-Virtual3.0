@@ -1,12 +1,13 @@
 ## Identificación
 
-CampoValor  
-**ID** HU-015  
-**Título** Registro de proveedores  
-**Módulo** Proveedores  
-**Prioridad** Media  
-**Estado** Por Implementar  
-**RF asociados** RF-015
+| Campo | Valor |
+|-------|-------|
+| **ID** | HU-015 |
+| **Título** | Registro de proveedores |
+| **Módulo** | Proveedores |
+| **Prioridad** | Media |
+| **Estado** | Por Implementar |
+| **RF asociados** | RF-015 |
 
 ---
 
@@ -36,8 +37,9 @@ CampoValor
 
 ## Endpoints
 
-Método Ruta Descripción  
-POST `/api/v1/suppliers` Guarda la información de un nuevo proveedor
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| POST | `/api/v1/suppliers` | Guarda la información del nuevo proveedor |
 
 ---
 

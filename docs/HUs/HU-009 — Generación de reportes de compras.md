@@ -1,15 +1,22 @@
 # HU-009 — Generación de reportes de compras
 
 ## Identificación
-- ID: HU-009
-- Título: Generación de reportes de compras
-- Módulo: Reportes
-- Prioridad: Media
-- Estado: Por Implementar
-- RF asociados: RF-009
+
+| Campo | Valor |
+|-------|-------|
+| **ID** | HU-009 |
+| **Título** | Generación de reportes de compras |
+| **Módulo** | Reportes |
+| **Prioridad** | Media |
+| **Estado** | Por Implementar |
+| **RF asociados** | RF-009 |
+
+---
 
 ## Historia
 Como administrador, quiero generar reportes de compras, para controlar los gastos e inversión en abastecimiento de inventario.
+---
+
 
 ## Criterios de Aceptación
 
@@ -22,11 +29,13 @@ Como administrador, quiero generar reportes de compras, para controlar los gasto
 - Dado que no existen ingresos registrados en las fechas seleccionadas,
 - cuando ejecuto la consulta,
 - entonces el sistema muestra: "No se encontraron compras en el período seleccionado" con totales en cero.
+---
 
 ## Endpoints
 - Método: GET
 - Ruta: `/api/v1/reports/purchases`
 - Descripción: Devuelve el reporte de gastos de compras
+---
 
 ## Notas técnicas
 - Agrupación por proveedor (`supplier_id`) y fecha.

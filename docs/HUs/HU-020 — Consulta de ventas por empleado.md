@@ -2,12 +2,14 @@
 
 ## Identificación
 
-- **ID:** HU-020
-- **Título:** Consulta de ventas por empleado
-- **Módulo:** Reportes
-- **Prioridad:** Media
-- **Estado:** Por Implementar
-- **RF asociados:** RF-020
+| Campo | Valor |
+|-------|-------|
+| **ID** | HU-020 |
+| **Título** | Consulta de ventas por empleado |
+| **Módulo** | Reportes |
+| **Prioridad** | Media |
+| **Estado** | Por Implementar |
+| **RF asociados** | RF-020 |
 
 ---
 
@@ -37,9 +39,9 @@
 
 ## Endpoints
 
-- **Método:** GET
-- **Ruta:** `/api/v1/reports/sales-by-user`
-- **Descripción:** Obtiene el total de ventas filtrado por usuario.
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/api/v1/reports/sales-by-user` | Retorna el reporte de ventas filtrado por usuario |
 
 ---
 

@@ -1,7 +1,15 @@
 # HU-029 — Visualización del historial de precios
 
 ## Identificación
-CampoValor**ID**HU-029**Título**Visualización del historial de precios**Módulo**Auditoría**Prioridad**Baja**Estado**Por Implementar**RF asociados**RF-029
+
+| Campo | Valor |
+|-------|-------|
+| **ID** | HU-029 |
+| **Título** | Visualización del historial de precios |
+| **Módulo** | Auditoría |
+| **Prioridad** | Baja |
+| **Estado** | Por Implementar |
+| **RF asociados** | RF-029 |
 
 ---
 
@@ -23,7 +31,10 @@ CampoValor**ID**HU-029**Título**Visualización del historial de precios**Módul
 ---
 
 ## Endpoints
-MétodoRutaDescripciónGET`/api/v1/products/{id}/price-history`Consulta los registros históricos de precio
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/api/v1/products/{id}/price-history` | Retorna las variaciones históricas del precio |
 
 ---
 

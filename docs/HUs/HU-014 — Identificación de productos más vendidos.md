@@ -1,7 +1,15 @@
 # HU-014 — Identificación de productos más vendidos
 
 ## Identificación
-CampoValor**ID**HU-014**Título**Identificación de productos más vendidos**Módulo**Reportes**Prioridad**Media**Estado**Por Implementar**RF asociados**RF-014
+
+| Campo | Valor |
+|-------|-------|
+| **ID** | HU-014 |
+| **Título** | Identificación de productos más vendidos |
+| **Módulo** | Reportes |
+| **Prioridad** | Media |
+| **Estado** | Por Implementar |
+| **RF asociados** | RF-014 |
 
 ---
 
@@ -29,7 +37,10 @@ CampoValor**ID**HU-014**Título**Identificación de productos más vendidos**Mó
 ---
 
 ## Endpoints
-MétodoRutaDescripciónGET`/api/v1/reports/top-selling`Retorna el ranking de productos más vendidos
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/api/v1/reports/top-selling` | Consulta y ordena los productos con mayor rotación |
 
 ---
 

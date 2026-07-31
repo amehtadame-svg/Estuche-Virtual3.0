@@ -1,7 +1,15 @@
 # HU-024 — Exportación de reportes
 
 ## Identificación
-CampoValor**ID**HU-024**Título**Exportación de reportes**Módulo**Reportes**Prioridad**Media**Estado**Por Implementar**RF asociados**RF-024
+
+| Campo | Valor |
+|-------|-------|
+| **ID** | HU-024 |
+| **Título** | Exportación de reportes |
+| **Módulo** | Reportes |
+| **Prioridad** | Media |
+| **Estado** | Por Implementar |
+| **RF asociados** | RF-024 |
 
 ---
 
@@ -29,7 +37,10 @@ CampoValor**ID**HU-024**Título**Exportación de reportes**Módulo**Reportes**Pr
 ---
 
 ## Endpoints
-MétodoRutaDescripciónGET`/api/v1/reports/export`Genera y transmite el archivo de descarga
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/api/v1/reports/export` | Descarga el archivo del reporte en el formato elegido |
 
 ---
 

@@ -2,7 +2,14 @@
 
 ## Identificación
 
-CampoValor**ID**HU-011**Título**Cálculo de ganancias**Módulo**Finanzas**Prioridad**Alta**Estado**Por Implementar**RF asociados**RF-011
+| Campo | Valor |
+|-------|-------|
+| **ID** | HU-011 |
+| **Título** | Cálculo de ganancias |
+| **Módulo** | Finanzas |
+| **Prioridad** | Alta |
+| **Estado** | Por Implementar |
+| **RF asociados** | RF-011 |
 
 ---
 
@@ -30,7 +37,10 @@ CampoValor**ID**HU-011**Título**Cálculo de ganancias**Módulo**Finanzas**Prior
 ---
 
 ## Endpoints
-MétodoRutaDescripciónGET`/api/v1/financials/profits`Devuelve métricas calculadas de utilidad
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/api/v1/financials/profits` | Retorna los cálculos de ganancias y costos |
 
 ---
 

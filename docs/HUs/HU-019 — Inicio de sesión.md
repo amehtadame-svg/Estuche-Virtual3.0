@@ -1,7 +1,15 @@
 # HU-019 — Inicio de sesión
 
 ## Identificación
-CampoValor**ID**HU-019**Título**Inicio de sesión**Módulo**Autenticación**Prioridad**Alta**Estado**Por Implementar**RF asociados**RF-019
+
+| Campo | Valor |
+|-------|-------|
+| **ID** | HU-019 |
+| **Título** | Inicio de sesión |
+| **Módulo** | Autenticación |
+| **Prioridad** | Alta |
+| **Estado** | Por Implementar |
+| **RF asociados** | RF-019 |
 
 ---
 
@@ -29,7 +37,10 @@ CampoValor**ID**HU-019**Título**Inicio de sesión**Módulo**Autenticación**Pri
 ---
 
 ## Endpoints
-MétodoRutaDescripciónPOST`/api/v1/auth/login`Autentica y genera un token JWT de sesión
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| POST | `/api/v1/auth/login` | Autentica al usuario e inicia la sesión |
 
 ---
 

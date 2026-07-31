@@ -1,7 +1,15 @@
 # HU-002 — Registro de ingreso de mercancía
 
 ## Identificación
-CampoValor**ID**HU-002**Título**Registro de ingreso de mercancía**Módulo**Inventario**Prioridad**Alta**Estado**Por Implementar**RF asociados**RF-002
+
+| Campo | Valor |
+|-------|-------|
+| **ID** | HU-002 |
+| **Título** | Registro de ingreso de mercancía |
+| **Módulo** | Inventario |
+| **Prioridad** | Alta |
+| **Estado** | Por Implementar |
+| **RF asociados** | RF-002 |
 
 ---
 
@@ -35,7 +43,10 @@ CampoValor**ID**HU-002**Título**Registro de ingreso de mercancía**Módulo**Inv
 ---
 
 ## Endpoints
-MétodoRutaDescripciónPOST`/api/v1/inventory/inbound`Procesa la entrada y suma stock al producto
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| POST | `/api/v1/inventory/inbound` | Registra el ingreso y actualiza el stock |
 
 ---
 

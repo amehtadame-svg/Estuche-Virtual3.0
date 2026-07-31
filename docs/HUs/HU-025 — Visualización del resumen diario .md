@@ -1,7 +1,15 @@
 # HU-025 — Visualización del resumen diario
 
 ## Identificación
-CampoValor**ID**HU-025**Título**Visualización del resumen diario**Módulo**Reportes**Prioridad**Alta**Estado**Por Implementar**RF asociados**RF-025
+
+| Campo | Valor |
+|-------|-------|
+| **ID** | HU-025 |
+| **Título** | Visualización del resumen diario |
+| **Módulo** | Reportes |
+| **Prioridad** | Alta |
+| **Estado** | Por Implementar |
+| **RF asociados** | RF-025 |
 
 ---
 
@@ -29,7 +37,10 @@ CampoValor**ID**HU-025**Título**Visualización del resumen diario**Módulo**Rep
 ---
 
 ## Endpoints
-MétodoRutaDescripciónGET`/api/v1/dashboard/daily-summary`Retorna los totales acumulados del día actual
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/api/v1/dashboard/daily-summary` | Obtiene los indicadores y totales del día actual |
 
 ---
 

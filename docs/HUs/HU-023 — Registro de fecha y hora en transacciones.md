@@ -39,7 +39,7 @@
 
 ## Endpoints
 
-*(Funcionalidad transversal aplicada a todos los endpoints en el procesamiento interno del servidor)*
+*(Funcionalidad interna transversal)*
 
 ---
 

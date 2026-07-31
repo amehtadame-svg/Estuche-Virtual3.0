@@ -1,7 +1,15 @@
 # HU-013 — Venta de combos
 
 ## Identificación
-CampoValor**ID**HU-013**Título**Venta de combos**Módulo**Ventas**Prioridad**Alta**Estado**Por Implementar**RF asociados**RF-013
+
+| Campo | Valor |
+|-------|-------|
+| **ID** | HU-013 |
+| **Título** | Venta de combos |
+| **Módulo** | Ventas |
+| **Prioridad** | Alta |
+| **Estado** | Por Implementar |
+| **RF asociados** | RF-013 |
 
 ---
 
@@ -29,7 +37,10 @@ CampoValor**ID**HU-013**Título**Venta de combos**Módulo**Ventas**Prioridad**Al
 ---
 
 ## Endpoints
-MétodoRutaDescripciónPOST`/api/v1/sales/combo`Procesa la venta de un combo y sus ítems
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| POST | `/api/v1/sales/combo` | Procesa la venta descontando los componentes del combo |
 
 ---
 

@@ -1,7 +1,15 @@
 # HU-001 — Registro de productos nuevos
 
 ## Identificación
-CampoValor**ID**HU-001**Título**Registro de productos nuevos**Módulo**Inventario**Prioridad**Alta**Estado**Por Implementar**RF asociados**RF-001
+
+| Campo | Valor |
+|-------|-------|
+| **ID** | HU-001 |
+| **Título** | Registro de productos nuevos |
+| **Módulo** | Inventario |
+| **Prioridad** | Alta |
+| **Estado** | Por Implementar |
+| **RF asociados** | RF-001 |
 
 ---
 
@@ -41,7 +49,10 @@ CampoValor**ID**HU-001**Título**Registro de productos nuevos**Módulo**Inventar
 ---
 
 ## Endpoints
-MétodoRutaDescripciónPOST`/api/v1/products`Valida los datos y guarda el nuevo producto
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| POST | `/api/v1/products` | Guarda los datos del nuevo producto en la BD |
 
 ---
 

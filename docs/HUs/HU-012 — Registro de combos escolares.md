@@ -1,7 +1,15 @@
 # HU-012 — Registro de combos escolares
 
 ## Identificación
-CampoValor**ID**HU-012**Título**Registro de combos escolares**Módulo**Productos**Prioridad**Media**Estado**Por Implementar**RF asociados**RF-012
+
+| Campo | Valor |
+|-------|-------|
+| **ID** | HU-012 |
+| **Título** | Registro de combos escolares |
+| **Módulo** | Productos |
+| **Prioridad** | Media |
+| **Estado** | Por Implementar |
+| **RF asociados** | RF-012 |
 
 ---
 
@@ -29,7 +37,10 @@ CampoValor**ID**HU-012**Título**Registro de combos escolares**Módulo**Producto
 ---
 
 ## Endpoints
-MétodoRutaDescripciónPOST`/api/v1/combos`Crea la definición de un paquete o combo
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| POST | `/api/v1/combos` | Crea la agrupación del combo y sus ítems |
 
 ---
 

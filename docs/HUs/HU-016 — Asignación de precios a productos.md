@@ -1,7 +1,15 @@
 # HU-016 — Asignación de precios a productos
 
 ## Identificación
-CampoValor**ID**HU-016**Título**Asignación de precios a productos**Módulo**Productos**Prioridad**Alta**Estado**Por Implementar**RF asociados**RF-016
+
+| Campo | Valor |
+|-------|-------|
+| **ID** | HU-016 |
+| **Título** | Asignación de precios a productos |
+| **Módulo** | Productos |
+| **Prioridad** | Alta |
+| **Estado** | Por Implementar |
+| **RF asociados** | RF-016 |
 
 ---
 
@@ -29,7 +37,10 @@ CampoValor**ID**HU-016**Título**Asignación de precios a productos**Módulo**Pr
 ---
 
 ## Endpoints
-MétodoRutaDescripciónPATCH`/api/v1/products/{id}/price`Modifica el valor numérico del precio
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| PATCH | `/api/v1/products/{id}/price` | Modifica el precio asignado al producto |
 
 ---
 

@@ -2,12 +2,14 @@
 
 ## Identificación
 
-- **ID:** HU-010
-- **Título:** Visualización del historial de movimientos
-- **Módulo:** Auditoría
-- **Prioridad:** Media
-- **Estado:** Por Implementar
-- **RF asociados:** RF-010
+| Campo | Valor |
+|-------|-------|
+| **ID** | HU-010 |
+| **Título** | Visualización del historial de movimientos |
+| **Módulo** | Auditoría |
+| **Prioridad** | Media |
+| **Estado** | Por Implementar |
+| **RF asociados** | RF-010 |
 
 ---
 
@@ -37,7 +39,9 @@
 
 ## Endpoints
 
-- **GET** `/api/v1/inventory/movements` — Consulta los logs de movimientos de stock
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/api/v1/inventory/movements` | Muestra la bitácora de movimientos de stock |
 
 ---
 

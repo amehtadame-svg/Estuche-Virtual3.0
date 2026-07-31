@@ -1,7 +1,15 @@
 # HU-018 — Control de usuarios y permisos
 
 ## Identificación
-CampoValor**ID**HU-018**Título**Control de usuarios y permisos**Módulo**Seguridad**Prioridad**Alta**Estado**Por Implementar**RF asociados**RF-018
+
+| Campo | Valor |
+|-------|-------|
+| **ID** | HU-018 |
+| **Título** | Control de usuarios y permisos |
+| **Módulo** | Seguridad |
+| **Prioridad** | Alta |
+| **Estado** | Por Implementar |
+| **RF asociados** | RF-018 |
 
 ---
 
@@ -29,7 +37,10 @@ CampoValor**ID**HU-018**Título**Control de usuarios y permisos**Módulo**Seguri
 ---
 
 ## Endpoints
-MétodoRutaDescripciónPOST`/api/v1/users`Registra un nuevo usuario con rol explícitoGET`/api/v1/roles`Retorna el catálogo de roles disponibles
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| POST | `/api/v1/users` | Crea un usuario y le asigna un rol |
 
 ---
 

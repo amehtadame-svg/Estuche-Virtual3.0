@@ -1,7 +1,15 @@
 # HU-027 — Búsqueda de productos
 
 ## Identificación
-CampoValor**ID**HU-027**Título**Búsqueda de productos**Módulo**Inventario**Prioridad**Alta**Estado**Por Implementar**RF asociados**RF-027
+
+| Campo | Valor |
+|-------|-------|
+| **ID** | HU-027 |
+| **Título** | Búsqueda de productos |
+| **Módulo** | Inventario |
+| **Prioridad** | Alta |
+| **Estado** | Por Implementar |
+| **RF asociados** | RF-027 |
 
 ---
 
@@ -29,7 +37,10 @@ CampoValor**ID**HU-027**Título**Búsqueda de productos**Módulo**Inventario**Pr
 ---
 
 ## Endpoints
-MétodoRutaDescripciónGET`/api/v1/products/search`Filtra productos según el parámetro `q`
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/api/v1/products/search` | Filtra productos por coincidencia de nombre |
 
 ---
 

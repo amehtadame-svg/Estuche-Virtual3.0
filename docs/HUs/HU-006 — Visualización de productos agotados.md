@@ -1,7 +1,15 @@
 # HU-006 — Visualización de productos agotados
 
 ## Identificación
-CampoValor**ID**HU-006**Título**Visualización de productos agotados**Módulo**Inventario**Prioridad**Media**Estado**Por Implementar**RF asociados**RF-006
+
+| Campo | Valor |
+|-------|-------|
+| **ID** | HU-006 |
+| **Título** | Visualización de productos agotados |
+| **Módulo** | Inventario |
+| **Prioridad** | Media |
+| **Estado** | Por Implementar |
+| **RF asociados** | RF-006 |
 
 ---
 
@@ -29,7 +37,10 @@ CampoValor**ID**HU-006**Título**Visualización de productos agotados**Módulo**
 ---
 
 ## Endpoints
-MétodoRutaDescripciónGET`/api/v1/inventory/out-of-stock`Consulta productos con condición `stock = 0`
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/api/v1/inventory/out-of-stock` | Consulta productos con cantidad cero |
 
 ---
 

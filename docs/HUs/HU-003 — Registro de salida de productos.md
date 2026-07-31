@@ -1,12 +1,15 @@
 # HU-003 — Registro de salida de productos
 
 ## Identificación
-- ID: HU-003
-- Título: Registro de salida de productos
-- Módulo: Inventario
-- Prioridad: Alta
-- Estado: Por Implementar
-- RF asociados: RF-003
+
+| Campo | Valor |
+|-------|-------|
+| **ID** | HU-003 |
+| **Título** | Registro de salida de productos |
+| **Módulo** | Inventario |
+| **Prioridad** | Alta |
+| **Estado** | Por Implementar |
+| **RF asociados** | RF-003 |
 
 ---
 
@@ -35,9 +38,10 @@ Como administrador, quiero registrar salida de productos, para controlar lo vend
 ---
 
 ## Endpoints
-- Método: POST
-- Ruta: `/api/v1/inventory/outbound`
-- Descripción: Procesa la salida manual y reduce el stock
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| POST | `/api/v1/inventory/outbound` | Registra la salida y resta del stock |
 
 ---
 

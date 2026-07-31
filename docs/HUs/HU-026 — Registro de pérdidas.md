@@ -1,7 +1,15 @@
 # HU-026 — Registro de pérdidas
 
 ## Identificación
-CampoValor**ID**HU-026**Título**Registro de pérdidas**Módulo**Inventario**Prioridad**Media**Estado**Por Implementar**RF asociados**RF-026
+
+| Campo | Valor |
+|-------|-------|
+| **ID** | HU-026 |
+| **Título** | Registro de pérdidas |
+| **Módulo** | Inventario |
+| **Prioridad** | Media |
+| **Estado** | Por Implementar |
+| **RF asociados** | RF-026 |
 
 ---
 
@@ -29,7 +37,10 @@ CampoValor**ID**HU-026**Título**Registro de pérdidas**Módulo**Inventario**Pri
 ---
 
 ## Endpoints
-MétodoRutaDescripciónPOST`/api/v1/inventory/losses`Procesa la baja por pérdida y descuenta stock
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| POST | `/api/v1/inventory/losses` | Registra la merma y descuenta del stock |
 
 ---
 

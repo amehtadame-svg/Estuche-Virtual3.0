@@ -1,7 +1,15 @@
 # HU-021 — Edición de productos
 
 ## Identificación
-Campo Valor **ID** HU-021 **Título** Edición de productos **Módulo** Inventario **Prioridad** Alta **Estado** Por Implementar **RF asociados** RF-021
+
+| Campo | Valor |
+|-------|-------|
+| **ID** | HU-021 |
+| **Título** | Edición de productos |
+| **Módulo** | Inventario |
+| **Prioridad** | Alta |
+| **Estado** | Por Implementar |
+| **RF asociados** | RF-021 |
 
 ---
 
@@ -29,7 +37,10 @@ Campo Valor **ID** HU-021 **Título** Edición de productos **Módulo** Inventar
 ---
 
 ## Endpoints
-Método Ruta Descripción PUT `/api/v1/products/{id}` Reemplaza/Actualiza la información del producto
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| PUT | `/api/v1/products/{id}` | Guarda las modificaciones del producto |
 
 ---
 

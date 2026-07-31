@@ -41,7 +41,7 @@
 
 | Método | Ruta | Descripción |
 |--------|------|-------------|
-| DELETE | `/api/v1/products/{id}` | Desactiva lógicamente el producto del sistema |
+| DELETE | `/api/v1/products/{id}` | Desactiva o remueve el producto |
 
 ---
 

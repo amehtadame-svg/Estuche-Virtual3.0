@@ -1,12 +1,15 @@
 # HU-005 — Visualización del inventario actual
 
 ## Identificación
-- **ID**: HU-005
-- **Título**: Visualización del inventario actual
-- **Módulo**: Inventario
-- **Prioridad**: Alta
-- **Estado**: Por Implementar
-- **RF asociados**: RF-005
+
+| Campo | Valor |
+|-------|-------|
+| **ID** | HU-005 |
+| **Título** | Visualización del inventario actual |
+| **Módulo** | Inventario |
+| **Prioridad** | Alta |
+| **Estado** | Por Implementar |
+| **RF asociados** | RF-005 |
 
 ---
 
@@ -32,9 +35,10 @@
 ---
 
 ## Endpoints
-- **Método**: GET
-- **Ruta**: `/api/v1/inventory/products`
-- **Descripción**: Devuelve el listado paginado del inventario
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/api/v1/inventory` | Devuelve la lista actual del inventario |
 
 ---
 

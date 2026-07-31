@@ -1,13 +1,15 @@
 # HU-028 — Categorización de productos
 
 ## Identificación
-CampoValor
-**ID** HU-028  
-**Título** Categorización de productos  
-**Módulo** Inventario  
-**Prioridad** Media  
-**Estado** Por Implementar  
-**RF asociados** RF-028
+
+| Campo | Valor |
+|-------|-------|
+| **ID** | HU-028 |
+| **Título** | Categorización de productos |
+| **Módulo** | Inventario |
+| **Prioridad** | Media |
+| **Estado** | Por Implementar |
+| **RF asociados** | RF-028 |
 
 ---
 
@@ -35,10 +37,10 @@ CampoValor
 ---
 
 ## Endpoints
-Método | Ruta | Descripción
---- | --- | ---
-GET | `/api/v1/categories` | Obtiene el listado de categorías activas
-POST | `/api/v1/categories` | Crea una nueva categoría dentro del sistema
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| POST | `/api/v1/categories` | Crea y asigna categorías de productos |
 
 ---
 

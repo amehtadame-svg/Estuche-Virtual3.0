@@ -1,7 +1,15 @@
 # HU-017 — Alerta de faltantes de stock
 
 ## Identificación
-CampoValor**ID**HU-017**Título**Alerta de faltantes de stock**Módulo**Notificaciones**Prioridad**Media**Estado**Por Implementar**RF asociados**RF-017
+
+| Campo | Valor |
+|-------|-------|
+| **ID** | HU-017 |
+| **Título** | Alerta de faltantes de stock |
+| **Módulo** | Notificaciones |
+| **Prioridad** | Media |
+| **Estado** | Por Implementar |
+| **RF asociados** | RF-017 |
 
 ---
 
@@ -29,7 +37,10 @@ CampoValor**ID**HU-017**Título**Alerta de faltantes de stock**Módulo**Notifica
 ---
 
 ## Endpoints
-MétodoRutaDescripciónGET`/api/v1/notifications/stock-alerts`Obtiene las alertas activas de stock bajo
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/api/v1/notifications/stock-alerts` | Obtiene las alertas de faltantes pendientes |
 
 ---
 
