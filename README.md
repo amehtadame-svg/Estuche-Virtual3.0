@@ -35,9 +35,9 @@ Desarrollar una plataforma web integral que optimice la compra y venta de útile
 
 ## Tecnologías
 
-- Frontend: HTML, CSS, JavaScript  
-- Backend: Node.js / PHP / Java  
-- Base de datos: MySQL / MongoDB  
+- Frontend: React.js
+- Backend: Node.js / Express
+- Base de datos: Postgress
 - Control de versiones: Git & GitHub  
 
 ## Roles
