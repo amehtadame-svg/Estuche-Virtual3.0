@@ -14,25 +14,34 @@
 ---
 
 ## Historia
-**Como** administrador,
-**quiero** editar productos,
-**para** corregir descripciones o actualizar sus características en el sistema.
+
+**Como** administrador del catálogo,  
+**quiero** editar las fichas técnicas, nombres comerciales, descripciones, categorías o códigos de los productos registrados previamente,  
+**para** corregir errores en los datos, mantener actualizada la información técnica de los artículos y adaptar las categorías sin alterar las ventas pasadas.
 
 ---
 
 ## Criterios de Aceptación
 
-### CA-021.1 — Edición de campos permitidos
+### CA-021.1 — Formulario de modificación pre-cargado
+- **Dado que** selecciono la opción "Editar" sobre un producto en la tabla del catálogo (`/products/{id}/edit`),
+- **cuando** la pantalla carga,
+- **entonces** el formulario se presenta con todos los datos actuales del producto pre-cargados en sus respectivos campos.
 
-- **Dado que** selecciono la opción de editar un producto (`/products/{id}/edit`),
-- **cuando** modifico datos como nombre, descripción o categoría y presiono "Guardar Cambios",
-- **entonces** el sistema actualiza la información en la base de datos y muestra confirmación.
+### CA-021.2 — Guardado de modificaciones válidas
+- **Dado que** cambio campos como Nombre, Descripción o Categoría con datos válidos,
+- **cuando** presiono "Guardar Cambios",
+- **entonces** el sistema actualiza la información en la base de datos y despliega una notificación de éxito.
 
-### CA-021.2 — Conservación de historial operativo
+### CA-021.3 — Control de duplicidad en edición
+- **Dado que** modifico el SKU o Nombre de un producto,
+- **cuando** introduzco un valor que pertenece a otro producto activo,
+- **entonces** el sistema detiene la actualización informando: "No se puede guardar: El código SKU o Nombre ya está siendo utilizado por otro producto".
 
-- **Dado que** un producto es editado,
-- **cuando** consulto sus movimientos históricos o ventas previas,
-- **entonces** las transacciones pasadas deben conservar los valores con los que fueron ejecutadas originalmente.
+### CA-021.4 — Inmutabilidad de existencias desde la edición
+- **Dado que** me encuentro en el formulario de edición de datos de un producto,
+- **cuando** reviso los campos disponibles,
+- **entonces** el campo de stock se presenta deshabilitado/bloqueado (los cambios de stock requieren el módulo de movimientos o recepciones).
 
 ---
 

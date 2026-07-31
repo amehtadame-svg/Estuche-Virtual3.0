@@ -15,25 +15,33 @@
 
 ## Historia
 
-**Como** administrador,
-**quiero** eliminar productos,
-**para** limpiar el inventario removiendo los que ya no están disponibles o descontinuados.
+**Como** administrador,  
+**quiero** dar de baja o desactivar productos descontinuados u obsoletos del catálogo activo,  
+**para** limpiar las listas de búsqueda del punto de venta, evitar que se vendan mercancías sin disponibilidad futura y conservar la integridad referencial de las ventas históricas mediante un borrado lógico (*Soft Delete*).
 
 ---
 
 ## Criterios de Aceptación
 
-### CA-022.1 — Eliminación lógica (Soft Delete)
+### CA-022.1 — Diálogo de confirmación de eliminación
+- **Dado que** presiono la opción "Eliminar" sobre un producto en la tabla del catálogo,
+- **cuando** se ejecuta la orden,
+- **entonces** el sistema presenta una ventana modal de confirmación: "¿Está seguro que desea eliminar este producto? Esta acción lo removerá de los listados activos de venta".
 
-- **Dado que** selecciono la opción "Eliminar" sobre un producto con historial de ventas,
-- **cuando** confirmo el mensaje de advertencia,
-- **entonces** el sistema realiza un borrado lógico (cambiando `is_active = false`), ocultándolo de los listados activos de ventas sin borrar su historial.
+### CA-022.2 — Aplicación de borrado lógico (Soft Delete)
+- **Dado que** confirmo la eliminación de un producto con historial de ventas previo,
+- **cuando** la solicitud es procesada en el servidor,
+- **entonces** el sistema marca el registro como inactivo (`is_active = false`), ocultándolo sin borrar físicamente sus datos de la base de datos.
 
-### CA-022.2 — Intentos de venta de producto desactivado
-
+### CA-022.3 — Ocultamiento en búsquedas del punto de venta
 - **Dado que** un producto ha sido desactivado/eliminado,
-- **cuando** se busca en el punto de venta,
-- **entonces** no aparece disponible para ser comercializado.
+- **cuando** un vendedor intenta buscarlo en el terminal de caja (`/pos`),
+- **entonces** el producto no aparece disponible dentro de los resultados de búsqueda.
+
+### CA-022.4 — Protección de integridad referencial
+- **Dado que** un producto tiene transacciones vinculadas en `sale_items`,
+- **cuando** se solicita su borrado,
+- **entonces** el sistema impide su eliminación física de la base de datos protegiendo los reportes contables del pasado.
 
 ---
 

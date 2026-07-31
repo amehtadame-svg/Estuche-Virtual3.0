@@ -14,25 +14,34 @@
 ---
 
 ## Historia
-**Como** administrador,
-**quiero** asignar precios a productos,
-**para** controlar el valor comercial de las ventas y márgenes de ganancia.
+
+**Como** administrador general del sistema,  
+**quiero** modificar y asignar los precios de venta comerciales de cualquier producto del catálogo,  
+**para** ajustar las tarifas comerciales ante cambios en los costos de adquisición de proveedores, implementar cambios de precios por campañas u oferta y asegurar que el punto de venta aplique siempre los precios vigentes.
 
 ---
 
 ## Criterios de Aceptación
 
-### CA-016.1 — Actualización de precio de venta
+### CA-016.1 — Modificación de precio de venta al público
+- **Dado que** selecciono la ficha o fila de un producto del catálogo,
+- **cuando** edito el valor del campo "Precio de Venta" ingresando un número positivo y presiono "Guardar Precio",
+- **entonces** el sistema actualiza la tarifa del producto en la base de datos de forma inmediata.
 
-- **Dado que** edito un producto desde la vista de gestión de catálogo,
-- **cuando** modifico el campo "Precio de Venta" e introduzco un valor válido mayor que cero,
-- **entonces** el sistema guarda el nuevo precio y lo hace efectivo de inmediato en el módulo de ventas.
+### CA-016.2 — Bloqueo de precios menores o iguales a cero
+- **Dado que** me encuentro modificando el precio de un producto,
+- **cuando** introduzco una cifra menor o igual a cero (0),
+- **entonces** el sistema rechaza el valor notificando: "El precio de venta debe ser un número positivo mayor a cero".
 
-### CA-016.2 — Bloqueo de precio inválido
+### CA-016.3 — Advertencia preventiva por precio menor al costo
+- **Dado que** un producto tiene registrado un costo de adquisición de $10.00,
+- **cuando** intento fijarle un precio de venta comercial de $8.00,
+- **entonces** el sistema despliega una alerta de advertencia: "Atención: El precio asignado ($8.00) es inferior al costo de adquisición ($10.00). ¿Desea confirmar la operación?".
 
-- **Dado que** introduzco un precio de cero o valor negativo,
-- **cuando** intento guardar los cambios,
-- **entonces** el sistema rechaza la operación notificando: "El precio asignado debe ser superior a cero".
+### CA-016.4 — Actualización en tiempo real en el punto de venta
+- **Dado que** se ha guardado exitosamente el nuevo precio de un producto,
+- **cuando** un vendedor selecciona dicho producto en el terminal del punto de venta (`/pos`),
+- **entonces** el artículo se carga automáticamente reflejando la nueva tarifa actualizada.
 
 ---
 

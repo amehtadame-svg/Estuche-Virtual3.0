@@ -14,31 +14,34 @@
 ---
 
 ## Historia
-**Como** vendedor,
-**quiero** registrar ventas,
-**para** llevar el control diario de las operaciones y el stock comercializado.
+
+**Como** vendedor o cajero del punto de venta (POS), encargado del cobro al cliente y del procesamiento diario de transacciones comerciales,  
+**quiero** contar con un terminal de ventas ágil e interactivo que me permita buscar o escanear productos, agregarlos a un carrito dinámico, ajustar cantidades, visualizar subtotales e impuestos, seleccionar la forma de pago (efectivo, tarjeta, transferencia) e ingresar el pago recibido,  
+**para** procesar cobros de manera veloz, asegurar un cálculo preciso del total de la compra y del cambio a entregar, registrar oficialmente los ingresos del día, restar de forma automática las mercancías vendidas del inventario y emitir el ticket de compra para el cliente.
 
 ---
 
 ## Criterios de Aceptación
 
-### CA-004.1 — Interfaz del punto de venta (POS)
+### CA-004.1 — Gestión dinámica del carrito de venta en el POS
+- **Dado que** me encuentro en la interfaz del punto de venta POS (`/pos`),
+- **cuando** escaneo el código de barras o busco y selecciono varios artículos para agregarlos al carrito de compra,
+- **entonces** el sistema debe actualizar en tiempo real el listado de ítems, mostrando el nombre, precio unitario, cantidad solicitada, IVA/impuestos calculados y el gran total acumulado a pagar.
 
-- **Dado que** estoy en la pantalla de terminal de caja (`/pos`),
-- **cuando** agrego productos al carrito de venta,
-- **entonces** se visualiza la lista de ítems, cantidades, precio unitario y el monto total calculado en tiempo real.
+### CA-004.2 — Validación instantánea de stock antes de agregar al carrito
+- **Dado que** intento agregar un producto o incrementar la cantidad de un ítem ya presente en el carrito,
+- **cuando** la cantidad total requerida supera la cantidad disponible en el inventario real de la base de datos,
+- **entonces** el sistema debe bloquear el incremento y mostrar un mensaje emergente: "Stock insuficiente: No es posible agregar más unidades del producto [Nombre del producto]".
 
-### CA-004.2 — Confirmación de la venta e impacto en stock
+### CA-004.3 — Procesamiento atómico de la venta y descuento de existencias
+- **Dado que** el carrito contiene artículos válidos con stock suficiente y se selecciona un método de pago,
+- **cuando** presiono el botón "Completar Venta",
+- **entonces** el sistema debe ejecutar una transacción atómica que registre la venta (`sales`), cree el detalle de productos (`sale_items`), reste automáticamente las cantidades del inventario (`products`) y marque la orden como finalizada.
 
-- **Dado que** he seleccionado uno o varios productos con disponibilidad suficiente,
-- **cuando** procesar el pago y presionar "Finalizar Venta",
-- **entonces** el sistema registra la venta en la base de datos, descuenta el stock de los productos vendidos y genera el ticket de venta.
-
-### CA-004.3 — Alerta por falta de stock durante la venta
-
-- **Dado que** intento agregar al carrito una cantidad superior al stock disponible de un producto,
-- **cuando** modifico la cantidad en la venta,
-- **entonces** el sistema notifica: "Stock insuficiente para el producto seleccionado".
+### CA-004.4 — Emisión de comprobante de venta e impresión automática
+- **Dado que** la transacción de venta ha finalizado correctamente en el servidor,
+- **cuando** el sistema confirma la persistencia de los datos,
+- **entonces** se genera de forma inmediata la vista previa del comprobante/ticket de venta con el desglose de productos e inicia automáticamente la orden de impresión para su entrega al cliente.
 
 ---
 

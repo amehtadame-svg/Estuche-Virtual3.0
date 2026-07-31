@@ -13,25 +13,33 @@
 
 ## Historia
 
-**Como** administrador,  
-**quiero** registrar proveedores,  
-**para** organizar las compras y mantener un directorio actualizado de suministros.
+**Como** administrador o encargado de suministros del negocio,  
+**quiero** registrar y administrar las fichas de los proveedores comerciales incluyendo Razón Social, Identificación Fiscal (RUC/NIT), datos de contacto, dirección y teléfono,  
+**para** mantener un directorio organizado de la cadena de suministro, vincular formalmente las compras y recepciones de mercancía con sus distribuidores y facilitar el rastreo de garantías.
 
 ---
 
 ## Criterios de Aceptación
 
-### CA-015.1 — Registro de datos clave
+### CA-015.1 — Formulario de alta de nuevo proveedor
+- **Dado que** accedo al formulario de creación de proveedores (`/suppliers/new`),
+- **cuando** completo Razón Social, Identificación Fiscal (RUC/NIT), Persona de Contacto, Teléfono, Correo y Dirección Comercial,
+- **entonces** el sistema habilita el botón para guardar el registro.
 
-- **Dado que** estoy en el formulario de registro de proveedor (`/suppliers/new`),
-- **cuando** completo la razón social, número de identificación fiscal, teléfono y correo electrónico,
-- **entonces** el sistema almacena correctamente la información del proveedor.
+### CA-015.2 — Control de unicidad de la Identificación Fiscal
+- **Dado que** escribo una Identificación Fiscal (RUC/NIT) que ya pertenece a un proveedor previamente registrado,
+- **cuando** intento guardar el registro,
+- **entonces** el sistema detiene la operación informando: "Error: La identificación fiscal ingresada ya pertenece a un proveedor activo en la plataforma".
 
-### CA-015.2 — Validación de documento de identificación duplicado
+### CA-015.3 — Validación de sintaxis en el correo electrónico
+- **Dado que** completo el campo de correo electrónico del proveedor,
+- **cuando** introduzco una cadena con formato inválido (ej. "correo_invalido"),
+- **entonces** el formulario resalta el campo indicando: "Debe ingresar una dirección de correo electrónico válida".
 
-- **Dado que** un proveedor ya existe registrado con un número fiscal determinado,
-- **cuando** intento volver a usar el mismo número,
-- **entonces** el sistema emite un error: "El proveedor con este número de identificación ya se encuentra registrado".
+### CA-015.4 — Confirmación de persistencia de proveedor
+- **Dado que** he completado todos los campos obligatorios con valores correctos,
+- **cuando** hago clic en "Guardar Proveedor",
+- **entonces** el registro se almacena en la base de datos y se muestra un mensaje confirmando el éxito de la operación.
 
 ---
 

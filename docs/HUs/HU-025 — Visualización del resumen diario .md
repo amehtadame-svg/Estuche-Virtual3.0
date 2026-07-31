@@ -14,25 +14,34 @@
 ---
 
 ## Historia
-**Como** administrador,
-**quiero** ver resumen diario,
-**para** tener un control rápido e inmediato de las ventas, ingresos y ganancias del día en curso.
+
+**Como** administrador o supervisor del negocio,  
+**quiero** disponer de un panel de control (Dashboard) que exhiba en tiempo real las métricas consolidadas del día en curso (ventas acumuladas, ingresos en caja y estimación de ganancias),  
+**para** evaluar de un solo vistazo el desempeño de la jornada de trabajo, tomar decisiones operativas de inmediato y realizar arqueos preliminares sin esperar al cierre de caja.
 
 ---
 
 ## Criterios de Aceptación
 
-### CA-025.1 — Métricas del día en curso
+### CA-025.1 — Tarjetas de métricas consolidadas del día
+- **Dado que** accedo al Dashboard principal de la plataforma (`/dashboard`),
+- **cuando** la pantalla carga,
+- **entonces** debo visualizar tres tarjetas destacadas: "Ventas Totales de Hoy", "Ingresos Percibidos" y "Estimado de Ganancias del Día".
 
-- **Dado que** accedo al Dashboard principal (`/dashboard`),
-- **cuando** la pantalla se renderiza,
-- **entonces** debo observar tres indicadores principales acumulados desde las 00:00h del día actual: Total Vendido, Total Ingresos y Estimado de Ganancias del día.
+### CA-025.2 — Actualización dinámica ante nuevas ventas
+- **Dado que** un vendedor procesa una nueva venta en la terminal de caja,
+- **cuando** regreso al Dashboard principal,
+- **entonces** los contadores del resumen diario incrementan su valor para reflejar la operación en tiempo real.
 
-### CA-025.2 — Actualización tras nuevas ventas
+### CA-025.3 — Reinicio automático de contadores al cambio de fecha
+- **Dado que** el reloj del servidor alcanza las 00:00 horas de un nuevo día,
+- **cuando** se consulta el resumen diario,
+- **entonces** los acumuladores inician automáticamente en $0.00 para la nueva jornada.
 
-- **Dado que** se completa una nueva venta en el sistema,
-- **cuando** regreso al Dashboard,
-- **entonces** las cifras del resumen diario se recalculan agregando la nueva transacción.
+### CA-025.4 — Indicador porcentual comparativo con el día anterior
+- **Dado que** observo las tarjetas de resumen diario,
+- **cuando** analizo su detalle,
+- **entonces** el sistema muestra un porcentaje comparativo relacionando el ritmo de ventas actual con el resultado alcanzado el día anterior a la misma hora.
 
 ---
 

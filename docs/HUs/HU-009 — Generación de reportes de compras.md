@@ -14,27 +14,36 @@
 ---
 
 ## Historia
-Como administrador, quiero generar reportes de compras, para controlar los gastos e inversión en abastecimiento de inventario.
+
+**Como** administrador o encargado de finanzas y tesorería,  
+**quiero** emitir informes detallados con el histórico de compras de mercancía recibidas dentro de un intervalo de fechas específico, pudiendo filtrar por proveedor,  
+**para** controlar los egresos de dinero invertidos en el abastecimiento del almacén, auditar el volumen de compras efectuado a cada proveedor y supervisar la evolución de los costos de adquisición de los productos.
+
 ---
 
 
 ## Criterios de Aceptación
 
-### CA-009.1 — Filtro y detalle del gasto en abastecimiento
-- Dado que accedo al panel de reportes de compras (`/reports/purchases`),
-- cuando selecciono un rango de fechas de consulta,
-- entonces el sistema genera un resumen con el monto total gastado y el desglose de ingresos por proveedor y lote.
+### CA-009.1 — Filtro combinado de reporte de compras por fechas y proveedor
+- **Dado que** accedo al módulo de reportes de compras (`/reports/purchases`),
+- **cuando** selecciono un rango de fechas y (opcionalmente) elijo un proveedor específico en el menú desplegable,
+- **entonces** el sistema consulta y genera el informe consolidado correspondiente.
 
-### CA-009.2 — Resultado sin movimientos en el período
-- Dado que no existen ingresos registrados en las fechas seleccionadas,
-- cuando ejecuto la consulta,
-- entonces el sistema muestra: "No se encontraron compras en el período seleccionado" con totales en cero.
----
+### CA-009.2 — Consolidado de montos y volumen de compras
+- **Dado que** se procesan los datos del reporte de compras,
+- **cuando** los resultados se muestran en pantalla,
+- **entonces** debo visualizar: Monto Total Invertido en Compras, Número de Órdenes Recibidas y Cantidad de Productos Incorporados.
 
-## Endpoints
-- Método: GET
-- Ruta: `/api/v1/reports/purchases`
-- Descripción: Devuelve el reporte de gastos de compras
+### CA-009.3 — Detalle modal explicativo por orden de compra
+- **Dado que** reviso la tabla de órdenes de compra incluidas en el reporte,
+- **cuando** hago clic sobre una orden específica,
+- **entonces** el sistema debe abrir una ventana modal con el desglose de productos adquiridos, sus cantidades y los costos unitarios negociados.
+
+### CA-009.4 — Restablecimiento de los parámetros de búsqueda del reporte
+- **Dado que** he aplicado filtros en la consulta de compras,
+- **cuando** presiono el botón "Limpiar Filtros",
+- **entonces** el formulario restaura las fechas por defecto del mes actual, elimina el filtro de proveedor y refresca los datos.
+
 ---
 
 ## Notas técnicas

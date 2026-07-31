@@ -15,25 +15,33 @@
 
 ## Historia
 
-**Como** administrador,  
-**quiero** ver historial de movimientos,  
-**para** realizar auditorías sobre las entradas y salidas de stock registradas.
+**Como** auditor del sistema o supervisor de operaciones de inventario,  
+**quiero** consultar una bitácora inalterable y cronológica con el registro de todos los movimientos de entrada, salida, venta, ajuste o pérdida aplicados al inventario,  
+**para** realizar auditorías detalladas sobre el stock, rastrear la trazabilidad histórica de cualquier mercancía, detectar irregularidades o descuadres y verificar qué usuario autorizó y ejecutó cada transacción.
 
 ---
 
 ## Criterios de Aceptación
 
-### CA-010.1 — Bitácora completa de movimientos
+### CA-010.1 — Presentación de bitácora cronológica e inmutable
+- **Dado que** me dirijo a la pantalla de historial de movimientos de auditoría (`/inventory/history`),
+- **cuando** la interfaz completa su carga,
+- **entonces** debo observar una bitácora ordenada cronológicamente que detalle: Fecha/Hora exacta, Producto, Categoría de movimiento (Entrada/Salida/Venta/Merma), Cantidad modificada y Nombre del usuario responsable.
 
-- **Dado que** estoy en la vista de historial de movimientos (`/inventory/history`),
-- **cuando** consulto la bitácora,
-- **entonces** el sistema presenta un listado con fecha, hora, tipo de movimiento (Entrada, Salida, Venta, Pérdida), cantidad modificada y el usuario responsable.
+### CA-010.2 — Filtro especializado de trazabilidad por producto
+- **Dado que** necesito consultar los movimientos históricos de un producto en particular,
+- **cuando** selecciono dicho producto en el buscador del historial,
+- **entonces** la bitácora se actualiza mostrando únicamente las transacciones que hayan afectado el stock de ese producto específico.
 
-### CA-010.2 — Filtro por producto específico
+### CA-010.3 — Filtro por tipo de movimiento operativo
+- **Dado que** me encuentro revisando el historial de auditoría,
+- **cuando** selecciono un filtro por el tipo de movimiento "Pérdidas/Mermas",
+- **entonces** el sistema presenta únicamente los registros de salida atribuidos a ese motivo específico.
 
-- **Dado que** selecciono un producto en el buscador del historial,
-- **cuando** aplico el filtro,
-- **entonces** el sistema despliega únicamente la cronología completa de cambios de stock referentes a ese producto.
+### CA-010.4 — Garantía de inmutabilidad y ausencia de acciones de edición
+- **Dado que** estoy consultando los registros de auditoría en el historial,
+- **cuando** interactúo con la interfaz,
+- **entonces** confirmo que el sistema no posee ningún botón, opción o menú que permita modificar, alterar o eliminar los registros históricos presentados.
 
 ---
 

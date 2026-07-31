@@ -14,25 +14,34 @@
 ---
 
 ## Historia
-**Como** administrador,
-**quiero** registrar pérdidas,
-**para** controlar errores, daños o robos descontando del stock los productos faltantes.
+
+**Como** administrador o responsable de inventarios,  
+**quiero** registrar formalmente la baja de mercancía mermada por daños, caducidad, roturas o extravío, ingresando la cantidad de unidades afectadas y la justificación aclaratoria del caso,  
+**para** descontar las existencias reales mermadas del almacén, registrar la pérdida financiera correspondiente y mantener la transparencia del stock.
 
 ---
 
 ## Criterios de Aceptación
 
-### CA-026.1 — Declaración de pérdida o merma
+### CA-026.1 — Declaración de baja por merma o pérdida
+- **Dado que** accedo al módulo de pérdidas de inventario (`/inventory/losses`),
+- **cuando** selecciono un producto, indico la cantidad de unidades dañadas o extraviadas y elijo el motivo (ej. Vencimiento, Daño, Robo),
+- **entonces** se habilita la opción para procesar la baja.
 
-- **Dado que** estoy en el formulario de pérdidas (`/inventory/losses`),
-- **cuando** elijo un producto, especifico las unidades perdidas y el motivo (ej. "Dañado", "Robo", "Vencido"),
-- **entonces** el sistema registra la pérdida y descuenta las unidades del inventario actual.
+### CA-026.2 — Justificación de texto obligatoria para el registro
+- **Dado que** estoy declarando una pérdida de mercancía en el formulario,
+- **cuando** dejo vacío el campo de observación/nota aclaratoria y presiono "Guardar Pérdida",
+- **entonces** el sistema detiene la operación informando: "Debe ingresar una nota o justificación obligatoria sobre la pérdida".
 
-### CA-026.2 — Justificación obligatoria
+### CA-026.3 — Descuento automático de existencias en el inventario
+- **Dado que** confirmo la declaración de una pérdida de 3 unidades sobre un producto,
+- **cuando** el sistema guarda la transacción,
+- **entonces** las existencias del producto en la base de datos se reducen de forma inmediata en 3 unidades.
 
-- **Dado que** intento registrar una pérdida sin indicar el motivo,
-- **cuando** presiono "Guardar Registro",
-- **entonces** el sistema indica: "Debe ingresar una justificación para la merma o pérdida".
+### CA-026.4 — Registro del impacto financiero del descuadre
+- **Dado que** se procesa el registro de una pérdida de mercancía,
+- **cuando** la base de datos almacena el movimiento,
+- **entonces** calcula el costo contable de la pérdida multiplicando las unidades descontadas por el costo de adquisición del producto.
 
 ---
 

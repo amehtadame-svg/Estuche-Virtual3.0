@@ -14,25 +14,34 @@
 ---
 
 ## Historia
-**Como** administrador,
-**quiero** controlar usuarios,
-**para** definir los roles del personal, limitar permisos y prevenir errores o accesos no autorizados.
+
+**Como** administrador del sistema,  
+**quiero** administrar las cuentas de los empleados del negocio y asignarles roles con permisos de acceso específicos (Administrador, Vendedor, Almacenero),  
+**para** restringir el acceso a módulos delicados (como informes financieros, eliminación de productos o configuración de respaldos), prevenir operaciones no autorizadas y resguardar la seguridad del sistema.
 
 ---
 
 ## Criterios de Aceptación
 
-### CA-018.1 — Creación de usuarios y asignación de rol
+### CA-018.1 — Creación de cuentas y asignación de rol
+- **Dado que** accedo al panel de gestión de usuarios (`/settings/users`),
+- **cuando** creo un nuevo usuario introduciendo Nombre, Correo, Contraseña y selecciono su Rol (ej. Vendedor),
+- **entonces** la cuenta se guarda vinculada estrictamente a los permisos de dicho rol.
 
-- **Dado que** accedo a la administración de usuarios (`/settings/users`),
-- **cuando** creo una nueva cuenta y le asigno el rol "Vendedor" o "Administrador",
-- **entonces** el sistema guarda el usuario aplícándole las restricciones del rol elegido.
+### CA-018.2 — Restricción de navegación por rol no autorizado
+- **Dado que** un empleado inicia sesión con el rol "Vendedor",
+- **cuando** intenta navegar manualmente hacia una URL administrativa (ej. `/financials/profits`),
+- **entonces** el sistema detiene la carga y muestra el mensaje: "Acceso denegado: No posee los permisos requeridos para consultar este módulo".
 
-### CA-018.2 — Denegación de acceso por falta de permisos
+### CA-018.3 — Ocultamiento dinámico de menús de navegación
+- **Dado que** un usuario ingresa al sistema con sus credenciales,
+- **cuando** el menú lateral se renderiza,
+- **entonces** únicamente presenta los accesos directos a los módulos expresamente autorizados para su rol.
 
-- **Dado que** un usuario con rol "Vendedor" intenta acceder a una ruta administrativa (ej. `/reports/financials`),
-- **cuando** la aplicación intenta cargar la vista,
-- **entonces** el sistema bloquea el paso y muestra el mensaje: "No tiene permisos suficientes para acceder a este módulo".
+### CA-018.4 — Desactivación preventiva de usuarios
+- **Dado que** el administrador selecciona la cuenta de un empleado inactivo,
+- **cuando** hace clic en "Desactivar Usuario",
+- **entonces** la cuenta pasa a estado inactivo y el sistema invalida inmediatamente todas sus sesiones activas.
 
 ---
 

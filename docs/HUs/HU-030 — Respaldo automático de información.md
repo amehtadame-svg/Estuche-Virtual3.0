@@ -15,25 +15,33 @@
 
 ## Historia
 
-**Como** administrador,  
-**quiero** respaldo de información,  
-**para** no perder datos operativos o históricos ante eventualidades o fallas del sistema.
+**Como** administrador del sistema o responsable de TI,  
+**quiero** que la plataforma ejecute respaldos programados automatizados y permita copias manuales a demanda de toda la base de datos,  
+**para** proteger la información contable y de inventarios ante posibles caídas de servidor, fallas de hardware o errores humanos, garantizando la recuperación de datos e imprevistos.
 
 ---
 
 ## Criterios de Aceptación
 
-### CA-030.1 — Tarea programada de respaldo
-
+### CA-030.1 — Tarea programada de respaldo diario
 - **Dado que** el servidor se encuentra operativo,
-- **cuando** se alcanza el horario programado de mantenimiento (ej. medianoche/00:00 hrs),
-- **entonces** el sistema genera automáticamente un respaldo de la base de datos y lo almacena en un repositorio seguro.
+- **cuando** el reloj del sistema alcanza la hora configurada (ej. medianoche / 00:00 hrs),
+- **entonces** el sistema genera automáticamente una copia de seguridad comprimida y cifrada de la base de datos.
 
-### CA-030.2 — Generación manual bajo demanda
+### CA-030.2 — Generación manual a demanda
+- **Dado que** me encuentro en el módulo de respaldos (`/settings/backups`),
+- **cuando** hago clic en el botón "Generar Respaldo Ahora",
+- **entonces** el sistema inicia inmediatamente la creación de una nueva copia de seguridad.
 
-- **Dado que** estoy en la vista de configuración del sistema (`/settings/backups`),
-- **cuando** presiono el botón "Generar Respaldo Ahora",
-- **entonces** el sistema crea de inmediato una copia de seguridad y permite descargar el archivo comprimido resultante.
+### CA-030.3 — Descarga segura de archivos de respaldo
+- **Dado que** existen copias de seguridad generadas en el historial,
+- **cuando** presiono "Descargar" en un archivo de respaldo,
+- **entonces** el sistema transmite el archivo comprimido previa revalidación de credenciales de administrador.
+
+### CA-030.4 — Notificación ante fallos en la generación de copia
+- **Dado que** la tarea de respaldo se ejecuta y ocurre un error de almacenamiento o servidor,
+- **cuando** falla el proceso,
+- **entonces** el sistema registra el fallo en los logs y envía una alerta al correo electrónico del administrador.
 
 ---
 

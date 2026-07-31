@@ -14,25 +14,34 @@
 ---
 
 ## Historia
-**Como** administrador,
-**quiero** ver productos agotados,
-**para** reabastecer a tiempo y no dejar de vender por falta de stock.
+
+**Como** encargado de compras o administrador del almacén,  
+**quiero** filtrar y consultar una vista consolidada que me exponga exclusivamente aquellos productos activos del catálogo cuyas existencias en stock hayan llegado a cero (0) unidades,  
+**para** identificar de manera inmediata la mercancía completamente desabastecida, priorizar la elaboración y envío de órdenes de compra urgentes a los proveedores y evitar la pérdida continua de ventas por falta de disponibilidad en el punto de venta.
 
 ---
 
 ## Criterios de Aceptación
 
-### CA-006.1 — Filtro rápido de productos sin stock
+### CA-006.1 — Filtro estricto de productos con existencias en cero
+- **Dado que** me ubico en el módulo de inventario e ingreso a la pestaña "Agotados" (`/inventory/out-of-stock`),
+- **cuando** la consulta se ejecuta contra la base de datos,
+- **entonces** la pantalla debe mostrar un listado exclusivo de los productos cuyo valor en la columna de stock sea exactamente igual a cero (0).
 
-- **Dado que** estoy en el módulo de inventario (`/inventory/out-of-stock`),
-- **cuando** selecciono la vista o pestaña "Agotados",
-- **entonces** el sistema debe desplegar únicamente los productos cuya cantidad de stock sea igual a 0.
+### CA-006.2 — Mensaje descriptivo para catálogo sin desabasto
+- **Dado que** todos los productos activos dentro del sistema tienen existencias disponibles (stock > 0),
+- **cuando** consulto la sección de productos agotados,
+- **entonces** la pantalla debe mostrar un contenedor informativo con el mensaje: "Excelente: En este momento no existen productos agotados en el inventario".
 
-### CA-006.2 — Mensaje de lista vacía
+### CA-006.3 — Redirección a reabastecimiento rápido
+- **Dado que** estoy revisando la lista de productos en estado agotado,
+- **cuando** presiono el botón "Reabastecer" situado en la fila de un producto específico,
+- **entonces** el sistema debe redirigirme al formulario de ingreso de mercancía (`/inventory/inbound`) con los datos de dicho producto seleccionados por defecto.
 
-- **Dado que** todos los productos del catálogo tienen al menos 1 unidad disponible,
-- **cuando** consulto la sección de agotados,
-- **entonces** la pantalla muestra el mensaje: "No hay productos agotados actualmente".
+### CA-006.4 — Exportación de reporte de mercancía desabastecida
+- **Dado que** visualizo el listado de productos agotados en pantalla,
+- **cuando** hago clic en el botón "Exportar Lista",
+- **entonces** el sistema debe descargar un documento formateado en Excel o PDF con el detalle de los artículos agotados para su entrega al departamento de compras.
 
 ---
 

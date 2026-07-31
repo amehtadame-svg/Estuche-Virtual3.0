@@ -11,23 +11,39 @@
 | **Estado** | Por Implementar |
 | **RF asociados** | RF-007 |
 
+---
 
 ## Historia
-**Como** administrador,
-**quiero** ver productos con bajo stock,
-**para** evitar pérdidas de ventas reordenando antes del agotamiento.
+
+**Como** administrador o encargado de suministros,  
+**quiero** contar con una pantalla de monitoreo preventivo que liste todos los productos cuyas existencias actuales se encuentren en o por debajo de su punto de reorden (stock mínimo parametrizado),  
+**para** generar pedidos de reposición antes de que los productos lleguen al agotamiento total, mantener una disponibilidad continua de la mercancía con mayor demanda y planificar adecuadamente el flujo de caja destinado a compras.
+
+---
 
 ## Criterios de Aceptación
 
-### CA-007.1 — Filtro de umbral mínimo de stock
-- **Dado que** me ubico en el listado de alertas de inventario (`/inventory/low-stock`),
-- **cuando** la pantalla carga,
-- **entonces** el sistema lista todos los productos cuyo stock actual sea menor o igual al valor `min_stock` predefinido por el producto.
+### CA-007.1 — Listado dinámico basado en el umbral mínimo individual
+- **Dado que** accedo a la vista de alertas de bajo stock (`/inventory/low-stock`),
+- **cuando** el sistema procesa la solicitud,
+- **entonces** debe retornar únicamente los productos cuyo valor de `stock` actual sea menor o igual al parámetro `min_stock` configurado para dicho artículo, y que mantengan un stock mayor a cero.
 
-### CA-007.2 — Indicadores visuales de advertencia
-- **Dado que** un producto está en el rango de bajo stock,
-- **cuando** aparece en la lista,
-- **entonces** el registro se resalta en color de advertencia (ej. amarillo/naranja) indicando las unidades restantes.
+### CA-007.2 — Modificación directa del parámetro de stock mínimo
+- **Dado que** estoy revisando la tabla de productos con bajo stock,
+- **cuando** modifico el número del campo "Stock Mínimo" directamente en la fila del producto y guardo,
+- **entonces** el sistema actualiza esa regla en la base de datos y recalcula de inmediato si el producto debe seguir figurando en el listado de alertas.
+
+### CA-007.3 — Ordenamiento prioritario por grado de escasez
+- **Dado que** la lista de bajo stock despliega múltiples productos,
+- **cuando** se cargan los registros en pantalla,
+- **entonces** el sistema debe ordenarlos automáticamente de forma ascendente en función de sus unidades disponibles (los productos con menor stock en la parte superior).
+
+### CA-007.4 — Columna calculada de sugerencia de compra
+- **Dado que** analizo los ítems mostrados en la vista de bajo stock,
+- **cuando** reviso las columnas del reporte,
+- **entonces** debo visualizar una columna calculada denominada "Unidades a Solicitar" que corresponda a la fórmula: `(Stock Máximo Deseado - Stock Actual)`.
+
+---
 
 ## Endpoints
 
@@ -35,6 +51,9 @@
 |--------|------|-------------|
 | GET | `/api/v1/inventory/low-stock` | Consulta productos por debajo del umbral mínimo |
 
+---
+
 ## Notas técnicas
+
 - Consulta SQL: `SELECT * FROM products WHERE stock <= min_stock AND stock > 0 AND is_active = true`.
 - Permitir configuración dinámica del parámetro `min_stock` individual o global.

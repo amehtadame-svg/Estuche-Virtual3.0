@@ -14,25 +14,34 @@
 ---
 
 ## Historia
-**Como** administrador,
-**quiero** exportar reportes,
-**para** analizar la información en herramientas externas en formatos Excel o PDF.
+
+**Como** administrador del negocio,  
+**quiero** exportar los datos de cualquier reporte consultado hacia archivos descargables en formato Excel (.xlsx) o PDF (.pdf),  
+**para** procesar la información en hojas de cálculo externas, respaldar digitalmente los cierres de período, enviar informes a contabilidad o imprimir copias físicas formalmente diagramadas.
 
 ---
 
 ## Criterios de Aceptación
 
 ### CA-024.1 — Descarga en formato Excel (.xlsx)
-
-- **Dado que** estoy visualizando un reporte de ventas o inventario,
-- **cuando** hago clic en "Exportar a Excel",
-- **entonces** el sistema descarga un archivo ejecutable/hoja de cálculo con todos los datos tabulados correctamente.
+- **Dado que** estoy visualizando un reporte en pantalla,
+- **cuando** hago clic en el botón "Exportar a Excel",
+- **entonces** el sistema genera y descarga un archivo `.xlsx` estructurado con columnas, encabezados y totales.
 
 ### CA-024.2 — Descarga en formato PDF (.pdf)
+- **Dado que** me encuentro en una vista de reportes,
+- **cuando** presiono "Exportar a PDF",
+- **entonces** el sistema genera y descarga un documento `.pdf` listo para impresión con formato formal.
 
-- **Dado que** estoy visualizando un reporte,
-- **cuando** elijo la opción "Exportar a PDF",
-- **entonces** el sistema descarga un documento listo para impresión con encabezados, totales y formato formal.
+### CA-024.3 — Respeto estricto de los filtros de consulta aplicados
+- **Dado que** apliqué un filtro de fechas o categorías en el reporte en pantalla,
+- **cuando** ejecuto la exportación a Excel o PDF,
+- **entonces** el archivo generado contiene únicamente los datos filtrados y no la totalidad de la base de datos.
+
+### CA-024.4 — Indicador visual de procesamiento de archivo
+- **Dado que** solicito la descarga de un reporte con un gran volumen de información,
+- **cuando** el backend procesa el archivo,
+- **entonces** la pantalla muestra el mensaje "Generando archivo..." y deshabilita temporalmente el botón de exportación para evitar solicitudes duplicadas.
 
 ---
 

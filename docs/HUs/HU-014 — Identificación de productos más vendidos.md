@@ -14,25 +14,34 @@
 ---
 
 ## Historia
-**Como** administrador,
-**quiero** saber productos más vendidos,
-**para** planificar de manera más eficiente las decisiones de compra e inventario.
+
+**Como** administrador o encargado de compras y marketing,  
+**quiero** visualizar un reporte tipo ranking (Top 10 / Top 20) que ordene los productos en función de la cantidad de unidades vendidas dentro de un período seleccionable,  
+**para** identificar los artículos estrella de mayor rotación comercial, asegurar su reposición prioritaria sin margen de desabasto, coordinar estrategias de exhibición y negociar mejores volúmenes de compra con proveedores.
 
 ---
 
 ## Criterios de Aceptación
 
-### CA-014.1 — Reporte de ranking
+### CA-014.1 — Ranking de productos ordenado por unidades vendidas
+- **Dado que** accedo al reporte de rotación de mercancía (`/reports/top-selling`),
+- **cuando** elijo un rango de fechas y ejecuto la consulta,
+- **entonces** el sistema presenta el ranking de productos ordenados de mayor a menor según la cantidad total de unidades vendidas.
 
-- **Dado que** accedo al reporte de rotación (`/reports/top-selling`),
-- **cuando** consulto el listado por un rango de fechas,
-- **entonces** el sistema ordena los productos en forma descendente según la cantidad total de unidades vendidas.
+### CA-014.2 — Gráfico comparativo visual del Top 10
+- **Dado que** consulto el ranking de alta rotación,
+- **cuando** la pantalla muestra los resultados,
+- **entonces** se despliega un gráfico de barras comparativo resaltando los 10 productos con mayor volumen comercializado en el período.
 
-### CA-014.2 — Límite de resultados
+### CA-014.3 — Filtro del ranking por categoría comercial
+- **Dado que** me encuentro analizando el reporte de productos más vendidos,
+- **cuando** aplico un filtro por categoría (ej. "Papelería"),
+- **entonces** el ranking se recalcula inmediatamente exponiendo únicamente los artículos pertenecientes a dicha categoría.
 
-- **Dado que** solicito la consulta rápida del dashboard,
-- **cuando** la vista renderiza,
-- **entonces** se muestran los 10 productos más vendidos (Top 10) acompañados por un gráfico comparativo.
+### CA-014.4 — Exportación del reporte de rotación comercial
+- **Dado que** he consultado el ranking de ventas,
+- **cuando** presiono el botón "Exportar Ranking",
+- **entonces** el sistema descarga un archivo en formato PDF conteniendo la lista del ranking y sus totales.
 
 ---
 

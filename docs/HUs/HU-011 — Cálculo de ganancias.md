@@ -14,25 +14,34 @@
 ---
 
 ## Historia
-**Como** administrador,
-**quiero** calcular ganancias,
-**para** conocer las utilidades netas del negocio durante un período.
+
+**Como** administrador o dueño del negocio,  
+**quiero** contar con un cálculo financiero automático que reste el costo histórico de adquisición de las mercancías vendidas del valor total recaudado por concepto de ventas en un rango de fechas determinado,  
+**para** conocer la utilidad neta real del negocio, evaluar el margen operativo de ganancia logrado y analizar la rentabilidad comercial del establecimiento.
 
 ---
 
 ## Criterios de Aceptación
 
-### CA-011.1 — Cálculo del margen de utilidad
+### CA-011.1 — Cálculo automatizado de la utilidad neta del período
+- **Dado que** accedo a la sección de finanzas y ganancias (`/financials/profits`),
+- **cuando** defino un rango de fechas y presiono "Calcular Utilidad",
+- **entonces** el sistema ejecuta el cálculo restando los costos de adquisición de las mercancías vendidas al valor total acumulado de las ventas del período.
 
-- **Dado que** estoy en el módulo financiero (`/financials/profits`),
-- **cuando** defino un período determinado y presiono "Calcular",
-- **entonces** el sistema resta los costos de adquisición de los productos vendidos al valor total acumulado de las ventas en ese período y muestra la ganancia neta.
+### CA-011.2 — Desglose explicativo de las cifras financieras principales
+- **Dado que** se procesan los cálculos financieros del período,
+- **cuando** reviso el resultado en pantalla,
+- **entonces** debo visualizar claramente tres contadores: Ingresos Totales por Ventas, Costo de los Productos Vendidos (COGS) y Utilidad Neta Ganada.
 
-### CA-011.2 — Desglose de fórmula
+### CA-011.3 — Porcentaje de margen operativo sobre ventas
+- **Dado que** el sistema calcula la utilidad neta,
+- **cuando** despliega las métricas en la interfaz,
+- **entonces** debe mostrar el porcentaje de margen operativo logrado mediante la fórmula: `(Ganancia Neta / Ingresos Totales) * 100`.
 
-- **Dado que** se calcula la ganancia,
-- **cuando** reviso los detalles,
-- **entonces** debo visualizar claramente: Ingresos Totales, Costos Totales de Productos Vendidos (COGS) y Utilidad Neta.
+### CA-011.4 — Resaltado de pérdida en caso de saldo negativo
+- **Dado que** en un período seleccionado los costos de los productos vendidos superaron los ingresos recaudados,
+- **cuando** se genera la respuesta en pantalla,
+- **entonces** el sistema debe pintar la cifra en color rojo con signo negativo e indicar explícitamente el texto: "Resultado del período: Pérdida Neta".
 
 ---
 

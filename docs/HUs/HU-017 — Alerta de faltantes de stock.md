@@ -14,25 +14,34 @@
 ---
 
 ## Historia
-**Como** administrador,
-**quiero** recibir alertas de faltantes,
-**para** reaccionar a tiempo y evitar pérdidas de ventas.
+
+**Como** administrador o encargado de almacén,  
+**quiero** recibir alertas automáticas e indicadores en el panel superior cada vez que la venta o salida de un producto reduzca sus existencias por debajo del umbral mínimo de seguridad,  
+**para** enterarme en tiempo real sobre situaciones críticas de inventario, emitir órdenes de reabastecimiento inmediatas y evitar pérdidas de ventas por falta de stock.
 
 ---
 
 ## Criterios de Aceptación
 
-### CA-017.1 — Disparo automático de notificación
+### CA-017.1 — Generación automática de notificación de bajo stock
+- **Dado que** una transacción de venta o salida reduce el stock de un producto por debajo de su `min_stock`,
+- **cuando** el movimiento se completa exitosamente,
+- **entonces** el sistema crea de forma automática un evento y registro de notificación de alerta de faltante.
 
-- **Dado que** se completa una venta o salida y el stock de un producto cae por debajo de su valor crítico (`min_stock`),
-- **cuando** finaliza la transacción,
-- **entonces** el sistema crea una notificación interna (en el panel o por correo) alertando que el producto requiere reabastecimiento.
+### CA-017.2 — Indicador numérico en la barra de navegación
+- **Dado que** existen alertas de bajo stock sin revisar por el administrador,
+- **cuando** el usuario navega por la plataforma,
+- **entonces** visualiza un icono de campana en la barra superior con un contador en color rojo indicando el número de productos en estado crítico.
 
-### CA-017.2 — Indicador global en panel superior
+### CA-017.3 — Menú flotante de revisión rápida
+- **Dado que** hago clic sobre la campana de notificaciones,
+- **cuando** el menú se despliega,
+- **entonces** muestra la lista de productos con stock crítico, sus existencias actuales y un botón para iniciar el reabastecimiento.
 
-- **Dado que** existen alertas de bajo stock sin revisar,
-- **cuando** el administrador ingresa al sistema,
-- **entonces** visualiza un icono de campana con la cantidad de faltantes pendientes por atender.
+### CA-017.4 — Marcar notificación como atendida
+- **Dado que** reviso una alerta dentro del menú desplegable,
+- **cuando** presiono "Marcar como Atendida",
+- **entonces** la notificación cambia su estado y disminuye en 1 el contador flotante de la barra superior.
 
 ---
 

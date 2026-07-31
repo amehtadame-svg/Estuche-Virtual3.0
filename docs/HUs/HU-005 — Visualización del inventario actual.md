@@ -14,23 +14,34 @@
 ---
 
 ## Historia
-**Como** administrador,  
-**quiero** ver el inventario actual,  
-**para** saber qué productos hay disponibles inmediatamente para la venta.
+
+**Como** administrador del negocio o supervisor de inventario,  
+**quiero** disponer de una tabla centralizada, paginada y filtrable que despliegue la totalidad del catálogo de productos con su información técnica, existencias disponibles, categorías, precios de venta y costos de adquisición,  
+**para** supervisar en tiempo real el volumen y la valoración económica de los activos almacenados, responder rápidamente a consultas sobre disponibilidad de mercancía y tomar decisiones oportunas de compra y rotación de productos.
 
 ---
 
 ## Criterios de Aceptación
 
-### CA-005.1 — Listado general de existencias
-- **Dado que** accedo al panel principal de inventario (`/inventory`),
-- **cuando** se carga la vista,
-- **entonces** debo ver una tabla paginada con la lista actualizada de todos los productos activos con su ID, nombre, precio y stock actual.
+### CA-005.1 — Visualización de tabla de catálogo paginada
+- **Dado que** accedo al módulo de inventario general en la ruta (`/inventory`),
+- **cuando** la vista completa la carga inicial de datos desde el servidor,
+- **entonces** debo observar una tabla paginada con las columnas: SKU, Nombre comercial, Categoría, Precio de Venta, Costo, Stock Actual e Indicador de Estado.
 
-### CA-005.2 — Actualización en tiempo real o bajo demanda
-- **Dado que** se realiza una venta o un registro de mercancía en otra terminal,
-- **cuando** presiono el botón "Refrescar" o navego en la tabla,
-- **entonces** se muestran las cantidades reflejando exactamente la base de datos.
+### CA-005.2 — Filtrado interactivo por texto y categoría
+- **Dado que** me encuentro en la vista general del inventario,
+- **cuando** escribo una palabra clave en el campo de búsqueda o elijo una categoría específica en el menú desplegable de filtros,
+- **entonces** la tabla debe refrescar su contenido al instante, presentando únicamente los productos que concuerden con los filtros aplicados.
+
+### CA-005.3 — Paginación eficiente del lado del servidor
+- **Dado que** la base de datos alberga un número elevado de productos (ej. más de 20 registros),
+- **cuando** navego haciendo clic en las opciones de paginación ("Siguiente", "Anterior", "Número de página"),
+- **entonces** el sistema realiza una solicitud HTTP liviana al backend con los parámetros de paginación (`page`, `limit`), actualizando los datos de la tabla sin refrescar la página completa.
+
+### CA-005.4 — Indicador visual de alerta por existencias críticas
+- **Dado que** un producto listado en la tabla tiene un stock menor o igual al umbral crítico (ej. 5 unidades),
+- **cuando** se dibuja la fila del producto en pantalla,
+- **entonces** el campo del stock debe resaltarse automáticamente con una etiqueta de color distintivo (amarillo para bajo stock, rojo para producto agotado).
 
 ---
 

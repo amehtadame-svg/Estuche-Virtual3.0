@@ -14,25 +14,35 @@
 ---
 
 ## Historia
-**Como** administrador,
-**quiero** generar reportes de ventas,
-**para** analizar ganancias y medir el desempeño del negocio por períodos.
+
+**Como** administrador o director financiero del negocio,  
+**quiero** contar con un generador de reportes de ventas que me permita especificar rangos de fechas flexibles (días, semanas, meses) para calcular y presentar métricas e indicadores de rendimiento comercial,  
+**para** evaluar los ingresos acumulados por ventas, medir el volumen de transacciones ejecutadas, conocer el promedio de consumo de los clientes y fundamentar la toma de decisiones estratégicas en datos estadísticos reales.
 
 ---
 
 ## Criterios de Aceptación
 
-### CA-008.1 — Filtrado por rango de fechas
+### CA-008.1 — Selección de rango de fechas de consulta en el reporte
+- **Dado que** me ubico en el módulo de reportes de ventas (`/reports/sales`),
+- **cuando** elijo una fecha de inicio y una fecha de fin en los selectores de calendario y hago clic en "Generar Reporte",
+- **entonces** el sistema procesa las órdenes del período y presenta el informe consolidado en pantalla.
 
-- **Dado que** estoy en el módulo de reportes (`/reports/sales`),
-- **cuando** selecciono una fecha inicial y una fecha final y presiono "Generar Reporte",
-- **entonces** el sistema muestra la suma total de dinero vendido, la cantidad de transacciones e ítems comercializados.
+### CA-008.2 — Validación de coherencia en el rango de fechas seleccionadas
+- **Dado que** me encuentro configurando los parámetros del reporte de ventas,
+- **cuando** elijo una fecha inicial que es cronológicamente posterior a la fecha final de la consulta,
+- **entonces** el sistema debe detener la ejecución de la búsqueda y desplegar el mensaje de error: "Rango no válido: La fecha de inicio no puede ser posterior a la fecha final".
 
-### CA-008.2 — Validación de rango de fechas incoherente
+### CA-008.3 — Despliegue de tarjetas con indicadores clave de rendimiento (KPIs)
+- **Dado que** el reporte de ventas finaliza su cálculo exitosamente,
+- **cuando** la vista renderiza los resultados,
+- **entonces** debo visualizar claramente: Monto Total Facturado, Cantidad de Órdenes Procesadas, Ticket Promedio por Venta y Total de Unidades Comercializadas.
 
-- **Dado que** selecciono una fecha inicial posterior a la fecha final,
-- **cuando** solicito el reporte,
-- **entonces** el sistema muestra una advertencia: "La fecha inicial no puede ser posterior a la fecha final".
+### CA-008.4 — Manejo de períodos de consulta sin actividad de ventas
+- **Dado que** ejecuto el reporte en un rango de fechas en el que no se registraron ventas en la plataforma,
+- **cuando** concluye la consulta en la base de datos,
+- **entonces** el sistema debe presentar todos los contadores numéricos en $0.00 junto al texto: "No se registraron ventas en el período de tiempo seleccionado".
+
 
 ---
 
