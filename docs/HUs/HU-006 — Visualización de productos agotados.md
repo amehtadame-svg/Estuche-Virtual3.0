@@ -15,9 +15,9 @@
 
 ## Historia
 
-**Como** encargado de compras o administrador del almacén,  
-**quiero** filtrar y consultar una vista consolidada que me exponga exclusivamente aquellos productos activos del catálogo cuyas existencias en stock hayan llegado a cero (0) unidades,  
-**para** identificar de manera inmediata la mercancía completamente desabastecida, priorizar la elaboración y envío de órdenes de compra urgentes a los proveedores y evitar la pérdida continua de ventas por falta de disponibilidad en el punto de venta.
+**Como** encargado de compras, analista de inventarios o jefe de almacén, responsable de evitar quiebres de stock y garantizar el flujo continuo de abastecimiento,  
+**quiero** filtrar y consultar una vista consolidada de alta prioridad que me exponga exclusivamente aquellos productos activos del catálogo cuyas existencias registradas en bodega hayan alcanzado exactamente las cero (0) unidades,  
+**para** identificar de manera inmediata la mercancía completamente desabastecida, priorizar la elaboración y emisión urgente de órdenes de compra a proveedores, prevenir la pérdida continua de ingresos por ventas no concretadas en el punto de venta y mantener la continuidad operativa del catálogo.
 
 ---
 

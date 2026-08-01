@@ -15,9 +15,9 @@
 
 ## Historia
 
-**Como** vendedor del punto de venta (POS),  
-**quiero** buscar, agregar y cobrar combos o paquetes escolares en la pantalla de caja de manera directa,  
-**para** atender con rapidez las solicitudes de promociones en momentos de alta afluencia de clientes y asegurar que las existencias individuales de cada producto integrante del paquete se descuenten de forma automática del inventario.
+**Como** vendedor o cajero operativo del punto de venta (POS), encargado de la atención rápida en mostrador, facturación y cobro presencial a clientes,  
+**quiero** buscar, seleccionar y añadir paquetes promocionales o combos escolares previamente registrados a la orden de venta activa mediante un único clic o escaneo de código promocional, cobrando el importe empaquetado correspondiente,  
+**para** agilizar significativamente el proceso de cobro durante picos de alta afluencia comercial, evitar la adición manual repetitiva de ítems individuales en caja, asegurar que el sistema ejecute de manera atómica y diferida la reducción proporcional de existencias de cada producto componente en la base de datos y emitir un comprobante claro que desglose el contenido del combo vendido.
 
 ---
 

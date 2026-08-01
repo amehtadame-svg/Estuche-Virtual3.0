@@ -15,9 +15,9 @@
 
 ## Historia
 
-**Como** administrador o dueño del negocio,  
-**quiero** contar con un cálculo financiero automático que reste el costo histórico de adquisición de las mercancías vendidas del valor total recaudado por concepto de ventas en un rango de fechas determinado,  
-**para** conocer la utilidad neta real del negocio, evaluar el margen operativo de ganancia logrado y analizar la rentabilidad comercial del establecimiento.
+**Como** propietario del establecimiento, director financiero o gerente general de la empresa, responsable de la evaluación de rentabilidad comercial, toma de decisiones de inversión y control de costos,  
+**quiero** disponer de un motor de cálculo financiero automatizado y configurable que determine con exactitud la utilidad neta operativa dentro de cualquier rango de fechas seleccionado, restando el costo histórico real de adquisición de los productos comercializados (COGS) del volumen de ingresos brutos obtenidos por ventas directas o de combos,  
+**para** conocer con precisión el margen bruto y neto de ganancia de la empresa en tiempo real, evaluar la viabilidad financiera de las operaciones, analizar el rendimiento de las estrategias de precios implementadas, detectar líneas de productos poco rentables y tomar decisiones informadas sobre distribución de dividendos o reinversión de capital.
 
 ---
 

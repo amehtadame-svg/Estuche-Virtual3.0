@@ -15,9 +15,9 @@
 
 ## Historia
 
-**Como** administrador de almacén o supervisor de inventarios, responsable del resguardo y la concordancia de las existencias físicas,  
-**quiero** disponer de una funcionalidad para registrar manualmente las salidas de productos del almacén no originadas por ventas directas (tales como transferencias entre sucursales, consumo interno, muestras comerciales o ajustes por daño), especificando la cantidad a retirar y la razón justificativa,  
-**para** reducir en tiempo real las existencias teóricas del sistema, evitar sobrestimaciones de disponibilidad comercial en la tienda, mantener exactitud plena entre los recuentos físicos y digitales, y dejar una evidencia justificada de cada egreso de almacén.
+**Como** supervisor de inventarios o administrador de almacén, responsable del resguardo, custodia física, ordenamiento y concordancia de las existencias teóricas y reales en bodega,  
+**quiero** disponer de una funcionalidad dedicada que me permita registrar manualmente los retiros o salidas de productos del almacén que no correspondan a ventas comerciales directas (tales como transferencias entre sucursales, consumo interno administrativo, muestras comerciales o mermas por daño), especificando las cantidades a retirar y la justificación obligatoria,  
+**para** descontar en tiempo real las existencias teóricas del sistema, evitar sobrestimaciones de disponibilidad en la tienda, mantener exactitud plena entre los recuentos físicos y digitales, y dejar respaldada cada salida manual con su respectivo motivo de auditoría.
 
 ---
 

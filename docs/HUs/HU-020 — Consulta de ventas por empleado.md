@@ -15,9 +15,9 @@
 
 ## Historia
 
-**Como** administrador del negocio,  
-**quiero** consultar e imprimir reportes con las ventas concretadas filtrando por cada vendedor individualmente dentro de un rango de fechas,  
-**para** evaluar el nivel de productividad comercial del personal de caja, calcular correctamente comisiones o incentivos de venta y comparar el rendimiento entre los empleados.
+**Como** administrador del negocio, director de recursos humanos o supervisor de personal de caja y fuerza de ventas, responsable directo del seguimiento del desempeño comercial, cumplimiento de metas corporativas y evaluación de la productividad del talento humano,  
+**quiero** disponer de un módulo analítico especializado que me permita consultar, filtrar y consolidar informes de ventas detallados por cada vendedor de forma individual dentro de períodos de tiempo totalmente configurables (días, semanas, meses o rangos personalizados), desglosando volumen facturado, cantidad de tickets emitidos, promedio por venta e historial de órdenes procesadas,  
+**para** medir de manera objetiva, cuantitativa e imparcial la productividad y eficiencia comercial del personal en caja, transparentar y calcular con exactitud comisiones, bonificaciones o incentivos económicos por metas alcanzadas, identificar cuellos de botella en la atención al cliente, comparar el rendimiento operativo entre turnos de trabajo y tomar decisiones fundamentadas sobre capacitación, reconocimientos o ajustes en la plantilla de personal.
 
 ---
 

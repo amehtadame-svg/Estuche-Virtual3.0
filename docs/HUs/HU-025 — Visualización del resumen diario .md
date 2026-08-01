@@ -15,9 +15,9 @@
 
 ## Historia
 
-**Como** administrador o supervisor del negocio,  
-**quiero** disponer de un panel de control (Dashboard) que exhiba en tiempo real las métricas consolidadas del día en curso (ventas acumuladas, ingresos en caja y estimación de ganancias),  
-**para** evaluar de un solo vistazo el desempeño de la jornada de trabajo, tomar decisiones operativas de inmediato y realizar arqueos preliminares sin esperar al cierre de caja.
+**Como** administrador del negocio, director de operaciones o supervisor de ventas diarias, responsable de la supervisión continua del flujo de caja, monitoreo del punto de venta y evaluación del desempeño comercial,  
+**quiero** disponer de un panel de control (Dashboard) ejecutivo e interactivo que me exhiba en tiempo real las métricas e indicadores clave consolidados de la jornada en curso (ventas totales acumuladas, número de transacciones ejecutadas, ingresos por medio de pago y estimación de ganancias netas del día desde las 00:00 hrs),  
+**para** evaluar de un solo vistazo la productividad y ritmo comercial del establecimiento durante el día, tomar decisiones operativas o de caja de inmediato, realizar arqueos y comparativas preliminares sin esperar al cierre definitivo de la jornada y monitorear el cumplimiento de las metas diarias de facturación.
 
 ---
 

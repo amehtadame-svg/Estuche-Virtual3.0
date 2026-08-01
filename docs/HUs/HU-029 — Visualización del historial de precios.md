@@ -15,9 +15,9 @@
 
 ## Historia
 
-**Como** administrador o auditor del negocio,  
-**quiero** visualizar la línea de tiempo de cambios de precios asignados a un producto comercial especificando fecha, valor previo, valor nuevo y usuario responsable,  
-**para** auditar los ajustes aplicados, analizar las fluctuaciones de tarifas en el tiempo y resolver discrepancias en el cálculo de márgenes históricos.
+**Como** administrador del negocio, director financiero o auditor de costos y precios, responsable del resguardo de los márgenes de ganancia, supervisión de la inflación y auditoría de decisiones comerciales,  
+**quiero** consultar una línea de tiempo cronológica y detallada de todas las variaciones de precios de venta comerciales y costos de adquisición asignados a un producto a lo largo de su ciclo de vida, especificando fecha y hora del cambio, valor anterior, valor nuevo, porcentaje de ajuste y usuario autorizador,  
+**para** auditar las modificaciones tarifarias ejecutadas en el sistema, analizar el impacto del incremento de costos de proveedores sobre el precio final al público, justificar la evolución de las utilidades en estados financieros históricos y verificar el estricto cumplimiento de las políticas de precios fijadas por la empresa.
 
 ---
 

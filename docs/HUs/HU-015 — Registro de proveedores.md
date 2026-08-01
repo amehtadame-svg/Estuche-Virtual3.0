@@ -13,9 +13,9 @@
 
 ## Historia
 
-**Como** administrador o encargado de suministros del negocio,  
-**quiero** registrar y administrar las fichas de los proveedores comerciales incluyendo Razón Social, Identificación Fiscal (RUC/NIT), datos de contacto, dirección y teléfono,  
-**para** mantener un directorio organizado de la cadena de suministro, vincular formalmente las compras y recepciones de mercancía con sus distribuidores y facilitar el rastreo de garantías.
+**Como** administrador del negocio, encargado del departamento de compras o coordinador de la cadena de suministro, responsable del mantenimiento del directorio de socios comerciales,  
+**quiero** disponer de una sección administrativa de gestión de proveedores para dar de alta, editar y organizar fichas comerciales completas que capturen Razón Social, Identificación Fiscal única (RUC/NIT), persona de contacto principal, dirección física, números telefónicos, correo electrónico para facturación y condiciones comerciales acordadas,  
+**para** construir y centralizar un directorio formal de la cadena de abastecimiento del negocio, vincular cada recepción e ingreso de mercancía en almacén a su distribuidor de origen, facilitar la emisión de órdenes de compra, agilizar reclamos por garantías o devoluciones y tener trazabilidad total sobre las relaciones comerciales de la empresa.
 
 ---
 

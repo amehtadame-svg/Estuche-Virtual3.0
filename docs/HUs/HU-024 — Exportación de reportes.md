@@ -15,9 +15,9 @@
 
 ## Historia
 
-**Como** administrador del negocio,  
-**quiero** exportar los datos de cualquier reporte consultado hacia archivos descargables en formato Excel (.xlsx) o PDF (.pdf),  
-**para** procesar la información en hojas de cálculo externas, respaldar digitalmente los cierres de período, enviar informes a contabilidad o imprimir copias físicas formalmente diagramadas.
+**Como** administrador del negocio, director general, contador externo o analista financiero, responsable del análisis consolidado de datos, presentación de informes gerenciales y cumplimiento de auditorías contables,  
+**quiero** contar con una funcionalidad transversal de exportación que me permita transformar y descargar cualquier reporte, tabla o consolidado financiero e inventarial consultado en pantalla hacia archivos estructurados en formatos estándares como hojas de cálculo de Microsoft Excel (.xlsx) o documentos portátiles imprimibles (.pdf),  
+**para** procesar libremente la información en herramientas de análisis externo o modelos financieros, respaldar digitalmente los cierres contables periódicos fuera del sistema, compartir reportes ejecutivos con socios o auditores externos y conservar archivos físicos o digitales formalmente diagramados para el archivo histórico de la empresa.
 
 ---
 

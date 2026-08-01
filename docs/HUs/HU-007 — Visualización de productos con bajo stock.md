@@ -15,9 +15,9 @@
 
 ## Historia
 
-**Como** administrador o encargado de suministros,  
-**quiero** contar con una pantalla de monitoreo preventivo que liste todos los productos cuyas existencias actuales se encuentren en o por debajo de su punto de reorden (stock mínimo parametrizado),  
-**para** generar pedidos de reposición antes de que los productos lleguen al agotamiento total, mantener una disponibilidad continua de la mercancía con mayor demanda y planificar adecuadamente el flujo de caja destinado a compras.
+**Como** administrador del negocio o encargado de suministros y reposición, responsable de la planificación de compras y la gestión del stock de seguridad,  
+**quiero** contar con una pantalla de monitoreo preventivo que liste automáticamente todos los productos cuyas existencias actuales se encuentren en o por debajo de su punto de reorden (stock mínimo parametrizado),  
+**para** generar pedidos de reposición con suficiente margen de tiempo antes de que los productos lleguen al agotamiento total, mantener una disponibilidad ininterrumpida de la mercancía de mayor demanda, optimizar la gestión del flujo de caja destinado a compras y proteger la satisfacción del cliente.
 
 ---
 

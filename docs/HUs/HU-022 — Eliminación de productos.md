@@ -15,9 +15,9 @@
 
 ## Historia
 
-**Como** administrador,  
-**quiero** dar de baja o desactivar productos descontinuados u obsoletos del catálogo activo,  
-**para** limpiar las listas de búsqueda del punto de venta, evitar que se vendan mercancías sin disponibilidad futura y conservar la integridad referencial de las ventas históricas mediante un borrado lógico (*Soft Delete*).
+**Como** administrador general de la plataforma o gestor de catálogo comercial, responsable de la depuración, mantenimiento y optimización del listado de mercancías activas en el negocio,  
+**quiero** disponer de un mecanismo de eliminación segura que me permita dar de baja o desactivar productos del catálogo que hayan sido descontinuados por fabricantes, registrados por error o que ya no formen parte de la oferta comercial del establecimiento,  
+**para** limpiar y depurar las listas de búsqueda del punto de venta (POS) facilitando la operación de las cajas, evitar que los vendedores intenten comercializar mercancías sin disponibilidad futura, y al mismo tiempo preservar la integridad referencial de la base de datos y los reportes contables del pasado mediante una técnica de borrado lógico (*Soft Delete*).
 
 ---
 

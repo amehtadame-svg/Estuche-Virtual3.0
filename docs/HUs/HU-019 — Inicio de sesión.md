@@ -15,9 +15,10 @@
 
 ## Historia
 
-**Como** usuario registrado en el sistema (vendedor, almacenero o administrador),  
-**quiero** autenticarme introduciendo mi correo electrónico y contraseña en la pantalla de acceso,  
-**para** validar mis credenciales de forma segura, ingresar a las funciones autorizadas para mi rol y dejar evidencia auditable de mi sesión de trabajo.
+
+**Como** usuario registrado en la plataforma (vendedor de caja, encargado de almacén, auditor o administrador general), responsable de ejecutar operaciones dentro del sistema,  
+**quiero** disponer de un portal de inicio de sesión seguro donde pueda ingresar mi correo electrónico corporativo registrado y mi contraseña encriptada, con validación de credenciales en tiempo real y protección contra intentos fallidos,  
+**para** autenticar de forma inequívoca mi identidad ante el servidor, obtener un token de sesión seguro, acceder a las herramientas y vistas autorizadas para mi rol de usuario, iniciar formalmente mi jornada operativa y asegurar que todas mis acciones queden registradas con mi firma digital dentro de los logs del sistema.
 
 ---
 

@@ -15,9 +15,9 @@
 
 ## Historia
 
-**Como** administrador o encargado de compras y marketing,  
-**quiero** visualizar un reporte tipo ranking (Top 10 / Top 20) que ordene los productos en función de la cantidad de unidades vendidas dentro de un período seleccionable,  
-**para** identificar los artículos estrella de mayor rotación comercial, asegurar su reposición prioritaria sin margen de desabasto, coordinar estrategias de exhibición y negociar mejores volúmenes de compra con proveedores.
+**Como** gerente de compras, analista de inteligencia comercial o administrador general del negocio, responsable del análisis de demanda, rotación de mercancía e inversión en inventario,  
+**quiero** disponer de un módulo de analítica que procese y presente un ranking interactivo (Top 10 / Top 20) de los productos que registran la mayor cantidad de unidades comercializadas en un período de tiempo seleccionable, ordenados descendentemente y respaldados por gráficos comparativos e indicadores de volumen e ingresos,  
+**para** identificar con absoluta precisión los artículos de alta rotación comercial (productos estrella), asegurar su reabastecimiento prioritario antes de llegar a situaciones de bajo stock, optimizar la disposición física de mercancías en estanterías o vitrinas de alto impacto, planificar campañas publicitarias focalizadas y negociar mejores precios y condiciones de crédito con proveedores clave.
 
 ---
 

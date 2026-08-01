@@ -15,9 +15,9 @@
 
 ## Historia
 
-**Como** administrador o encargado de almacén,  
-**quiero** recibir alertas automáticas e indicadores en el panel superior cada vez que la venta o salida de un producto reduzca sus existencias por debajo del umbral mínimo de seguridad,  
-**para** enterarme en tiempo real sobre situaciones críticas de inventario, emitir órdenes de reabastecimiento inmediatas y evitar pérdidas de ventas por falta de stock.
+**Como** administrador del establecimiento, jefe de bodega o encargado de reposición de mercancía, responsable del monitoreo constante de niveles de inventario y prevención de quiebres de stock,  
+**quiero** que la plataforma genere e impulse notificaciones automáticas en tiempo real e indicadores visuales destacados en la barra de navegación cada vez que una transacción de venta o salida manual provoque que el stock de un producto caiga por debajo de su umbral mínimo de seguridad parametrizado (punto de reorden),  
+**para** ser alertado de forma proactiva sin depender de revisiones o reportes manuales periódicos, reaccionar de manera inmediata emitiendo solicitudes o pedidos de reabastecimiento a proveedores, evitar la pérdida de oportunidades de venta por falta de existencias y mantener un flujo comercial ininterrumpido en la tienda.
 
 ---
 

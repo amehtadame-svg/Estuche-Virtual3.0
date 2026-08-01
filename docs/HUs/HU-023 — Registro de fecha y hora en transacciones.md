@@ -15,9 +15,9 @@
 
 ## Historia
 
-**Como** sistema de gestión de información,  
-**quiero** estampar automáticamente marcas de tiempo estandarizadas (`created_at` / `updated_at`) en cada registro, transacción, venta o movimiento generado en la base de datos,  
-**para** asegurar la precisión cronológica de la información, respaldar auditorías de seguridad, sincronizar eventos en zona horaria estandarizada y permitir el filtrado exacto por fechas.
+**Como** sistema central de gestión de información, arquitectura de base de datos e infraestructura de auditoría operativa, responsable de garantizar la inmutabilidad, trazabilidad y secuencia temporal de todas las entidades y eventos del software,  
+**quiero** estampar automáticamente marcas de tiempo estandarizadas, precisas e inalterables (`created_at` para la creación inicial y `updated_at` para modificaciones) en cada registro, transacción comercial, movimiento de almacén o acción de usuario efectuada en la plataforma,  
+**para** asegurar la precisión cronológica estricta de la información registrada, respaldar auditorías de seguridad informática y controles forenses, sincronizar eventos bajo un estándar único de zona horaria (UTC) y posibilitar la generación de reportes e inspecciones temporales con exactitud de segundos.
 
 ---
 

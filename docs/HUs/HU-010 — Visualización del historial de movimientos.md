@@ -15,9 +15,9 @@
 
 ## Historia
 
-**Como** auditor del sistema o supervisor de operaciones de inventario,  
-**quiero** consultar una bitácora inalterable y cronológica con el registro de todos los movimientos de entrada, salida, venta, ajuste o pérdida aplicados al inventario,  
-**para** realizar auditorías detalladas sobre el stock, rastrear la trazabilidad histórica de cualquier mercancía, detectar irregularidades o descuadres y verificar qué usuario autorizó y ejecutó cada transacción.
+**Como** auditor interno de la empresa, supervisor general de operaciones de almacén o responsable de control patrimonial y prevención de pérdidas,  
+**quiero** acceder a un módulo de auditoría integral e inalterable que registre cronológicamente y en tiempo real la totalidad de las transacciones y movimientos físicos y lógicos de inventario (entradas por compras, salidas manuales, ventas en POS, mermas, devoluciones, traslados e incrementos de stock) especificando fecha/hora exacta, producto, lote, cantidad, usuario responsable, origen/destino y motivo justificado,  
+**para** garantizar una trazabilidad absoluta de cada unidad de mercancía desde su ingreso hasta su disposición final, realizar auditorías forenses sobre descuadres o robos hormiga, verificar el cumplimiento de protocolos operativos, respaldar los asientos contables de existencias y disponer de evidencias sólidas ante revisiones fiscales o administrativas.
 
 ---
 

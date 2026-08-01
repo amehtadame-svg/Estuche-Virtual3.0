@@ -15,9 +15,9 @@
 
 ## Historia
 
-**Como** vendedor o usuario de la plataforma,  
-**quiero** contar con una función de búsqueda ágil por coincidencia parcial de nombre o escaneo de código de barras/SKU,  
-**para** reducir el tiempo de localización de mercancía durante el cobro en caja o las consultas de inventario en almacén.
+**Como** vendedor en punto de venta (POS), cajero operativo o encargado de almacén, responsable de la atención rápida al cliente, cotizaciones dinámicas e inspección de existencias en mostrador,  
+**quiero** disponer de un motor de búsqueda de alta velocidad e intuitivo integrado en los módulos operacionales que procese consultas por coincidencia parcial de nombre, categoría comercial o mediante la lectura óptica directa de códigos de barras y SKU,  
+**para** reducir drásticamente los tiempos de respuesta y localización de productos durante el proceso de cobro en caja, evitar colas o demoras en la atención al público, prevenir errores humanos por digitación de precios o códigos incorrectos y verificar de forma instantánea la disponibilidad teórica de mercancía en bodega.
 
 ---
 

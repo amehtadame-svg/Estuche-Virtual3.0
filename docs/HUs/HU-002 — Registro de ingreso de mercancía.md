@@ -15,9 +15,9 @@
 
 ## Historia
 
-**Como** encargado de recepción de mercancía o administrador del almacén central, responsable de la recepción física, verificación de pedidos a proveedores y custodia del stock,  
-**quiero** utilizar un módulo especializado para registrar las recepciones de nuevos lotes de mercancía que ingresan al almacén, indicando las cantidades exactas recibidas, el número de factura o guía de remisión del proveedor y observaciones del estado de la entrega,  
-**para** incrementar de forma matemática y atómica las existencias disponibles en el sistema en tiempo real, mantener sincronizado el inventario físico con los registros digitales, actualizar el costo promedio ponderado de los productos e ir alimentando la bitácora inmutable de recepciones para futuras auditorías.
+**Como** encargado de recepción de mercancía o jefe de almacén central, responsable de la recepción física, verificación contra órdenes de compra y resguardo de existencias,  
+**quiero** contar con un módulo especializado que me permita registrar formalmente los ingresos de nuevos lotes de productos adquiridos a proveedores o provenientes de redistribuciones, capturando las cantidades recibidas, costo unitario de compra, número de factura y proveedor emisor,  
+**para** incrementar de forma matemática y atómica el stock disponible en tiempo real, reflejar la disponibilidad real de mercancía en el punto de venta, actualizar el costo promedio ponderado de los productos y alimentar la bitácora inmutable de auditoría de entradas de almacén.
 
 ---
 

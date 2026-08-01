@@ -15,9 +15,9 @@
 
 ## Historia
 
-**Como** administrador del negocio o supervisor de inventario,  
-**quiero** disponer de una tabla centralizada, paginada y filtrable que despliegue la totalidad del catálogo de productos con su información técnica, existencias disponibles, categorías, precios de venta y costos de adquisición,  
-**para** supervisar en tiempo real el volumen y la valoración económica de los activos almacenados, responder rápidamente a consultas sobre disponibilidad de mercancía y tomar decisiones oportunas de compra y rotación de productos.
+**Como** administrador del negocio, director de operaciones o supervisor de inventario, responsable de la gestión integral del activo corriente, análisis de stock y auditoría de existencias,  
+**quiero** disponer de un panel tabular centralizado, paginado y con filtros avanzados que despliegue la totalidad del catálogo de productos activos con su información técnica, existencias disponibles en bodega, categorías comerciales, precios de venta al público y costos de adquisición,  
+**para** supervisar en tiempo real el volumen y la valoración económica total de los activos almacenados, responder rápidamente a consultas internas o de clientes sobre disponibilidad de mercancía, prevenir quiebres de inventario y tomar decisiones oportunas sobre adquisición, redistribución y rotación de productos.
 
 ---
 

@@ -15,9 +15,9 @@
 
 ## Historia
 
-**Como** administrador del sistema,  
-**quiero** administrar las cuentas de los empleados del negocio y asignarles roles con permisos de acceso específicos (Administrador, Vendedor, Almacenero),  
-**para** restringir el acceso a módulos delicados (como informes financieros, eliminación de productos o configuración de respaldos), prevenir operaciones no autorizadas y resguardar la seguridad del sistema.
+**Como** administrador del sistema o responsable de la seguridad de la información y gestión de identidades, encargado de la asignación de responsabilidades y protección del sistema,  
+**quiero** contar con un módulo de gestión de usuarios y roles que me permita crear cuentas de acceso para el personal, configurar perfiles de permisos granulados (RBAC) otorgando o restringiendo acceso a módulos específicos (ventas, inventario, reportes financieros, mantenimientos), y gestionar el estado activo/inactivo de cada usuario,  
+**para** garantizar que cada empleado interactúe estrictamente dentro del marco de sus funciones laborales, prevenir la manipulación o eliminación no autorizada de información contable o de inventario, proteger datos confidenciales del negocio, cumplir con normativas de seguridad de la información y mantener un registro de auditoría atribuible a cada cuenta.
 
 ---
 

@@ -15,9 +15,9 @@
 
 ## Historia
 
-**Como** administrador del catálogo comercial,  
-**quiero** agrupar múltiples productos individuales existentes en el inventario para crear paquetes promocionales o combos escolares asignándoles un precio global preferencial,  
-**para** impulsar las ventas por paquete en temporadas de alta demanda, ofrecer precios competitivos a los clientes y agilizar la selección de conjuntos de productos en el punto de venta.
+**Como** administrador del catálogo comercial, diseñador de estrategias de marketing e incentivos de ventas, responsable de la empaquetación estacional de productos y optimización del ticket promedio,  
+**quiero** contar con una herramienta dentro del módulo de productos que me permita definir, configurar y registrar paquetes promocionales o combos escolares agrupando dos o más artículos individuales del catálogo activo, asignándoles un nombre representativo, un código promocional único, las cantidades fijadas de cada componente y un precio global de venta preferencial o con descuento,  
+**para** dinamizar las ventas en temporadas clave (como inicio de clases o campañas festivas), incentivar la compra por volumen de artículos complementarios, dar salida a productos de menor rotación empaquetándolos con productos estrella, ofrecer alternativas atractivas y convenientes para los clientes y simplificar el proceso de selección en el punto de venta.
 
 ---
 

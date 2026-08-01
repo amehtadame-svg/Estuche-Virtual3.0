@@ -15,9 +15,9 @@
 
 ## Historia
 
-**Como** administrador del sistema o responsable de TI,  
-**quiero** que la plataforma ejecute respaldos programados automatizados y permita copias manuales a demanda de toda la base de datos,  
-**para** proteger la información contable y de inventarios ante posibles caídas de servidor, fallas de hardware o errores humanos, garantizando la recuperación de datos e imprevistos.
+**Como** administrador del sistema, encargado de TI o responsable de infraestructura tecnológica y ciberseguridad, responsable de la continuidad del negocio, custodia de activos digitales y planes de recuperación ante desastres (DRP),  
+**quiero** que la plataforma ejecute tareas programadas automatizadas para el respaldo periódico, comprimido y cifrado de toda la base de datos centralizada, ofreciendo además una opción para generar y descargar copias de seguridad manuales a demanda desde el panel de control,  
+**para** resguardar la información operativa, financiera, contable y de inventarios ante eventuales caídas del servidor, fallas críticas de hardware, ciberataques (como ransomware) o errores humanos graves, garantizando la restauración ágil y completa del sistema sin pérdida de datos ni interrupciones prolongadas del negocio.
 
 ---
 

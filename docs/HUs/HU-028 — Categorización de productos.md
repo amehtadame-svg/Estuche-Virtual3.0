@@ -15,9 +15,9 @@
 
 ## Historia
 
-**Como** administrador de catálogo,  
-**quiero** crear y estructurar categorías o departamentos comerciales para agrupar los productos del inventario,  
-**para** mantener una organización coherente del catálogo, agilizar los filtros en el punto de venta y evaluar reportes segmentados por familia de productos.
+**Como** administrador del catálogo comercial o arquitecto de información de productos, responsable de la estructuración, navegabilidad, taxonomía y ordenamiento comercial de la oferta del negocio,  
+**quiero** crear, modificar y administrar una estructura jerárquica de categorías y departamentos comerciales que me permita clasificar y agrupar la totalidad de los artículos del inventario en familias de mercancías afines,  
+**para** mantener un catálogo limpio, lógico y bien organizado, agilizar los filtros de selección en las pantallas del punto de venta (POS), facilitar la navegación de los usuarios operativos y hacer posible la emisión de reportes financieros, de inventario y de rotación comercial segmentados por sectores de productos.
 
 ---
 

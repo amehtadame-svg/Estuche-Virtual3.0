@@ -15,9 +15,9 @@
 
 ## Historia
 
-**Como** administrador o encargado de finanzas y tesorería,  
-**quiero** emitir informes detallados con el histórico de compras de mercancía recibidas dentro de un intervalo de fechas específico, pudiendo filtrar por proveedor,  
-**para** controlar los egresos de dinero invertidos en el abastecimiento del almacén, auditar el volumen de compras efectuado a cada proveedor y supervisar la evolución de los costos de adquisición de los productos.
+**Como** administrador del negocio, encargado de finanzas o tesorero, responsable del control de egresos, fiscalización de presupuestos e inversión de capital en inventario,  
+**quiero** emitir informes detallados y consolidados con el histórico de compras de mercancía recibidas dentro de un intervalo de fechas específico, incluyendo filtros por proveedor emisor y estado de entrega,  
+**para** controlar con precisión las salidas de capital destinadas al abastecimiento del almacén, auditar el volumen de compras efectuado a cada distribuidor comercial, evaluar la evolución de los costos unitarios de adquisición y mantener un balance financiero transparente entre egresos e ingresos.
 
 ---
 

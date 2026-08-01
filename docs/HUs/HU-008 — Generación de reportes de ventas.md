@@ -15,13 +15,14 @@
 
 ## Historia
 
-**Como** administrador o director financiero del negocio,  
-**quiero** contar con un generador de reportes de ventas que me permita especificar rangos de fechas flexibles (días, semanas, meses) para calcular y presentar métricas e indicadores de rendimiento comercial,  
-**para** evaluar los ingresos acumulados por ventas, medir el volumen de transacciones ejecutadas, conocer el promedio de consumo de los clientes y fundamentar la toma de decisiones estratégicas en datos estadísticos reales.
+**Como** administrador del negocio, director comercial o analista financiero, responsable de la evaluación del rendimiento económico, análisis de facturación y proyecciones de crecimiento,  
+**quiero** disponer de un generador de reportes de ventas consolidado que me permita seleccionar rangos de fechas flexibles (días, semanas, meses o años) para calcular y presentar métricas consolidadas e indicadores de rendimiento comercial,  
+**para** evaluar los ingresos brutos y netos acumulados por ventas, medir el volumen total de transacciones ejecutadas, analizar el ticket promedio de consumo de los clientes, detectar picos de demanda y fundamentar la toma de decisiones estratégicas en datos estadísticos reales y auditables.
 
 ---
 
 ## Criterios de Aceptación
+
 
 ### CA-008.1 — Selección de rango de fechas de consulta en el reporte
 - **Dado que** me ubico en el módulo de reportes de ventas (`/reports/sales`),
@@ -42,7 +43,6 @@
 - **Dado que** ejecuto el reporte en un rango de fechas en el que no se registraron ventas en la plataforma,
 - **cuando** concluye la consulta en la base de datos,
 - **entonces** el sistema debe presentar todos los contadores numéricos en $0.00 junto al texto: "No se registraron ventas en el período de tiempo seleccionado".
-
 
 ---
 

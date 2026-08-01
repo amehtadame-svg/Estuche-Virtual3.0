@@ -15,9 +15,9 @@
 
 ## Historia
 
-**Como** vendedor o cajero del punto de venta (POS), encargado del cobro al cliente y del procesamiento diario de transacciones comerciales,  
-**quiero** contar con un terminal de ventas ágil e interactivo que me permita buscar o escanear productos, agregarlos a un carrito dinámico, ajustar cantidades, visualizar subtotales e impuestos, seleccionar la forma de pago (efectivo, tarjeta, transferencia) e ingresar el pago recibido,  
-**para** procesar cobros de manera veloz, asegurar un cálculo preciso del total de la compra y del cambio a entregar, registrar oficialmente los ingresos del día, restar de forma automática las mercancías vendidas del inventario y emitir el ticket de compra para el cliente.
+**Como** vendedor o cajero operativo del punto de venta (POS), encargado de la atención comercial directa en mostrador, agilidad en el cobro, gestión de formas de pago, cuadre de caja y emisión de comprobantes fiscales/comerciales,  
+**quiero** disponer de una interfaz de terminal de ventas (POS) interactiva, intuitiva y de alta velocidad que me permita buscar o escanear productos mediante lectura óptica de códigos de barras, agregarlos a un carrito dinámico, ajustar cantidades, visualizar subtotales, calcular impuestos y descuentos aplicables, seleccionar diversos medios de pago (efectivo, tarjeta de débito/crédito, transferencia) e ingresar el monto recibido del cliente,  
+**para** procesar los cobros de forma ágil y sin demoras en filas de caja, garantizar un cálculo transparente e higiénico del total acumulado y del cambio a entregar, registrar oficialmente las transacciones de ingresos en la jornada, descontar automáticamente y de forma atómica las mercancías comercializadas del inventario general y emitir el ticket o factura correspondiente para el cliente.
 
 ---
 
