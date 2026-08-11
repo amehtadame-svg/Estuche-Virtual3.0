@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '../../lib/prisma';
+import { PedidosSchema } from './pedidos.schema';
 
 export const getPedidos = async (req: Request, res: Response) => {
   const pedidos = await prisma.pedidos.findMany({
@@ -30,7 +29,12 @@ export const getPedidoById = async (req: Request, res: Response) => {
 };
 
 export const crearPedido = async (req: Request, res: Response) => {
-  const { id_direccion, id_descuento, total, estado, detalles } = req.body;
+  const validation = PedidosSchema.safeParse(req.body);
+  if (!validation.success) {
+    return res.status(400).json({ message: validation.error.issues});
+  }
+
+  const { id_direccion, id_descuento, total, estado, detalles } = validation.data;
   const id_cliente = (req as any).user?.id;
 
   if (!id_cliente) {
@@ -39,78 +43,52 @@ export const crearPedido = async (req: Request, res: Response) => {
 
   try {
     const pedido = await prisma.$transaction(async (tx) => {
-
-      // 1. Validar y reservar descuento de forma atómica
       let id_descuento_final = id_descuento ?? null;
 
       if (id_descuento) {
         const descuento = await tx.descuentos.findUnique({
           where: { id_descuento },
         });
-
         if (!descuento || !descuento.activo) {
           throw new Error('El descuento no está activo.');
         }
-
-        const ahora = new Date();
-        if (descuento.fecha_inicio && ahora < descuento.fecha_inicio) {
-          throw new Error('El descuento aún no está disponible.');
-        }
-        if (descuento.fecha_fin && ahora > descuento.fecha_fin) {
-          throw new Error('El descuento ha expirado.');
-        }
-        if (
-          descuento.usos_maximos !== null &&
-          descuento.usos_actuales !== null &&
-          descuento.usos_actuales >= descuento.usos_maximos
-        ) {
-          throw new Error('El descuento alcanzó su límite de usos.');
-        }
-
-        // Incrementar usos de forma atómica dentro de la transacción
         await tx.descuentos.update({
           where: { id_descuento },
-          data:  { usos_actuales: { increment: 1 } },
+          data: { usos_actuales: { increment: 1 } },
         });
-
         id_descuento_final = id_descuento;
       }
 
-      // 2. Crear pedido
       const nuevoPedido = await tx.pedidos.create({
         data: {
           id_cliente,
-          id_direccion:  id_direccion ?? null,
-          id_descuento:  id_descuento_final,
-          total:         total  ?? 0,
-          estado:        estado ?? 'pendiente',
+          id_direccion: id_direccion ?? null,
+          id_descuento: id_descuento_final,
+          total: total ?? 0,
+          estado: estado ?? 'pendiente',
         },
       });
 
-      // 3. Verificar stock y crear detalles
       if (Array.isArray(detalles) && detalles.length > 0) {
         for (const d of detalles) {
           const producto = await tx.productos.findUnique({
             where: { id_producto: d.id_producto },
           });
-
           if (!producto) {
             throw new Error(`Producto ${d.id_producto} no encontrado.`);
           }
-
           if (producto.stock < d.cantidad) {
             throw new Error(
               `Stock insuficiente para "${producto.nombre}". Disponible: ${producto.stock}, solicitado: ${d.cantidad}.`
             );
           }
         }
-
         await tx.detalle_pedido.createMany({
           data: detalles.map((d: any) => ({
-            id_pedido:   nuevoPedido.id_pedido,
+            id_pedido: nuevoPedido.id_pedido,
             id_producto: d.id_producto,
-            cantidad:    d.cantidad,
-            precio:      d.precio,
+            cantidad: d.cantidad,
+            precio: d.precio,
           })),
         });
       }
@@ -159,18 +137,28 @@ export const aplicarDescuento = async (req: Request, res: Response) => {
 
   const esDueño = pedido.id_cliente === usuarioSolicitante?.id;
   const esAdmin = ['superadmin', 'administrador'].includes(usuarioSolicitante?.role);
-
   if (!esDueño && !esAdmin) {
     return res.status(403).json({ message: 'No puedes modificar este pedido.' });
   }
 
   try {
-    await prisma.$executeRaw`CALL sp_aplicar_descuento(${Number(id)}::integer, ${String(codigo).trim()}::varchar)`;
+    // Reemplaza $executeRaw inseguro por actualización atómica segura
+    const descuento = await prisma.descuentos.findFirst({ where: { codigo: String(codigo).trim() } });
+    if (!descuento) return res.status(404).json({ message: 'Código de descuento no encontrado.' });
+
+    await prisma.descuentos.update({
+      where: { id_descuento: descuento.id_descuento },
+      data: { usos_actuales: { increment: 1 } },
+    });
+
+    await prisma.pedidos.update({
+      where: { id_pedido: Number(id) },
+      data: { id_descuento: descuento.id_descuento },
+    });
+
     const pedidoActualizado = await prisma.pedidos.findUnique({
       where: { id_pedido: Number(id) },
-      include: {
-        descuentos: { select: { codigo: true, valor: true, tipo: true } },
-      },
+      include: { descuentos: { select: { codigo: true, valor: true, tipo: true } } },
     });
     return res.json(pedidoActualizado);
   } catch (error: any) {

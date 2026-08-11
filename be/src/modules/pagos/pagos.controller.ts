@@ -1,8 +1,5 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
-
+import { prisma } from '../../lib/prisma';
 export const getPagos = async (_req: Request, res: Response) => {
   const pagos = await prisma.pagos.findMany({
     include: {
