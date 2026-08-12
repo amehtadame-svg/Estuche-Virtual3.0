@@ -8,12 +8,12 @@
 
 El stack tecnológico está definido y no puede modificarse sin aprobación explícita del instructor:
 
-| Capa          | Tecnología        |
-| ------------- | ----------------- |
-| Runtime       | Node.js           |
-| Backend       | Express.js        |
-| Frontend      | React + Vite      |
-| Base de datos | MySQL (Workbench) |
+| Capa          | Tecnología           |
+| ------------- | -------------------- |
+| Runtime       | Node.js              |
+| Backend       | Express.js           |
+| Frontend      | React + Vite         |
+| Base de datos | postgress + supabase |
 
 ---
 
@@ -163,7 +163,7 @@ El stack tecnológico está definido y no puede modificarse sin aprobación expl
   * Nombre
   * Precio
   * Stock
-* El precio debe ser mayor a 0
+  * El precio debe ser mayor a 0
 
 ---
 
