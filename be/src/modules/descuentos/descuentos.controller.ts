@@ -1,7 +1,5 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '../../lib/prisma';
 
 export const getDescuentos = async (_req: Request, res: Response) => {
   const descuentos = await prisma.descuentos.findMany({

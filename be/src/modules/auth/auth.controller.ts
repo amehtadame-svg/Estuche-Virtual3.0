@@ -1,11 +1,10 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../../lib/prisma';
 import * as dotenv from 'dotenv';
 dotenv.config();
 
-const prisma = new PrismaClient();
 
 export const login = async (req: Request, res: Response) => {
   const { email, password } = req.body;
@@ -13,7 +12,8 @@ export const login = async (req: Request, res: Response) => {
   const user = await prisma.usuarios.findUnique({ where: { email } });
   if (!user) return res.status(401).json({ message: 'Credenciales inválidas' });
 
-  const valid = password === user.password || await bcrypt.compare(password, user.password);
+
+  const valid = await bcrypt.compare(password, user.password);
   if (!valid) return res.status(401).json({ message: 'Credenciales inválidas' });
 
   const token = jwt.sign(
