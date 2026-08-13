@@ -17,33 +17,35 @@ export default function ForgotPassword() {
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+  e.preventDefault();
+  setLoading(true);
 
-    const token = generateResetToken(email);
+  // Ahora esto le pregunta al backend y espera la respuesta (por eso "await").
+  const token = await generateResetToken(email);
 
-    try {
-      if (token) {
-        await emailjs.send(
-          SERVICE_ID,
-          TEMPLATE_ID,
-          {
-            to_email:    email,
-            reset_token: token,
-          },
-          PUBLIC_KEY
-        );
-      }
-      // Mismo mensaje siempre por seguridad
-      setMessage('Si el correo está registrado, recibirás el token en breve.');
-    } catch (err) {
-      console.error('EmailJS error:', err);
-      setMessage('Hubo un problema al enviar el correo. Intenta de nuevo.');
+  try {
+    if (token) {
+      await emailjs.send(
+        SERVICE_ID,
+        TEMPLATE_ID,
+        {
+          to_email:    email,
+          reset_token: token,
+        },
+        PUBLIC_KEY
+      );
     }
+    // Mismo mensaje siempre por seguridad
+    setMessage('Si el correo está registrado, recibirás el código en breve.');
+  } catch (err) {
+    console.error('EmailJS error:', err);
+    setMessage('Hubo un problema al enviar el correo. Intenta de nuevo.');
+  }
 
-    setLoading(false);
-    setTimeout(() => navigate('/reset-password'), 2500);
-  };
+  setLoading(false);
+  // Le pasamos el correo a la siguiente pantalla para no pedirlo de nuevo.
+  setTimeout(() => navigate('/reset-password', { state: { email } }), 2500);
+};
 
   return (
     <div className="forgot-container">

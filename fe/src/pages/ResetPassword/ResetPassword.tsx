@@ -1,12 +1,20 @@
 import { useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { validarPassword } from '../../utils/validarPassword';
 import './ResetPassword.css';
 
 export default function ResetPassword() {
-  const { resetPassword, validateResetToken } = useAuth();
+  const { resetPassword } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
+  // Si venimos de "Olvidé mi contraseña" o de un bloqueo por 3 intentos,
+  const state = location.state as { email?: string; message?: string } | null;
+  const emailFromState = state?.email ?? '';
+  const lockMessage = state?.message ?? '';
+
+  const [email, setEmail]           = useState(emailFromState);
   const [token, setToken]           = useState('');
   const [password, setPassword]     = useState('');
   const [confirm, setConfirm]       = useState('');
@@ -17,30 +25,31 @@ export default function ResetPassword() {
     e.preventDefault();
     setError('');
 
+    if (!email.trim()) {
+      setError('Ingresa tu correo electrónico.');
+      return;
+    }
+
     // Validar que las contraseñas coincidan
     if (password !== confirm) {
       setError('Las contraseñas no coinciden.');
       return;
     }
-    if (password.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres.');
+
+    // Reglas de contraseña segura (mayúscula, minúscula, número, carácter especial)
+    const passCheck = validarPassword(password);
+    if (!passCheck.valid) {
+      setError(passCheck.message!);
       return;
     }
 
-    // Validar el token antes de intentar el reset
-    const { valid, reason } = validateResetToken(token.toUpperCase());
-    if (!valid) {
-      setError(reason || 'Token inválido.');
-      return;
-    }
-
-    // Ejecutar el cambio de contraseña
-    const ok  = await resetPassword(token.toUpperCase(), password);
+    // El backend valida el código: que exista, no esté usado y no haya expirado.
+    const { ok, message } = await resetPassword(email.trim(), token.toUpperCase(), password);
     if (ok) {
       setSuccess(true);
       setTimeout(() => navigate('/login'), 3000);
     } else {
-      setError('No se pudo cambiar la contraseña. Intenta de nuevo.');
+      setError(message || 'No se pudo cambiar la contraseña. Intenta de nuevo.');
     }
   };
 
@@ -68,7 +77,19 @@ export default function ResetPassword() {
 
         <form onSubmit={handleSubmit}>
           <div className="reset-field">
-            <label htmlFor="token">Token de verificación</label>
+            <label htmlFor="email">Correo electrónico</label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="tucorreo@ejemplo.com"
+              required
+            />
+          </div>
+
+          <div className="reset-field">
+            <label htmlFor="token">Código de verificación</label>
             <input
               id="token"
               type="text"
@@ -79,7 +100,18 @@ export default function ResetPassword() {
               required
             />
           </div>
+          <h2>Nueva contraseña</h2>
+          <p className="reset-subtitle">
+            Ingresa el código que recibiste y tu nueva contraseña.
+          </p>
 
+          {lockMessage && (
+            <p className="reset-error" style={{ marginBottom: '10px' }}>
+              🔒 {lockMessage}
+             </p>
+          )}
+
+          <form onSubmit={handleSubmit}></form>
           <div className="reset-field">
             <label htmlFor="password">Nueva contraseña</label>
             <input
@@ -87,9 +119,12 @@ export default function ResetPassword() {
               type="password"
               value={password}
               onChange={e => setPassword(e.target.value)}
-              placeholder="Mínimo 6 caracteres"
+              placeholder="Mínimo 8 caracteres"
               required
             />
+            <p style={{ fontSize: '0.78rem', color: '#666', margin: '2px 0 0' }}>
+              Debe tener mayúscula, minúscula, número y un carácter especial (!@#$%...).
+            </p>
           </div>
 
           <div className="reset-field">

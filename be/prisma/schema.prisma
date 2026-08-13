@@ -17,6 +17,8 @@ model usuarios {
   direccion                               String?
   rol                                     String                   @default("cliente") @db.VarChar(20)
   fecha_registro                          DateTime?                @default(now()) @db.Timestamp(6)
+  intentos_fallidos                       Int                      @default(0)
+  bloqueado                               Boolean                  @default(false)
   carrito                                 carrito[]
   devoluciones                            devoluciones[]
   direcciones_entrega                     direcciones_entrega[]
@@ -365,4 +367,16 @@ model proveedor_categoria {
   proveedores  proveedores @relation(fields: [id_proveedor], references: [id_proveedor], onDelete: NoAction, onUpdate: NoAction)
 
   @@id([id_proveedor, id_categoria])
+}
+
+model tokens_verificacion {
+  id_token   Int      @id @default(autoincrement())
+  email      String   @db.VarChar(100)
+  token      String   @db.VarChar(10)
+  tipo       String   @db.VarChar(20)
+  usado      Boolean  @default(false)
+  creado_en  DateTime @default(now()) @db.Timestamp(6)
+  expira_en  DateTime @db.Timestamp(6)
+
+  @@index([email, token], map: "idx_tokens_email_token")
 }

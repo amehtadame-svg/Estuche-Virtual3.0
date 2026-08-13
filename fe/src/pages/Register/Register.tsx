@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { validarPassword } from '../../utils/validarPassword';
 import './Register.css';
 
 const Register = () => {
@@ -24,22 +25,23 @@ const Register = () => {
       return;
     }
 
-    if (password.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres.');
-      return;
-    }
+const passCheck = validarPassword(password);
+if (!passCheck.valid) {
+  setError(passCheck.message!);
+  return;
+}
 
-    if (password !== confirmPassword) {
-      setError('Las contraseñas no coinciden.');
-      return;
-    }
+if (password !== confirmPassword) {
+  setError('Las contraseñas no coinciden.');
+  return;
+}
 
-    const ok = await register(name.trim(), email, password);
+const { ok, message } = await register(name.trim(), email, password);
 
-    if (!ok) {
-      setError('El correo ya está registrado o hubo un error.');
-      return;
-    }
+if (!ok) {
+  setError(message || 'El correo ya está registrado o hubo un error.');
+  return;
+}
 
     setSuccess('¡Cuenta creada! Redirigiendo...');
     setTimeout(() => navigate('/cliente'), 1500);
@@ -64,9 +66,12 @@ const Register = () => {
           <input className="register-input" type="password" placeholder="Mínimo 6 caracteres"
             value={password} onChange={e => setPassword(e.target.value)} required />
 
-          <label className="register-label">Confirmar contraseña</label>
-          <input className="register-input" type="password" placeholder="Repite tu contraseña"
-            value={confirmPassword} onChange={e => setConfirm(e.target.value)} required />
+          <label className="register-label">Contraseña</label>
+          <input className="register-input" type="password" placeholder="Mínimo 8 caracteres"
+            value={password} onChange={e => setPassword(e.target.value)} required />
+          <p style={{ fontSize: '0.78rem', color: '#666', margin: '2px 0 10px' }}>
+            Debe tener mayúscula, minúscula, número y un carácter especial (!@#$%...).
+          </p>
 
           {error   && <p className="register-error">⚠️ {error}</p>}
           {success && <p className="register-success">✅ {success}</p>}
