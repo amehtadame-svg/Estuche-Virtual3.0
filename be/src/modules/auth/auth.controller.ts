@@ -3,8 +3,8 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../../lib/prisma';
 import * as dotenv from 'dotenv';
+import { MAX_INTENTOS, TOKEN_EXP_MINUTOS, generarCodigo, validarPassword } from '../../utils/auth.utils';
 dotenv.config();
-
 
 export const login = async (req: Request, res: Response) => {
   const { email, password } = req.body;

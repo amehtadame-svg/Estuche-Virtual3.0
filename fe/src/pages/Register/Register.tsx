@@ -63,15 +63,12 @@ if (!ok) {
             value={email} onChange={e => setEmail(e.target.value)} required />
 
           <label className="register-label">Contraseña</label>
-          <input className="register-input" type="password" placeholder="Mínimo 6 caracteres"
-            value={password} onChange={e => setPassword(e.target.value)} required />
-
-          <label className="register-label">Contraseña</label>
           <input className="register-input" type="password" placeholder="Mínimo 8 caracteres"
             value={password} onChange={e => setPassword(e.target.value)} required />
-          <p style={{ fontSize: '0.78rem', color: '#666', margin: '2px 0 10px' }}>
-            Debe tener mayúscula, minúscula, número y un carácter especial (!@#$%...).
-          </p>
+
+          <label className="register-label">Confirmar contraseña</label>
+          <input className="register-input" type="password" placeholder="Repite tu contraseña"
+            value={confirmPassword} onChange={e => setConfirm(e.target.value)} required />
 
           {error   && <p className="register-error">⚠️ {error}</p>}
           {success && <p className="register-success">✅ {success}</p>}
