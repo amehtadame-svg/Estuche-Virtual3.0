@@ -143,7 +143,7 @@ const resetPassword = async (email: string, token: string, newPassword: string) 
 };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, generateResetToken, validateResetToken, resetPassword }}>
+    <AuthContext.Provider value={{ user, login, register, logout, generateResetToken, resetPassword }}>
       {children}
     </AuthContext.Provider>
   );
