@@ -19,21 +19,21 @@ import ForgotPassword from './pages/ResetPassword/ForgotPassword';
 import ResetPassword  from './pages/ResetPassword/ResetPassword';
 
 // Cliente
-import ClienteDashboard from './pages/Client-dashboard/ClienteDashboard';
+import ClienteDashboard from './pages/Client-dashboard/ClientDashboard';
 
 // Admin
 import AdminDashboard  from './pages/Admin/AdminDashboard';
 import ProductosAD     from './pages/Admin/Products/Products';
 import Pedidos         from './pages/Admin/Orders/Orders';
 import Facturas        from './pages/Admin/Receipt/Receipt';
-import Envios          from './pages/Admin/Depatch/Depatch';
+import Envios          from './pages/Admin/Despatch/Despatch';
 import Proveedores     from './pages/Admin/Provider/Provider';
 import Usuarios        from './pages/Admin/Users/AdminUsers';
 import DetallePedidos from './pages/Admin/order-details/OrderDetails';
 
 // SuperAdmin
 import SuperAdminDashboard from './pages/SuperAdmin/SuperAdminDashboard';
-import Descuentos          from './pages/SuperAdmin/Promotional-code/Promotional-code';
+import Descuentos          from './pages/SuperAdmin/PromotionalCode/PromotionalCode';
 import Pagos               from './pages/SuperAdmin/Payout/Payout';
 import Devoluciones        from './pages/SuperAdmin/Returns/Returns';
 import Reportes            from './pages/SuperAdmin/Reports/Reports';
