@@ -1,7 +1,9 @@
+![Banner Estuche Virtual](./docs/banner-estuche-virtual.svg)
+
 # ESTUCHE VIRTUAL
 
 ![Estado](https://img.shields.io/badge/estado-en%20desarrollo-yellow)
-![Versión](https://img.shields.io/badge/version-1.0-blue)
+![Versión](https://img.shields.io/badge/version-1.6-blue)
 ![Licencia](https://img.shields.io/badge/licencia-academica-green)
 ![Tech](https://img.shields.io/badge/stack-web-orange)
 
