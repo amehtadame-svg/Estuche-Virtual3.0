@@ -20,7 +20,7 @@ export const verifyToken = (req: Request, res: Response, next: NextFunction) => 
 // Solo administrador o superadmin
 export const verifyAdmin = (req: Request, res: Response, next: NextFunction) => {
   const role = (req as any).user?.role;
-  if (role !== 'administrador' && role !== 'superadmin')
+  if (role !== 'admin' && role !== 'superadmin')
     return res.status(403).json({ message: 'Acceso restringido a administradores' });
   next();
 };

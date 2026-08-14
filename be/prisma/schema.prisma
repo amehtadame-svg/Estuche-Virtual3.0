@@ -8,361 +8,476 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model usuarios {
-  id_usuario                              Int                      @id @default(autoincrement())
-  nombre                                  String                   @db.VarChar(100)
-  email                                   String                   @unique @db.VarChar(100)
-  password                                String                   @db.VarChar(255)
-  telefono                                String?                  @db.VarChar(20)
-  direccion                               String?
-  rol                                     String                   @default("cliente") @db.VarChar(20)
-  fecha_registro                          DateTime?                @default(now()) @db.Timestamp(6)
-  carrito                                 carrito[]
-  devoluciones                            devoluciones[]
-  direcciones_entrega                     direcciones_entrega[]
-  envios                                  envios[]
-  facturas                                facturas[]
-  facturas_facturas_id_empleadoTousuarios facturas[]               @relation("facturas_id_empleadoTousuarios")
-  historial_precios                       historial_precios[]
-  lista_deseos                            lista_deseos[]
-  movimientos_inventario                  movimientos_inventario[]
-  notificaciones                          notificaciones[]
-  pagos                                   pagos[]
-  pedidos_cliente                         pedidos[]                @relation("PedidoCliente")
-  pedidos_pedidos_id_repartidorTousuarios pedidos[]                @relation("pedidos_id_repartidorTousuarios")
-  rese_as                                 rese_as[]
+enum Role {
+  client
+  employee
+  delivery
+  admin
+  superadmin
 }
 
-model pedidos {
-  id_pedido                                Int                  @id @default(autoincrement())
-  id_cliente                               Int?
-  id_repartidor                            Int?
-  id_descuento                             Int?
-  id_direccion                             Int?
-  fecha_pedido                             DateTime?            @default(now()) @db.Timestamp(6)
-  estado                                   String               @default("pendiente") @db.VarChar(30)
-  total                                    Decimal              @default(0) @db.Decimal(10, 2)
-  updated_at                               DateTime?            @default(now()) @db.Timestamp(6)
-  detalle_pedido                           detalle_pedido[]
-  devoluciones                             devoluciones[]
-  envios                                   envios[]
-  facturas                                 facturas?
-  clientes                                 usuarios?            @relation("PedidoCliente", fields: [id_cliente], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction)
-  descuentos                               descuentos?          @relation(fields: [id_descuento], references: [id_descuento], onDelete: NoAction, onUpdate: NoAction)
-  direcciones_entrega                      direcciones_entrega? @relation(fields: [id_direccion], references: [id_direccion], onDelete: NoAction, onUpdate: NoAction)
-  usuarios_pedidos_id_repartidorTousuarios usuarios?            @relation("pedidos_id_repartidorTousuarios", fields: [id_repartidor], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction)
-
-  @@index([id_cliente], map: "idx_pedidos_cliente")
-  @@index([id_repartidor], map: "idx_pedidos_repartidor")
+enum OrderStatus {
+  pending
+  paid
+  preparing
+  shipped
+  delivered
+  canceled
+  returned
 }
 
-model productos {
-  id_producto            Int                      @id @default(autoincrement())
-  nombre                 String                   @db.VarChar(100)
-  descripcion            String?
-  precio                 Decimal                  @db.Decimal(10, 2)
-  stock                  Int                      @default(0)
-  stock_minimo           Int                      @default(5)
-  id_categoria           Int?
-  id_proveedor           Int?
-  fecha_registro         DateTime?                @default(now()) @db.Timestamp(6)
-  carrito                carrito[]
-  detalle_factura        detalle_factura[]
-  detalle_pedido         detalle_pedido[]
-  devoluciones           devoluciones[]
-  historial_precios      historial_precios[]
-  imagenes_producto      imagenes_producto[]
-  lista_deseos           lista_deseos[]
-  movimientos_inventario movimientos_inventario[]
-  categorias             categorias?              @relation(fields: [id_categoria], references: [id_categoria], onDelete: NoAction, onUpdate: NoAction)
-  proveedores            proveedores?             @relation(fields: [id_proveedor], references: [id_proveedor], onDelete: NoAction, onUpdate: NoAction)
-  rese_as                rese_as[]
-
-  @@index([id_categoria], map: "idx_productos_categoria")
-  @@index([id_proveedor], map: "idx_productos_proveedor")
+enum PaymentStatus {
+  pending
+  approved
+  rejected
+  refunded
 }
 
-model categorias {
-  id_categoria        Int                   @id @default(autoincrement())
-  nombre              String                @db.VarChar(100)
-  descripcion         String?
-  productos           productos[]
-  proveedor_categoria proveedor_categoria[]
+enum ReceiptStatus {
+  pending
+  paid
+  partial
+  overdue
+  voided
 }
 
-model proveedores {
-  id_proveedor        Int                   @id @default(autoincrement())
-  nombre              String                @db.VarChar(100)
-  telefono            String?               @db.VarChar(20)
-  email               String?               @db.VarChar(100)
-  direccion           String?
-  productos           productos[]
-  proveedor_categoria proveedor_categoria[]
+enum DespatchStatus {
+  in_transit
+  delivered
+  returned
+  canceled
 }
 
-model detalle_pedido {
-  id_detalle  Int       @id @default(autoincrement())
-  id_pedido   Int
-  id_producto Int
-  cantidad    Int
-  precio      Decimal   @db.Decimal(10, 2)
-  subtotal    Decimal?  @default(dbgenerated("((cantidad)::numeric * precio)")) @db.Decimal(10, 2)
-  pedidos     pedidos   @relation(fields: [id_pedido], references: [id_pedido], onDelete: NoAction, onUpdate: NoAction)
-  productos   productos @relation(fields: [id_producto], references: [id_producto], onDelete: NoAction, onUpdate: NoAction)
-
-  @@index([id_pedido], map: "idx_detalle_pedido")
+enum ReturnStatus {
+  requested
+  approved
+  rejected
+  refunded
 }
 
-model envios {
-  id_envio        Int       @id @default(autoincrement())
-  id_pedido       Int
-  fecha_envio     DateTime? @default(now()) @db.Timestamp(6)
-  fecha_entregado DateTime? @db.Timestamp(6)
-  estado          String    @default("en camino") @db.VarChar(30)
-  id_repartidor   Int?
-  direccion       String?
-  pedidos         pedidos   @relation(fields: [id_pedido], references: [id_pedido], onDelete: NoAction, onUpdate: NoAction)
-  empleados       usuarios? @relation(fields: [id_repartidor], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction)
-
-  @@index([id_pedido], map: "idx_envios_pedido")
+enum MovementType {
+  in
+  out
+  adjustment
 }
 
-model movimientos_inventario {
-  id_movimiento Int       @id @default(autoincrement())
-  id_producto   Int
-  tipo          String    @db.VarChar(20)
-  cantidad      Int
-  motivo        String?
-  id_usuario    Int?
-  fecha         DateTime? @default(now()) @db.Timestamp(6)
-  productos     productos @relation(fields: [id_producto], references: [id_producto], onDelete: NoAction, onUpdate: NoAction)
-  usuarios      usuarios? @relation(fields: [id_usuario], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction)
-
-  @@index([id_producto], map: "idx_movimientos_producto")
+enum PromotionalCodeType {
+  percentage
+  fixed
 }
 
-model facturas {
-  id_factura                              Int               @id @default(autoincrement())
-  id_cliente                              Int?
-  id_empleado                             Int?
-  id_pedido                               Int?              @unique(map: "uq_factura_pedido")
-  fecha                                   DateTime?         @default(now()) @db.Timestamp(6)
-  total                                   Decimal           @default(0) @db.Decimal(10, 2)
-  estado_pago                             String            @default("pendiente") @db.VarChar(20)
-  detalle_factura                         detalle_factura[]
-  clientes                                usuarios?         @relation(fields: [id_cliente], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction)
-  usuarios_facturas_id_empleadoTousuarios usuarios?         @relation("facturas_id_empleadoTousuarios", fields: [id_empleado], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction)
-  pedidos                                 pedidos?          @relation(fields: [id_pedido], references: [id_pedido], onDelete: NoAction, onUpdate: NoAction)
-  pagos                                   pagos[]
+model User {
+  id                 String   @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  email              String   @unique @db.VarChar(255)
+  fullName           String   @db.VarChar(150) @map("full_name")
+  hashedPassword     String   @db.VarChar(255) @map("hashed_password")
+  passwordUpdatedAt  DateTime? @default(now()) @map("password_updated_at")
+  mustChangePassword Boolean  @default(false) @map("must_change_password")
+  phone              String?  @db.VarChar(30)
+  address            String?  @db.VarChar(255)
+  role               Role     @default(client)
+  isActive           Boolean  @default(true) @map("is_active")
+  isEmailVerified    Boolean  @default(false) @map("is_email_verified")
+  mfaEnabled         Boolean  @default(false) @map("mfa_enabled")
+  mfaSecret          String?  @db.VarChar(255) @map("mfa_secret")
+  failedAttempts     Int      @default(0) @map("failed_attempts")
+  lockedUntil        DateTime? @map("locked_until")
+  lastLogin          DateTime? @map("last_login")
+  dataConsentAt      DateTime? @map("data_consent_at")
+  deletedAt          DateTime? @map("deleted_at")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @default(now()) @map("updated_at")
 
-  @@index([id_cliente], map: "idx_facturas_cliente")
-  @@index([id_empleado], map: "idx_facturas_empleado")
-  @@index([id_pedido], map: "idx_facturas_pedido")
+  shopping          Shopping[]
+  returns           OrderReturn[]
+  deliveryAddresses DeliveryAddress[]
+  shipments         Despatch[]
+  receipts          Receipt[]
+  receiptsAsEmployee Receipt[] @relation("ReceiptEmployee")
+  priceHistory      PriceHistory[]
+  wishlist          Wishlist[]
+  inventoryMovements InventoryMovement[]
+  notifications     Notification[]
+  payouts           Payout[]
+  ordersAsCustomer  Order[] @relation("OrderCustomer")
+  ordersAsDriver    Order[] @relation("OrderDriver")
+  reviews           Review[]
+  securityEvents    SecurityEvent[]
+
+  @@index([lockedUntil], map: "idx_users_locked_until")
+  @@index([deletedAt], map: "idx_users_deleted_at")
+  @@map("users")
 }
 
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model carrito {
-  id_carrito     Int       @id @default(autoincrement())
-  id_usuario     Int
-  id_producto    Int
-  cantidad       Int
-  fecha_agregado DateTime? @default(now()) @db.Timestamp(6)
-  productos      productos @relation(fields: [id_producto], references: [id_producto], onDelete: NoAction, onUpdate: NoAction)
-  usuarios       usuarios  @relation(fields: [id_usuario], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction)
+model Order {
+  id               String      @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  customerId       String?     @db.Uuid @map("customer_id")
+  driverId         String?     @db.Uuid @map("driver_id")
+  promotionalCodeId String?    @db.Uuid @map("promotional_code_id")
+  deliveryAddressId String?    @db.Uuid @map("delivery_address_id")
+  orderDate        DateTime?   @default(now()) @map("order_date")
+  status           OrderStatus @default(pending)
+  total            Decimal     @default(0) @db.Decimal(14, 2)
+  updatedAt        DateTime?   @default(now()) @map("updated_at")
 
-  @@unique([id_usuario, id_producto])
-  @@index([id_usuario], map: "idx_carrito_usuario")
+  details          OrderDetail[]
+  returns          OrderReturn[]
+  shipments        Despatch[]
+  receipt          Receipt?
+  customer         User?           @relation("OrderCustomer", fields: [customerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  promotionalCode  PromotionalCode? @relation(fields: [promotionalCodeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  deliveryAddress  DeliveryAddress? @relation(fields: [deliveryAddressId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  driver           User?           @relation("OrderDriver", fields: [driverId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([customerId], map: "idx_orders_customer")
+  @@index([driverId], map: "idx_orders_driver")
+  @@map("orders")
 }
 
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model descuentos {
-  id_descuento  Int       @id @default(autoincrement())
-  codigo        String    @unique @db.VarChar(50)
-  descripcion   String?
-  tipo          String    @db.VarChar(20)
-  valor         Decimal   @db.Decimal(10, 2)
-  minimo_compra Decimal?  @default(0) @db.Decimal(10, 2)
-  fecha_inicio  DateTime  @db.Date
-  fecha_fin     DateTime  @db.Date
-  usos_maximos  Int?
-  usos_actuales Int?      @default(0)
-  activo        Boolean?  @default(true)
-  pedidos       pedidos[]
+model Product {
+  id          String   @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  name        String   @db.VarChar(150)
+  description String?  @db.VarChar(500)
+  price       Decimal  @db.Decimal(14, 2)
+  stock       Int      @default(0)
+  stockMin    Int      @default(5) @map("stock_min")
+  categoryId  String?  @db.Uuid @map("category_id")
+  supplierId  String?  @db.Uuid @map("supplier_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  shopping           Shopping[]
+  receiptItems       ReceiptItem[]
+  details            OrderDetail[]
+  returns            OrderReturn[]
+  priceHistory       PriceHistory[]
+  images             ProductImage[]
+  wishlist           Wishlist[]
+  inventoryMovements InventoryMovement[]
+  category           Category?  @relation(fields: [categoryId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  supplier           Provider?  @relation(fields: [supplierId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  reviews            Review[]
+
+  @@index([categoryId], map: "idx_products_category")
+  @@index([supplierId], map: "idx_products_supplier")
+  @@map("products")
 }
 
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model detalle_factura {
-  id_detalle  Int       @id @default(autoincrement())
-  id_factura  Int
-  id_producto Int
-  cantidad    Int
-  precio      Decimal   @db.Decimal(10, 2)
-  subtotal    Decimal?  @default(dbgenerated("((cantidad)::numeric * precio)")) @db.Decimal(10, 2)
-  facturas    facturas  @relation(fields: [id_factura], references: [id_factura], onDelete: NoAction, onUpdate: NoAction)
-  productos   productos @relation(fields: [id_producto], references: [id_producto], onDelete: NoAction, onUpdate: NoAction)
+model Category {
+  id          String   @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  name        String   @db.VarChar(150)
+  description String?  @db.VarChar(500)
+  products    Product[]
+  providerCategories ProviderCategory[]
 
-  @@index([id_factura], map: "idx_detalle_factura")
+  @@map("categories")
 }
 
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model devoluciones {
-  id_devolucion    Int       @id @default(autoincrement())
-  id_pedido        Int
-  id_cliente       Int
-  id_producto      Int
-  cantidad         Int
-  motivo           String
-  estado           String    @default("solicitada") @db.VarChar(30)
-  estado_producto  String    @default("bueno") @db.VarChar(30)
-  reembolso        Decimal?  @default(0) @db.Decimal(10, 2)
-  fecha_solicitud  DateTime? @default(now()) @db.Timestamp(6)
-  fecha_resolucion DateTime? @db.Timestamp(6)
-  updated_at       DateTime? @default(now()) @db.Timestamp(6)
-  usuarios         usuarios  @relation(fields: [id_cliente], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction)
-  pedidos          pedidos   @relation(fields: [id_pedido], references: [id_pedido], onDelete: NoAction, onUpdate: NoAction)
-  productos        productos @relation(fields: [id_producto], references: [id_producto], onDelete: NoAction, onUpdate: NoAction)
+model Provider {
+  id       String  @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  name     String  @db.VarChar(150)
+  phone    String? @db.VarChar(30)
+  email    String? @db.VarChar(255)
+  address  String? @db.VarChar(255)
+  products Product[]
+  providerCategories ProviderCategory[]
 
-  @@index([id_pedido], map: "idx_devoluciones_pedido")
+  @@map("providers")
 }
 
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model direcciones_entrega {
-  id_direccion    Int       @id @default(autoincrement())
-  id_usuario      Int
-  nombre_contacto String?   @db.VarChar(100)
-  telefono        String?   @db.VarChar(20)
-  direccion       String
-  ciudad          String?   @db.VarChar(100)
-  departamento    String?   @db.VarChar(100)
-  principal       Boolean?  @default(false)
-  usuarios        usuarios  @relation(fields: [id_usuario], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction)
-  pedidos         pedidos[]
+model OrderDetail {
+  id        String  @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  orderId   String  @db.Uuid @map("order_id")
+  productId String  @db.Uuid @map("product_id")
+  quantity  Int
+  unitPrice Decimal @db.Decimal(14, 2) @map("unit_price")
+  subtotal  Decimal? @db.Decimal(14, 2)
 
-  @@index([id_usuario], map: "idx_direcciones_usuario")
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  product Product @relation(fields: [productId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([orderId], map: "idx_order_details_order")
+  @@map("order_details")
 }
 
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model historial_precios {
-  id_historial    Int       @id @default(autoincrement())
-  id_producto     Int
-  precio_anterior Decimal   @db.Decimal(10, 2)
-  precio_nuevo    Decimal   @db.Decimal(10, 2)
-  fecha_cambio    DateTime? @default(now()) @db.Timestamp(6)
-  id_usuario      Int?
-  productos       productos @relation(fields: [id_producto], references: [id_producto], onDelete: NoAction, onUpdate: NoAction)
-  usuarios        usuarios? @relation(fields: [id_usuario], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction)
+model Despatch {
+  id          String          @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  orderId     String          @db.Uuid @map("order_id")
+  shipDate    DateTime?       @default(now()) @map("ship_date")
+  deliveredAt DateTime?       @map("delivered_at")
+  status      DespatchStatus  @default(in_transit)
+  driverId    String?         @db.Uuid @map("driver_id")
+  address     String?         @db.VarChar(255)
 
-  @@index([id_producto], map: "idx_historial_producto")
+  order   Order @relation(fields: [orderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  driver  User? @relation(fields: [driverId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([orderId], map: "idx_despatches_order")
+  @@map("despatches")
 }
 
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model imagenes_producto {
-  id_imagen   Int       @id @default(autoincrement())
-  id_producto Int
-  url         String
-  nombre      String?   @db.VarChar(150)
-  principal   Boolean?  @default(false)
-  orden       Int?      @default(1)
-  productos   productos @relation(fields: [id_producto], references: [id_producto], onDelete: NoAction, onUpdate: NoAction)
+model InventoryMovement {
+  id        String        @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  productId String        @db.Uuid @map("product_id")
+  type      MovementType
+  quantity  Int
+  reason    String?       @db.VarChar(500)
+  userId    String?       @db.Uuid @map("user_id")
+  date      DateTime?     @default(now())
 
-  @@index([id_producto], map: "idx_imagenes_producto")
+  product Product @relation(fields: [productId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user    User?   @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([productId], map: "idx_inventory_movements_product")
+  @@map("inventory_movements")
 }
 
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model lista_deseos {
-  id_deseo       Int       @id @default(autoincrement())
-  id_usuario     Int
-  id_producto    Int
-  fecha_agregado DateTime? @default(now()) @db.Timestamp(6)
-  productos      productos @relation(fields: [id_producto], references: [id_producto], onDelete: NoAction, onUpdate: NoAction)
-  usuarios       usuarios  @relation(fields: [id_usuario], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction)
+model Receipt {
+  id             String        @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  receiptNumber  Int           @unique @default(autoincrement()) @map("receipt_number")
+  customerId     String?       @db.Uuid @map("customer_id")
+  employeeId     String?       @db.Uuid @map("employee_id")
+  orderId        String?       @unique @db.Uuid @map("order_id")
+  date           DateTime?     @default(now())
+  total          Decimal       @default(0) @db.Decimal(14, 2)
+  paymentStatus  ReceiptStatus @default(pending) @map("payment_status")
 
-  @@unique([id_usuario, id_producto])
-  @@index([id_usuario], map: "idx_lista_deseos_usuario")
+  receiptItems ReceiptItem[]
+  customer     User?  @relation(fields: [customerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  employee     User?  @relation("ReceiptEmployee", fields: [employeeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  order        Order? @relation(fields: [orderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  payouts      Payout[]
+
+  @@index([customerId], map: "idx_receipts_customer")
+  @@index([employeeId], map: "idx_receipts_employee")
+  @@index([orderId], map: "idx_receipts_order")
+  @@map("receipts")
 }
 
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model notificaciones {
-  id_notificacion Int       @id @default(autoincrement())
-  id_usuario      Int
-  titulo          String    @db.VarChar(150)
-  mensaje         String
-  tipo            String    @db.VarChar(30)
-  leida           Boolean?  @default(false)
-  fecha           DateTime? @default(now()) @db.Timestamp(6)
-  usuarios        usuarios  @relation(fields: [id_usuario], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction)
+model Shopping {
+  id        String   @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  userId    String   @db.Uuid @map("user_id")
+  productId String   @db.Uuid @map("product_id")
+  quantity  Int
+  addedAt   DateTime? @default(now()) @map("added_at")
 
-  @@index([id_usuario], map: "idx_notificaciones_usuario")
+  product Product @relation(fields: [productId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user    User    @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([userId, productId], map: "shopping_user_product_unique")
+  @@index([userId], map: "idx_shopping_user")
+  @@map("shopping")
 }
 
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model pagos {
-  id_pago            Int       @id @default(autoincrement())
-  id_factura         Int
-  id_usuario         Int
-  pasarela           String    @db.VarChar(50)
-  id_transaccion     String    @unique @db.VarChar(255)
-  estado             String    @default("pendiente") @db.VarChar(30)
-  metodo_pago        String?   @db.VarChar(50)
-  monto              Decimal   @db.Decimal(10, 2)
-  moneda             String    @default("COP") @db.VarChar(10)
-  fecha_pago         DateTime? @default(now()) @db.Timestamp(6)
-  fecha_confirmacion DateTime? @db.Timestamp(6)
-  token_pasarela     String?   @db.VarChar(255)
-  facturas           facturas  @relation(fields: [id_factura], references: [id_factura], onDelete: NoAction, onUpdate: NoAction)
-  usuarios           usuarios  @relation(fields: [id_usuario], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction)
+model PromotionalCode {
+  id           String              @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  code         String              @unique @db.VarChar(50)
+  description  String?             @db.VarChar(500)
+  type         PromotionalCodeType
+  value        Decimal             @db.Decimal(14, 2)
+  minPurchase  Decimal?            @default(0) @db.Decimal(14, 2) @map("min_purchase")
+  startDate    DateTime            @db.Date @map("start_date")
+  endDate      DateTime            @db.Date @map("end_date")
+  maxUses      Int?                @map("max_uses")
+  currentUses  Int?                @default(0) @map("current_uses")
+  active       Boolean?            @default(true)
+  version      Int                 @default(0)
+  orders       Order[]
 
-  @@index([id_factura], map: "idx_pagos_factura")
-  @@index([id_usuario], map: "idx_pagos_usuario")
+  @@map("promotional_codes")
 }
 
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model reportes_ventas {
-  id_reporte         Int       @id @default(autoincrement())
-  fecha              DateTime  @unique @db.Date
-  total_pedidos      Int       @default(0)
-  pedidos_entregados Int       @default(0)
-  pedidos_cancelados Int       @default(0)
-  total_vendido      Decimal   @default(0) @db.Decimal(12, 2)
-  total_pagado       Decimal   @default(0) @db.Decimal(12, 2)
-  total_reembolsado  Decimal   @default(0) @db.Decimal(12, 2)
-  productos_vendidos Int       @default(0)
-  clientes_nuevos    Int       @default(0)
-  fecha_generado     DateTime? @default(now()) @db.Timestamp(6)
+model ReceiptItem {
+  id        String  @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  receiptId String  @db.Uuid @map("receipt_id")
+  productId String  @db.Uuid @map("product_id")
+  quantity  Int
+  unitPrice Decimal @db.Decimal(14, 2) @map("unit_price")
+  subtotal  Decimal? @db.Decimal(14, 2)
 
-  @@index([fecha], map: "idx_reportes_fecha")
+  receipt Receipt @relation(fields: [receiptId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  product Product @relation(fields: [productId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([receiptId], map: "idx_receipt_items_receipt")
+  @@map("receipt_items")
 }
 
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model rese_as {
-  id_rese_a    Int       @id @default(autoincrement()) @map("id_reseña")
-  id_producto  Int
-  id_usuario   Int
-  calificacion Int
-  comentario   String?
-  fecha        DateTime? @default(now()) @db.Timestamp(6)
-  productos    productos @relation(fields: [id_producto], references: [id_producto], onDelete: NoAction, onUpdate: NoAction)
-  usuarios     usuarios  @relation(fields: [id_usuario], references: [id_usuario], onDelete: NoAction, onUpdate: NoAction)
+model OrderReturn {
+  id              String       @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  orderId         String       @db.Uuid @map("order_id")
+  customerId      String       @db.Uuid @map("customer_id")
+  productId       String       @db.Uuid @map("product_id")
+  quantity        Int
+  reason          String       @db.VarChar(500)
+  status          ReturnStatus @default(requested)
+  productCondition String      @default("good") @db.VarChar(30) @map("product_condition")
+  refund          Decimal?     @default(0) @db.Decimal(14, 2)
+  requestedAt     DateTime?    @default(now()) @map("requested_at")
+  resolvedAt      DateTime?    @map("resolved_at")
+  updatedAt       DateTime?    @default(now()) @map("updated_at")
 
-  @@unique([id_producto, id_usuario])
-  @@index([id_producto], map: "idx_reseñas_producto")
-  @@map("reseñas")
+  customer User    @relation(fields: [customerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  order    Order   @relation(fields: [orderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  product  Product @relation(fields: [productId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([orderId], map: "idx_returns_order")
+  @@map("returns")
 }
 
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model proveedor_categoria {
-  id_proveedor Int
-  id_categoria Int
-  categorias   categorias  @relation(fields: [id_categoria], references: [id_categoria], onDelete: NoAction, onUpdate: NoAction)
-  proveedores  proveedores @relation(fields: [id_proveedor], references: [id_proveedor], onDelete: NoAction, onUpdate: NoAction)
+model DeliveryAddress {
+  id           String   @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  userId       String   @db.Uuid @map("user_id")
+  contactName  String?  @db.VarChar(150) @map("contact_name")
+  phone        String?  @db.VarChar(30)
+  address      String   @db.VarChar(255)
+  city         String?  @db.VarChar(150)
+  state        String?  @db.VarChar(150)
+  isPrimary    Boolean? @default(false) @map("is_primary")
 
-  @@id([id_proveedor, id_categoria])
+  user   User    @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  orders Order[]
+
+  @@index([userId], map: "idx_delivery_addresses_user")
+  @@map("delivery_addresses")
+}
+
+model PriceHistory {
+  id            String   @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  productId     String   @db.Uuid @map("product_id")
+  previousPrice Decimal  @db.Decimal(14, 2) @map("previous_price")
+  newPrice      Decimal  @db.Decimal(14, 2) @map("new_price")
+  changedAt     DateTime? @default(now()) @map("changed_at")
+  userId        String?  @db.Uuid @map("user_id")
+
+  product Product @relation(fields: [productId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user    User?   @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([productId], map: "idx_price_history_product")
+  @@map("price_history")
+}
+
+model ProductImage {
+  id        String   @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  productId String   @db.Uuid @map("product_id")
+  url       String   @db.VarChar(500)
+  name      String?  @db.VarChar(150)
+  isPrimary Boolean? @default(false) @map("is_primary")
+  sortOrder Int?     @default(1) @map("sort_order")
+
+  product Product @relation(fields: [productId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([productId], map: "idx_product_images_product")
+  @@map("product_images")
+}
+
+model Wishlist {
+  id        String    @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  userId    String    @db.Uuid @map("user_id")
+  productId String    @db.Uuid @map("product_id")
+  addedAt   DateTime? @default(now()) @map("added_at")
+
+  product Product @relation(fields: [productId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user    User    @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([userId, productId], map: "wishlist_user_product_unique")
+  @@index([userId], map: "idx_wishlist_user")
+  @@map("wishlist")
+}
+
+model Notification {
+  id        String    @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  userId    String    @db.Uuid @map("user_id")
+  title     String    @db.VarChar(150)
+  message   String    @db.VarChar(500)
+  type      String    @db.VarChar(50)
+  isRead    Boolean?  @default(false) @map("is_read")
+  date      DateTime? @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([userId], map: "idx_notifications_user")
+  @@map("notifications")
+}
+
+model Payout {
+  id              String        @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  receiptId       String        @db.Uuid @map("receipt_id")
+  userId          String        @db.Uuid @map("user_id")
+  gateway         String        @db.VarChar(50)
+  transactionId   String        @unique @db.VarChar(255) @map("transaction_id")
+  status          PaymentStatus @default(pending)
+  method          String?       @db.VarChar(50)
+  amount          Decimal       @db.Decimal(14, 2)
+  currency        String        @default("COP") @db.VarChar(10)
+  paidAt          DateTime?     @default(now()) @map("paid_at")
+  confirmedAt     DateTime?     @map("confirmed_at")
+  gatewayToken    String?       @db.VarChar(255) @map("gateway_token")
+
+  receipt Receipt @relation(fields: [receiptId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user    User    @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([receiptId], map: "idx_payouts_receipt")
+  @@index([userId], map: "idx_payouts_user")
+  @@map("payouts")
+}
+
+model Report {
+  id               String   @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  date             DateTime @unique @db.Date
+  totalOrders      Int      @default(0) @map("total_orders")
+  deliveredOrders  Int      @default(0) @map("delivered_orders")
+  canceledOrders   Int      @default(0) @map("canceled_orders")
+  totalSold        Decimal  @default(0) @db.Decimal(14, 2) @map("total_sold")
+  totalPaid        Decimal  @default(0) @db.Decimal(14, 2) @map("total_paid")
+  totalRefunded    Decimal  @default(0) @db.Decimal(14, 2) @map("total_refunded")
+  productsSold     Int      @default(0) @map("products_sold")
+  newCustomers     Int      @default(0) @map("new_customers")
+  generatedAt      DateTime? @default(now()) @map("generated_at")
+
+  @@index([date], map: "idx_reports_date")
+  @@map("reports")
+}
+
+model Review {
+  id        String    @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  productId String    @db.Uuid @map("product_id")
+  userId    String    @db.Uuid @map("user_id")
+  rating    Int
+  comment   String?   @db.VarChar(1000)
+  date      DateTime? @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  user    User    @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([productId, userId], map: "review_product_user_unique")
+  @@index([productId], map: "idx_reviews_product")
+  @@map("reviews")
+}
+
+model ProviderCategory {
+  providerId String   @db.Uuid @map("provider_id")
+  categoryId String   @db.Uuid @map("category_id")
+
+  category Category @relation(fields: [categoryId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  provider Provider @relation(fields: [providerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([providerId, categoryId], name: "provider_category_pkey")
+  @@map("provider_categories")
+}
+
+model SecurityEvent {
+  id        String   @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  userId    String?  @db.Uuid @map("user_id")
+  type      String   @db.VarChar(50)
+  ip        String?  @db.VarChar(45)
+  userAgent String?  @db.VarChar(255) @map("user_agent")
+  detail    Json?
+  success   Boolean  @default(true)
+  date      DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([userId], map: "idx_security_events_user")
+  @@index([type, date], map: "idx_security_events_type_date")
+  @@index([ip, date], map: "idx_security_events_ip_date")
+  @@map("security_events")
 }
