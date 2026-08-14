@@ -1,4 +1,69 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* Typography */
+  --font-display: "Sora", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Fraunces", ui-serif, Georgia, serif;
+
+  /* Brand palette */
+  --color-grape-50: #faf5ff;
+  --color-grape-100: #f3e8ff;
+  --color-grape-200: #ead6ff;
+  --color-grape-300: #d8b4fe;
+  --color-grape-400: #c97bff;
+  --color-grape-500: #aa3bff;
+  --color-grape-600: #9333ea;
+  --color-grape-700: #8b1fe8;
+  --color-grape-800: #6d28d9;
+  --color-grape-900: #581c87;
+  --color-grape-950: #3b0764;
+
+  /* Dark surfaces */
+  --color-night-950: #0e0b14;
+  --color-night-900: #121212;
+  --color-night-850: #17141f;
+  --color-night-800: #1e1e1e;
+  --color-night-700: #28242f;
+  --color-night-600: #38333f;
+
+  /* Text and neutral colors */
+  --color-ink-950: #08060d;
+  --color-ink-700: #433d4d;
+  --color-ink-500: #6b6375;
+  --color-ink-300: #a8a2b3;
+  --color-ink-200: #cfccd4;
+  --color-ink-100: #e5e4e7;
+  --color-cloud: #faf9fc;
+
+  /* Shared animations */
+  --animate-marquee: marquee 30s linear infinite;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-float-slow: float 9s ease-in-out infinite;
+  --animate-spin-slow: spin 14s linear infinite;
+
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+
+    50% {
+      transform: translateY(-14px);
+    }
+  }
+}
 /* ── RESET BASE ─────────────────────────────────────── */
 *, *::before, *::after {
   box-sizing: border-box;
@@ -229,3 +294,21 @@ body.dark-mode code {
 
 body.dark-mode .logo_estuche_limpio { display: none; } /* modo oscuro: solo logo blanco */
 body.dark-mode .logo-dark  { display: block; }
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  letter-spacing: 0.01em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+::selection {
+  background: rgba(170, 59, 255, 0.25);
+  color: inherit;
+}

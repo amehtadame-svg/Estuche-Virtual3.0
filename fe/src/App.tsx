@@ -3,6 +3,7 @@ import { AuthProvider }  from './context/AuthContext';
 import { CartProvider }  from './context/CartContext';
 import ProtectedRoute    from './components/ui/ProtectedRoute';
 import Header            from './components/layout/Header';
+import AnnouncementBar from './components/layout/AnnouncementBar';
 import Footer            from './components/layout/Footer';
 
 // Páginas públicas
@@ -44,6 +45,7 @@ function App() {
     <AuthProvider>
       <CartProvider>
         <BrowserRouter>
+          <AnnouncementBar />
           <Header />
           <Routes>
 
