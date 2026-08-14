@@ -1,4 +1,4 @@
-const getBaseURL = () => {
+const getBaseUrl = () => {
   const host = window.location.host;
   if (host.includes('.app.github.dev')) {
     return `https://${host.replace(/-(3000|5173|4173)\./, '-4000.')}`;
@@ -6,21 +6,25 @@ const getBaseURL = () => {
   return 'http://localhost:4000';
 };
 
-export const BASE = getBaseURL();
-export const API = {
-  auth:         `${BASE}/api/auth`,
-  usuarios:     `${BASE}/api/usuarios`,
-  pedidos:      `${BASE}/api/pedidos`,
-  proveedores:  `${BASE}/api/proveedores`,
-  productos:    `${BASE}/api/productos`,
-  envios:       `${BASE}/api/envios`,
-  detalle:      `${BASE}/api/detalle-pedido`,
-  facturas:     `${BASE}/api/facturas`,
-  descuentos:   `${BASE}/api/descuentos`,
-  pagos:        `${BASE}/api/pagos`,
-  devoluciones: `${BASE}/api/devoluciones`,
-  reportes:     `${BASE}/api/reportes`,
-  detallePedidos:`${BASE}/api/detallePedidos`,
-  carrito:      `${BASE}/api/carrito`,
+export const BASE = getBaseUrl();
 
+export const API = {
+  auth:              `${BASE}/api/auth`,
+  users:             `${BASE}/api/users`,
+  orders:            `${BASE}/api/orders`,
+  orderDetails:      `${BASE}/api/order-details`,
+  products:          `${BASE}/api/products`,
+  providers:         `${BASE}/api/providers`,
+  despatches:        `${BASE}/api/despatches`,
+  receipts:          `${BASE}/api/receipts`,
+  shopping:          `${BASE}/api/shopping`,
+  promotionalCodes:  `${BASE}/api/promotional-codes`,
+  payouts:           `${BASE}/api/payouts`,
+  returns:           `${BASE}/api/returns`,
+  reports:           `${BASE}/api/reports`,
 };
+
+export const authHeaders = () => ({
+  'Content-Type': 'application/json',
+  Authorization: `Bearer ${localStorage.getItem('token') ?? ''}`,
+});

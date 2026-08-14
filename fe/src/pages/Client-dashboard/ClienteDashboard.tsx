@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import './Home.css';
+import './ClientDashboard.css';
 
-const Home = () => {
+const ClientDashboard = () => {
   const { user } = useAuth();
 
   const deals = [
@@ -29,6 +29,9 @@ const Home = () => {
             <p className="welcome-text">
               Hola, {user.name}. Rol: {user.role}
             </p>
+            <Link className="hero-button" to={user.role === 'client' ? '/cliente' : '/admin'}>
+              Ir a tu panel
+            </Link>
           </div>
         ) : (
           <Link className="hero-button" to="/catalogo">
@@ -75,4 +78,4 @@ const Home = () => {
   );
 };
 
-export default Home;
+export default ClientDashboard;

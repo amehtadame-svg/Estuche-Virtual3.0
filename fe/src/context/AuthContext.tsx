@@ -1,13 +1,13 @@
 import { createContext, useState, useEffect, type ReactNode } from 'react';
-
-
 import { API } from '../api/api';
 
+export type Role = 'client' | 'employee' | 'delivery' | 'admin' | 'superadmin';
+
 interface User {
-  id: number;
+  id: string;
   email: string;
   name: string;
-  role: 'cliente' | 'administrador' | 'empleado' | 'repartidor' | 'superadmin';
+  role: Role;
 }
 
 interface ResetToken {
@@ -32,26 +32,25 @@ export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const stored = localStorage.getItem('user');
   const [user, setUser] = useState<User | null>(stored ? JSON.parse(stored) : null);
-  useEffect(() => {
-  const token = localStorage.getItem('token');
-  if (!token) return;
 
-  fetch(`${API.auth}/me`, {
-    headers: { Authorization: `Bearer ${token}` },
-  })
-    .then(res => {
-      if (!res.ok) {
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    fetch(`${API.auth}/me`, { headers: { Authorization: `Bearer ${token}` } })
+      .then((res) => {
+        if (!res.ok) {
+          setUser(null);
+          localStorage.removeItem('user');
+          localStorage.removeItem('token');
+        }
+      })
+      .catch(() => {
         setUser(null);
         localStorage.removeItem('user');
         localStorage.removeItem('token');
-      }
-    })
-    .catch(() => {
-      setUser(null);
-      localStorage.removeItem('user');
-      localStorage.removeItem('token');
-    });
-}, []);
+      });
+  }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
@@ -98,7 +97,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const generateResetToken = (email: string): string | null => {
     const token = Math.floor(100000 + Math.random() * 900000).toString();
     localStorage.setItem('reset_token', JSON.stringify({
-      token, email, createdAt: Date.now(), used: false,
+      token,
+      email,
+      createdAt: Date.now(),
+      used: false,
     } as ResetToken));
     return token;
   };

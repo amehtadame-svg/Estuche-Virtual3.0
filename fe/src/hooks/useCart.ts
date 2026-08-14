@@ -3,6 +3,6 @@ import { CartContext } from '../context/CartContext';
 
 export const useCart = () => {
   const ctx = useContext(CartContext);
-  if (!ctx) throw new Error('useCart debe usarse dentro de CartProvider');
+  if (!ctx) throw new Error('useCart must be used within CartProvider');
   return ctx;
 };

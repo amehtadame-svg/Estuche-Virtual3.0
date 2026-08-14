@@ -1,8 +1,9 @@
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import type { Role } from '../../context/AuthContext';
 
 interface ProtectedRouteProps {
-  allowedRoles?: Array<'cliente' | 'administrador' | 'empleado' | 'repartidor' | 'superadmin'>;
+  allowedRoles?: Array<Role>;
 }
 
 const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps) => {

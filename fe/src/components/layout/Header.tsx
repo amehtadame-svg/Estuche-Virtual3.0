@@ -32,7 +32,7 @@ export default function Header() {
     <header className="header">
       <Link to="/" className="header-logo">
         <img src="/logo-light.png" alt="Estuche Virtual" className="logo-img logo_estuche_limpio" />
-        <img src="/logo-dark.png"  alt="Estuche Virtual" className="logo-img logo-dark" />
+        <img src="/logo-dark.png" alt="Estuche Virtual" className="logo-img logo-dark" />
       </Link>
 
       <nav className="header-nav">
@@ -45,7 +45,7 @@ export default function Header() {
             <Link to="/superadmin/devoluciones">Devoluciones</Link>
             <Link to="/superadmin/reportes">Reportes</Link>
           </>
-        ) : user?.role === 'administrador' ? (
+        ) : user?.role === 'admin' ? (
           <>
             <Link to="/admin">Inicio</Link>
             <Link to="/admin/productos">Productos</Link>
@@ -69,7 +69,7 @@ export default function Header() {
           {isDarkMode ? '🌙' : '☀️'}
         </button>
 
-        {user?.role !== 'administrador' && (
+        {user?.role !== 'admin' && (
           <button className="cart-btn" onClick={() => navigate('/carrito')}>
             🛒
           </button>

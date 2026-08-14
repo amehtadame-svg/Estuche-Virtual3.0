@@ -6,38 +6,38 @@ import Header            from './components/layout/Header';
 import Footer            from './components/layout/Footer';
 
 // Páginas públicas
-import Pago           from './pages/Pago/Pago';
+import Pago           from './pages/Checkout/Checkout';
 import Home           from './pages/Home/Home';
 import Login          from './pages/Login/Login';
 import Register       from './pages/Register/Register';
-import Catalogo       from './pages/Catalogo/Catalogo';
-import Producto       from './pages/Productos/Productos';
-import Carrito        from './pages/Carrito/Carrito';
-import Contacto       from './pages/Contacto/Contacto';
-import Nosotros       from './pages/Nosotros/Nosotros';
+import Catalogo       from './pages/Catalog/Catalog';
+import Producto       from './pages/Product/Product';
+import Carrito        from './pages/Shopping/Shopping';
+import Contacto       from './pages/Contact/Contact';
+import Nosotros       from './pages/About/About';
 import ForgotPassword from './pages/ResetPassword/ForgotPassword';
 import ResetPassword  from './pages/ResetPassword/ResetPassword';
 
 // Cliente
-import ClienteDashboard from './pages/Clientes/ClienteDashboard';
+import ClienteDashboard from './pages/Client-dashboard/ClienteDashboard';
 
 // Admin
 import AdminDashboard  from './pages/Admin/AdminDashboard';
-import ProductosAD     from './pages/Admin/Productos/ProductosAD';
-import Pedidos         from './pages/Admin/Pedidos/Pedidos';
-import Facturas        from './pages/Admin/Facturas/Facturas';
-import Envios          from './pages/Admin/Envios/Envios';
-import Proveedores     from './pages/Admin/Proveedores/Proveedores';
-import Usuarios        from './pages/Admin/Usuarios/Usuarios';
-import DetallePedidos from './pages/Admin/DetallePedidos/Detallepedidos';
+import ProductosAD     from './pages/Admin/Products/Products';
+import Pedidos         from './pages/Admin/Orders/Orders';
+import Facturas        from './pages/Admin/Receipt/Receipt';
+import Envios          from './pages/Admin/Depatch/Depatch';
+import Proveedores     from './pages/Admin/Provider/Provider';
+import Usuarios        from './pages/Admin/Users/AdminUsers';
+import DetallePedidos from './pages/Admin/order-details/OrderDetails';
 
 // SuperAdmin
 import SuperAdminDashboard from './pages/SuperAdmin/SuperAdminDashboard';
-import Descuentos          from './pages/SuperAdmin/Descuentos/Descuentos';
-import Pagos               from './pages/SuperAdmin/Pagos/Pagos';
-import Devoluciones        from './pages/SuperAdmin/Devoluciones/Devoluciones';
-import Reportes            from './pages/SuperAdmin/Reportes/Reportes';
-import UsuariosSA          from './pages/SuperAdmin/UsuariosSA/UsuariosSA';
+import Descuentos          from './pages/SuperAdmin/Promotional-code/Promotional-code';
+import Pagos               from './pages/SuperAdmin/Payout/Payout';
+import Devoluciones        from './pages/SuperAdmin/Returns/Returns';
+import Reportes            from './pages/SuperAdmin/Reports/Reports';
+import UsuariosSA          from './pages/SuperAdmin/UsuariosSA/SuperAdminUsers';
 
 function App() {
   return (
@@ -60,7 +60,7 @@ function App() {
             <Route path="/reset-password"  element={<ResetPassword />} />
 
             {/* ── Cliente ──────────────────────────────── */}
-            <Route element={<ProtectedRoute allowedRoles={['cliente', 'empleado']} />}>
+            <Route element={<ProtectedRoute allowedRoles={['client', 'employee']} />}>
               <Route path="/cliente" element={<ClienteDashboard />} />
             </Route>
 
@@ -70,7 +70,7 @@ function App() {
             </Route>
 
             {/* ── Admin ────────────────────────────────── */}
-            <Route element={<ProtectedRoute allowedRoles={['administrador', 'superadmin']} />}>
+            <Route element={<ProtectedRoute allowedRoles={['admin', 'superadmin']} />}>
               <Route path="/admin"                 element={<AdminDashboard />} />
               <Route path="/admin/productos"       element={<ProductosAD />} />
               <Route path="/admin/pedidos"         element={<Pedidos />} />
