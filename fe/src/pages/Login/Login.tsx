@@ -7,6 +7,7 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false); 
   const [loading, setLoading] = useState(false);
   const { login, generateResetToken } = useAuth();
   const navigate = useNavigate();
@@ -23,8 +24,9 @@ const Login = () => {
 
     const result = await login(email, password);
 
-    if (!result.ok) {
-      await generateResetToken(email);
+  if (!result.ok) {
+      if (result.locked) {
+        await generateResetToken(email);
         setLoading(false);
         navigate('/reset-password', {
           state: { email, message: result.message },
@@ -68,15 +70,24 @@ const Login = () => {
             required
           />
 
-          <label className="input-label">Contraseña</label>
-          <input
-            className="login-input"
-            type="password"
-            placeholder="Tu contraseña"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            required
+        <label className="input-label">Contraseña</label>
+        <div style={{ position: 'relative' }}>
+        <input
+          className="login-input"
+          type={showPassword ? 'text' : 'password'}
+          placeholder="Tu contraseña"
+          value={password}
+          onChange={e => setPassword(e.target.value)}
+          required
           />
+        <button
+          type="button"
+          onClick={() => setShowPassword(prev => !prev)}
+          style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer' }}
+          >
+          {showPassword ? '🙈' : '👁️'}
+        </button>
+      </div>
 
           {error && (
             <p style={{ color: '#e53e3e', fontSize: '0.85rem', margin: '4px 0 8px', textAlign: 'center' }}>

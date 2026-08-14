@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../../lib/prisma';
 import { validarPassword } from '../../lib/validarPassword';
-import { crearToken, verificarYConsumirToken } from '../../lib/tokenStore';
+import { crearToken, verificarYConsumirToken, verificarToken } from '../../lib/tokenStore';
 import { enviarCodigoVerificacion } from '../../lib/mailer';
 import * as dotenv from 'dotenv';
 dotenv.config();
@@ -148,6 +148,26 @@ export const requestToken = async (req: Request, res: Response) => {
     return res.json({ message: 'Código generado y enviado por correo.' });
   } catch (err) {
     console.error('Error en requestToken:', err);
+    return res.status(500).json({ message: 'Ocurrió un error inesperado. Intenta de nuevo.' });
+  }
+};
+
+export const verifyResetToken = async (req: Request, res: Response) => {
+  try {
+    const { email, token } = req.body;
+
+    if (!email || !token) {
+      return res.status(400).json({ message: 'Correo y código son obligatorios.' });
+    }
+
+    const { valido, motivo } = verificarToken(email, token);
+    if (!valido) {
+      return res.status(400).json({ message: motivo });
+    }
+
+    return res.json({ message: 'Código válido.' });
+  } catch (err) {
+    console.error('Error en verifyResetToken:', err);
     return res.status(500).json({ message: 'Ocurrió un error inesperado. Intenta de nuevo.' });
   }
 };

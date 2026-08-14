@@ -23,7 +23,8 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<LoginResult>;
   register: (name: string, email: string, password: string) => Promise<{ ok: boolean; message?: string }>;
   logout: () => void;
-  generateResetToken: (email: string) => Promise<{ ok: boolean; message?: string }>;
+  generateResetToken: (email: string) => Promise<string | null>;
+  verifyResetToken: (email: string, token: string) => Promise<{ ok: boolean; message?: string }>; 
   resetPassword: (email: string, token: string, newPassword: string) => Promise<{ ok: boolean; message?: string }>;
 }
 
@@ -125,14 +126,29 @@ const generateResetToken = async (email: string): Promise<string | null> => {
   }
 };
 
-// Envía email + código + nueva contraseña al backend, que valida todo
-
-const generateResetToken = async (email: string) => {
+const verifyResetToken = async (email: string, token: string) => {
   try {
-    const res = await fetch(`${API.auth}/request-token`, {
+    const res = await fetch(`${API.auth}/verify-token`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({ email, token }),
+    });
+    const data = await res.json();
+    if (!res.ok) return { ok: false, message: data.message };
+    return { ok: true, message: data.message };
+  } catch {
+    return { ok: false, message: 'No se pudo conectar con el servidor.' };
+  }
+};
+
+// Envía email + código + nueva contraseña al backend, que valida todo
+
+const resetPassword = async (email: string, token: string, newPassword: string) => {
+  try {
+    const res = await fetch(`${API.auth}/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, token, newPassword }),
     });
     const data = await res.json();
     if (!res.ok) return { ok: false, message: data.message };
@@ -143,7 +159,7 @@ const generateResetToken = async (email: string) => {
 };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, generateResetToken, resetPassword }}>
+    <AuthContext.Provider value={{ user, login, register, logout, generateResetToken, verifyResetToken, resetPassword }}>
       {children}
     </AuthContext.Provider>
   );

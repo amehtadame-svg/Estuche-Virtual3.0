@@ -5,7 +5,7 @@ import { validarPassword } from '../../utils/validarPassword';
 import './ResetPassword.css';
 
 export default function ResetPassword() {
-  const { resetPassword } = useAuth();
+  const { resetPassword, verifyResetToken } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -20,8 +20,32 @@ export default function ResetPassword() {
   const [confirm, setConfirm]       = useState('');
   const [error, setError]           = useState('');
   const [success, setSuccess]       = useState(false);
+  const [step, setStep]             = useState<'token' | 'password'>('token');
+  const [verifying, setVerifying]   = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm]   = useState(false);
 
-  const handleSubmit  = async (e: React.FormEvent) => {
+  const handleVerifyToken = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    if (!token.trim()) {
+      setError('Ingresa el código de verificación.');
+      return;
+    }
+
+    setVerifying(true);
+    const { ok, message } = await verifyResetToken(email.trim(), token.toUpperCase());
+    setVerifying(false);
+
+    if (ok) {
+      setStep('password');
+    } else {
+      setError(message || 'Código incorrecto.');
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -69,87 +93,126 @@ export default function ResetPassword() {
 
   return (
     <div className="reset-container">
-      <div className="reset-card">
-        <h2>Nueva contraseña</h2>
-        <p className="reset-subtitle">
-          Ingresa el token que recibiste y tu nueva contraseña.
-        </p>
-
-        <form onSubmit={handleSubmit}>
-          <div className="reset-field">
-            <label htmlFor="email">Correo electrónico</label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              placeholder="tucorreo@ejemplo.com"
-              required
-            />
-          </div>
-
-          <div className="reset-field">
-            <label htmlFor="token">Código de verificación</label>
-            <input
-              id="token"
-              type="text"
-              value={token}
-              onChange={e => setToken(e.target.value.toUpperCase())}
-              placeholder="Ej: A3F9K2"
-              maxLength={6}
-              required
-            />
-          </div>
-          <h2>Nueva contraseña</h2>
-          <p className="reset-subtitle">
-            Ingresa el código que recibiste y tu nueva contraseña.
-          </p>
-
-          {lockMessage && (
-            <p className="reset-error" style={{ marginBottom: '10px' }}>
-              🔒 {lockMessage}
-             </p>
-          )}
-
-          <form onSubmit={handleSubmit}></form>
-          <div className="reset-field">
-            <label htmlFor="password">Nueva contraseña</label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              placeholder="Mínimo 8 caracteres"
-              required
-            />
-            <p style={{ fontSize: '0.78rem', color: '#666', margin: '2px 0 0' }}>
-              Debe tener mayúscula, minúscula, número y un carácter especial (!@#$%...).
+      {step === 'token' ? (
+        <div className="reset-modal-overlay">
+          <div className="reset-modal-card">
+            <h2>Verifica tu código</h2>
+            <p className="reset-subtitle">
+              Ingresa el código que recibiste en tu correo para continuar.
             </p>
+
+            {lockMessage && (
+              <p className="reset-error" style={{ marginBottom: '10px' }}>
+                🔒 {lockMessage}
+              </p>
+            )}
+
+            <form onSubmit={handleVerifyToken}>
+              <div className="reset-field">
+                <label htmlFor="email">Correo electrónico</label>
+                <input id="email" type="email" value={email} readOnly disabled />
+              </div>
+
+              <div className="reset-field">
+                <label htmlFor="token">Código de verificación</label>
+                <input
+                  id="token"
+                  type="text"
+                  value={token}
+                  onChange={e => setToken(e.target.value.toUpperCase())}
+                  placeholder="Ej: A3F9K2"
+                  maxLength={6}
+                  required
+                />
+              </div>
+
+              {error && <p className="reset-error">⚠️ {error}</p>}
+
+              <button type="submit" className="reset-btn" disabled={verifying}>
+                {verifying ? 'Verificando...' : 'Verificar código'}
+              </button>
+            </form>
+
+            <Link to="/forgot-password" className="reset-back">
+              ← Solicitar nuevo código
+            </Link>
           </div>
+        </div>
+      ) : (
+        <div className="reset-card">
+          <h2>Nueva contraseña</h2>
+          <p className="reset-subtitle">Ingresa tu nueva contraseña.</p>
 
-          <div className="reset-field">
-            <label htmlFor="confirm">Confirmar contraseña</label>
-            <input
-              id="confirm"
-              type="password"
-              value={confirm}
-              onChange={e => setConfirm(e.target.value)}
-              placeholder="Repite la contraseña"
-              required
-            />
-          </div>
+          <form onSubmit={handleSubmit}>
+            <div className="reset-field">
+              <label htmlFor="password">Nueva contraseña</label>
+              <div style={{ position: 'relative' }}>
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  placeholder="Mínimo 8 caracteres"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(p => !p)}
+                  style={{
+                    position: 'absolute',
+                    right: '10px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {showPassword ? '🙈' : '👁️'}
+                </button>
+              </div>
+              <p style={{ fontSize: '0.78rem', color: '#666', margin: '2px 0 0' }}>
+                Debe tener mayúscula, minúscula, número y un carácter especial (!@#$%...).
+              </p>
+            </div>
 
-          {error && <p className="reset-error">⚠️ {error}</p>}
+            <div className="reset-field">
+              <label htmlFor="confirm">Confirmar contraseña</label>
+              <div style={{ position: 'relative' }}>
+                <input
+                  id="confirm"
+                  type={showConfirm ? 'text' : 'password'}
+                  value={confirm}
+                  onChange={e => setConfirm(e.target.value)}
+                  placeholder="Repite la contraseña"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirm(p => !p)}
+                  style={{
+                    position: 'absolute',
+                    right: '10px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {showConfirm ? '🙈' : '👁️'}
+                </button>
+              </div>
+            </div>
 
-          <button type="submit" className="reset-btn">
-            Cambiar contraseña
-          </button>
-        </form>
+            {error && <p className="reset-error">⚠️ {error}</p>}
 
-        <Link to="/forgot-password" className="reset-back">
-          ← Solicitar nuevo token
-        </Link>
-      </div>
+            <button type="submit" className="reset-btn">
+              Cambiar contraseña
+            </button>
+          </form>
+        </div>
+      )}
     </div>
   );
 }
