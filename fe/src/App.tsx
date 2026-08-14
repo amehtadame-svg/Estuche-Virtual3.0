@@ -19,7 +19,7 @@ import ForgotPassword from './pages/ResetPassword/ForgotPassword';
 import ResetPassword  from './pages/ResetPassword/ResetPassword';
 
 // Cliente
-import ClienteDashboard from './pages/Client-dashboard/ClientDashboard';
+import ClienteDashboard from './pages/ClientDashboard/ClientDashboard';
 
 // Admin
 import AdminDashboard  from './pages/Admin/AdminDashboard';
@@ -29,7 +29,7 @@ import Facturas        from './pages/Admin/Receipt/Receipt';
 import Envios          from './pages/Admin/Despatch/Despatch';
 import Proveedores     from './pages/Admin/Provider/Provider';
 import Usuarios        from './pages/Admin/Users/AdminUsers';
-import DetallePedidos from './pages/Admin/order-details/OrderDetails';
+import DetallePedidos from './pages/Admin/OrderDetails/OrderDetails';
 
 // SuperAdmin
 import SuperAdminDashboard from './pages/SuperAdmin/SuperAdminDashboard';
