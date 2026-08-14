@@ -1,12 +1,8 @@
 import { useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { useNavigate, Link } from 'react-router-dom';
-import emailjs from '@emailjs/browser';
 import './ForgotPassword.css';
 
-const SERVICE_ID  = 'service_cpk14dk'; 
-const TEMPLATE_ID = 'template_iw2ub0s';
-const PUBLIC_KEY  = 'ysKRVpX_AojrEDk-x';
 
 export default function ForgotPassword() {
   const { generateResetToken } = useAuth();
@@ -20,27 +16,8 @@ export default function ForgotPassword() {
   e.preventDefault();
   setLoading(true);
 
-  // Ahora esto le pregunta al backend y espera la respuesta (por eso "await").
-  const token = await generateResetToken(email);
-
-  try {
-    if (token) {
-      await emailjs.send(
-        SERVICE_ID,
-        TEMPLATE_ID,
-        {
-          to_email:    email,
-          reset_token: token,
-        },
-        PUBLIC_KEY
-      );
-    }
-    // Mismo mensaje siempre por seguridad
-    setMessage('Si el correo está registrado, recibirás el código en breve.');
-  } catch (err) {
-    console.error('EmailJS error:', err);
-    setMessage('Hubo un problema al enviar el correo. Intenta de nuevo.');
-  }
+  await generateResetToken(email);
+  setMessage('Si el correo está registrado, recibirás el código en breve.');
 
   setLoading(false);
   // Le pasamos el correo a la siguiente pantalla para no pedirlo de nuevo.

@@ -1,13 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import emailjs from '@emailjs/browser';
 import './Login.css';
-
-// Mismos datos de EmailJS que usa la pantalla de "Olvidé mi contraseña".
-const SERVICE_ID  = 'service_cpk14dk';
-const TEMPLATE_ID = 'template_iw2ub0s';
-const PUBLIC_KEY  = 'ysKRVpX_AojrEDk-x';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -30,24 +24,7 @@ const Login = () => {
     const result = await login(email, password);
 
     if (!result.ok) {
-      // Caso especial: se acaba de bloquear la cuenta (o ya estaba bloqueada).
-      // En vez de solo mostrar un error, generamos el código automáticamente,
-      // lo enviamos por correo y llevamos al usuario a la pantalla para
-      // ingresar el código + su nueva contraseña.
-      if (result.locked) {
-        const token = await generateResetToken(email);
-        if (token) {
-          try {
-            await emailjs.send(
-              SERVICE_ID,
-              TEMPLATE_ID,
-              { to_email: email, reset_token: token },
-              PUBLIC_KEY
-            );
-          } catch (err) {
-            console.error('EmailJS error:', err);
-          }
-        }
+      await generateResetToken(email);
         setLoading(false);
         navigate('/reset-password', {
           state: { email, message: result.message },

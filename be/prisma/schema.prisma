@@ -369,14 +369,3 @@ model proveedor_categoria {
   @@id([id_proveedor, id_categoria])
 }
 
-model tokens_verificacion {
-  id_token   Int      @id @default(autoincrement())
-  email      String   @db.VarChar(100)
-  token      String   @db.VarChar(10)
-  tipo       String   @db.VarChar(20)
-  usado      Boolean  @default(false)
-  creado_en  DateTime @default(now()) @db.Timestamp(6)
-  expira_en  DateTime @db.Timestamp(6)
-
-  @@index([email, token], map: "idx_tokens_email_token")
-}
