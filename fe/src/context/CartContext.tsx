@@ -1,35 +1,30 @@
 import { createContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { API } from '../api/api';
+import { API, authHeaders } from '../api/api';
 
 export interface CartItem {
-  id: number;
-  nombre: string;
-  precio: number;
-  categoria: string;
-  icono: string;
-  cantidad: number;
+  id: string;
+  name: string;
+  price: number;
+  category: string;
+  icon: string;
+  quantity: number;
 }
 
 interface CartContextType {
   items: CartItem[];
-  agregar: (producto: Omit<CartItem, 'cantidad'>) => void;
-  quitar: (id: number) => void;
-  cambiarCantidad: (id: number, cantidad: number) => void;
-  vaciar: () => void;
+  add: (product: Omit<CartItem, 'quantity'>) => void;
+  remove: (id: string) => void;
+  updateQuantity: (id: string, quantity: number) => void;
+  clear: () => void;
   total: number;
   totalItems: number;
-  cargando: boolean;
+  loading: boolean;
 }
 
 export const CartContext = createContext<CartContextType | undefined>(undefined);
 
-const headers = () => ({
-  'Content-Type': 'application/json',
-  Authorization: `Bearer ${localStorage.getItem('token')}`,
-});
-
-const iconosPorCategoria: Record<string, string> = {
+const iconsByCategory: Record<string, string> = {
   Cuadernos: '📓',
   Lapices: '✏️',
   Colores: '🎨',
@@ -43,94 +38,108 @@ const iconosPorCategoria: Record<string, string> = {
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
   const [items, setItems] = useState<CartItem[]>([]);
-  const [cargando, setCargando] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   // Cargar carrito desde la BD cuando el usuario inicia sesión
-  const cargarDesdeDB = useCallback(async () => {
-    if (!user) { setItems([]); return; }
-    setCargando(true);
+  const loadFromDb = useCallback(async () => {
+    if (!user) {
+      setItems([]);
+      return;
+    }
+    setLoading(true);
     try {
-      const res = await fetch(`${API.carrito}`, { headers: headers() });
+      const res = await fetch(`${API.shopping}`, { headers: authHeaders() });
       if (!res.ok) return;
       const data = await res.json();
-      // Mapear respuesta de BD al formato CartItem
-      setItems(data.map((item: any) => {
-        const categoria = item.productos?.categorias?.nombre ?? '';
-        return {
-          id: item.id_producto,
-          nombre: item.productos?.nombre ?? '',
-          precio: Number(item.productos?.precio ?? 0),
-          categoria,
-          icono: iconosPorCategoria[categoria] ?? '📦',
-          cantidad: item.cantidad,
-        };
-      }));
+      setItems(
+        data.map((item: any) => {
+          const category = item.product?.category?.name ?? '';
+          return {
+            id: item.productId,
+            name: item.product?.name ?? '',
+            price: Number(item.product?.price ?? 0),
+            category,
+            icon: iconsByCategory[category] ?? '📦',
+            quantity: item.quantity,
+          };
+        })
+      );
     } catch {
       // Si falla la BD, el carrito queda vacío
     } finally {
-      setCargando(false);
+      setLoading(false);
     }
   }, [user]);
 
-  useEffect(() => { cargarDesdeDB(); }, [cargarDesdeDB]);
+  useEffect(() => {
+    loadFromDb();
+  }, [loadFromDb]);
 
-  const agregar = async (producto: Omit<CartItem, 'cantidad'>) => {
+  const add = async (product: Omit<CartItem, 'quantity'>) => {
     // Optimistic update — actualiza UI inmediatamente
-    setItems(prev => {
-      const existe = prev.find(i => i.id === producto.id);
-      if (existe) return prev.map(i => i.id === producto.id ? { ...i, cantidad: i.cantidad + 1 } : i);
-      return [...prev, { ...producto, cantidad: 1 }];
+    setItems((prev) => {
+      const existing = prev.find((i) => i.id === product.id);
+      if (existing) return prev.map((i) => (i.id === product.id ? { ...i, quantity: i.quantity + 1 } : i));
+      return [...prev, { ...product, quantity: 1 }];
     });
 
     // Sincronizar con BD si hay usuario
     if (user) {
       try {
-        await fetch(`${API.carrito}`, {
+        await fetch(`${API.shopping}`, {
           method: 'POST',
-          headers: headers(),
-          body: JSON.stringify({ id_producto: producto.id, cantidad: 1 }),
+          headers: authHeaders(),
+          body: JSON.stringify({ productId: product.id, quantity: 1 }),
         });
-      } catch { }
+      } catch {
+        /* noop */
+      }
     }
   };
 
-  const quitar = async (id: number) => {
-    setItems(prev => prev.filter(i => i.id !== id));
+  const remove = async (id: string) => {
+    setItems((prev) => prev.filter((i) => i.id !== id));
     if (user) {
       try {
-        await fetch(`${API.carrito}/${id}`, { method: 'DELETE', headers: headers() });
-      } catch { }
+        await fetch(`${API.shopping}/${id}`, { method: 'DELETE', headers: authHeaders() });
+      } catch {
+        /* noop */
+      }
     }
   };
 
-  const cambiarCantidad = async (id: number, cantidad: number) => {
-    if (cantidad < 1) return quitar(id);
-    setItems(prev => prev.map(i => i.id === id ? { ...i, cantidad } : i));
+  const updateQuantity = async (id: string, quantity: number) => {
+    if (quantity < 1) return remove(id);
+    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, quantity } : i)));
     if (user) {
       try {
-        await fetch(`${API.carrito}/${id}`, {
+        await fetch(`${API.shopping}/${id}`, {
           method: 'PUT',
-          headers: headers(),
-          body: JSON.stringify({ cantidad }),
+          headers: authHeaders(),
+          body: JSON.stringify({ quantity }),
         });
-      } catch { }
+      } catch {
+        /* noop */
+      }
     }
   };
 
-  const vaciar = async () => {
+  const clear = async () => {
     setItems([]);
     if (user) {
       try {
-        await fetch(`${API.carrito}/vaciar`, { method: 'DELETE', headers: headers() });
-      } catch { }
+        await fetch(`${API.shopping}/clear`, { method: 'DELETE', headers: authHeaders() });
+      } catch {
+        /* noop */
+      }
     }
   };
 
-  const total = items.reduce((acc, i) => acc + i.precio * i.cantidad, 0);
-  const totalItems = items.reduce((acc, i) => acc + i.cantidad, 0);
+  const total = items.reduce((acc, i) => acc + i.price * i.quantity, 0);
+  const totalItems = items.reduce((acc, i) => acc + i.quantity, 0);
 
   return (
-    <CartContext.Provider value={{ items, agregar, quitar, cambiarCantidad, vaciar, total, totalItems, cargando }}>
+    <CartContext.Provider value={{ items, add, remove, updateQuantity, clear, total, totalItems, loading }}>
       {children}
     </CartContext.Provider>
   );

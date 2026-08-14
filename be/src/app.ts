@@ -1,19 +1,20 @@
 import express from 'express';
 import cors from 'cors';
 
-import authRoutes          from './modules/auth/auth.routes';
-import usuariosRoutes      from './modules/usuarios/usuarios.routes';
-import pedidosRoutes       from './modules/pedidos/pedidos.routes';
-import productosRoutes     from './modules/productos/productos.routes';
-import proveedoresRoutes   from './modules/proveedores/proveedores.routes';
-import enviosRoutes        from './modules/envios/envios.routes';
-import detallePedidoRoutes from './modules/detallepedido/detallepedido.routes';
-import facturasRoutes      from './modules/facturas/facturas.routes';
-import descuentosRoutes    from './modules/descuentos/descuentos.routes';
-import pagosRoutes         from './modules/pagos/pagos.routes';
-import devolucionesRoutes  from './modules/devoluciones/devoluciones.routes';
-import reportesRoutes      from './modules/reportes/reportes.routes';
-import carritoRoutes       from './modules/carrito/carrito.routes';
+import authRoutes            from './modules/auth/auth.routes';
+import userRoutes            from './modules/users/users.routes';
+import orderRoutes           from './modules/orders/orders.routes';
+import productRoutes         from './modules/products/products.routes';
+import providerRoutes        from './modules/provider/provider.routes';
+import despatchRoutes        from './modules/despatch/despatch.routes';
+import orderDetailRoutes     from './modules/order-details/order-details.routes';
+import receiptRoutes         from './modules/receipt/receipt.routes';
+import shoppingRoutes        from './modules/shopping/shopping.routes';
+import promotionalCodeRoutes from './modules/promotional-code/promotional-code.routes';
+import payoutRoutes          from './modules/payout/payout.routes';
+import returnRoutes          from './modules/returns/returns.routes';
+import reportRoutes          from './modules/reports/reports.routes';
+import { errorHandler }      from './middlewares/error.middleware';
 
 const app = express();
 
@@ -21,20 +22,23 @@ app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 
 // ── Públicas / compartidas ────────────────────────────
-app.use('/api/auth',           authRoutes);
-app.use('/api/usuarios',       usuariosRoutes);
-app.use('/api/pedidos',        pedidosRoutes);
-app.use('/api/productos',      productosRoutes);
-app.use('/api/proveedores',    proveedoresRoutes);
-app.use('/api/envios',         enviosRoutes);
-app.use('/api/detallePedidos', detallePedidoRoutes);
-app.use('/api/facturas',       facturasRoutes);
-app.use('/api/carrito', carritoRoutes);
+app.use('/api/auth',               authRoutes);
+app.use('/api/users',              userRoutes);
+app.use('/api/orders',             orderRoutes);
+app.use('/api/products',           productRoutes);
+app.use('/api/providers',          providerRoutes);
+app.use('/api/despatches',         despatchRoutes);
+app.use('/api/order-details',      orderDetailRoutes);
+app.use('/api/receipts',           receiptRoutes);
+app.use('/api/shopping',           shoppingRoutes);
 
 // ── SuperAdmin ────────────────────────────────────────
-app.use('/api/descuentos',     descuentosRoutes);
-app.use('/api/pagos',          pagosRoutes);
-app.use('/api/devoluciones',   devolucionesRoutes);
-app.use('/api/reportes',       reportesRoutes);
+app.use('/api/promotional-codes',  promotionalCodeRoutes);
+app.use('/api/payouts',            payoutRoutes);
+app.use('/api/returns',            returnRoutes);
+app.use('/api/reports',            reportRoutes);
+
+// Manejador global de errores (debe ir al final)
+app.use(errorHandler);
 
 export default app;

@@ -1,31 +1,30 @@
 import { createContext, useState, useEffect, type ReactNode } from 'react';
-
-
 import { API } from '../api/api';
 
+export type Role = 'client' | 'employee' | 'delivery' | 'admin' | 'superadmin';
+
 interface User {
-  id: number;
+  id: string;
   email: string;
   name: string;
-  role: 'cliente' | 'administrador' | 'empleado' | 'repartidor' | 'superadmin';
+  role: Role;
 }
 
-// intentos quedan, para poder mostrar el mensaje correcto en pantalla.
-interface LoginResult {
-  ok: boolean;
-  locked?: boolean;
-  intentosRestantes?: number;
-  message?: string;
+interface ResetToken {
+  token: string;
+  email: string;
+  createdAt: number;
+  used: boolean;
 }
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<LoginResult>;
-  register: (name: string, email: string, password: string) => Promise<{ ok: boolean; message?: string }>;
+  login: (email: string, password: string) => Promise<boolean>;
+  register: (name: string, email: string, password: string) => Promise<boolean>;
   logout: () => void;
-  generateResetToken: (email: string) => Promise<string | null>;
-  verifyResetToken: (email: string, token: string) => Promise<{ ok: boolean; message?: string }>; 
-  resetPassword: (email: string, token: string, newPassword: string) => Promise<{ ok: boolean; message?: string }>;
+  generateResetToken: (email: string) => string | null;
+  validateResetToken: (token: string) => { valid: boolean; email: string | null; reason?: string };
+  resetPassword: (token: string, newPassword: string) => Promise<boolean>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -33,75 +32,61 @@ export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const stored = localStorage.getItem('user');
   const [user, setUser] = useState<User | null>(stored ? JSON.parse(stored) : null);
-  useEffect(() => {
-  const token = localStorage.getItem('token');
-  if (!token) return;
 
-  fetch(`${API.auth}/me`, {
-    headers: { Authorization: `Bearer ${token}` },
-  })
-    .then(res => {
-      if (!res.ok) {
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    fetch(`${API.auth}/me`, { headers: { Authorization: `Bearer ${token}` } })
+      .then((res) => {
+        if (!res.ok) {
+          setUser(null);
+          localStorage.removeItem('user');
+          localStorage.removeItem('token');
+        }
+      })
+      .catch(() => {
         setUser(null);
         localStorage.removeItem('user');
         localStorage.removeItem('token');
-      }
-    })
-    .catch(() => {
-      setUser(null);
-      localStorage.removeItem('user');
-      localStorage.removeItem('token');
-    });
-}, []);
+      });
+  }, []);
 
-const login = async (email: string, password: string): Promise<LoginResult> => {
-  try {
-    const res = await fetch(`${API.auth}/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    });
-    const data = await res.json();
-
-    if (!res.ok) {
-
-      // El backend responde locked:true cuando la cuenta se bloqueó
-
-      return {
-        ok: false,
-        locked: !!data.locked,
-        intentosRestantes: data.intentosRestantes,
-        message: data.message,
-      };
+  const login = async (email: string, password: string): Promise<boolean> => {
+    try {
+      const res = await fetch(`${API.auth}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      if (!res.ok) return false;
+      const data = await res.json();
+      setUser(data.user);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      localStorage.setItem('token', data.token);
+      return true;
+    } catch {
+      return false;
     }
+  };
 
-    setUser(data.user);
-    localStorage.setItem('user', JSON.stringify(data.user));
-    localStorage.setItem('token', data.token);
-    return { ok: true };
-  } catch {
-    return { ok: false, message: 'No se pudo conectar con el servidor.' };
-  }
-};
-
-const register = async (name: string, email: string, password: string) => {
-  try {
-    const res = await fetch(`${API.auth}/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, password }),
-    });
-    const data = await res.json();
-    if (!res.ok) return { ok: false, message: data.message };
-
-    setUser(data.user);
-    localStorage.setItem('user', JSON.stringify(data.user));
-    localStorage.setItem('token', data.token);
-    return { ok: true };
-  } catch {
-    return { ok: false, message: 'No se pudo conectar con el servidor.' };
-  }
-};
+  const register = async (name: string, email: string, password: string): Promise<boolean> => {
+    try {
+      const res = await fetch(`${API.auth}/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password }),
+      });
+      if (!res.ok) return false;
+      const data = await res.json();
+      setUser(data.user);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      localStorage.setItem('token', data.token);
+      return true;
+    } catch {
+      return false;
+    }
+  };
 
   const logout = () => {
     setUser(null);
@@ -109,57 +94,52 @@ const register = async (name: string, email: string, password: string) => {
     localStorage.removeItem('token');
   };
 
-// Le pide al backend que genere un código de 6 dígitos y lo guarde
+  const generateResetToken = (email: string): string | null => {
+    const token = Math.floor(100000 + Math.random() * 900000).toString();
+    localStorage.setItem('reset_token', JSON.stringify({
+      token,
+      email,
+      createdAt: Date.now(),
+      used: false,
+    } as ResetToken));
+    return token;
+  };
 
-const generateResetToken = async (email: string): Promise<string | null> => {
-  try {
-    const res = await fetch(`${API.auth}/request-token`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email }),
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data.token ?? null;
-  } catch {
-    return null;
-  }
-};
+  const validateResetToken = (token: string) => {
+    const raw = localStorage.getItem('reset_token');
+    if (!raw) return { valid: false, email: null, reason: 'No hay ningún token activo.' };
+    const data: ResetToken = JSON.parse(raw);
+    if (data.token !== token) return { valid: false, email: null, reason: 'Token incorrecto.' };
+    if (data.used) return { valid: false, email: null, reason: 'Este token ya fue utilizado.' };
+    if (Date.now() - data.createdAt > 600000) return { valid: false, email: null, reason: 'El token expiró.' };
+    return { valid: true, email: data.email };
+  };
 
-const verifyResetToken = async (email: string, token: string) => {
-  try {
-    const res = await fetch(`${API.auth}/verify-token`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, token }),
-    });
-    const data = await res.json();
-    if (!res.ok) return { ok: false, message: data.message };
-    return { ok: true, message: data.message };
-  } catch {
-    return { ok: false, message: 'No se pudo conectar con el servidor.' };
-  }
-};
+  const resetPassword = async (token: string, newPassword: string): Promise<boolean> => {
+    const { valid, email } = validateResetToken(token);
+    if (!valid || !email) return false;
 
-// Envía email + código + nueva contraseña al backend, que valida todo
+    try {
+      const res = await fetch(`${API.auth}/reset-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, newPassword }),
+      });
+      if (!res.ok) return false;
+    } catch {
+      return false;
+    }
 
-const resetPassword = async (email: string, token: string, newPassword: string) => {
-  try {
-    const res = await fetch(`${API.auth}/reset-password`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, token, newPassword }),
-    });
-    const data = await res.json();
-    if (!res.ok) return { ok: false, message: data.message };
-    return { ok: true, message: data.message };
-  } catch {
-    return { ok: false, message: 'No se pudo conectar con el servidor.' };
-  }
-};
+    const raw = localStorage.getItem('reset_token');
+    if (raw) {
+      const data: ResetToken = JSON.parse(raw);
+      localStorage.setItem('reset_token', JSON.stringify({ ...data, used: true }));
+    }
+    return true;
+  };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, generateResetToken, verifyResetToken, resetPassword }}>
+    <AuthContext.Provider value={{ user, login, register, logout, generateResetToken, validateResetToken, resetPassword }}>
       {children}
     </AuthContext.Provider>
   );
