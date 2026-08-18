@@ -13,6 +13,19 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
   return res.status(201).json(result);
 });
 
+/** PASO 1: envía el código de recuperación al correo. */
+export const forgotPassword = asyncHandler(async (req: Request, res: Response) => {
+  const result = await authService.forgotPassword(req.body, getRequestContext(req));
+  return res.json(result);
+});
+
+/** PASO 2: valida el código sin gastarlo. */
+export const verifyResetToken = asyncHandler(async (req: Request, res: Response) => {
+  const result = await authService.verifyResetToken(req.body);
+  return res.json(result);
+});
+
+/** PASO 3: cambia la contraseña consumiendo el código. */
 export const resetPassword = asyncHandler(async (req: Request, res: Response) => {
   const result = await authService.resetPassword(req.body, getRequestContext(req));
   return res.json(result);

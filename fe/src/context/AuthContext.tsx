@@ -1,145 +1,165 @@
-import { createContext, useState, useEffect, type ReactNode } from 'react';
+import { createContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import { API } from '../api/api';
 
 export type Role = 'client' | 'employee' | 'delivery' | 'admin' | 'superadmin';
 
-interface User {
+export interface User {
   id: string;
   email: string;
   name: string;
   role: Role;
 }
 
-interface ResetToken {
-  token: string;
-  email: string;
-  createdAt: number;
-  used: boolean;
+/** Respuesta estándar de todas las operaciones de auth. */
+export interface AuthResult {
+  ok: boolean;
+  message?: string;
+  /** true si la cuenta quedó bloqueada por intentos fallidos. */
+  locked?: boolean;
+  /** Intentos que le quedan al usuario antes del bloqueo. */
+  intentosRestantes?: number;
+  /** Solo en desarrollo con Ethereal: enlace para ver el correo enviado. */
+  previewUrl?: string;
 }
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<boolean>;
-  register: (name: string, email: string, password: string) => Promise<boolean>;
+  loading: boolean;
+  login: (email: string, password: string) => Promise<AuthResult>;
+  register: (name: string, email: string, password: string) => Promise<AuthResult>;
   logout: () => void;
-  generateResetToken: (email: string) => string | null;
-  validateResetToken: (token: string) => { valid: boolean; email: string | null; reason?: string };
-  resetPassword: (token: string, newPassword: string) => Promise<boolean>;
+  /** Paso 1: pide al BACKEND que genere y envíe el código por correo. */
+  generateResetToken: (email: string) => Promise<AuthResult>;
+  /** Paso 2: valida el código contra el backend (no lo consume). */
+  verifyResetToken: (email: string, token: string) => Promise<AuthResult>;
+  /** Paso 3: cambia la contraseña usando el código. */
+  resetPassword: (email: string, token: string, newPassword: string) => Promise<AuthResult>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+/** Envoltura de fetch que siempre devuelve un AuthResult, nunca lanza. */
+async function postJson(url: string, body: unknown): Promise<AuthResult & { data?: any }> {
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+    let data: any = null;
+    try {
+      data = await res.json();
+    } catch {
+    }
+
+    if (!res.ok) {
+      return {
+        ok: false,
+        message: data?.message ?? `Error ${res.status}. Inténtalo de nuevo.`,
+        locked: data?.locked ?? res.status === 423,
+        intentosRestantes: data?.remainingAttempts,
+        data,
+      };
+    }
+
+    return { ok: true, message: data?.message, previewUrl: data?.previewUrl, data };
+  } catch {
+    // Error de red: el backend no responde.
+    return {
+      ok: false,
+      message: 'No se pudo conectar con el servidor. Verifica que el backend esté encendido.',
+    };
+  }
+}
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const stored = localStorage.getItem('user');
-  const [user, setUser] = useState<User | null>(stored ? JSON.parse(stored) : null);
-
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
-
-    fetch(`${API.auth}/me`, { headers: { Authorization: `Bearer ${token}` } })
-      .then((res) => {
-        if (!res.ok) {
-          setUser(null);
-          localStorage.removeItem('user');
-          localStorage.removeItem('token');
-        }
-      })
-      .catch(() => {
-        setUser(null);
-        localStorage.removeItem('user');
-        localStorage.removeItem('token');
-      });
-  }, []);
-
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const [user, setUser] = useState<User | null>(() => {
+    const stored = localStorage.getItem('user');
     try {
-      const res = await fetch(`${API.auth}/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-      if (!res.ok) return false;
-      const data = await res.json();
-      setUser(data.user);
-      localStorage.setItem('user', JSON.stringify(data.user));
-      localStorage.setItem('token', data.token);
-      return true;
+      return stored ? (JSON.parse(stored) as User) : null;
     } catch {
-      return false;
+      return null;
     }
-  };
+  });
+  const [loading, setLoading] = useState(true);
 
-  const register = async (name: string, email: string, password: string): Promise<boolean> => {
-    try {
-      const res = await fetch(`${API.auth}/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password }),
-      });
-      if (!res.ok) return false;
-      const data = await res.json();
-      setUser(data.user);
-      localStorage.setItem('user', JSON.stringify(data.user));
-      localStorage.setItem('token', data.token);
-      return true;
-    } catch {
-      return false;
-    }
-  };
-
-  const logout = () => {
+  const clearSession = useCallback(() => {
     setUser(null);
     localStorage.removeItem('user');
     localStorage.removeItem('token');
-  };
+  }, []);
 
-  const generateResetToken = (email: string): string | null => {
-    const token = Math.floor(100000 + Math.random() * 900000).toString();
-    localStorage.setItem('reset_token', JSON.stringify({
-      token,
-      email,
-      createdAt: Date.now(),
-      used: false,
-    } as ResetToken));
-    return token;
-  };
-
-  const validateResetToken = (token: string) => {
-    const raw = localStorage.getItem('reset_token');
-    if (!raw) return { valid: false, email: null, reason: 'No hay ningún token activo.' };
-    const data: ResetToken = JSON.parse(raw);
-    if (data.token !== token) return { valid: false, email: null, reason: 'Token incorrecto.' };
-    if (data.used) return { valid: false, email: null, reason: 'Este token ya fue utilizado.' };
-    if (Date.now() - data.createdAt > 600000) return { valid: false, email: null, reason: 'El token expiró.' };
-    return { valid: true, email: data.email };
-  };
-
-  const resetPassword = async (token: string, newPassword: string): Promise<boolean> => {
-    const { valid, email } = validateResetToken(token);
-    if (!valid || !email) return false;
-
-    try {
-      const res = await fetch(`${API.auth}/reset-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, newPassword }),
-      });
-      if (!res.ok) return false;
-    } catch {
-      return false;
+  // Revalida la sesión guardada contra el backend al cargar la app.
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setLoading(false);
+      return;
     }
 
-    const raw = localStorage.getItem('reset_token');
-    if (raw) {
-      const data: ResetToken = JSON.parse(raw);
-      localStorage.setItem('reset_token', JSON.stringify({ ...data, used: true }));
-    }
-    return true;
+    fetch(`${API.auth}/me`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(async (res) => {
+        if (!res.ok) {
+          clearSession();
+          return;
+        }
+        const me = await res.json();
+        // Mantiene el usuario local sincronizado con el token real.
+        const fresh: User = { id: me.id, email: me.email, name: me.name, role: me.role };
+        setUser(fresh);
+        localStorage.setItem('user', JSON.stringify(fresh));
+      })
+      .catch(() => clearSession())
+      .finally(() => setLoading(false));
+  }, [clearSession]);
+
+  const login = async (email: string, password: string): Promise<AuthResult> => {
+    const result = await postJson(`${API.auth}/login`, { email, password });
+    if (!result.ok) return result;
+
+    const { user: u, token } = result.data;
+    setUser(u);
+    localStorage.setItem('user', JSON.stringify(u));
+    localStorage.setItem('token', token);
+    return { ok: true };
   };
+
+  const register = async (name: string, email: string, password: string): Promise<AuthResult> => {
+    const result = await postJson(`${API.auth}/register`, { name, email, password });
+    if (!result.ok) return result;
+
+    const { user: u, token } = result.data;
+    setUser(u);
+    localStorage.setItem('user', JSON.stringify(u));
+    localStorage.setItem('token', token);
+    return { ok: true };
+  };
+
+  const logout = () => clearSession();
+
+  const generateResetToken = (email: string) =>
+    postJson(`${API.auth}/forgot-password`, { email });
+
+  const verifyResetToken = (email: string, token: string) =>
+    postJson(`${API.auth}/verify-reset-token`, { email, token });
+
+  const resetPassword = (email: string, token: string, newPassword: string) =>
+    postJson(`${API.auth}/reset-password`, { email, token, newPassword });
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, generateResetToken, validateResetToken, resetPassword }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        login,
+        register,
+        logout,
+        generateResetToken,
+        verifyResetToken,
+        resetPassword,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

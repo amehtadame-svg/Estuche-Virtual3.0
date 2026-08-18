@@ -1,12 +1,16 @@
-// Maximum number of failed attempts before locking the account.
-export const MAX_ATTEMPTS = 3;
+export const MAX_ATTEMPTS = Number(process.env.LOGIN_MAX_ATTEMPTS ?? 3);
+
+// How long (in minutes) the account stays locked after too many failed logins.
+export const LOCK_MINUTES = Number(process.env.LOGIN_LOCK_MINUTES ?? 15);
 
 // Validity (in minutes) of the password-recovery code.
-export const TOKEN_EXP_MINUTES = 15;
+export const TOKEN_EXP_MINUTES = Number(process.env.RESET_TOKEN_MINUTES ?? 15);
 
-// Generates a 6-digit numeric code (000000 - 999999) for password reset.
+// Generates a 6-digit numeric code (100000 - 999999) for password reset.
+import crypto from 'crypto';
+
 export function generateCode(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  return String(crypto.randomInt(100000, 1000000));
 }
 
 export interface PasswordCheck {
