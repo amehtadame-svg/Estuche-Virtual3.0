@@ -3,8 +3,8 @@ import jwt from 'jsonwebtoken';
 import { prisma } from '../../lib/prisma';
 import { HttpError, badRequest, unauthorized } from '../../lib/errors';
 
-const MAX_ATTEMPTS = Number(process.env.LOGIN_MAX_INTENTOS ?? 5);
-const LOCK_MINUTES = Number(process.env.LOGIN_BLOQUEO_MINUTOS ?? 15);
+const MAX_ATTEMPTS = Number(process.env.LOGIN_MAX_ATTEMPTS ?? 5);
+const LOCK_MINUTES = Number(process.env.LOGIN_LOCK_MINUTES ?? 15);
 
 export interface RequestContext {
   ip: string | null;
@@ -37,7 +37,7 @@ async function logSecurityEvent(
       },
     });
   } catch {
-    // la bitácora nunca debe interrumpir la autenticación
+    // the audit log must never interrupt authentication
   }
 }
 

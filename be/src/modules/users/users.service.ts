@@ -107,8 +107,8 @@ export const userService = {
         await tx.order.deleteMany({ where: { id: { in: orderIds } } });
       }
       await tx.order.updateMany({ where: { driverId: id }, data: { driverId: null } });
-      // NOTA: se conserva el borrado físico en cascada del flujo original.
-      // `deletedAt` queda disponible para implementar soft-delete a futuro.
+      // NOTE: cascading hard-delete is kept from the original flow.
+      // `deletedAt` is available for implementing soft-delete in the future.
       await tx.user.delete({ where: { id } });
     });
 

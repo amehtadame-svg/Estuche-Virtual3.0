@@ -1,11 +1,11 @@
-// Número máximo de intentos fallidos antes de bloquear la cuenta.
-export const MAX_INTENTOS = 3;
+// Maximum number of failed attempts before locking the account.
+export const MAX_ATTEMPTS = 3;
 
-// Minutos de validez del código de recuperación de contraseña.
-export const TOKEN_EXP_MINUTOS = 15;
+// Validity (in minutes) of the password-recovery code.
+export const TOKEN_EXP_MINUTES = 15;
 
-// Genera un código numérico de 6 dígitos (000000 - 999999) para reset de contraseña.
-export function generarCodigo(): string {
+// Generates a 6-digit numeric code (000000 - 999999) for password reset.
+export function generateCode(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
@@ -14,8 +14,8 @@ export interface PasswordCheck {
   message?: string;
 }
 
-// mínimo 8 caracteres, mayúscula, minúscula, número y carácter especial.
-export function validarPassword(password: string): PasswordCheck {
+// Minimum 8 characters, uppercase, lowercase, number and special character.
+export function validatePassword(password: string): PasswordCheck {
   if (!password || password.length < 8) {
     return { valid: false, message: 'La contraseña debe tener al menos 8 caracteres.' };
   }

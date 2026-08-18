@@ -10,7 +10,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-export async function enviarCodigoVerificacion(email: string, token: string): Promise<boolean> {
+export async function sendVerificationCode(email: string, token: string): Promise<boolean> {
   try {
     await transporter.sendMail({
       from: `"Estuche Virtual" <${process.env.EMAIL_USER}>`,
@@ -29,7 +29,7 @@ export async function enviarCodigoVerificacion(email: string, token: string): Pr
     });
     return true;
   } catch (err) {
-    console.error('Error enviando correo:', err);
+    console.error('Error sending email:', err);
     return false;
   }
 }

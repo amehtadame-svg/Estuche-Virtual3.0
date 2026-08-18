@@ -32,7 +32,7 @@ export const shoppingService = {
     });
   },
 
-  // Devuelve el item actualizado, o null si la cantidad <= 0 (se elimina el item).
+  // Returns the updated item, or null if quantity <= 0 (the item is removed).
   async updateQuantity(userId: string, productId: string, quantity: number) {
     if (!quantity || quantity < 1) {
       await prisma.shopping.delete({

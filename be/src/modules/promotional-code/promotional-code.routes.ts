@@ -20,11 +20,11 @@ import {
 
 const router = Router();
 
-// Cualquier usuario autenticado puede validar/aplicar un código
+// Any authenticated user can validate/apply a code
 router.post('/validate', verifyToken, validate({ body: validatePromotionalCodeSchema }), validatePromotionalCode);
 router.post('/apply',    verifyToken, validate({ body: applyPromotionalCodeSchema }), applyPromotionalCode);
 
-// Gestión solo para superadmin
+// Management restricted to superadmin
 router.use(verifyToken, verifySuperAdmin);
 
 router.get('/',             listPromotionalCodes);

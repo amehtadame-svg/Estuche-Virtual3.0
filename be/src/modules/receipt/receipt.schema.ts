@@ -10,5 +10,5 @@ export const createReceiptSchema = z.object({
   paymentStatus: z.enum(receiptStatusEnum).optional(),
 });
 
-// El update no permite cambiar el pedido asociado (coincide con el flujo original).
+// Update does not allow changing the associated order (matches the original flow).
 export const updateReceiptSchema = createReceiptSchema.omit({ orderId: true }).partial();
