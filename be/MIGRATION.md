@@ -100,3 +100,7 @@ psql "$DATABASE_URL" -c "SELECT uuid_generate_v7();"     # debe devolver un UUID
 psql "$DATABASE_URL" -c "\dt"                            # lista las tablas
 ```
 Un UUID v7 válido empieza por `017`–`019` (timestamp actual) y lleva la versión `7`.
+
+## 7. COMANDO PARA NO UTILIZAR NUNCA 
+
+Docker Compose Down -V : Provoca la eliminacion de los datos de migracion, NO USAR JAMÀS.
