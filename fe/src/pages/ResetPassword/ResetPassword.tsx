@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { validarPassword } from '../../utils/validarPassword';
+import PasswordInput from '../../components/ui/PasswordInput';
 import './ResetPassword.css';
 
 export default function ResetPassword() {
@@ -22,8 +23,6 @@ export default function ResetPassword() {
   const [success, setSuccess]       = useState(false);
   const [step, setStep]             = useState<'token' | 'password'>('token');
   const [verifying, setVerifying]   = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirm, setShowConfirm]   = useState(false);
 
   const handleVerifyToken = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -146,31 +145,13 @@ export default function ResetPassword() {
           <form onSubmit={handleSubmit}>
             <div className="reset-field">
               <label htmlFor="password">Nueva contraseña</label>
-              <div style={{ position: 'relative' }}>
-                <input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  placeholder="Mínimo 8 caracteres"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(p => !p)}
-                  style={{
-                    position: 'absolute',
-                    right: '10px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                  }}
-                >
-                  {showPassword ? '🙈' : '👁️'}
-                </button>
-              </div>
+              <PasswordInput
+                id="password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder="Mínimo 8 caracteres"
+                required
+              />
               <p style={{ fontSize: '0.78rem', color: '#666', margin: '2px 0 0' }}>
                 Debe tener mayúscula, minúscula, número y un carácter especial (!@#$%...).
               </p>
@@ -178,33 +159,15 @@ export default function ResetPassword() {
 
             <div className="reset-field">
               <label htmlFor="confirm">Confirmar contraseña</label>
-              <div style={{ position: 'relative' }}>
-                <input
-                  id="confirm"
-                  type={showConfirm ? 'text' : 'password'}
-                  value={confirm}
-                  onChange={e => setConfirm(e.target.value)}
-                  placeholder="Repite la contraseña"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirm(p => !p)}
-                  style={{
-                    position: 'absolute',
-                    right: '10px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                  }}
-                >
-                  {showConfirm ? '🙈' : '👁️'}
-                </button>
-              </div>
+              <PasswordInput
+                id="confirm"
+                value={confirm}
+                onChange={e => setConfirm(e.target.value)}
+                placeholder="Repite la contraseña"
+                required
+              />
             </div>
-
+            
             {error && <p className="reset-error">⚠️ {error}</p>}
 
             <button type="submit" className="reset-btn">

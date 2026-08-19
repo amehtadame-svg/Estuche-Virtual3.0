@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { validarPassword } from '../../utils/validarPassword';
+import PasswordInput from '../../components/ui/PasswordInput'; 
 import './Register.css';
 
 const Register = () => {
@@ -9,8 +10,6 @@ const Register = () => {
   const [email, setEmail]             = useState('');
   const [password, setPassword]       = useState('');
   const [confirmPassword, setConfirm] = useState('');
-  const [showPassword, setShowPassword]   = useState(false); 
-  const [showConfirm, setShowConfirm]     = useState(false); 
   const [error, setError]             = useState('');
   const [success, setSuccess]         = useState('');
 
@@ -65,25 +64,23 @@ if (!ok) {
             value={email} onChange={e => setEmail(e.target.value)} required />
 
           <label className="register-label">Contraseña</label>
-          <div style={{ position: 'relative' }}>
-            <input className="register-input" type={showPassword ? 'text' : 'password'} placeholder="Mínimo 8 caracteres"
-              value={password} onChange={e => setPassword(e.target.value)} required />
-          <button type="button" onClick={() => setShowPassword(p => !p)}
-              style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer' }}>
-              {showPassword ? '🙈' : '👁️'}
-          </button>
-        </div>
+          <PasswordInput
+            className="register-input"
+            placeholder="Mínimo 8 caracteres"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            required
+          />
 
           <label className="register-label">Confirmar contraseña</label>
-          <div style={{ position: 'relative' }}>
-            <input className="register-input" type={showConfirm ? 'text' : 'password'} placeholder="Repite tu contraseña"
-                value={confirmPassword} onChange={e => setConfirm(e.target.value)} required />
-            <button type="button" onClick={() => setShowConfirm(p => !p)}
-                style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer' }}>
-                {showConfirm ? '🙈' : '👁️'}
-            </button>
-          </div>
-
+          <PasswordInput
+            className="register-input"
+            placeholder="Repite tu contraseña"
+            value={confirmPassword}
+            onChange={e => setConfirm(e.target.value)}
+            required
+          />
+          
           {error   && <p className="register-error">⚠️ {error}</p>}
           {success && <p className="register-success">✅ {success}</p>}
 
