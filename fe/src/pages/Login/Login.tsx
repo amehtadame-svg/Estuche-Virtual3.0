@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import PasswordInput from '../../components/ui/PasswordInput';
 import './Login.css';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [showPassword, setShowPassword] = useState(false); 
   const [loading, setLoading] = useState(false);
   const { login, generateResetToken } = useAuth();
   const navigate = useNavigate();
@@ -71,23 +71,13 @@ const Login = () => {
           />
 
         <label className="input-label">Contraseña</label>
-        <div style={{ position: 'relative' }}>
-        <input
+        <PasswordInput
           className="login-input"
-          type={showPassword ? 'text' : 'password'}
           placeholder="Tu contraseña"
           value={password}
           onChange={e => setPassword(e.target.value)}
           required
           />
-        <button
-          type="button"
-          onClick={() => setShowPassword(prev => !prev)}
-          style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer' }}
-          >
-          {showPassword ? '🙈' : '👁️'}
-        </button>
-      </div>
 
           {error && (
             <p style={{ color: '#e53e3e', fontSize: '0.85rem', margin: '4px 0 8px', textAlign: 'center' }}>
