@@ -133,7 +133,7 @@ export const authService = {
     const exists = await prisma.user.findUnique({ where: { email } });
     if (exists) throw badRequest('El correo ya está registrado');
 
-    const hashed = await bcrypt.hash(password, 10);
+    const hashed = await bcrypt.hash(password, 12);
     const newUser = await prisma.user.create({
       data: {
         email,
@@ -222,7 +222,7 @@ export const authService = {
       throw badRequest('La nueva contraseña no puede ser igual a la anterior.');
     }
 
-    const hashed = await bcrypt.hash(newPassword, 10);
+    const hashed = await bcrypt.hash(newPassword, 12);
     await prisma.user.update({
       where: { email },
       data: {
