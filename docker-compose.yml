@@ -28,7 +28,7 @@ services:
     restart: unless-stopped
     env_file:
       - ./be/.env
-    command: sh -c "pnpm prisma generate && pnpm dev"
+    command: sh -c "pnpm prisma generate && (pnpm prisma migrate resolve --applied 20260813000000_uuid_v7_function || true) && (pnpm prisma migrate resolve --applied 20260814053836_init || true) && pnpm prisma migrate deploy && pnpm dev"
     volumes:
       - ./be:/app
       - be_node_modules:/app/node_modules

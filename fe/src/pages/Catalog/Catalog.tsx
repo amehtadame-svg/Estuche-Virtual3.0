@@ -33,15 +33,20 @@ export default function Catalog() {
   const [search, setSearch] = useState('');
   const [recentlyAdded, setRecentlyAdded] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch(API.products)
-      .then((r) => r.json())
-      .then((data) => {
-        setProducts(data);
-        setLoading(false);
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
       })
-      .catch(() => setLoading(false));
+      .then((data) => {
+        if (!Array.isArray(data)) throw new Error('Respuesta inválida del servidor');
+        setProducts(data);
+      })
+      .catch((e) => setError(e.message ?? 'Error al cargar productos'))
+      .finally(() => setLoading(false));
   }, []);
 
   const categories = ['Todos', ...Array.from(new Set(products.map((p) => p.category?.name ?? 'Otros')))];
@@ -97,6 +102,14 @@ export default function Catalog() {
 
         {loading ? (
           <p style={{ color: 'var(--text)', padding: '40px 0' }}>Cargando productos...</p>
+        ) : error ? (
+          <div className="catalogo-vacio">
+            <p>No se pudieron cargar los productos 😕</p>
+            <p style={{ fontSize: '0.85rem', opacity: 0.7 }}>{error}</p>
+            <button className="cat-btn cat-btn-activa" onClick={() => window.location.reload()}>
+              Reintentar
+            </button>
+          </div>
         ) : filtered.length === 0 ? (
           <div className="catalogo-vacio">
             <p>No se encontraron productos 😕</p>
