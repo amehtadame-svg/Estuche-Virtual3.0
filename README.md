@@ -2,6 +2,7 @@
 
 # ESTUCHE VIRTUAL
 
+[![CI](https://github.com/amehtadame-svg/Estuche-Virtual3.0/actions/workflows/ci.yml/badge.svg)](https://github.com/amehtadame-svg/Estuche-Virtual3.0/actions/workflows/ci.yml)
 ![Estado](https://img.shields.io/badge/estado-en%20desarrollo-yellow)
 ![Versión](https://img.shields.io/badge/version-1.6-blue)
 ![Licencia](https://img.shields.io/badge/licencia-academica-green)

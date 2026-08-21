@@ -1,16 +1,16 @@
 <!--
-  ¿Qué? Requisito funcional que describe la generación automática de la factura de un pedido.
+  ¿Qué? Requisito funcional que describe la generación automática del recibo de un pedido.
   ¿Para qué? Definir cómo y cuándo se emite el comprobante formal de una compra.
   ¿Impacto? Es el documento legal y contable que respalda cada venta realizada.
 -->
 
-# RF-020 — Generación de Facturas
+# RF-020 — Generación de Recibos
 
 **Historia de usuario relacionada**: HU-033
 
 ## Descripción
 
-El sistema debe generar automáticamente una factura cuando el pago de un pedido es confirmado, consolidando el detalle de productos, cantidades y totales.
+El sistema debe generar automáticamente un recibo cuando el pago de un pedido es confirmado, consolidando el detalle de productos, cantidades y totales.
 
 ---
 
@@ -19,10 +19,10 @@ El sistema debe generar automáticamente una factura cuando el pago de un pedido
 | Paso | Descripción |
 |------|-------------|
 | 1 | Un pago es confirmado por la pasarela para un pedido determinado. |
-| 2 | El sistema crea el registro en `facturas` asociado al pedido y al cliente. |
-| 3 | Se genera el `detalle_factura` a partir del `detalle_pedido`. |
-| 4 | El estado de la factura se establece como "pagado". |
-| 5 | El cliente puede consultar o descargar su factura. |
+| 2 | El sistema crea el registro en `receipts` asociado al pedido y al cliente. |
+| 3 | Se generan los `receipt_items` a partir de los `order_details`. |
+| 4 | El estado del recibo se establece como "pagado". |
+| 5 | El cliente puede consultar o descargar su recibo. |
 
 ---
 
@@ -30,9 +30,9 @@ El sistema debe generar automáticamente una factura cuando el pago de un pedido
 
 | ID | Regla |
 |----|--------|
-| RN-001 | Cada pedido genera exactamente una factura (`UNIQUE(id_pedido)`). |
-| RN-002 | El total de la factura debe coincidir con la suma de sus detalles. |
-| RN-003 | Una factura no puede generarse sin un pago confirmado. |
+| RN-001 | Cada pedido genera exactamente un recibo (`UNIQUE(order_id)`). |
+| RN-002 | El total del recibo debe coincidir con la suma de sus detalles. |
+| RN-003 | Un recibo no puede generarse sin un pago confirmado. |
 
 ---
 
@@ -48,8 +48,8 @@ No aplica (proceso automático disparado por confirmación de pago).
 
 ```json
 {
-  "id_factura": 55,
-  "estado_pago": "pagado",
+  "id": "01912345-6789-7000-8000-000000000000",
+  "paymentStatus": "paid",
   "total": 95000
 }
 ```
@@ -58,7 +58,7 @@ No aplica (proceso automático disparado por confirmación de pago).
 
 ```json
 {
-  "error": "Ya existe una factura para este pedido."
+  "error": "Ya existe un recibo para este pedido."
 }
 ```
 
@@ -68,5 +68,5 @@ No aplica (proceso automático disparado por confirmación de pago).
 
 | Método | Ruta | Auth requerida | Descripción |
 |---------|------|----------------|-------------|
-| GET | `/api/facturas/{id}` | Sí | Consulta el detalle de una factura. |
-| GET | `/api/facturas/pedido/{idPedido}` | Sí | Consulta la factura asociada a un pedido. |
+| GET | `/api/receipts` | Sí (admin) | Lista los recibos emitidos. |
+| GET | `/api/orders/{id}` | Sí | Consulta del pedido, que incluye el recibo asociado. |
