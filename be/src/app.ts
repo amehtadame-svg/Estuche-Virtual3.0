@@ -20,10 +20,24 @@ import { errorHandler }      from './middlewares/error.middleware';
 
 // C-06 / RNF-001.4: CORS con lista blanca explícita por variable de entorno.
 // Nunca un comodín: en producción solo se aceptan los orígenes declarados.
-const CORS_ORIGINS = (process.env.CORS_ORIGINS ?? 'http://localhost:5173')
+// Se admiten patrones con '*' en el subdominio (p. ej. https://*.app.github.dev)
+// para entornos de preview (Codespaces) cuyo host cambia en cada sesión.
+const CORS_ORIGINS = (
+  process.env.CORS_ORIGINS ?? 'http://localhost:5173,https://*.app.github.dev'
+)
   .split(',')
   .map((origin) => origin.trim())
   .filter(Boolean);
+
+const originIsAllowed = (origin: string) =>
+  CORS_ORIGINS.some((allowed) => {
+    if (!allowed.includes('*')) return allowed === origin;
+    const pattern = allowed
+      .split('*')
+      .map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+      .join('.*');
+    return new RegExp(`^${pattern}$`).test(origin);
+  });
 
 // C-06 / RNF-001.3: rate limiting en los endpoints de autenticación.
 // Por defecto 10 peticiones cada 15 minutos por IP (configurable por env).
@@ -41,7 +55,11 @@ const app = express();
 app.use(helmet());
 app.use(
   cors({
-    origin: CORS_ORIGINS,
+    origin: (origin, callback) => {
+      // Peticiones sin origin (curl, Postman, server-to-server) se permiten.
+      if (!origin || originIsAllowed(origin)) return callback(null, true);
+      return callback(null, false); // bloquea: no fija header CORS
+    },
     credentials: true,
   })
 );

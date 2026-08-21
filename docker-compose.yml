@@ -2,7 +2,7 @@ name: estuche-virtual
 
 services:
   db:
-    image: postgres:16-alpine
+    image: postgres:17-alpine
     container_name: estuche-db
     restart: unless-stopped
     environment:
@@ -11,6 +11,7 @@ services:
       POSTGRES_DB: estuche_virtual
     volumes:
       - db_data:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro
     ports:
       - "5432:5432"
     healthcheck:

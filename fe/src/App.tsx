@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider }  from './context/AuthContext';
 import { CartProvider }  from './context/CartContext';
+import AccessDenied from './pages/AccessDenied/AccessDenied';
 import ProtectedRoute    from './components/ui/ProtectedRoute';
 import Header            from './components/layout/Header';
 import Footer            from './components/layout/Footer';
@@ -56,6 +57,7 @@ function App() {
             <Route path="/carrito"         element={<Carrito />} />
             <Route path="/Contacto"        element={<Contacto />} />
             <Route path="/Nosotros"        element={<Nosotros />} />
+            <Route path="/no-acceso" element={<AccessDenied />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password"  element={<ResetPassword />} />
 
