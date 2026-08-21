@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import Modal from '../../../components/ui/Modal';
-import { API } from '../../../api/api';
+import { API, authHeaders } from '../../../api/api';
 import './Receipt.css';
 
 const statusColor: Record<string, string> = {
@@ -33,14 +33,14 @@ export default function Receipt() {
   const [loading, setLoading] = useState(true);
 
   const loadReceipts = () => {
-    fetch(API.receipts)
+    fetch(API.receipts, { headers: authHeaders() })
       .then((r) => r.json())
       .then((data) => {
         setReceipts(data);
         setLoading(false);
       })
       .catch(() => {
-        showMessage('Error al cargar facturas.');
+        showMessage('Error al cargar recibos.');
         setLoading(false);
       });
   };
@@ -86,17 +86,17 @@ export default function Receipt() {
     if (editingId !== null) {
       await fetch(`${API.receipts}/${editingId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify(body),
       });
-      showMessage('Factura actualizada.');
+      showMessage('Recibo actualizado.');
     } else {
       await fetch(API.receipts, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify(body),
       });
-      showMessage('Factura agregada.');
+      showMessage('Recibo agregado.');
     }
 
     loadReceipts();
@@ -115,15 +115,15 @@ export default function Receipt() {
   };
 
   const handleDelete = async (id: string) => {
-    await fetch(`${API.receipts}/${id}`, { method: 'DELETE' });
+    await fetch(`${API.receipts}/${id}`, { method: 'DELETE', headers: authHeaders() });
     setReceipts(receipts.filter((f) => f.id !== id));
-    showMessage('Factura eliminada.');
+    showMessage('Recibo eliminado.');
   };
 
   const changeStatus = async (id: string, newStatus: string) => {
     const res = await fetch(`${API.receipts}/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
       body: JSON.stringify({ paymentStatus: newStatus }),
     });
     if (res.ok) {
@@ -138,22 +138,22 @@ export default function Receipt() {
     <>
       <div className="facturas-page">
         <div className="facturas-topbar">
-          <h2 className="titulo-facturas">Gestion de Facturas</h2>
-          <p className="subtitulo-usuarios">Administra las Facturas registradas</p>
+          <h2 className="titulo-facturas">Gestión de Recibos</h2>
+          <p className="subtitulo-usuarios">Administra los Recibos registrados</p>
           <button className="btn-nuevo-factura" onClick={openNewModal}>
-            + Nueva factura
+            + Nuevo recibo
           </button>
         </div>
 
         {message && <div className="mensaje-facturas">{message}</div>}
 
         {loading ? (
-          <p style={{ color: 'var(--text)', padding: '20px 0' }}>Cargando facturas...</p>
+          <p style={{ color: 'var(--text)', padding: '20px 0' }}>Cargando recibos...</p>
         ) : (
           <table className="tabla-facturas">
             <thead>
               <tr>
-                <th>N° Factura</th>
+                <th>N° Recibo</th>
                 <th>Pedido</th>
                 <th>Fecha</th>
                 <th>Total</th>
@@ -165,7 +165,7 @@ export default function Receipt() {
             <tbody>
               {receipts.map((fac) => (
                 <tr key={fac.id}>
-                  <td className="numero-factura">FAC-{String(fac.receiptNumber).padStart(3, '0')}</td>
+                  <td className="numero-factura">REC-{String(fac.receiptNumber).padStart(3, '0')}</td>
                   <td>{fac.order ? `PED-${fac.order.id.slice(0, 6).toUpperCase()}` : '—'}</td>
                   <td>{fac.date ? fac.date.split('T')[0] : '—'}</td>
                   <td className="total-factura">${Number(fac.total).toLocaleString()}</td>
@@ -197,13 +197,13 @@ export default function Receipt() {
 
       {modalOpen && (
         <Modal
-          titulo={editingId !== null ? 'Editar factura' : 'Nueva factura'}
+          titulo={editingId !== null ? 'Editar recibo' : 'Nuevo recibo'}
           onClose={closeModal}
           footer={
             <>
               <button className="btn-cancelar-factura" onClick={closeModal}>Cancelar</button>
               <button className="btn-guardar-factura" onClick={handleSave}>
-                {editingId !== null ? 'Guardar cambios' : 'Agregar factura'}
+                {editingId !== null ? 'Guardar cambios' : 'Agregar recibo'}
               </button>
             </>
           }

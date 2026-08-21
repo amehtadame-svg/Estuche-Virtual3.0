@@ -208,7 +208,7 @@ export default function Checkout() {
 
       const order = await resOrder.json();
 
-      // 3. Crear factura/recibo asociado al pedido
+      // 3. Crear recibo asociado al pedido
       const resReceipt = await fetch(API.receipts, {
         method: 'POST',
         headers,

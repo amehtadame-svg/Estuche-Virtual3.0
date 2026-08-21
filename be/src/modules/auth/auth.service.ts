@@ -47,9 +47,13 @@ async function logSecurityEvent(
 }
 
 function signToken(user: AuthUser) {
-  const secret = process.env.JWT_SECRET ?? process.env.JWT_ACCESS_SECRET;
+  // C-04: un solo secreto para firmar y verificar. Antes se firmaba con un
+  // fallback a una variable distinta que el .env-example publicaba, mientras
+  // el middleware verificaba solo con JWT_SECRET: quien seguía la
+  // documentación veía fallar todas las rutas protegidas con 401.
+  const secret = process.env.JWT_SECRET;
   if (!secret) {
-    throw new Error('Falta JWT_SECRET (o JWT_ACCESS_SECRET) en las variables de entorno.');
+    throw new Error('Falta JWT_SECRET en las variables de entorno.');
   }
   return jwt.sign(
     { id: user.id, name: user.fullName, email: user.email, role: user.role },

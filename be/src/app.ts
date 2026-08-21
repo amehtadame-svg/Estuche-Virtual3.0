@@ -1,5 +1,7 @@
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
+import { rateLimit } from 'express-rate-limit';
 
 import authRoutes            from './modules/auth/auth.routes';
 import userRoutes            from './modules/users/users.routes';
@@ -16,13 +18,37 @@ import returnRoutes          from './modules/returns/returns.routes';
 import reportRoutes          from './modules/reports/reports.routes';
 import { errorHandler }      from './middlewares/error.middleware';
 
+// C-06 / RNF-001.4: CORS con lista blanca explícita por variable de entorno.
+// Nunca un comodín: en producción solo se aceptan los orígenes declarados.
+const CORS_ORIGINS = (process.env.CORS_ORIGINS ?? 'http://localhost:5173')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+// C-06 / RNF-001.3: rate limiting en los endpoints de autenticación.
+// Por defecto 10 peticiones cada 15 minutos por IP (configurable por env).
+const authLimiter = rateLimit({
+  windowMs: Number(process.env.RATE_LIMIT_WINDOW_MS ?? 15 * 60 * 1000),
+  limit: Number(process.env.RATE_LIMIT_MAX ?? 10),
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'Demasiados intentos. Intenta de nuevo más tarde.' },
+});
+
 const app = express();
 
-app.use(cors({ origin: true, credentials: true }));
+// Cabeceras de seguridad HTTP (helmet) antes que cualquier ruta.
+app.use(helmet());
+app.use(
+  cors({
+    origin: CORS_ORIGINS,
+    credentials: true,
+  })
+);
 app.use(express.json());
 
 // ── Públicas / compartidas ────────────────────────────
-app.use('/api/auth',               authRoutes);
+app.use('/api/auth',               authLimiter, authRoutes);
 app.use('/api/users',              userRoutes);
 app.use('/api/orders',             orderRoutes);
 app.use('/api/products',           productRoutes);

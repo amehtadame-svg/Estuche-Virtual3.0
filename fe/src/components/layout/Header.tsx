@@ -50,7 +50,7 @@ export default function Header() {
             <Link to="/admin">Inicio</Link>
             <Link to="/admin/productos">Productos</Link>
             <Link to="/admin/pedidos">Pedidos</Link>
-            <Link to="/admin/facturas">Facturas</Link>
+            <Link to="/admin/recibos">Recibos</Link>
             <Link to="/admin/envios">Envíos</Link>
             <Link to="/admin/proveedores">Proveedores</Link>
             <Link to="/admin/usuarios">Usuarios</Link>

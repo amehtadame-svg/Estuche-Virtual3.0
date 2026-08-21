@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import Modal from '../../../components/ui/Modal';
-import { API } from '../../../api/api';
+import { API, authHeaders } from '../../../api/api';
 import './Despatch.css';
 
 const statusColor: Record<string, string> = {
@@ -44,7 +44,7 @@ export default function Despatch() {
   const [loading, setLoading] = useState(true);
 
   const loadDespatches = () => {
-    fetch(API.despatches)
+    fetch(API.despatches, { headers: authHeaders() })
       .then((r) => r.json())
       .then((data) => {
         setDespatches(data);
@@ -127,14 +127,14 @@ export default function Despatch() {
     if (editingId !== null) {
       await fetch(`${API.despatches}/${editingId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify(body),
       });
       showMessage('Envio actualizado.');
     } else {
       await fetch(API.despatches, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify(body),
       });
       showMessage('Envio agregado.');
@@ -156,7 +156,7 @@ export default function Despatch() {
   };
 
   const handleDelete = async (id: string) => {
-    await fetch(`${API.despatches}/${id}`, { method: 'DELETE' });
+    await fetch(`${API.despatches}/${id}`, { method: 'DELETE', headers: authHeaders() });
     setDespatches(despatches.filter((e) => e.id !== id));
     showMessage('Envio eliminado.');
   };
@@ -164,7 +164,7 @@ export default function Despatch() {
   const changeStatus = async (id: string, newStatus: string) => {
     await fetch(`${API.despatches}/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
       body: JSON.stringify({ status: newStatus }),
     });
     setDespatches(despatches.map((e) => (e.id === id ? { ...e, status: newStatus } : e)));

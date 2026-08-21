@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import Modal from '../../../components/ui/Modal';
-import { API } from '../../../api/api';
+import { API, authHeaders } from '../../../api/api';
 import './Products.css';
 
 const categories = ['Cuadernos', 'Colores', 'Carpetas', 'Lapiceros', 'Mochilas', 'Tijeras'];
@@ -31,7 +31,7 @@ export default function Products() {
   const [categoryFilter, setCategoryFilter] = useState('');
 
   const loadProducts = () => {
-    fetch(API.products)
+    fetch(API.products, { headers: authHeaders() })
       .then((r) => r.json())
       .then((data) => {
         setProducts(data);
@@ -103,14 +103,14 @@ export default function Products() {
     if (editingId !== null) {
       await fetch(`${API.products}/${editingId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify(body),
       });
       showMessage('Producto actualizado.');
     } else {
       await fetch(API.products, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify(body),
       });
       showMessage('Producto agregado.');
@@ -134,7 +134,7 @@ export default function Products() {
   };
 
   const handleDelete = async (id: string) => {
-    await fetch(`${API.products}/${id}`, { method: 'DELETE' });
+    await fetch(`${API.products}/${id}`, { method: 'DELETE', headers: authHeaders() });
     setProducts(products.filter((p) => p.id !== id));
     showMessage('Producto eliminado.');
   };

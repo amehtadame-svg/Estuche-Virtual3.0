@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import Modal from '../../../components/ui/Modal';
 import './OrderDetails.css';
-import { API } from '../../../api/api';
+import { API, authHeaders } from '../../../api/api';
 
 const emptyForm = { orderId: '', productId: '', quantity: '', unitPrice: '' };
 
@@ -26,7 +26,7 @@ export default function OrderDetails() {
   const [search, setSearch] = useState('');
 
   const loadDetails = () => {
-    fetch(API.orderDetails)
+    fetch(API.orderDetails, { headers: authHeaders() })
       .then((r) => r.json())
       .then((data) => {
         setDetails(data);
@@ -96,14 +96,14 @@ export default function OrderDetails() {
       if (editingId !== null) {
         await fetch(`${API.orderDetails}/${editingId}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', ...authHeaders() },
           body: JSON.stringify(body),
         });
         showMessage('Detalle actualizado.');
       } else {
         await fetch(API.orderDetails, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', ...authHeaders() },
           body: JSON.stringify(body),
         });
         showMessage('Artículo agregado.');
@@ -128,7 +128,7 @@ export default function OrderDetails() {
 
   const handleDelete = async (id: string) => {
     try {
-      await fetch(`${API.orderDetails}/${id}`, { method: 'DELETE' });
+      await fetch(`${API.orderDetails}/${id}`, { method: 'DELETE', headers: authHeaders() });
       setDetails(details.filter((d) => d.id !== id));
       showMessage('Artículo eliminado.');
     } catch {

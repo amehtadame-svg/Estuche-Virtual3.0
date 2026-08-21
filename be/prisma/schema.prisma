@@ -119,6 +119,7 @@ model Order {
   status           OrderStatus @default(pending)
   total            Decimal     @default(0) @db.Decimal(14, 2)
   updatedAt        DateTime?   @default(now()) @map("updated_at")
+  deletedAt        DateTime?   @map("deleted_at")
 
   details          OrderDetail[]
   returns          OrderReturn[]
@@ -131,6 +132,7 @@ model Order {
 
   @@index([customerId], map: "idx_orders_customer")
   @@index([driverId], map: "idx_orders_driver")
+  @@index([deletedAt], map: "idx_orders_deleted_at")
   @@map("orders")
 }
 
@@ -144,6 +146,7 @@ model Product {
   categoryId  String?  @db.Uuid @map("category_id")
   supplierId  String?  @db.Uuid @map("supplier_id")
   createdAt   DateTime @default(now()) @map("created_at")
+  deletedAt   DateTime? @map("deleted_at")
 
   shopping           Shopping[]
   receiptItems       ReceiptItem[]
@@ -159,6 +162,7 @@ model Product {
 
   @@index([categoryId], map: "idx_products_category")
   @@index([supplierId], map: "idx_products_supplier")
+  @@index([deletedAt], map: "idx_products_deleted_at")
   @@map("products")
 }
 

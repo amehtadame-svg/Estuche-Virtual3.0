@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import Modal from '../../../components/ui/Modal';
 import './Provider.css';
-import { API } from '../../../api/api';
+import { API, authHeaders } from '../../../api/api';
 
 const emptyForm = { name: '', email: '', phone: '', address: '' };
 
@@ -27,7 +27,7 @@ export default function Provider() {
   const [loading, setLoading] = useState(true);
 
   const loadProviders = () => {
-    fetch(API.providers)
+    fetch(API.providers, { headers: authHeaders() })
       .then((r) => r.json())
       .then((data) => {
         setProviders(data);
@@ -81,14 +81,14 @@ export default function Provider() {
     if (editingId !== null) {
       await fetch(`${API.providers}/${editingId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify(body),
       });
       showMessage('Proveedor actualizado.');
     } else {
       await fetch(API.providers, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify(body),
       });
       showMessage('Proveedor agregado.');
@@ -110,7 +110,7 @@ export default function Provider() {
   };
 
   const handleDelete = async (id: string) => {
-    await fetch(`${API.providers}/${id}`, { method: 'DELETE' });
+    await fetch(`${API.providers}/${id}`, { method: 'DELETE', headers: authHeaders() });
     setProviders(providers.filter((p) => p.id !== id));
     showMessage('Proveedor eliminado.');
   };

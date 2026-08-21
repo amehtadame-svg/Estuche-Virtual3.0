@@ -25,7 +25,7 @@ import ClienteDashboard from './pages/ClientDashboard/ClientDashboard';
 import AdminDashboard  from './pages/Admin/AdminDashboard';
 import ProductosAD     from './pages/Admin/Products/Products';
 import Pedidos         from './pages/Admin/Orders/Orders';
-import Facturas        from './pages/Admin/Receipt/Receipt';
+import Recibos          from './pages/Admin/Receipt/Receipt';
 import Envios          from './pages/Admin/Despatch/Despatch';
 import Proveedores     from './pages/Admin/Provider/Provider';
 import Usuarios        from './pages/Admin/Users/AdminUsers';
@@ -74,7 +74,7 @@ function App() {
               <Route path="/admin"                 element={<AdminDashboard />} />
               <Route path="/admin/productos"       element={<ProductosAD />} />
               <Route path="/admin/pedidos"         element={<Pedidos />} />
-              <Route path="/admin/facturas"        element={<Facturas />} />
+              <Route path="/admin/recibos"           element={<Recibos />} />
               <Route path="/admin/envios"          element={<Envios />} />
               <Route path="/admin/proveedores"     element={<Proveedores />} />
               <Route path="/admin/usuarios"        element={<Usuarios />} />

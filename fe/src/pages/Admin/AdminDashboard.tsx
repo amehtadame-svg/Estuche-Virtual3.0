@@ -29,7 +29,7 @@ const statusColor: Record<string, string> = {
 const recentActivity = [
   { text: 'Nuevo pedido #4521 de Laura Pérez', time: 'Hace 5 min', icon: '🛒' },
   { text: 'Producto "Cuaderno A4" actualizado', time: 'Hace 20 min', icon: '📦' },
-  { text: 'Factura #0217 generada', time: 'Hace 1 hora', icon: '🧾' },
+  { text: 'Recibo #0217 generado', time: 'Hace 1 hora', icon: '🧾' },
   { text: 'Envío #312 marcado como entregado', time: 'Hace 2 horas', icon: '🚚' },
   { text: 'Proveedor "Papelería Luna" agregado', time: 'Ayer', icon: '🏭' },
 ];
@@ -40,7 +40,7 @@ const AdminDashboard = () => {
   const stats = [
     { label: 'Productos', value: '124', icon: '📦', color: 'stat-purple' },
     { label: 'Pedidos hoy', value: '38', icon: '🛒', color: 'stat-blue' },
-    { label: 'Facturas', value: '217', icon: '🧾', color: 'stat-green' },
+    { label: 'Recibos', value: '217', icon: '🧾', color: 'stat-green' },
     { label: 'Proveedores', value: '12', icon: '🏭', color: 'stat-orange' },
   ];
 

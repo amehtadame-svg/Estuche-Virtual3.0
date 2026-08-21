@@ -312,7 +312,7 @@ export default function SuperAdminUsers() {
             <p>
               ¿Estás seguro de que deseas eliminar a <strong>{modalDelete.fullName}</strong>?
             </p>
-            <p className="eliminar-warning-sub">Esta acción eliminará también sus pedidos, envíos y facturas asociadas.</p>
+            <p className="eliminar-warning-sub">Esta acción eliminará también sus pedidos, envíos y recibos asociados.</p>
           </div>
         </Modal>
       )}

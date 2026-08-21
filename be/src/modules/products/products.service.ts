@@ -1,8 +1,10 @@
 import { prisma } from '../../lib/prisma';
 
 export const productService = {
+  // C-05: los productos eliminados (deletedAt) no aparecen en el catálogo.
   list() {
     return prisma.product.findMany({
+      where: { deletedAt: null },
       include: {
         category: { select: { name: true } },
         supplier: { select: { name: true } },
@@ -46,7 +48,7 @@ export const productService = {
     }
   ) {
     return prisma.product.update({
-      where: { id },
+      where: { id, deletedAt: null },
       data: {
         name: data.name,
         description: data.description,
@@ -59,12 +61,13 @@ export const productService = {
     });
   },
 
+  // C-05: borrado lógico. Se marca deletedAt en lugar de destruir el producto
+  // y su historial (inventoryMovements, priceHistory, orderDetails, recibos).
+  // El historial contable y de ventas se conserva intacto.
   async remove(id: string) {
-    await prisma.$transaction(async (tx) => {
-      await tx.inventoryMovement.deleteMany({ where: { productId: id } });
-      await tx.priceHistory.deleteMany({ where: { productId: id } });
-      await tx.orderDetail.deleteMany({ where: { productId: id } });
-      await tx.product.delete({ where: { id } });
+    await prisma.product.update({
+      where: { id, deletedAt: null },
+      data: { deletedAt: new Date() },
     });
     return null;
   },

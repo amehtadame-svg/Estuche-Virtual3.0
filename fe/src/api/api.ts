@@ -1,4 +1,16 @@
+/**
+ * Base URL del backend.
+ *
+ * Prioridad (C-07):
+ * 1. VITE_API_URL — variable de entorno de Vite. Permite apuntar a cualquier
+ *    backend (Docker, producción, staging) sin tocar el código.
+ * 2. Codespaces — se deriva el puerto 4000 del host actual automáticamente.
+ * 3. Desarrollo local — http://localhost:4000.
+ */
 const getBaseUrl = () => {
+  const explicit = import.meta.env.VITE_API_URL as string | undefined;
+  if (explicit) return explicit.replace(/\/+$/, '');
+
   const host = window.location.host;
   if (host.includes('.app.github.dev')) {
     return `https://${host.replace(/-(3000|5173|4173)\./, '-4000.')}`;
