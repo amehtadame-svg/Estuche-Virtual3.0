@@ -1,181 +1,183 @@
-import { useState } from 'react';
-import { useAuth } from '../../hooks/useAuth';
-import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { validarPassword } from '../../utils/validarPassword';
-import PasswordInput from '../../components/ui/PasswordInput';
-import './ResetPassword.css';
+import { useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
+import PasswordInput from "../../components/ui/PasswordInput";
+import { validarPassword } from "../../utils/validarPassword";
+import "./Auth.css";
 
 export default function ResetPassword() {
   const { resetPassword, verifyResetToken } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-
-  // Si venimos de "Olvidé mi contraseña" o de un bloqueo por 3 intentos,
   const state = location.state as { email?: string; message?: string } | null;
-  const emailFromState = state?.email ?? '';
-  const lockMessage = state?.message ?? '';
-
-  const [email, setEmail]           = useState(emailFromState);
-  const [token, setToken]           = useState('');
-  const [password, setPassword]     = useState('');
-  const [confirm, setConfirm]       = useState('');
-  const [error, setError]           = useState('');
-  const [success, setSuccess]       = useState(false);
-  const [step, setStep]             = useState<'token' | 'password'>('token');
-  const [verifying, setVerifying]   = useState(false);
-
-  const handleVerifyToken = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-
+  const [email] = useState(state?.email ?? "");
+  const [token, setToken] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
+  const [step, setStep] = useState<"token" | "password">("token");
+  const [verifying, setVerifying] = useState(false);
+  const verifyCode = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setError("");
     if (!token.trim()) {
-      setError('Ingresa el código de verificación.');
+      setError("Ingresa el código de verificación.");
       return;
     }
-
     setVerifying(true);
-    const { ok, message } = await verifyResetToken(email.trim(), token.toUpperCase());
+    const result = await verifyResetToken(email.trim(), token.toUpperCase());
     setVerifying(false);
-
-    if (ok) {
-      setStep('password');
-    } else {
-      setError(message || 'Código incorrecto.');
-    }
+    if (result.ok) setStep("password");
+    else setError(result.message || "Código incorrecto.");
   };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-
-    if (!email.trim()) {
-      setError('Ingresa tu correo electrónico.');
-      return;
-    }
-
-    // Validar que las contraseñas coincidan
+  const changePassword = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setError("");
     if (password !== confirm) {
-      setError('Las contraseñas no coinciden.');
+      setError("Las contraseñas no coinciden.");
       return;
     }
-
-    // Reglas de contraseña segura (mayúscula, minúscula, número, carácter especial)
-    const passCheck = validarPassword(password);
-    if (!passCheck.valid) {
-      setError(passCheck.message!);
+    const check = validarPassword(password);
+    if (!check.valid) {
+      setError(check.message || "La contraseña no cumple los requisitos.");
       return;
     }
-
-    // El backend valida el código: que exista, no esté usado y no haya expirado.
-    const { ok, message } = await resetPassword(email.trim(), token.toUpperCase(), password);
-    if (ok) {
-      setSuccess(true);
-      setTimeout(() => navigate('/login'), 3000);
-    } else {
-      setError(message || 'No se pudo cambiar la contraseña. Intenta de nuevo.');
-    }
-  };
-
-  if (success) {
-    return (
-      <div className="reset-container">
-        <div className="reset-card">
-          <div className="reset-success">
-            <span>🎉</span>
-            <h3>¡Contraseña actualizada!</h3>
-            <p>Serás redirigido al login en unos segundos...</p>
-          </div>
-        </div>
-      </div>
+    const result = await resetPassword(
+      email.trim(),
+      token.toUpperCase(),
+      password,
     );
-  }
-
+    if (result.ok) {
+      setSuccess(true);
+      setTimeout(() => navigate("/login"), 3000);
+    } else setError(result.message || "No se pudo cambiar la contraseña.");
+  };
+  if (success)
+    return (
+      <main className="auth-shell">
+        <section className="auth-card">
+          <div className="auth-success-icon">✓</div>
+          <h1 className="auth-title">
+            ¡Todo <em>listo!</em>
+          </h1>
+          <p className="auth-subtitle">
+            Tu contraseña se actualizó correctamente. Serás redirigido al inicio
+            de sesión.
+          </p>
+        </section>
+      </main>
+    );
+  const isToken = step === "token";
   return (
-    <div className="reset-container">
-      {step === 'token' ? (
-        <div className="reset-modal-overlay">
-          <div className="reset-modal-card">
-            <h2>Verifica tu código</h2>
-            <p className="reset-subtitle">
-              Ingresa el código que recibiste en tu correo para continuar.
-            </p>
-
-            {lockMessage && (
-              <p className="reset-error" style={{ marginBottom: '10px' }}>
-                🔒 {lockMessage}
-              </p>
-            )}
-
-            <form onSubmit={handleVerifyToken}>
-              <div className="reset-field">
-                <label htmlFor="email">Correo electrónico</label>
-                <input id="email" type="email" value={email} readOnly disabled />
-              </div>
-
-              <div className="reset-field">
-                <label htmlFor="token">Código de verificación</label>
+    <main className="auth-shell">
+      <section className="auth-card" aria-labelledby="reset-title">
+        <div className="auth-mark">{isToken ? "✦" : "✓"}</div>
+        <h1 id="reset-title" className="auth-title">
+          {isToken ? (
+            <>
+              Verifica tu <em>código.</em>
+            </>
+          ) : (
+            <>
+              Nueva <em>contraseña.</em>
+            </>
+          )}
+        </h1>
+        <p className="auth-subtitle">
+          {isToken
+            ? "Ingresa el código enviado a tu correo para continuar."
+            : "Crea una contraseña segura para proteger tu cuenta."}
+        </p>
+        {state?.message && isToken && (
+          <p className="auth-alert">🔒 {state.message}</p>
+        )}
+        <form
+          className="auth-form"
+          onSubmit={isToken ? verifyCode : changePassword}
+        >
+          {isToken ? (
+            <>
+              <div className="auth-field">
+                <label className="auth-label" htmlFor="reset-email">
+                  Correo electrónico
+                </label>
                 <input
-                  id="token"
+                  id="reset-email"
+                  className="auth-input"
+                  type="email"
+                  value={email}
+                  disabled
+                />
+              </div>
+              <div className="auth-field">
+                <label className="auth-label" htmlFor="reset-code">
+                  Código de verificación
+                </label>
+                <input
+                  id="reset-code"
+                  className="auth-input"
                   type="text"
                   value={token}
-                  onChange={e => setToken(e.target.value.toUpperCase())}
+                  onChange={(event) =>
+                    setToken(event.target.value.toUpperCase())
+                  }
                   placeholder="Ej: A3F9K2"
                   maxLength={6}
                   required
                 />
               </div>
-
-              {error && <p className="reset-error">⚠️ {error}</p>}
-
-              <button type="submit" className="reset-btn" disabled={verifying}>
-                {verifying ? 'Verificando...' : 'Verificar código'}
-              </button>
-            </form>
-
-            <Link to="/forgot-password" className="reset-back">
-              ← Solicitar nuevo código
-            </Link>
-          </div>
+            </>
+          ) : (
+            <>
+              <div className="auth-field">
+                <label className="auth-label" htmlFor="reset-password">
+                  Nueva contraseña
+                </label>
+                <PasswordInput
+                  id="reset-password"
+                  className="auth-input"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  placeholder="Mínimo 8 caracteres"
+                  required
+                />
+                <p className="auth-helper">
+                  Usa mayúscula, minúscula, número y carácter especial.
+                </p>
+              </div>
+              <div className="auth-field">
+                <label className="auth-label" htmlFor="reset-confirm">
+                  Confirmar contraseña
+                </label>
+                <PasswordInput
+                  id="reset-confirm"
+                  className="auth-input"
+                  value={confirm}
+                  onChange={(event) => setConfirm(event.target.value)}
+                  placeholder="Repite la contraseña"
+                  required
+                />
+              </div>
+            </>
+          )}
+          {error && <p className="auth-alert">⚠️ {error}</p>}
+          <button type="submit" className="auth-submit" disabled={verifying}>
+            {verifying
+              ? "Verificando..."
+              : isToken
+                ? "Verificar código →"
+                : "Cambiar contraseña →"}
+          </button>
+        </form>
+        <div className="auth-links">
+          <Link to={isToken ? "/forgot-password" : "/login"}>
+            {isToken
+              ? "← Solicitar un nuevo código"
+              : "← Volver al inicio de sesión"}
+          </Link>
         </div>
-      ) : (
-        <div className="reset-card">
-          <h2>Nueva contraseña</h2>
-          <p className="reset-subtitle">Ingresa tu nueva contraseña.</p>
-
-          <form onSubmit={handleSubmit}>
-            <div className="reset-field">
-              <label htmlFor="password">Nueva contraseña</label>
-              <PasswordInput
-                id="password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                placeholder="Mínimo 8 caracteres"
-                required
-              />
-              <p style={{ fontSize: '0.78rem', color: '#666', margin: '2px 0 0' }}>
-                Debe tener mayúscula, minúscula, número y un carácter especial (!@#$%...).
-              </p>
-            </div>
-
-            <div className="reset-field">
-              <label htmlFor="confirm">Confirmar contraseña</label>
-              <PasswordInput
-                id="confirm"
-                value={confirm}
-                onChange={e => setConfirm(e.target.value)}
-                placeholder="Repite la contraseña"
-                required
-              />
-            </div>
-            
-            {error && <p className="reset-error">⚠️ {error}</p>}
-
-            <button type="submit" className="reset-btn">
-              Cambiar contraseña
-            </button>
-          </form>
-        </div>
-      )}
-    </div>
+      </section>
+    </main>
   );
 }

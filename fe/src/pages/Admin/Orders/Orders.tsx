@@ -104,7 +104,7 @@ export default function Orders() {
     } else {
       await fetch(API.orders, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...authHeaders() },
+        headers: authHeaders(),
         body: JSON.stringify(body),
       });
       showMessage('Pedido agregado.');
@@ -155,7 +155,7 @@ export default function Orders() {
 
     const res = await fetch(`${API.orders}/${id}/apply-code`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      headers: authHeaders(),
       body: JSON.stringify({ code: discountCode }),
     });
     const data = await res.json();

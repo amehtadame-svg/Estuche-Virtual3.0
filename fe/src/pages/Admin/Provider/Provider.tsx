@@ -81,14 +81,14 @@ export default function Provider() {
     if (editingId !== null) {
       await fetch(`${API.providers}/${editingId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', ...authHeaders() },
+        headers: authHeaders(),
         body: JSON.stringify(body),
       });
       showMessage('Proveedor actualizado.');
     } else {
       await fetch(API.providers, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...authHeaders() },
+        headers: authHeaders(),
         body: JSON.stringify(body),
       });
       showMessage('Proveedor agregado.');

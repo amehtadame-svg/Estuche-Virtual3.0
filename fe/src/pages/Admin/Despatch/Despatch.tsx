@@ -127,14 +127,14 @@ export default function Despatch() {
     if (editingId !== null) {
       await fetch(`${API.despatches}/${editingId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', ...authHeaders() },
+        headers: authHeaders(),
         body: JSON.stringify(body),
       });
       showMessage('Envio actualizado.');
     } else {
       await fetch(API.despatches, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...authHeaders() },
+        headers: authHeaders(),
         body: JSON.stringify(body),
       });
       showMessage('Envio agregado.');
@@ -164,7 +164,7 @@ export default function Despatch() {
   const changeStatus = async (id: string, newStatus: string) => {
     await fetch(`${API.despatches}/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      headers: authHeaders(),
       body: JSON.stringify({ status: newStatus }),
     });
     setDespatches(despatches.map((e) => (e.id === id ? { ...e, status: newStatus } : e)));

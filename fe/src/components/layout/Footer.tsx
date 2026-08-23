@@ -1,66 +1,76 @@
-import { Link } from 'react-router-dom';
-import './Footer.css';
+import { Link } from "react-router-dom";
+import "./Footer.css";
 
 export default function Footer() {
   return (
     <footer className="footer">
+      <div className="footer-orb footer-orb-one" />
+      <div className="footer-orb footer-orb-two" />
       <div className="footer-grid">
-
-        {/* Col 1 - Logo */}
-        <div className="footer-col">
-          <Link to="/" className="footer-logo">📚 Estuche Virtual</Link>
-          <p className="footer-desc">
-            Tu tienda de útiles escolares y de oficina en línea. Calidad, variedad y entrega a domicilio en toda Colombia.
+        <div className="footer-brand">
+          <Link to="/" className="footer-logo" aria-label="Estuche Virtual">
+            <img
+              className="footer-logo-light"
+              src="/logo-dark.png"
+              alt="Estuche Virtual"
+            />
+            <img
+              className="footer-logo-dark"
+              src="/logo-light.png"
+              alt="Estuche Virtual"
+            />
+          </Link>
+          <p>
+            Todo lo que necesitas para aprender, crear y organizarte. Papelería,
+            arte y oficina sin salir de casa.
           </p>
+          <div className="footer-promise">
+            <span>✦</span> Envíos a toda Colombia
+          </div>
         </div>
-
-        {/* Col 2 - Links */}
         <div className="footer-col">
-          <h4 className="footer-heading">Links rápidos</h4>
-          <nav className="footer-links">
+          <h4>Explora</h4>
+          <nav>
             <Link to="/">Inicio</Link>
             <Link to="/catalogo">Catálogo</Link>
             <Link to="/Nosotros">Nosotros</Link>
             <Link to="/Contacto">Contacto</Link>
           </nav>
         </div>
-
-        {/* Col 3 - Contacto */}
         <div className="footer-col">
-          <h4 className="footer-heading">Contacto</h4>
-          <ul className="footer-info">
-            <li>📍 Calle 45 #12-30, Bogotá</li>
+          <h4>Atención</h4>
+          <ul>
+            <li>📍 Bogotá, Colombia</li>
             <li>📞 +57 300 123 4567</li>
             <li>✉️ hola@estuchevirtual.com</li>
-            <li>⏰ Lun – Vie: 8 am – 6 pm</li>
+            <li>⏱ Lun – Vie, 8:00–18:00</li>
           </ul>
         </div>
-
-        {/* Col 4 - Redes */}
         <div className="footer-col">
-          <h4 className="footer-heading">Síguenos</h4>
+          <h4>Conecta</h4>
           <div className="footer-socials">
-            <a href="https://instagram.com" target="_blank" rel="noreferrer" className="social-btn">
-              📸 Instagram
+            <a href="https://instagram.com" target="_blank" rel="noreferrer">
+              ◎ Instagram
             </a>
-            <a href="https://facebook.com" target="_blank" rel="noreferrer" className="social-btn">
-              👤 Facebook
+            <a href="https://facebook.com" target="_blank" rel="noreferrer">
+              ● Facebook
             </a>
             <a
-              href="https://wa.me/573204125692?text=Hola,%20quiero%20más%20información"
+              href="https://wa.me/573204125692"
               target="_blank"
               rel="noreferrer"
-              className="social-btn social-wa"
             >
-              📱 WhatsApp
+              ◉ WhatsApp
             </a>
           </div>
         </div>
-
       </div>
-
       <div className="footer-bottom">
-        <p>© 2025 Estuche Virtual — Todos los derechos reservados</p>
+        <span>© 2026 Estuche Virtual</span>
+        <span>
+          Hecho para acompañar tus ideas <b>✦</b>
+        </span>
+        <span>Todos los derechos reservados</span>
       </div>
     </footer>
   );

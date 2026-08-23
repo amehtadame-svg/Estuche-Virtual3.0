@@ -103,14 +103,14 @@ export default function Products() {
     if (editingId !== null) {
       await fetch(`${API.products}/${editingId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', ...authHeaders() },
+        headers: authHeaders(),
         body: JSON.stringify(body),
       });
       showMessage('Producto actualizado.');
     } else {
       await fetch(API.products, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...authHeaders() },
+        headers: authHeaders(),
         body: JSON.stringify(body),
       });
       showMessage('Producto agregado.');

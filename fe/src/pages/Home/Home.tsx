@@ -1,78 +1,241 @@
-import { Link } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
-import './Home.css';
+import { Link } from "react-router-dom";
+import { ArrowRight, Check, ShieldCheck, Star, Truck } from "lucide-react";
+import { useCart } from "../../hooks/useCart";
+import "./Home.css";
 
-const Home = () => {
-  const { user } = useAuth();
+const categories = [
+  ["Escritura", "/design/category-writing.webp"],
+  ["Cuadernos", "/design/category-notebooks.webp"],
+  ["Arte", "/design/category-art.webp"],
+  ["Oficina", "/design/category-office.webp"],
+];
 
-  const deals = [
-    { name: 'Cuaderno universitario', price: 8500, previousPrice: 12000, icon: '📓' },
-    { name: 'Set de colores x12', price: 9000, previousPrice: 12000, icon: '🎨' },
-    { name: 'Mochila escolar', price: 35000, previousPrice: 45000, icon: '🎒' },
-  ];
+const products = [
+  {
+    id: "1",
+    name: "Cuaderno Espiral Aurora 100h",
+    price: 18900,
+    old: 24900,
+    image: "/design/category-notebooks.webp",
+    category: "cuadernos",
+    badge: "-24%",
+  },
+  {
+    id: "2",
+    name: "Planner Pastel Organízate 2026",
+    price: 32900,
+    image: "/design/hero-stationery.webp",
+    category: "planeación",
+    badge: "Nuevo",
+  },
+  {
+    id: "3",
+    name: "Set de Escritorio Minimal",
+    price: 45900,
+    old: 59900,
+    image: "/design/category-office.webp",
+    category: "oficina",
+    badge: "-23%",
+  },
+  {
+    id: "5",
+    name: "Marcadores Arte Doble Punta",
+    price: 54900,
+    image: "/design/category-art.webp",
+    category: "arte",
+    badge: "Nuevo",
+  },
+];
 
-  const reasons = [
-    { icon: '🚀', title: 'Envío rápido', description: 'Recibe tus productos en la puerta de tu casa en el menor tiempo posible.' },
-    { icon: '💰', title: 'Mejores precios', description: 'Ofrecemos los precios más competitivos del mercado sin sacrificar calidad.' },
-    { icon: '🔒', title: 'Compra segura', description: 'Tu información y pagos están protegidos en todo momento.' },
-    { icon: '📦', title: 'Gran variedad', description: 'Encuentra todo lo que necesitas para el colegio y la oficina en un solo lugar.' },
-  ];
-
+export default function Home() {
+  const { add } = useCart();
   return (
-    <div className="home-container">
-      <section className="hero">
-        <h1 className="hero-title">Todo lo que necesitas, en un solo lugar</h1>
-        <p className="hero-description">Útiles escolares y de oficina al mejor precio, entregados en tu puerta.</p>
-
-        {user ? (
-          <div className="hero-actions">
-            <p className="welcome-text">
-              Hola, {user.name}. Rol: {user.role}
+    <main className="arena-home">
+      <section className="arena-hero">
+        <div className="hero-copy">
+          <p className="hero-pill">
+            ✦ Nueva colección 2026 · Envíos el mismo día
+          </p>
+          <h1>
+            Todo lo que
+            <br />
+            necesitas,
+            <br />
+            <em>en un solo</em> lugar.
+          </h1>
+          <span className="hero-stroke" />
+          <p className="hero-description">
+            Papelería, arte y oficina con curaduría premium. Más de 480
+            referencias seleccionadas una por una, entregadas en la puerta de tu
+            casa en 24 horas.
+          </p>
+          <div className="hero-buttons">
+            <Link to="/catalogo" className="hero-primary">
+              Explorar catálogo <ArrowRight size={18} />
+            </Link>
+            <Link to="/catalogo" className="hero-secondary">
+              Ofertas del mes
+            </Link>
+          </div>
+          <div className="hero-stats">
+            <div>
+              <b>12.876+</b>
+              <span>Clientes felices</span>
+            </div>
+            <div>
+              <b>412+</b>
+              <span>Productos curados</span>
+            </div>
+            <div>
+              <b>84%</b>
+              <span>Recomendación</span>
+            </div>
+          </div>
+        </div>
+        <div className="hero-visual">
+          <img src="/design/hero-stationery.webp" alt="Papelería premium" />
+          <div className="hero-product-float">
+            <img src="/design/category-notebooks.webp" alt="" />
+            <div>
+              <b>Cuaderno Espiral</b>
+              <span>
+                $ 18.900 <i>-24%</i>
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section className="trust-row">
+        <span>
+          <Truck size={18} /> Envío en <b>24 h</b>
+        </span>
+        <span>Bogotá · Medellín · Cali</span>
+        <span>
+          <Star size={17} /> <b>4.9/5</b> · 2.314 reseñas
+        </span>
+      </section>
+      <section className="home-section">
+        <p className="eyebrow">Explora</p>
+        <div className="section-head">
+          <div>
+            <h2>
+              Compra por <em>categoría</em>
+            </h2>
+            <p>
+              Seis universos organizados para que encuentres exactamente lo que
+              buscas.
             </p>
           </div>
-        ) : (
-          <Link className="hero-button" to="/catalogo">
-            Ver productos
+          <Link to="/catalogo">
+            Ver todo el catálogo <ArrowRight size={16} />
           </Link>
-        )}
+        </div>
+        <div className="category-grid">
+          {categories.map(([name, image]) => (
+            <Link key={name} to="/catalogo" className="category-card">
+              <img src={image} alt={name} />
+              <div>
+                <b>{name}</b>
+                <span>
+                  Ver productos <ArrowRight size={14} />
+                </span>
+              </div>
+            </Link>
+          ))}
+        </div>
       </section>
-
-      <section className="section">
-        <h2 className="section-title">Ofertas y promociones</h2>
-        <p className="section-description">Aprovecha estos descuentos por tiempo limitado</p>
-
-        <div className="cards-grid">
-          {deals.map((prod) => (
-            <div key={prod.name} className="card">
-              <span className="badge">Oferta</span>
-              <div className="icon">{prod.icon}</div>
-              <h3>{prod.name}</h3>
-              <p className="old-price">${prod.previousPrice.toLocaleString()}</p>
-              <p className="price">${prod.price.toLocaleString()}</p>
-              <Link className="card-button" to="/catalogo">
-                Ver producto
+      <section className="home-section">
+        <p className="eyebrow">Selección</p>
+        <div className="section-head">
+          <div>
+            <h2>
+              Lo más <em>buscado</em>
+            </h2>
+            <p>Los favoritos de nuestra comunidad, actualizados cada semana.</p>
+          </div>
+          <div className="product-tabs">
+            <button className="active">Destacados</button>
+            <button>Ofertas</button>
+            <button>Nuevos</button>
+          </div>
+        </div>
+        <div className="arena-products">
+          {products.map((p) => (
+            <article className="arena-product" key={p.id}>
+              <Link to={`/producto/${p.id}`} className="product-image">
+                <img src={p.image} alt={p.name} />
+                <span>{p.badge}</span>
               </Link>
-            </div>
+              <div className="product-content">
+                <p>
+                  {p.category} <small>★ 4.9</small>
+                </p>
+                <Link to={`/producto/${p.id}`}>
+                  <h3>{p.name}</h3>
+                </Link>
+                <div>
+                  <b>${p.price.toLocaleString("es-CO")}</b>
+                  {p.old && <del>${p.old.toLocaleString("es-CO")}</del>}
+                </div>
+                <button
+                  onClick={() =>
+                    add({
+                      id: p.id,
+                      name: p.name,
+                      price: p.price,
+                      category: p.category,
+                      icon: "📦",
+                    })
+                  }
+                >
+                  Agregar al carrito
+                </button>
+              </div>
+            </article>
           ))}
         </div>
       </section>
-
-      <section className="section">
-        <h2 className="section-title">Por qué elegirnos</h2>
-        <p className="section-description">Estas son las razones por las que nuestros clientes nos prefieren</p>
-
-        <div className="reasons-grid">
-          {reasons.map((r) => (
-            <div key={r.title} className="reason-card">
-              <div className="icon">{r.icon}</div>
-              <h3>{r.title}</h3>
-              <p>{r.description}</p>
-            </div>
-          ))}
+      <section className="school-banner">
+        <div>
+          <p className="eyebrow">Temporada escolar</p>
+          <h2>
+            Regreso a clases 2026:
+            <br />
+            <em>hasta 40% dcto.</em>
+          </h2>
+          <p>
+            Kits completos armados por expertos. Compra una sola lista, recibe
+            un solo paquete.
+          </p>
+          <Link to="/catalogo">
+            Comprar la colección <ArrowRight size={17} />
+          </Link>
+        </div>
+        <img src="/design/category-art.webp" alt="Colección escolar" />
+      </section>
+      <section className="home-section experience">
+        <p className="eyebrow">La experiencia</p>
+        <h2>
+          Comprar aquí se siente <em>diferente</em>
+        </h2>
+        <div className="benefits">
+          <article>
+            <Truck />
+            <h3>Envío exprés 24–48 h</h3>
+            <p>Cobertura nacional con seguimiento en tiempo real.</p>
+          </article>
+          <article>
+            <ShieldCheck />
+            <h3>Compra protegida</h3>
+            <p>Pagos cifrados y garantía total.</p>
+          </article>
+          <article>
+            <Check />
+            <h3>Devoluciones 30 días</h3>
+            <p>Lo recogemos sin costo y sin preguntas.</p>
+          </article>
         </div>
       </section>
-    </div>
+    </main>
   );
-};
-
-export default Home;
+}

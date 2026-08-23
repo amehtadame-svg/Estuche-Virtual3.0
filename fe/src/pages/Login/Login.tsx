@@ -1,108 +1,101 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
-import PasswordInput from '../../components/ui/PasswordInput';
-import './Login.css';
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
+import PasswordInput from "../../components/ui/PasswordInput";
+import "../ResetPassword/Auth.css";
 
 const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { login, generateResetToken } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const isDark = localStorage.getItem('theme') === 'dark';
-    if (isDark) document.body.classList.add('dark-mode');
-  }, []);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setError("");
     setLoading(true);
-
     const result = await login(email, password);
 
-  if (!result.ok) {
+    if (!result.ok) {
       if (result.locked) {
         await generateResetToken(email);
         setLoading(false);
-        navigate('/reset-password', {
+        navigate("/reset-password", {
           state: { email, message: result.message },
         });
         return;
       }
-
-      // Error normal: mostramos cuántos intentos quedan si el backend lo indica.
-      const restantes = result.intentosRestantes;
+      const remaining = result.intentosRestantes;
       setError(
-        restantes !== undefined
-          ? `Correo o contraseña incorrectos. Te quedan ${restantes} intento(s) antes de que se bloquee tu cuenta.`
-          : (result.message || 'Correo o contraseña incorrectos.')
+        remaining !== undefined
+          ? `Correo o contraseña incorrectos. Te quedan ${remaining} intento(s) antes del bloqueo.`
+          : result.message || "Correo o contraseña incorrectos.",
       );
       setLoading(false);
       return;
     }
 
-    const saved = JSON.parse(localStorage.getItem('user') || '{}');
-    const role = saved.role;
+    const role = JSON.parse(localStorage.getItem("user") || "{}").role;
     setLoading(false);
-    if (role === 'cliente') navigate('/cliente');
-    else if (role === 'superadmin') navigate('/superadmin');
-    else navigate('/admin');
+    if (role === "client") navigate("/cliente");
+    else if (role === "superadmin") navigate("/superadmin");
+    else navigate("/admin");
   };
 
   return (
-    <div className="login-container">
-      <div className="login-card">
-        <h1 className="login-title">Iniciar sesión</h1>
-        <p className="login-subtitle">Bienvenido de nuevo a Estuche Virtual</p>
-
-        <form onSubmit={handleSubmit}>
-          <label className="input-label">Correo electrónico</label>
-          <input
-            className="login-input"
-            type="email"
-            placeholder="tucorreo@email.com"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            required
-          />
-
-        <label className="input-label">Contraseña</label>
-        <PasswordInput
-          className="login-input"
-          placeholder="Tu contraseña"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-          required
-          />
-
-          {error && (
-            <p style={{ color: '#e53e3e', fontSize: '0.85rem', margin: '4px 0 8px', textAlign: 'center' }}>
-              ⚠️ {error}
-            </p>
-          )}
-
-        <button type="submit" className="login-button" disabled={loading}>
-          {loading ? 'Verificando...' : 'Iniciar sesión'}
-        </button>
-
-          <p style={{ textAlign: 'center', marginTop: '12px', fontSize: '0.9rem' }}>
-            <Link to="/forgot-password" style={{ color: '#aa3bff', textDecoration: 'none', fontWeight: '600' }}>
-              ¿Olvidaste tu contraseña?
-            </Link>
-          </p>
-
-          <p className="register-text">
-            ¿No tienes cuenta?{' '}
-            <Link to="/register" className="register-link">Regístrate aquí</Link>
-          </p>
+    <main className="auth-shell">
+      <section className="auth-card" aria-labelledby="login-title">
+        <div className="auth-mark">E</div>
+        <h1 id="login-title" className="auth-title">
+          Bienvenido <em>de nuevo.</em>
+        </h1>
+        <p className="auth-subtitle">
+          Inicia sesión para continuar creando, aprendiendo y organizando tus
+          ideas.
+        </p>
+        <form className="auth-form" onSubmit={handleSubmit}>
+          <div className="auth-field">
+            <label className="auth-label" htmlFor="login-email">
+              Correo electrónico
+            </label>
+            <input
+              id="login-email"
+              className="auth-input"
+              type="email"
+              placeholder="tucorreo@email.com"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              required
+            />
+          </div>
+          <div className="auth-field">
+            <label className="auth-label" htmlFor="login-password">
+              Contraseña
+            </label>
+            <PasswordInput
+              id="login-password"
+              className="auth-input"
+              placeholder="Tu contraseña"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              required
+            />
+          </div>
+          {error && <p className="auth-alert">⚠️ {error}</p>}
+          <button type="submit" className="auth-submit" disabled={loading}>
+            {loading ? "Verificando..." : "Iniciar sesión →"}
+          </button>
         </form>
-      </div>
-    </div>
+        <div className="auth-links">
+          <Link to="/forgot-password">¿Olvidaste tu contraseña?</Link>
+          <span>
+            ¿Aún no tienes cuenta? <Link to="/register">Crea la tuya</Link>
+          </span>
+        </div>
+      </section>
+    </main>
   );
 };
-
 export default Login;

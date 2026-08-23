@@ -96,14 +96,14 @@ export default function OrderDetails() {
       if (editingId !== null) {
         await fetch(`${API.orderDetails}/${editingId}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json', ...authHeaders() },
+          headers: authHeaders(),
           body: JSON.stringify(body),
         });
         showMessage('Detalle actualizado.');
       } else {
         await fetch(API.orderDetails, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', ...authHeaders() },
+          headers: authHeaders(),
           body: JSON.stringify(body),
         });
         showMessage('Artículo agregado.');

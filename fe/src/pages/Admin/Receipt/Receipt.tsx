@@ -86,14 +86,14 @@ export default function Receipt() {
     if (editingId !== null) {
       await fetch(`${API.receipts}/${editingId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', ...authHeaders() },
+        headers: authHeaders(),
         body: JSON.stringify(body),
       });
       showMessage('Recibo actualizado.');
     } else {
       await fetch(API.receipts, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...authHeaders() },
+        headers: authHeaders(),
         body: JSON.stringify(body),
       });
       showMessage('Recibo agregado.');
@@ -123,7 +123,7 @@ export default function Receipt() {
   const changeStatus = async (id: string, newStatus: string) => {
     const res = await fetch(`${API.receipts}/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      headers: authHeaders(),
       body: JSON.stringify({ paymentStatus: newStatus }),
     });
     if (res.ok) {

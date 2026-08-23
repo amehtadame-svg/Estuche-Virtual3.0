@@ -1,99 +1,126 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
-import { validarPassword } from '../../utils/validarPassword';
-import PasswordInput from '../../components/ui/PasswordInput'; 
-import './Register.css';
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
+import PasswordInput from "../../components/ui/PasswordInput";
+import { validarPassword } from "../../utils/validarPassword";
+import "../ResetPassword/Auth.css";
 
 const Register = () => {
-  const [name, setName]               = useState('');
-  const [email, setEmail]             = useState('');
-  const [password, setPassword]       = useState('');
-  const [confirmPassword, setConfirm] = useState('');
-  const [error, setError]             = useState('');
-  const [success, setSuccess]         = useState('');
-
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const { register } = useAuth();
-  const navigate     = useNavigate();
+  const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setSuccess('');
-
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setError("");
+    setSuccess("");
     if (!name.trim()) {
-      setError('El nombre es obligatorio.');
+      setError("El nombre es obligatorio.");
       return;
     }
-
-const passCheck = validarPassword(password);
-if (!passCheck.valid) {
-  setError(passCheck.message!);
-  return;
-}
-
-if (password !== confirmPassword) {
-  setError('Las contraseñas no coinciden.');
-  return;
-}
-
-const { ok, message } = await register(name.trim(), email, password);
-
-if (!ok) {
-  setError(message || 'El correo ya está registrado o hubo un error.');
-  return;
-}
-
-    setSuccess('¡Cuenta creada! Redirigiendo...');
-    setTimeout(() => navigate('/cliente'), 1500);
+    const passwordCheck = validarPassword(password);
+    if (!passwordCheck.valid) {
+      setError(
+        passwordCheck.message || "La contraseña no cumple los requisitos.",
+      );
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError("Las contraseñas no coinciden.");
+      return;
+    }
+    const result = await register(name.trim(), email, password);
+    if (!result.ok) {
+      setError(result.message || "No se pudo crear la cuenta.");
+      return;
+    }
+    setSuccess("¡Cuenta creada! Redirigiendo...");
+    setTimeout(() => navigate("/cliente"), 1500);
   };
 
   return (
-    <div className="register-container">
-      <div className="register-card">
-        <h1 className="register-title">Crear cuenta</h1>
-        <p className="register-subtitle">Únete a Estuche Virtual hoy</p>
-
-        <form onSubmit={handleSubmit}>
-          <label className="register-label">Nombre completo</label>
-          <input className="register-input" type="text" placeholder="Tu nombre"
-            value={name} onChange={e => setName(e.target.value)} required />
-
-          <label className="register-label">Correo electrónico</label>
-          <input className="register-input" type="email" placeholder="tucorreo@email.com"
-            value={email} onChange={e => setEmail(e.target.value)} required />
-
-          <label className="register-label">Contraseña</label>
-          <PasswordInput
-            className="register-input"
-            placeholder="Mínimo 8 caracteres"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            required
-          />
-
-          <label className="register-label">Confirmar contraseña</label>
-          <PasswordInput
-            className="register-input"
-            placeholder="Repite tu contraseña"
-            value={confirmPassword}
-            onChange={e => setConfirm(e.target.value)}
-            required
-          />
-          
-          {error   && <p className="register-error">⚠️ {error}</p>}
-          {success && <p className="register-success">✅ {success}</p>}
-
-          <button type="submit" className="register-button">Crear cuenta</button>
-
-          <p className="register-footer">
-            ¿Ya tienes cuenta?{' '}
-            <Link to="/login" className="register-link">Inicia sesión</Link>
-          </p>
+    <main className="auth-shell">
+      <section className="auth-card" aria-labelledby="register-title">
+        <div className="auth-mark">✦</div>
+        <h1 id="register-title" className="auth-title">
+          Empieza a <em>crear.</em>
+        </h1>
+        <p className="auth-subtitle">
+          Crea tu cuenta y encuentra todo lo que necesitas en un mismo lugar.
+        </p>
+        <form className="auth-form" onSubmit={handleSubmit}>
+          <div className="auth-field">
+            <label className="auth-label" htmlFor="register-name">
+              Nombre completo
+            </label>
+            <input
+              id="register-name"
+              className="auth-input"
+              type="text"
+              placeholder="Tu nombre"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              required
+            />
+          </div>
+          <div className="auth-field">
+            <label className="auth-label" htmlFor="register-email">
+              Correo electrónico
+            </label>
+            <input
+              id="register-email"
+              className="auth-input"
+              type="email"
+              placeholder="tucorreo@email.com"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              required
+            />
+          </div>
+          <div className="auth-field">
+            <label className="auth-label" htmlFor="register-password">
+              Contraseña
+            </label>
+            <PasswordInput
+              id="register-password"
+              className="auth-input"
+              placeholder="Mínimo 8 caracteres"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              required
+            />
+          </div>
+          <div className="auth-field">
+            <label className="auth-label" htmlFor="register-confirm">
+              Confirmar contraseña
+            </label>
+            <PasswordInput
+              id="register-confirm"
+              className="auth-input"
+              placeholder="Repite la contraseña"
+              value={confirmPassword}
+              onChange={(event) => setConfirmPassword(event.target.value)}
+              required
+            />
+          </div>
+          {error && <p className="auth-alert">⚠️ {error}</p>}
+          {success && <p className="auth-alert success">✓ {success}</p>}
+          <button type="submit" className="auth-submit">
+            Crear cuenta →
+          </button>
         </form>
-      </div>
-    </div>
+        <div className="auth-links">
+          <span>
+            ¿Ya tienes una cuenta? <Link to="/login">Inicia sesión</Link>
+          </span>
+        </div>
+      </section>
+    </main>
   );
 };
-
 export default Register;
