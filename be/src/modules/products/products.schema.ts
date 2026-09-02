@@ -8,6 +8,7 @@ export const createProductSchema = z.object({
   supplierId: z.string().uuid().optional(),
   stock: z.coerce.number().int().optional(),
   stockMin: z.coerce.number().int().optional(),
+  imageUrl: z.string().url().max(500).optional(),
 });
 
 export const updateProductSchema = createProductSchema.partial();

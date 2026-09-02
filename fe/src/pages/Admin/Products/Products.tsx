@@ -4,7 +4,7 @@ import { API, authHeaders } from '../../../api/api';
 import './Products.css';
 
 const categories = ['Cuadernos', 'Colores', 'Carpetas', 'Lapiceros', 'Mochilas', 'Tijeras'];
-const emptyForm = { name: '', price: '', stock: '', stockMin: '', category: '', description: '' };
+const emptyForm = { name: '', price: '', stock: '', stockMin: '', category: '', description: '', imageUrl: '' };
 
 interface Product {
   id: string;
@@ -17,6 +17,7 @@ interface Product {
   supplierId: string | null;
   category: { name: string } | null;
   supplier: { name: string } | null;
+  images?: { url: string; isPrimary?: boolean }[];
 }
 
 export default function Products() {
@@ -98,6 +99,7 @@ export default function Products() {
       stock: Number(form.stock),
       stockMin: Number(form.stockMin) || 5,
       description: form.description,
+      ...(form.imageUrl ? { imageUrl: form.imageUrl } : {}),
     };
 
     if (editingId !== null) {
@@ -128,6 +130,7 @@ export default function Products() {
       stockMin: String(prod.stockMin ?? 5),
       category: prod.category?.name ?? '',
       description: prod.description ?? '',
+      imageUrl: prod.images?.find((i) => i.isPrimary)?.url ?? prod.images?.[0]?.url ?? '',
     });
     setEditingId(prod.id);
     setModalOpen(true);
@@ -239,6 +242,17 @@ export default function Products() {
 
           <label className="label-producto">Descripción</label>
           <textarea className="input-producto" name="description" value={form.description} onChange={handleChange} placeholder="Descripción del producto" rows={3} />
+
+          <label className="label-producto">URL de la imagen</label>
+          <input className="input-producto" name="imageUrl" value={form.imageUrl} onChange={handleChange} placeholder="https://i.postimg.cc/..." />
+          {form.imageUrl && (
+            <img
+              src={form.imageUrl}
+              alt="Vista previa"
+              style={{ width: 80, height: 80, objectFit: 'contain', margin: '4px 0 8px' }}
+              onError={(e) => (e.currentTarget.style.display = 'none')}
+            />
+          )}
 
           <label className="label-producto">Precio</label>
           <input className="input-producto" type="number" name="price" value={form.price} onChange={handleChange} placeholder="Precio en pesos" />

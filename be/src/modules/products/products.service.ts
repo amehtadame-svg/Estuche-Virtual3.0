@@ -8,12 +8,13 @@ export const productService = {
       include: {
         category: { select: { name: true } },
         supplier: { select: { name: true } },
+        images: { orderBy: { sortOrder: 'asc' } },
       },
       orderBy: { createdAt: 'desc' },
     });
   },
 
-  create(data: {
+  async create(data: {
     name: string;
     description?: string;
     price: number;
@@ -21,8 +22,9 @@ export const productService = {
     supplierId?: string;
     stock?: number;
     stockMin?: number;
+    imageUrl?: string;
   }) {
-    return prisma.product.create({
+    const product = await prisma.product.create({
       data: {
         name: data.name,
         description: data.description,
@@ -33,9 +35,17 @@ export const productService = {
         stockMin: data.stockMin ?? 5,
       },
     });
+
+    if (data.imageUrl) {
+      await prisma.productImage.create({
+        data: { productId: product.id, url: data.imageUrl, isPrimary: true, sortOrder: 1 },
+      });
+    }
+
+    return product;
   },
 
-  update(
+  async update(
     id: string,
     data: {
       name?: string;
@@ -45,9 +55,10 @@ export const productService = {
       supplierId?: string;
       stock?: number;
       stockMin?: number;
+      imageUrl?: string;
     }
   ) {
-    return prisma.product.update({
+    const product = await prisma.product.update({
       where: { id, deletedAt: null },
       data: {
         name: data.name,
@@ -59,6 +70,22 @@ export const productService = {
         stockMin: data.stockMin,
       },
     });
+
+    // Si mandan una nueva URL, reemplaza la imagen principal (upsert simple).
+    if (data.imageUrl) {
+      const primary = await prisma.productImage.findFirst({
+        where: { productId: id, isPrimary: true },
+      });
+      if (primary) {
+        await prisma.productImage.update({ where: { id: primary.id }, data: { url: data.imageUrl } });
+      } else {
+        await prisma.productImage.create({
+          data: { productId: id, url: data.imageUrl, isPrimary: true, sortOrder: 1 },
+        });
+      }
+    }
+
+    return product;
   },
 
   // C-05: borrado lógico. Se marca deletedAt en lugar de destruir el producto

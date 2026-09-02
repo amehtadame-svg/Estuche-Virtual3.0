@@ -4,10 +4,10 @@ import { useCart } from "../../hooks/useCart";
 import "./Home.css";
 
 const categories = [
-  ["Escritura", "/design/category-writing.webp"],
-  ["Cuadernos", "/design/category-notebooks.webp"],
-  ["Arte", "/design/category-art.webp"],
-  ["Oficina", "/design/category-office.webp"],
+  ["Escritura", "https://i.postimg.cc/fW09PXfV/utiles-de-escritura.webp"],
+  ["Cuadernos", "https://i.postimg.cc/MKkXcpfM/cuadernos.webp"],
+  ["Arte", "https://i.postimg.cc/rpqrDF36/arte.webp"],
+  ["Oficina", "https://i.postimg.cc/D0GrqpcQ/oficina.webp"],
 ];
 
 const products = [
@@ -16,7 +16,7 @@ const products = [
     name: "Cuaderno Espiral Aurora 100h",
     price: 18900,
     old: 24900,
-    image: "/design/category-notebooks.webp",
+    image: "https://i.postimg.cc/RFB4SNDT/cuaderno-espiral.webp",
     category: "cuadernos",
     badge: "-24%",
   },
@@ -24,7 +24,7 @@ const products = [
     id: "2",
     name: "Planner Pastel Organízate 2026",
     price: 32900,
-    image: "/design/hero-stationery.webp",
+    image: "https://i.postimg.cc/YC6Xc0YN/planner-2026.webp",
     category: "planeación",
     badge: "Nuevo",
   },
@@ -33,7 +33,7 @@ const products = [
     name: "Set de Escritorio Minimal",
     price: 45900,
     old: 59900,
-    image: "/design/category-office.webp",
+    image: "https://i.postimg.cc/kgqHgWJM/set-escritorio.webp",
     category: "oficina",
     badge: "-23%",
   },
@@ -41,7 +41,7 @@ const products = [
     id: "5",
     name: "Marcadores Arte Doble Punta",
     price: 54900,
-    image: "/design/category-art.webp",
+    image: "https://i.postimg.cc/FHrP4mpH/marcadores-arte.webp",
     category: "arte",
     badge: "Nuevo",
   },
