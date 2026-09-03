@@ -856,6 +856,8 @@
   font-size: clamp(2rem, 4vw, 3.1rem);
   font-weight: 800;
   letter-spacing: -0.05em;
+}
+
 .school-banner h2 {
   color: #ffffff !important;
 }

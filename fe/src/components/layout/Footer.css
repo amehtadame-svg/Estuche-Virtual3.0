@@ -41,22 +41,9 @@
 .footer-logo {
   display: inline-flex;
   align-items: center;
-<<<<<<< HEAD
-=======
+  gap: 10px;
 }
-.footer-logo img {
-  height: 110px;
-  width: auto;
-}
-.footer-logo-dark {
-  display: none;
-}
-body.dark-mode .footer-logo-light {
-  display: none;
-}
-body.dark-mode .footer-logo-dark {
-  display: block;
-}
+
 .footer-promise {
   display: inline-flex;
   align-items: center;
@@ -69,9 +56,11 @@ body.dark-mode .footer-logo-dark {
   font-weight: 600;
   background: rgba(170, 59, 255, 0.1);
 }
+
 .footer-promise span {
   color: #d8b4fe;
 }
+
 .footer-col h4 {
   font-family: var(--heading);
   font-size: 13px;
@@ -80,12 +69,11 @@ body.dark-mode .footer-logo-dark {
   color: #fff;
   margin: 7px 0 18px;
 }
-.footer-col nav,
-.footer-socials {
+
+.footer-col nav {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
->>>>>>> fix/ui-images
   gap: 10px;
 }
 
