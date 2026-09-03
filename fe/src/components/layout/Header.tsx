@@ -1,11 +1,15 @@
-import { FormEvent, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import {
   Menu,
   Moon,
+  RotateCcw,
   Search,
+  ShieldCheck,
   ShoppingBag,
+  Sparkles,
   Sun,
+  Truck,
   UserRound,
   X,
 } from "lucide-react";
@@ -14,10 +18,10 @@ import { useCart } from "../../hooks/useCart";
 import "./Header.css";
 
 const announcements = [
-  "Envío gratis en pedidos superiores a $120.000",
-  "Nueva colección 2026 ya disponible",
-  "Devoluciones fáciles hasta 30 días",
-  "Compra protegida · Pago 100% seguro",
+  { icon: Truck, text: "Envío gratis en pedidos superiores a $120.000" },
+  { icon: Sparkles, text: "Nueva colección 2026 ya disponible" },
+  { icon: RotateCcw, text: "Devoluciones fáciles hasta 30 días" },
+  { icon: ShieldCheck, text: "Compra protegida · Pago 100% seguro" },
 ];
 
 export default function Header() {
@@ -26,34 +30,28 @@ export default function Header() {
   const navigate = useNavigate();
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [search, setSearch] = useState("");
+
+  const applyTheme = (isDark: boolean) => {
+    document.body.classList.toggle("dark-mode", isDark);
+    document.documentElement.classList.toggle("dark-mode", isDark);
+    document.documentElement.style.colorScheme = isDark ? "dark" : "light";
+    localStorage.setItem("theme", isDark ? "dark" : "light");
+    setIsDarkMode(isDark);
+  };
 
   useEffect(() => {
-    const isDark = localStorage.getItem("theme") === "dark";
-    document.body.classList.toggle("dark-mode", isDark);
-    setIsDarkMode(isDark);
+    const stored = localStorage.getItem("theme");
+    applyTheme(stored ? stored === "dark" : true);
   }, []);
 
-  const toggleTheme = () => {
-    const nextMode = !isDarkMode;
-    document.body.classList.toggle("dark-mode", nextMode);
-    localStorage.setItem("theme", nextMode ? "dark" : "light");
-    setIsDarkMode(nextMode);
-  };
+  const toggleTheme = () => applyTheme(!isDarkMode);
 
   const closeMenu = () => setMenuOpen(false);
-
-  const handleSearch = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    navigate(
-      `/catalogo${search.trim() ? `?buscar=${encodeURIComponent(search.trim())}` : ""}`,
-    );
-    closeMenu();
-  };
 
   const links =
     user?.role === "superadmin"
       ? [
+          ["/", "Inicio"],
           ["/superadmin", "Resumen"],
           ["/superadmin/usuarios", "Usuarios"],
           ["/superadmin/descuentos", "Descuentos"],
@@ -63,6 +61,7 @@ export default function Header() {
         ]
       : user?.role === "admin"
         ? [
+            ["/", "Inicio"],
             ["/admin", "Resumen"],
             ["/admin/productos", "Productos"],
             ["/admin/pedidos", "Pedidos"],
@@ -83,11 +82,16 @@ export default function Header() {
     <>
       <div className="announcement-bar" aria-label="Promociones">
         <div className="announcement-track">
-          {[...announcements, ...announcements].map((announcement, index) => (
-            <span key={`${announcement}-${index}`}>
-              <i>✦</i> {announcement}
-            </span>
-          ))}
+          {[...announcements, ...announcements, ...announcements].map(
+            (item, index) => {
+              const Icon = item.icon;
+              return (
+                <span key={`${item.text}-${index}`}>
+                  <Icon size={13} /> {item.text}
+                </span>
+              );
+            },
+          )}
         </div>
       </div>
 
@@ -102,12 +106,12 @@ export default function Header() {
             <img
               src="/logo-light.png"
               alt="Estuche Virtual"
-              className="logo-img logo-light"
+              className="logo-img logo-for-dark"
             />
             <img
               src="/logo-dark.png"
               alt="Estuche Virtual"
-              className="logo-img logo-dark"
+              className="logo-img logo-for-light"
             />
           </Link>
 
@@ -119,6 +123,7 @@ export default function Header() {
               <NavLink
                 key={to}
                 to={to}
+                end={to === "/" || to === "/admin" || to === "/superadmin"}
                 onClick={closeMenu}
                 className={({ isActive }) => (isActive ? "active" : "")}
               >
@@ -127,25 +132,25 @@ export default function Header() {
             ))}
           </nav>
 
-          <form className="header-search" onSubmit={handleSearch}>
-            <Search size={16} aria-hidden="true" />
-            <input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Buscar productos"
-              aria-label="Buscar productos"
-            />
-          </form>
-
           <div className={`header-actions ${menuOpen ? "open" : ""}`}>
             <button
               className="header-icon-btn"
+              onClick={() => {
+                navigate("/catalogo");
+                closeMenu();
+              }}
+              aria-label="Buscar productos"
+            >
+              <Search size={18} />
+            </button>
+            <button
+              className="header-icon-btn theme-toggle"
               onClick={toggleTheme}
               aria-label={
                 isDarkMode ? "Activar modo claro" : "Activar modo oscuro"
               }
             >
-              {isDarkMode ? <Sun size={17} /> : <Moon size={17} />}
+              {isDarkMode ? <Moon size={18} /> : <Sun size={18} />}
             </button>
             <button
               className="header-icon-btn cart-btn"

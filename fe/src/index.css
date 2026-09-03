@@ -74,13 +74,14 @@ body::before {
   background-size: 34px 34px;
   mask-image: linear-gradient(to bottom, #000, transparent 42%);
 }
+html.dark-mode,
 body.dark-mode {
-  --bg: #0e0b14;
-  --bg-subtle: #17141f;
-  --text: #cfccd4;
-  --muted: #a8a2b3;
+  --bg: #0c0a10;
+  --bg-subtle: #16111c;
+  --text: #d4d0db;
+  --muted: #9b93a8;
   --ink: #faf9fc;
-  --border: #38333f;
+  --border: #2a2433;
   --gradient-hero: linear-gradient(
     135deg,
     #0e0b14 0%,
@@ -213,7 +214,7 @@ body.dark-mode .register-card {
   background: color-mix(in srgb, var(--bg-subtle) 92%, #2b1740) !important;
 }
 /* Consistent premium controls while allowing page CSS to retain its layout. */
-button:not(.theme-toggle-btn):not(.header-menu-toggle):not(.cart-btn),
+button:not(.theme-toggle-btn):not(.header-menu-toggle):not(.cart-btn):not(.header-icon-btn),
 .hero-button,
 .card-button,
 .login-btn {
@@ -225,7 +226,7 @@ button:not(.theme-toggle-btn):not(.header-menu-toggle):not(.cart-btn),
     box-shadow 0.2s,
     filter 0.2s;
 }
-button:not(.theme-toggle-btn):not(.header-menu-toggle):not(.cart-btn):hover,
+button:not(.theme-toggle-btn):not(.header-menu-toggle):not(.cart-btn):not(.header-icon-btn):hover,
 .hero-button:hover,
 .card-button:hover,
 .login-btn:hover {
