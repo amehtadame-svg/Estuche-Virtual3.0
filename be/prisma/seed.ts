@@ -201,22 +201,41 @@ const productsData = [
 ];
 
 const usersData = [
+  // 👑 TUS CUENTAS PERSONALIZADAS
   {
-    email: 'superadmin@estuche.com',
-    fullName: 'Super Administrador',
-    password: 'SuperAdmin123!',
+    email: 'alvaradocristian1027@gmail.com',
+    fullName: 'Cristian Alvarado',
+    password: 'Polonio@384',
     role: Role.superadmin,
-    phone: '+57 300 000 0001',
+    phone: '+57 300 123 4567',
     address: 'Sede Principal',
   },
   {
-    email: 'admin@estuche.com',
-    fullName: 'Administrador Estuche',
+    email: 'pgarces328@gmail.com',
+    fullName: 'P. Garcés',
     password: 'Admin123!',
     role: Role.admin,
-    phone: '+57 300 000 0002',
+    phone: '+57 300 234 5678',
     address: 'Oficina Central',
   },
+  {
+    email: 'francksalamanca54526@gmail.com',
+    fullName: 'Franck Salamanca',
+    password: 'SuperAdmin123!',
+    role: Role.superadmin,
+    phone: '+57 300 345 6789',
+    address: 'Sede Principal',
+  },
+  {
+    email: 'amethadame@gmail.com',
+    fullName: 'Ameth Adame',
+    password: 'SuperAdmin123!',
+    role: Role.superadmin,
+    phone: '+57 300 456 7890',
+    address: 'Sede Principal',
+  },
+
+  // 👥 CUENTAS DE APOYO / ROLES
   {
     email: 'empleado@estuche.com',
     fullName: 'Empleado Demo',
@@ -327,12 +346,14 @@ async function main() {
 
   // 3. Usuarios iniciales
   for (const usr of usersData) {
-    const existing = await prisma.user.findUnique({ where: { email: usr.email } });
+    const emailLower = usr.email.toLowerCase();
+    const existing = await prisma.user.findUnique({ where: { email: emailLower } });
+    const hashedPassword = await bcrypt.hash(usr.password, 10);
+
     if (!existing) {
-      const hashedPassword = await bcrypt.hash(usr.password, 10);
       await prisma.user.create({
         data: {
-          email: usr.email,
+          email: emailLower,
           fullName: usr.fullName,
           hashedPassword,
           role: usr.role,
@@ -343,9 +364,18 @@ async function main() {
           dataConsentAt: new Date(),
         },
       });
-      console.log(`  + Usuario creado [${usr.role}]: ${usr.email} (Clave: ${usr.password})`);
+      console.log(`  + Usuario creado [${usr.role}]: ${emailLower}`);
     } else {
-      console.log(`  = Usuario ya existe: ${usr.email}`);
+      // Si ya existía, actualizamos el rol y contraseña para asegurar acceso
+      await prisma.user.update({
+        where: { email: emailLower },
+        data: {
+          role: usr.role,
+          hashedPassword,
+          isActive: true,
+        },
+      });
+      console.log(`  ✓ Usuario actualizado [${usr.role}]: ${emailLower}`);
     }
   }
 
