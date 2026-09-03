@@ -9,7 +9,7 @@ import path from 'node:path';
  * Docker del frontend no podía apuntar a ningún backend que no fuera el de la
  * máquina del navegador.
  *
- * Criterio de la auditoría: "el frontend apunta a otro host cambiando solo la
+ * Criteio de la auditoría: "el frontend apunta a otro host cambiando solo la
  * variable". Aquí se verifica que el código lee VITE_API_URL con prioridad y
  * que el .env-example la documenta.
  */
