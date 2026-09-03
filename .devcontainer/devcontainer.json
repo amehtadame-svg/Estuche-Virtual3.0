@@ -1,12 +1,18 @@
 {
-  "forwardPorts": [4000, 5173],
+  "name": "Estuche Virtual 3.0",
+  "forwardPorts": [4000, 5173, 5432],
   "portsAttributes": {
     "4000": {
-      "visibility": "public"
+      "visibility": "public",
+      "label": "Backend API"
     },
     "5173": {
-      "visibility": "public"
+      "visibility": "public",
+      "label": "Frontend (Vite)"
+    },
+    "5432": {
+      "label": "PostgreSQL"
     }
   },
-  "postCreateCommand": "npm install && cd server && npm install && npx prisma generate"
+  "postCreateCommand": "npm install -g pnpm && cd be && pnpm install && cp -n .env-example .env || true && cd ../fe && pnpm install && cp -n .env-example .env || true"
 }
