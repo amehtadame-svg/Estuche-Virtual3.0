@@ -33,10 +33,10 @@
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(11, 9, 15, 0.48);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(22px);
-  -webkit-backdrop-filter: blur(22px);
+  background: rgba(11, 9, 15, 0.28);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
 }
 
 .header-inner {
@@ -201,8 +201,8 @@ body.dark-mode .logo-for-light {
 }
 
 body:not(.dark-mode) .header {
-  background: rgba(255, 255, 255, 0.92);
-  border-bottom: 1px solid #ece8f2;
+  background: rgba(246, 242, 251, 0.55);
+  border-bottom: 1px solid rgba(88, 28, 135, 0.06);
 }
 
 body:not(.dark-mode) .logo-word,

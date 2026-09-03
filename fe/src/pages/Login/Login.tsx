@@ -1,12 +1,17 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { Lock, Mail, ShieldCheck, Truck } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import PasswordInput from "../../components/ui/PasswordInput";
 import "../ResetPassword/Auth.css";
 
+const LOGIN_IMG =
+  "https://images.pexels.com/photos/636237/pexels-photo-636237.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=1200&w=900";
+
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [remember, setRemember] = useState(true);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { login, generateResetToken } = useAuth();
@@ -37,6 +42,9 @@ const Login = () => {
       return;
     }
 
+    if (remember) localStorage.setItem("remember-email", email);
+    else localStorage.removeItem("remember-email");
+
     const role = JSON.parse(localStorage.getItem("user") || "{}").role;
     setLoading(false);
     if (role === "client") navigate("/cliente");
@@ -45,57 +53,82 @@ const Login = () => {
   };
 
   return (
-    <main className="auth-shell">
-      <section className="auth-card" aria-labelledby="login-title">
-        <div className="auth-mark">E</div>
-        <h1 id="login-title" className="auth-title">
-          Bienvenido <em>de nuevo.</em>
+    <main className="auth-split">
+      <aside className="auth-visual login-visual">
+        <img src={LOGIN_IMG} alt="" />
+        <div className="auth-visual-copy">
+          <p className="auth-quote">
+            “La papelería más bonita en la puerta de tu casa, en menos de 24
+            horas.”
+          </p>
+          <div className="auth-visual-meta">
+            <span>
+              <Truck size={14} /> Envío exprés 24 h
+            </span>
+            <span>
+              <ShieldCheck size={14} /> Pago 100% seguro
+            </span>
+          </div>
+        </div>
+      </aside>
+
+      <section className="auth-panel" aria-labelledby="login-title">
+        <h1 id="login-title">
+          Bienvenido de <em>nuevo</em>
         </h1>
-        <p className="auth-subtitle">
-          Inicia sesión para continuar creando, aprendiendo y organizando tus
-          ideas.
+        <p className="auth-lead">
+          Accede para ver tus pedidos, puntos y ofertas exclusivas.
         </p>
         <form className="auth-form" onSubmit={handleSubmit}>
           <div className="auth-field">
-            <label className="auth-label" htmlFor="login-email">
-              Correo electrónico
-            </label>
-            <input
-              id="login-email"
-              className="auth-input"
-              type="email"
-              placeholder="tucorreo@email.com"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              required
-            />
+            <label htmlFor="login-email">Correo electrónico</label>
+            <div className="auth-input-icon">
+              <Mail size={16} />
+              <input
+                id="login-email"
+                type="email"
+                placeholder="tu@correo.com"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                required
+              />
+            </div>
           </div>
           <div className="auth-field">
-            <label className="auth-label" htmlFor="login-password">
-              Contraseña
-            </label>
-            <PasswordInput
-              id="login-password"
-              className="auth-input"
-              placeholder="Tu contraseña"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              required
-            />
+            <label htmlFor="login-password">Contraseña</label>
+            <div className="auth-input-icon">
+              <Lock size={16} />
+              <PasswordInput
+                id="login-password"
+                placeholder="••••••"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                required
+              />
+            </div>
           </div>
-          {error && <p className="auth-alert">⚠️ {error}</p>}
+          <div className="auth-row">
+            <label className="auth-check">
+              <input
+                type="checkbox"
+                checked={remember}
+                onChange={(event) => setRemember(event.target.checked)}
+              />
+              Recuérdame
+            </label>
+            <Link to="/forgot-password">¿Olvidaste tu contraseña?</Link>
+          </div>
+          {error && <p className="auth-alert">{error}</p>}
           <button type="submit" className="auth-submit" disabled={loading}>
-            {loading ? "Verificando..." : "Iniciar sesión →"}
+            {loading ? "Verificando..." : "Iniciar sesión  →"}
           </button>
         </form>
-        <div className="auth-links">
-          <Link to="/forgot-password">¿Olvidaste tu contraseña?</Link>
-          <span>
-            ¿Aún no tienes cuenta? <Link to="/register">Crea la tuya</Link>
-          </span>
-        </div>
+        <p className="auth-switch">
+          ¿Aún no tienes cuenta? <Link to="/register">Regístrate gratis</Link>
+        </p>
       </section>
     </main>
   );
 };
+
 export default Login;

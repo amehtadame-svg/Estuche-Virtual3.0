@@ -18,9 +18,6 @@ export default function Footer() {
       <div className="footer-grid">
         <div className="footer-brand">
           <Link to="/" className="footer-logo" aria-label="Estuche Virtual">
-            <span className="footer-mark">
-              <PenLine size={18} />
-            </span>
             <span className="footer-word">
               Estuche <em>Virtual</em>
             </span>

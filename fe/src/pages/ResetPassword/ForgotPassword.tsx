@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { ArrowLeft, KeyRound, Mail } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import "./Auth.css";
 
@@ -11,6 +12,7 @@ export default function ForgotPassword() {
   const [error, setError] = useState("");
   const [preview, setPreview] = useState("");
   const [loading, setLoading] = useState(false);
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setError("");
@@ -36,20 +38,26 @@ export default function ForgotPassword() {
       2500,
     );
   };
+
   return (
-    <main className="auth-shell">
+    <main className="auth-center">
+      <div className="auth-brand-row">
+        <span className="auth-word">
+          Estuche <em>Virtual</em>
+        </span>
+      </div>
       <section className="auth-card" aria-labelledby="forgot-title">
-        <div className="auth-mark">?</div>
-        <h1 id="forgot-title" className="auth-title">
-          Recupera tu <em>acceso.</em>
-        </h1>
-        <p className="auth-subtitle">
-          Escribe tu correo y te enviaremos un código de seis dígitos para
-          continuar.
+        <div className="auth-key">
+          <KeyRound size={22} />
+        </div>
+        <h1 id="forgot-title">¿Olvidaste tu contraseña?</h1>
+        <p className="auth-lead">
+          Tranquilo, nos pasa a todos. Te enviaremos un enlace para crear una
+          nueva.
         </p>
         {message ? (
           <div className="auth-alert success">
-            ✓ {message}
+            {message}
             {preview && (
               <p>
                 <a href={preview} target="_blank" rel="noreferrer">
@@ -60,29 +68,26 @@ export default function ForgotPassword() {
           </div>
         ) : (
           <form className="auth-form" onSubmit={handleSubmit}>
-            <div className="auth-field">
-              <label className="auth-label" htmlFor="forgot-email">
-                Correo electrónico
-              </label>
+            <div className="auth-input-icon">
+              <Mail size={16} />
               <input
                 id="forgot-email"
-                className="auth-input"
                 type="email"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                placeholder="tucorreo@ejemplo.com"
+                placeholder="tu@correo.com"
                 required
               />
             </div>
-            {error && <p className="auth-alert">⚠️ {error}</p>}
+            {error && <p className="auth-alert">{error}</p>}
             <button type="submit" className="auth-submit" disabled={loading}>
-              {loading ? "Enviando..." : "Enviar código →"}
+              {loading ? "Enviando..." : "Enviar enlace"}
             </button>
           </form>
         )}
-        <div className="auth-links">
-          <Link to="/login">← Volver al inicio de sesión</Link>
-        </div>
+        <Link className="auth-back" to="/login">
+          <ArrowLeft size={14} /> Volver a iniciar sesión
+        </Link>
       </section>
     </main>
   );
