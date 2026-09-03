@@ -330,8 +330,11 @@ h2 em {
   border-radius: 30px;
   background: #1a1120;
 }
+.school-banner h2 {
+  color: #ffffff !important;
+}
 .school-banner > div > p:not(.eyebrow) {
-  color: var(--text);
+  color: #d1d5db !important;
 }
 .school-banner img {
   width: 100%;

@@ -93,16 +93,6 @@ export default function Home() {
           </div>
         </div>
         <div className="hero-visual">
-          <img src="/design/hero-stationery.webp" alt="Papelería premium" />
-          <div className="hero-product-float">
-            <img src="/design/category-notebooks.webp" alt="" />
-            <div>
-              <b>Cuaderno Espiral</b>
-              <span>
-                $ 18.900 <i>-24%</i>
-              </span>
-            </div>
-          </div>
         </div>
       </section>
       <section className="trust-row">
@@ -211,7 +201,6 @@ export default function Home() {
             Comprar la colección <ArrowRight size={17} />
           </Link>
         </div>
-        <img src="/design/category-art.webp" alt="Colección escolar" />
       </section>
       <section className="home-section experience">
         <p className="eyebrow">La experiencia</p>

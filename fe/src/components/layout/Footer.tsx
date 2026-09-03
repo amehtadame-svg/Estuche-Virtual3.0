@@ -42,7 +42,6 @@ export default function Footer() {
           <ul>
             <li>📍 Bogotá, Colombia</li>
             <li>📞 +57 300 123 4567</li>
-            <li>✉️ hola@estuchevirtual.com</li>
             <li>⏱ Lun – Vie, 8:00–18:00</li>
           </ul>
         </div>
