@@ -849,6 +849,7 @@
     linear-gradient(135deg, #1a1024 0%, #120c18 55%, #1b1028 100%);
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
 }
+<<<<<<< HEAD
 
 .school-copy h2 {
   margin: 14px 0 12px;
@@ -856,6 +857,13 @@
   font-size: clamp(2rem, 4vw, 3.1rem);
   font-weight: 800;
   letter-spacing: -0.05em;
+=======
+.school-banner h2 {
+  color: #ffffff !important;
+}
+.school-banner > div > p:not(.eyebrow) {
+  color: #d1d5db !important;
+>>>>>>> fix/ui-images
 }
 
 .school-copy > p:not(.eyebrow) {

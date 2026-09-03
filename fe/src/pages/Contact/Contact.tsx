@@ -26,7 +26,6 @@ export default function Contact() {
   const contactInfo = [
     { icon: '📍', title: 'Dirección', data: 'Calle 45 #12-30, Bogotá, Colombia' },
     { icon: '📞', title: 'Teléfono', data: '+57 300 123 4' },
-    { icon: '✉️', title: 'Correo', data: 'hola@estuchevirtual.com' },
     { icon: '⏰', title: 'Horario', data: 'Lun – Vie: 8 am – 6 pm' },
   ];
 

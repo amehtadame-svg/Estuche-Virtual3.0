@@ -26,6 +26,32 @@ export default function Footer() {
             Papelería, arte y oficina con curaduría premium. Todo lo que
             necesitas, en un solo lugar.
           </p>
+<<<<<<< HEAD
+=======
+          <div className="footer-promise">
+            <span>✦</span> Envíos a toda Colombia
+          </div>
+        </div>
+        <div className="footer-col">
+          <h4>Explora</h4>
+          <nav>
+            <Link to="/">Inicio</Link>
+            <Link to="/catalogo">Catálogo</Link>
+            <Link to="/Nosotros">Nosotros</Link>
+            <Link to="/Contacto">Contacto</Link>
+          </nav>
+        </div>
+        <div className="footer-col">
+          <h4>Atención</h4>
+          <ul>
+            <li>📍 Bogotá, Colombia</li>
+            <li>📞 +57 300 123 4567</li>
+            <li>⏱ Lun – Vie, 8:00–18:00</li>
+          </ul>
+        </div>
+        <div className="footer-col">
+          <h4>Conecta</h4>
+>>>>>>> fix/ui-images
           <div className="footer-socials">
             <a href="https://instagram.com" target="_blank" rel="noreferrer">
               Ig
