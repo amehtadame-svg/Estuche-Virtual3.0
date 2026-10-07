@@ -51,6 +51,8 @@ const authLimiter = rateLimit({
 
 const app = express();
 
+// Necesario porque el proxy de Codespaces/Vite agrega headers X-Forwarded-*.
+app.set('trust proxy', 1);
 // Cabeceras de seguridad HTTP (helmet) antes que cualquier ruta.
 app.use(helmet());
 app.use(

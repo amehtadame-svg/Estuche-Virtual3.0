@@ -28,11 +28,7 @@ services:
     network_mode: host
     environment:
       - PORT=4000
-      - DATABASE_URL=postgresql://estuche_user:estuche_pass@127.0.0.1:5432/estuche_virtual
       - JWT_SECRET=your-super-secret-access-key-min-32-chars-change-in-production
-      - CORS_ORIGINS=http://localhost:5173,https://*.app.github.dev
-      - RATE_LIMIT_MAX=100
-      - RATE_LIMIT_WINDOW_MS=900000
     command: ["sh", "/app/docker-entrypoint.sh"]
     volumes:
       - ./be:/app
@@ -40,8 +36,6 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    ports:
-      - "4000:4000"
 
   frontend:
     build:
@@ -56,6 +50,14 @@ services:
       - fe_node_modules:/app/node_modules
     depends_on:
       - backend
+
+  adminer:
+    image: adminer:latest
+    container_name: estuche-adminer
+    restart: unless-stopped
+    network_mode: host
+    depends_on:
+      - db
 
 volumes:
   be_node_modules:
