@@ -1,8 +1,11 @@
 const getBaseUrl = () => {
   if (typeof window !== 'undefined') {
     const host = window.location.host;
-    if (host.includes('.app.github.dev') || host.includes('.github.dev')) {
-      return `https://${host.replace(/-(3000|5173|4173)\./, '-4000.')}`;
+        // En GitHub Codespaces / entornos de preview, usar URLs relativas ('')
+    // para que el proxy de Vite (vite.config.ts → /api → localhost:4000)
+    // maneje las peticiones internamente, evitando problemas de CORS.
+    if (host.includes('.app.github.dev') || host.includes('.github.dev') || host.includes('.e2b.app')) {
+      return '';
     }
   }
 

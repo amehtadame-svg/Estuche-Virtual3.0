@@ -5,19 +5,19 @@ services:
     image: postgres:16-alpine
     container_name: estuche-db
     restart: unless-stopped
+    network_mode: host
     environment:
       POSTGRES_USER: estuche_user
       POSTGRES_PASSWORD: estuche_pass
       POSTGRES_DB: estuche_virtual
     volumes:
       - ./db_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U estuche_user -d estuche_virtual"]
-      interval: 10s
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U estuche_user -d estuche_virtual"]
+      interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 30s
 
   backend:
     build:
@@ -25,14 +25,15 @@ services:
       dockerfile: Dockerfile
     container_name: estuche-backend
     restart: unless-stopped
+    network_mode: host
     environment:
       - PORT=4000
-      - DATABASE_URL=postgresql://estuche_user:estuche_pass@db:5432/estuche_virtual
+      - DATABASE_URL=postgresql://estuche_user:estuche_pass@127.0.0.1:5432/estuche_virtual
       - JWT_SECRET=your-super-secret-access-key-min-32-chars-change-in-production
       - CORS_ORIGINS=http://localhost:5173,https://*.app.github.dev
       - RATE_LIMIT_MAX=100
       - RATE_LIMIT_WINDOW_MS=900000
-    command: sh -c "pnpm prisma generate && pnpm prisma migrate deploy && pnpm prisma db seed && pnpm dev"
+    command: ["sh", "/app/docker-entrypoint.sh"]
     volumes:
       - ./be:/app
       - be_node_modules:/app/node_modules
@@ -48,12 +49,11 @@ services:
       dockerfile: Dockerfile
     container_name: estuche-frontend
     restart: unless-stopped
+    network_mode: host
     command: pnpm dev --host 0.0.0.0
     volumes:
       - ./fe:/app
       - fe_node_modules:/app/node_modules
-    ports:
-      - "5173:5173"
     depends_on:
       - backend
 
