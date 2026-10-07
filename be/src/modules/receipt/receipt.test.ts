@@ -27,7 +27,11 @@ test('C-02: el total de un recibo ligado a un pedido sale del pedido en BD (igno
 });
 
 test('C-02: actualizar un recibo con pedido ignora el total enviado por el cliente', async () => {
-  (prisma as any).receipt.findUnique = async () => ({ id: 'r-1', orderId: 'order-1' });
+  (prisma as any).receipt.findUnique = async () => ({
+    id: 'r-1',
+    orderId: 'order-1',
+    customerId: 'user-1',
+  });
   (prisma as any).order.findUnique = async () => ({ id: 'order-1', total: 300 });
   let updated: any;
   (prisma as any).receipt.update = async (args: any) => {
@@ -35,10 +39,27 @@ test('C-02: actualizar un recibo con pedido ignora el total enviado por el clien
     return { id: 'r-1', ...args.data };
   };
 
-  const receipt = await receiptService.update('r-1', { total: 0, paymentStatus: 'paid' });
+  const receipt = await receiptService.update(
+    'r-1',
+    { total: 0, paymentStatus: 'paid' },
+    { id: 'user-1', role: 'client' } // dueño del recibo
+  );
 
   assert.strictEqual(receipt.total, 300, 'el total debe seguir siendo el del pedido');
   assert.strictEqual(updated.data.paymentStatus, 'paid', 'el estado sí se actualiza');
+});
+
+test('C-01: nadie que no sea el dueño puede modificar un recibo ajeno', async () => {
+  (prisma as any).receipt.findUnique = async () => ({
+    id: 'r-1',
+    orderId: 'order-1',
+    customerId: 'user-1',
+  });
+
+  await assert.rejects(
+    receiptService.update('r-1', { paymentStatus: 'paid' }, { id: 'user-2', role: 'client' }),
+    (err: HttpError) => err.status === 403
+  );
 });
 
 test('C-02: recibo con pedido inexistente responde 404', async () => {

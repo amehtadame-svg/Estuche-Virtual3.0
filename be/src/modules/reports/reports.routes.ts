@@ -1,12 +1,15 @@
 import { Router } from 'express';
-import { verifyToken, verifySuperAdmin } from '../../middlewares/auth.middleware';
+import { verifyToken, verifyAdmin, verifySuperAdmin } from '../../middlewares/auth.middleware';
 import { listReports, getGeneralSummary } from './reports.controller';
 
 const router = Router();
 
-router.use(verifyToken, verifySuperAdmin);
+router.use(verifyToken);
 
-router.get('/',        listReports);
-router.get('/summary', getGeneralSummary);
+// El resumen lo consumen los paneles de administración (admin y superadmin).
+router.get('/summary', verifyAdmin, getGeneralSummary);
+
+// El histórico de reportes generados queda reservado al superadmin.
+router.get('/', verifySuperAdmin, listReports);
 
 export default router;

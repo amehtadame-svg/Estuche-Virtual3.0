@@ -1,47 +1,80 @@
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
+import { API, authHeaders } from '../../api/api';
+import { orderStatusLabel } from '../../lib/statusLabels';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import './AdminDashboard.css';
 
-const monthlySales = [
-  { month: 'Ago', sales: 320000 },
-  { month: 'Sep', sales: 480000 },
-  { month: 'Oct', sales: 390000 },
-  { month: 'Nov', sales: 610000 },
-  { month: 'Dic', sales: 750000 },
-  { month: 'Ene', sales: 530000 },
-];
-
-const recentOrders = [
-  { number: 'PED-005', customer: 'Antonella Ramirez', date: '2025-01-18', total: 53000, status: 'Cancelado' },
-  { number: 'PED-004', customer: 'Lucia Torres', date: '2025-01-16', total: 35000, status: 'Procesando' },
-  { number: 'PED-003', customer: 'Camila Rodriguez', date: '2025-01-14', total: 120000, status: 'Entregado' },
-  { number: 'PED-002', customer: 'Isabella Garcia', date: '2025-01-12', total: 47000, status: 'En camino' },
-  { number: 'PED-001', customer: 'Valentina Lopez', date: '2025-01-10', total: 85000, status: 'Entregado' },
-];
-
+// Colores por estado del pedido (valores del enum OrderStatus).
 const statusColor: Record<string, string> = {
-  Entregado: '#10b981',
-  'En camino': '#f59e0b',
-  Procesando: '#3b82f6',
-  Cancelado: '#e74c3c',
+  pending: '#3b82f6',
+  paid: '#2563eb',
+  preparing: '#8b5cf6',
+  shipped: '#f59e0b',
+  delivered: '#10b981',
+  canceled: '#e74c3c',
+  returned: '#c0392b',
 };
 
-const recentActivity = [
-  { text: 'Nuevo pedido #4521 de Laura Pérez', time: 'Hace 5 min', icon: '🛒' },
-  { text: 'Producto "Cuaderno A4" actualizado', time: 'Hace 20 min', icon: '📦' },
-  { text: 'Recibo #0217 generado', time: 'Hace 1 hora', icon: '🧾' },
-  { text: 'Envío #312 marcado como entregado', time: 'Hace 2 horas', icon: '🚚' },
-  { text: 'Proveedor "Papelería Luna" agregado', time: 'Ayer', icon: '🏭' },
-];
+
+interface Summary {
+  total_products: number;
+  total_providers: number;
+  total_receipts: number;
+  total_orders: number;
+  orders_today: number;
+  pending_orders: number;
+  low_stock_products: { id: string; name: string; stock: number; stockMin: number }[];
+  monthly_sales: { month: string; sales: number }[];
+}
+
+interface RecentOrder {
+  id: string;
+  total: number | null;
+  status: string | null;
+  orderDate: string | null;
+  customer: { fullName: string } | null;
+}
 
 const AdminDashboard = () => {
   const { user } = useAuth();
 
+  // Cifras reales de la base de datos. Antes el panel mostraba números fijos
+  // en el código ("124 productos"), que nunca cambiaban aunque la BD sí.
+  const [summary, setSummary] = useState<Summary | null>(null);
+  const [recent, setRecent] = useState<RecentOrder[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const [resSummary, resOrders] = await Promise.all([
+          fetch(`${API.reports}/summary`, { headers: authHeaders() }),
+          fetch(API.orders, { headers: authHeaders() }),
+        ]);
+
+        if (resSummary.ok) setSummary(await resSummary.json());
+        else setError('No se pudo cargar el resumen del negocio.');
+
+        if (resOrders.ok) {
+          const orders: RecentOrder[] = await resOrders.json();
+          setRecent(orders.slice(0, 5));
+        }
+      } catch {
+        setError('No se pudo conectar con el servidor.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
   const stats = [
-    { label: 'Productos', value: '124', icon: '📦', color: 'stat-purple' },
-    { label: 'Pedidos hoy', value: '38', icon: '🛒', color: 'stat-blue' },
-    { label: 'Recibos', value: '217', icon: '🧾', color: 'stat-green' },
-    { label: 'Proveedores', value: '12', icon: '🏭', color: 'stat-orange' },
+    { label: 'Productos', value: summary?.total_products ?? 0, icon: '📦', color: 'stat-purple' },
+    { label: 'Pedidos hoy', value: summary?.orders_today ?? 0, icon: '🛒', color: 'stat-blue' },
+    { label: 'Recibos', value: summary?.total_receipts ?? 0, icon: '🧾', color: 'stat-green' },
+    { label: 'Proveedores', value: summary?.total_providers ?? 0, icon: '🏭', color: 'stat-orange' },
   ];
 
   return (
@@ -55,6 +88,8 @@ const AdminDashboard = () => {
           <p className="subtitulo-usuarios">Listo para administrar tu pagina?</p>
         </div>
       </div>
+
+      {error && <div className="mensaje-pedidos mensaje-pedidos-error">{error}</div>}
 
       {/* Stats */}
       <div className="stats-grid">
@@ -74,8 +109,11 @@ const AdminDashboard = () => {
           {/* Gráfica */}
           <div className="chart-section">
             <h2 className="section-heading">Ventas últimos 6 meses</h2>
+            {(summary?.monthly_sales ?? []).length === 0 && !loading && (
+              <p style={{ color: 'var(--text)', fontSize: 13 }}>Sin ventas registradas todavía.</p>
+            )}
             <ResponsiveContainer width="100%" height={220}>
-              <AreaChart data={monthlySales}>
+              <AreaChart data={summary?.monthly_sales ?? []}>
                 <defs>
                   <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#aa3bff" stopOpacity={0.25} />
@@ -105,37 +143,57 @@ const AdminDashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {recentOrders.map((p) => (
-                  <tr key={p.number}>
-                    <td className="num-pedido">{p.number}</td>
-                    <td>{p.customer}</td>
-                    <td>{p.date}</td>
-                    <td>${p.total.toLocaleString()}</td>
+                {recent.map((p) => (
+                  <tr key={p.id}>
+                    <td className="num-pedido">PED-{p.id.slice(0, 6).toUpperCase()}</td>
+                    <td>{p.customer?.fullName ?? '—'}</td>
+                    <td>{p.orderDate ? p.orderDate.split('T')[0] : '—'}</td>
+                    <td>${Number(p.total ?? 0).toLocaleString()}</td>
                     <td>
-                      <span className="estado-badge" style={{ backgroundColor: statusColor[p.status] }}>
-                        {p.status}
+                      <span
+                        className="estado-badge"
+                        style={{ backgroundColor: statusColor[p.status ?? ''] || '#999' }}
+                      >
+                        {orderStatusLabel[p.status ?? ''] ?? p.status}
                       </span>
                     </td>
                   </tr>
                 ))}
+                {recent.length === 0 && !loading && (
+                  <tr>
+                    <td colSpan={5} style={{ textAlign: 'center', color: 'var(--text)' }}>
+                      Aún no hay pedidos registrados.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
         </div>
 
-        {/* Actividad reciente */}
+        {/* Alertas de inventario (datos reales, HU-007) */}
         <div className="activity-section">
-          <h2 className="section-heading">Actividad reciente</h2>
+          <h2 className="section-heading">Productos por agotarse</h2>
           <div className="activity-list">
-            {recentActivity.map((a, i) => (
-              <div key={i} className="activity-item">
-                <span className="activity-icon">{a.icon}</span>
+            {(summary?.low_stock_products ?? []).map((p) => (
+              <div key={p.id} className="activity-item">
+                <span className="activity-icon">⚠️</span>
                 <div className="activity-info">
-                  <p className="activity-text">{a.text}</p>
-                  <p className="activity-time">{a.time}</p>
+                  <p className="activity-text">{p.name}</p>
+                  <p className="activity-time">
+                    Stock {p.stock} / mínimo {p.stockMin}
+                  </p>
                 </div>
               </div>
             ))}
+            {!loading && (summary?.low_stock_products ?? []).length === 0 && (
+              <div className="activity-item">
+                <span className="activity-icon">✅</span>
+                <div className="activity-info">
+                  <p className="activity-text">Todo el inventario está por encima del mínimo.</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

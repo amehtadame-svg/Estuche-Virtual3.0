@@ -170,16 +170,19 @@ export default function Product() {
   const inCart = items.find((item) => item.id === product.id)?.quantity ?? 0;
   const image = productImage(product);
 
-  const handleAdd = (goCheckout = false) => {
-    for (let i = 0; i < quantity; i += 1) {
-      add({
+  const handleAdd = async (goCheckout = false) => {
+    // Una sola petición con la cantidad elegida: así el carrito de la BD
+    // queda exactamente igual a lo que el cliente ve en pantalla.
+    await add(
+      {
         id: product.id,
         name: product.name,
         price: Number(product.price),
         category: catName,
         icon: "📦",
-      });
-    }
+      },
+      quantity,
+    );
     setAdded(true);
     window.setTimeout(() => setAdded(false), 1600);
     if (goCheckout) navigate("/carrito");

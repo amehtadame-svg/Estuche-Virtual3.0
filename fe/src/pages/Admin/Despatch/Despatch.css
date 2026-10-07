@@ -323,3 +323,8 @@
     margin-right: 6px;
   }
 }
+/* Mensaje de error del servidor */
+.mensaje-envios-error {
+  background: rgba(231, 76, 60, 0.1);
+  color: #e74c3c;
+}

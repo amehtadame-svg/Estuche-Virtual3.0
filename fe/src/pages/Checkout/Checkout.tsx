@@ -9,6 +9,7 @@ import './Checkout.css';
 type PaymentMethod = 'tarjeta' | 'nequi' | 'daviplata' | 'transferencia' | 'efectivo';
 
 interface Discount {
+  id?: string;
   code: string;
   type: string;
   value: number;
@@ -115,11 +116,17 @@ export default function Checkout() {
     const newPhone = addressForm.phoneNumber;
 
     // Guardar en BD (una sola vez)
-    await fetch(`${API.users}/${user?.id}/profile`, {
+    const resProfile = await fetch(`${API.users}/${user?.id}/profile`, {
       method: 'PATCH',
       headers,
       body: JSON.stringify({ phone: newPhone, address: composedAddress }),
     });
+
+    if (!resProfile.ok) {
+      const d = await resProfile.json().catch(() => null);
+      setError(d?.message ?? 'No se pudo guardar la dirección.');
+      return;
+    }
 
     setPhone(newPhone);
     setAddress(composedAddress);
@@ -143,7 +150,10 @@ export default function Checkout() {
         return;
       }
       const d = await res.json();
-      setDiscount({ code: d.code, type: d.type, value: Number(d.value) });
+      // El cupón no se consume aquí: lo descuenta el servidor al crear el
+      // pedido. Antes se llamaba a /apply y después a POST /api/orders, así
+      // que cada compra gastaba DOS usos del mismo código.
+      setDiscount({ id: d.id, code: d.code, type: d.type, value: Number(d.value) });
       setDiscountError('');
     } catch {
       setDiscountError('Error al validar el código');
@@ -165,25 +175,20 @@ export default function Checkout() {
 
     try {
       // 0. Guardar teléfono y dirección en el perfil del usuario
-      await fetch(`${API.users}/${user?.id}/profile`, {
+      const resProfile = await fetch(`${API.users}/${user?.id}/profile`, {
         method: 'PATCH',
         headers,
         body: JSON.stringify({ phone, address }),
       });
-
-      // 1. Obtener id del código promocional y registrar uso
-      let promotionalCodeId: string | null = null;
-      if (discount) {
-        const resApply = await fetch(`${API.promotionalCodes}/apply`, {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({ code: discount.code }),
-        });
-        if (resApply.ok) {
-          const d = await resApply.json();
-          promotionalCodeId = d.id;
-        }
+      if (!resProfile.ok) {
+        const d = await resProfile.json().catch(() => null);
+        setError(d?.message ?? 'No se pudo guardar tus datos de envío.');
+        return;
       }
+
+      // 1. Id del código promocional ya validado (sin consumir usos).
+      //    El servidor recalcula el total y registra el uso al crear el pedido.
+      const promotionalCodeId: string | null = discount?.id ?? null;
 
       // 2. Crear pedido
       const resOrder = await fetch(API.orders, {
@@ -224,6 +229,10 @@ export default function Checkout() {
       if (resReceipt.ok) {
         const receipt = await resReceipt.json();
         receiptId = receipt.id;
+      } else {
+        // El pedido ya quedó guardado; el recibo se puede generar después.
+        const d = await resReceipt.json().catch(() => null);
+        console.warn('No se pudo generar el recibo:', d?.message);
       }
 
       // 4. Registrar pago simulado (mejor esfuerzo; la ruta puede requerir permisos)

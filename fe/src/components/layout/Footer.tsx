@@ -1,6 +1,6 @@
-import { FormEvent, useState } from "react";
+import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
-import { Mail, PenLine, Phone, Send } from "lucide-react";
+import { Mail, Phone, Send } from "lucide-react";
 import "./Footer.css";
 
 export default function Footer() {

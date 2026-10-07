@@ -87,6 +87,17 @@ estuche-virtual/
 
 ---
 
+## Persistencia de datos
+
+La información de productos, pedidos, cantidades y usuarios se guarda en
+PostgreSQL a través de Prisma, en el momento en que se hace el cambio (no al
+recargar ni al reiniciar).
+
+- Puesta en marcha y reglas para no perder datos: [`docs/diagnostico-persistencia-bd.md`](./docs/diagnostico-persistencia-bd.md)
+- El esquema se gobierna con `be/prisma/migrations`; **nunca** con `prisma db push` ni `prisma migrate reset`.
+- El volumen `./db_data` conserva la información entre `docker compose down` y `up`.
+  `docker compose down -v` **sí la borra**.
+
 ## Estado
 
 En desarrollo  

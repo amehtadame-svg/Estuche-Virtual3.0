@@ -10,6 +10,16 @@ const statusColor: Record<string, string> = {
   canceled: '#999',
 };
 
+/** Convierte la respuesta del backend en un mensaje legible. */
+const readError = async (res: Response, fallback: string) => {
+  try {
+    const data = await res.json();
+    return data?.message ?? fallback;
+  } catch {
+    return fallback;
+  }
+};
+
 const emptyForm = {
   orderId: '',
   driverId: '',
@@ -40,27 +50,32 @@ export default function Despatch() {
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const loadDespatches = () => {
-    fetch(API.despatches, { headers: authHeaders() })
-      .then((r) => r.json())
-      .then((data) => {
-        setDespatches(data);
-        setLoading(false);
-      })
-      .catch(() => {
-        showMessage('Error al cargar envios.');
-        setLoading(false);
-      });
+  const loadDespatches = async () => {
+    try {
+      const res = await fetch(API.despatches, { headers: authHeaders() });
+      if (!res.ok) throw new Error(await readError(res, 'Error al cargar envios.'));
+      setDespatches(await res.json());
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error al cargar envios.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const loadDrivers = () => {
-    fetch(API.users)
-      .then((r) => r.json())
-      .then((data) => setDrivers(data.filter((u: any) => u.role === 'delivery')))
-      .catch(() => {});
+  // GET /api/users exige sesión desde el cierre de la auditoría C-01.
+  const loadDrivers = async () => {
+    try {
+      const res = await fetch(API.users, { headers: authHeaders() });
+      if (!res.ok) return;
+      const data = await res.json();
+      setDrivers(data.filter((u: any) => u.role === 'delivery'));
+    } catch {
+      /* sin domiciliarios el formulario sigue siendo utilizable */
+    }
   };
 
   useEffect(() => {
@@ -84,7 +99,7 @@ export default function Despatch() {
 
     if (id) {
       try {
-        const res = await fetch(`${API.orders}/${id}`);
+        const res = await fetch(`${API.orders}/${id}`, { headers: authHeaders() });
         if (res.ok) {
           const order = await res.json();
           setForm((prev) => ({
@@ -124,24 +139,23 @@ export default function Despatch() {
       status: form.status,
     };
 
-    if (editingId !== null) {
-      await fetch(`${API.despatches}/${editingId}`, {
-        method: 'PUT',
-        headers: authHeaders(),
-        body: JSON.stringify(body),
-      });
-      showMessage('Envio actualizado.');
-    } else {
-      await fetch(API.despatches, {
-        method: 'POST',
-        headers: authHeaders(),
-        body: JSON.stringify(body),
-      });
-      showMessage('Envio agregado.');
-    }
+    setError('');
+    try {
+      const url = editingId !== null ? `${API.despatches}/${editingId}` : API.despatches;
+      const method = editingId !== null ? 'PUT' : 'POST';
+      const res = await fetch(url, { method, headers: authHeaders(), body: JSON.stringify(body) });
 
-    loadDespatches();
-    closeModal();
+      if (!res.ok) {
+        setError(await readError(res, 'No se pudo guardar el envío.'));
+        return;
+      }
+
+      showMessage(editingId !== null ? 'Envio actualizado.' : 'Envio agregado.');
+      await loadDespatches();
+      closeModal();
+    } catch {
+      setError('No se pudo conectar con el servidor.');
+    }
   };
 
   const handleEdit = (env: Despatch) => {
@@ -156,19 +170,43 @@ export default function Despatch() {
   };
 
   const handleDelete = async (id: string) => {
-    await fetch(`${API.despatches}/${id}`, { method: 'DELETE', headers: authHeaders() });
-    setDespatches(despatches.filter((e) => e.id !== id));
-    showMessage('Envio eliminado.');
+    setError('');
+    try {
+      const res = await fetch(`${API.despatches}/${id}`, { method: 'DELETE', headers: authHeaders() });
+      if (!res.ok) {
+        setError(await readError(res, 'No se pudo eliminar el envío.'));
+        return;
+      }
+      showMessage('Envio eliminado.');
+      await loadDespatches();
+    } catch {
+      setError('No se pudo conectar con el servidor.');
+    }
   };
 
+  // Cambio de estado en la tabla: si la BD lo rechaza se deshace en pantalla.
   const changeStatus = async (id: string, newStatus: string) => {
-    await fetch(`${API.despatches}/${id}`, {
-      method: 'PUT',
-      headers: authHeaders(),
-      body: JSON.stringify({ status: newStatus }),
-    });
+    const previous = despatches;
     setDespatches(despatches.map((e) => (e.id === id ? { ...e, status: newStatus } : e)));
-    showMessage('Estado actualizado.');
+    setError('');
+
+    try {
+      const res = await fetch(`${API.despatches}/${id}`, {
+        method: 'PUT',
+        headers: authHeaders(),
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (!res.ok) {
+        setDespatches(previous);
+        setError(await readError(res, 'Error al actualizar el estado.'));
+        return;
+      }
+      showMessage('Estado actualizado.');
+      await loadDespatches();
+    } catch {
+      setDespatches(previous);
+      setError('No se pudo conectar con el servidor.');
+    }
   };
 
   return (
@@ -185,6 +223,7 @@ export default function Despatch() {
         </div>
 
         {message && <div className="mensaje-envios">{message}</div>}
+        {error && <div className="mensaje-envios mensaje-envios-error">{error}</div>}
 
         {loading ? (
           <p style={{ color: 'var(--text)', padding: '20px 0' }}>Cargando envios...</p>
