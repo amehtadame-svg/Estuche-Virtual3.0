@@ -9,6 +9,11 @@ interface Requester {
 const ADMIN_ROLES = ['admin', 'superadmin'];
 const isAdmin = (r: Requester | undefined) => !!r && ADMIN_ROLES.includes(r.role);
 
+/** Estados que ya descontaron (y mantienen descontado) el inventario. */
+const LIVE_STATUSES = ['pending', 'paid', 'preparing', 'shipped', 'delivered'];
+/** Estados que devuelven la mercancía al inventario. */
+const RESTOCK_STATUSES = ['canceled', 'returned'];
+
 const LIST_INCLUDE = {
   customer: { select: { fullName: true } },
   driver: { select: { fullName: true } },
@@ -16,25 +21,47 @@ const LIST_INCLUDE = {
   promotionalCode: { select: { code: true, value: true } },
 } as const;
 
+const DETAILS_INCLUDE = {
+  details: { include: { product: { select: { id: true, name: true } } } },
+} as const;
+
 export const orderService = {
-  list() {
-    // C-05: los pedidos eliminados lógicamente no aparecen en las listas.
+  /**
+   * C-05 / RF-011: un cliente solo ve sus propios pedidos; el personal
+   * (admin, superadmin, empleado, domiciliario) ve todos.
+   */
+  list(requester?: Requester) {
     return prisma.order.findMany({
-      where: { deletedAt: null },
+      where: {
+        deletedAt: null,
+        ...(!isAdmin(requester) && requester ? { customerId: requester.id } : {}),
+      },
       include: LIST_INCLUDE,
       orderBy: { orderDate: 'desc' },
     });
   },
 
-  async getById(id: string) {
-    const order = await prisma.order.findUnique({
+  /** Pedidos del usuario autenticado (atajo para el panel del cliente). */
+  listMine(customerId: string) {
+    return prisma.order.findMany({
+      where: { deletedAt: null, customerId },
+      include: LIST_INCLUDE,
+      orderBy: { orderDate: 'desc' },
+    });
+  },
+
+  async getById(id: string, requester?: Requester) {
+    const order = await prisma.order.findFirst({
       where: { id, deletedAt: null },
       include: {
-        customer: { select: { fullName: true } },
-        deliveryAddress: { select: { address: true, city: true } },
+        ...LIST_INCLUDE,
+        ...DETAILS_INCLUDE,
       },
     });
     if (!order) throw notFound('Pedido no encontrado.');
+    if (!isAdmin(requester) && order.customerId !== requester?.id) {
+      throw forbidden('No puedes consultar este pedido.');
+    }
     return order;
   },
 
@@ -63,7 +90,9 @@ export const orderService = {
 
       if (Array.isArray(details) && details.length > 0) {
         for (const item of details) {
-          const product = await tx.product.findUnique({ where: { id: item.productId } });
+          const product = await tx.product.findFirst({
+            where: { id: item.productId, deletedAt: null },
+          });
           if (!product) throw badRequest(`Producto ${item.productId} no encontrado.`);
           if (product.stock < item.quantity) {
             throw badRequest(
@@ -117,9 +146,7 @@ export const orderService = {
             data: { stock: { decrement: item.quantity } },
           });
           if (updated.count === 0) {
-            throw badRequest(
-              `Stock insuficiente para el producto ${item.productId}.`
-            );
+            throw badRequest(`Stock insuficiente para el producto ${item.productId}.`);
           }
 
           // C-03 / RF-016: registrar el movimiento de inventario de la venta.
@@ -149,26 +176,117 @@ export const orderService = {
     });
   },
 
-  update(id: string, data: any) {
-    const { status, ...rest } = data;
-    return prisma.order.update({
-      where: { id, deletedAt: null },
-      data: { ...rest, status: status as any },
+  /**
+   * Cambio de estado / edición de un pedido.
+   *
+   * Se controla quién puede hacerlo y, sobre todo, se mantiene el inventario
+   * coherente: cancelar o devolver un pedido devuelve las unidades al stock y
+   * lo deja registrado en el kardex (antes el stock se perdía para siempre).
+   */
+  async update(
+    id: string,
+    data: {
+      status?: string;
+      driverId?: string | null;
+      deliveryAddressId?: string | null;
+      promotionalCodeId?: string | null;
+    },
+    requester?: Requester
+  ) {
+    return prisma.$transaction(async (tx) => {
+      const order = await tx.order.findFirst({
+        where: { id, deletedAt: null },
+        include: { details: true },
+      });
+      if (!order) throw notFound('Pedido no encontrado.');
+
+      const admin = isAdmin(requester);
+      const isDriver = requester && order.driverId === requester.id;
+
+      if (!admin && order.customerId !== requester?.id && !isDriver) {
+        throw forbidden('No puedes modificar este pedido.');
+      }
+
+      // Un cliente solo puede cancelar su pedido; el resto de transiciones es
+      // tarea del personal.
+      if (!admin && !isDriver && data.status !== undefined && data.status !== 'canceled') {
+        throw forbidden('Solo el personal puede cambiar el estado de un pedido.');
+      }
+
+      const nextStatus = data.status ?? order.status;
+      const wasLive = LIVE_STATUSES.includes(order.status);
+      const willRestock = RESTOCK_STATUSES.includes(nextStatus);
+
+      const patch: Record<string, unknown> = { updatedAt: new Date() };
+
+      if (data.status !== undefined) patch.status = data.status as any;
+      if (data.deliveryAddressId !== undefined) patch.deliveryAddressId = data.deliveryAddressId;
+      if (data.promotionalCodeId !== undefined) patch.promotionalCodeId = data.promotionalCodeId;
+      // Asignar domiciliario es exclusivo del personal.
+      if (data.driverId !== undefined && (admin || isDriver)) patch.driverId = data.driverId;
+
+      // Devolución de mercancía al inventario (cancelado / devuelto).
+      if (willRestock && wasLive) {
+        for (const detail of order.details) {
+          await tx.product.update({
+            where: { id: detail.productId },
+            data: { stock: { increment: detail.quantity } },
+          });
+          await tx.inventoryMovement.create({
+            data: {
+              productId: detail.productId,
+              type: 'in',
+              quantity: detail.quantity,
+              reason: `Devolución de stock - pedido ${id} (${nextStatus})`,
+              userId: requester?.id ?? null,
+            },
+          });
+        }
+      }
+
+      // Reactivar un pedido cancelado vuelve a descontar el inventario.
+      if (!willRestock && !wasLive && LIVE_STATUSES.includes(nextStatus)) {
+        for (const detail of order.details) {
+          const updated = await tx.product.updateMany({
+            where: { id: detail.productId, stock: { gte: detail.quantity } },
+            data: { stock: { decrement: detail.quantity } },
+          });
+          if (updated.count === 0) {
+            throw badRequest(
+              `No hay stock suficiente para reactivar el pedido (producto ${detail.productId}).`
+            );
+          }
+          await tx.inventoryMovement.create({
+            data: {
+              productId: detail.productId,
+              type: 'out',
+              quantity: detail.quantity,
+              reason: `Reactivación de pedido ${id}`,
+              userId: requester?.id ?? null,
+            },
+          });
+        }
+      }
+
+      return tx.order.update({ where: { id }, data: patch, include: LIST_INCLUDE });
     });
   },
 
   // C-05: borrado lógico. Se marca deletedAt en lugar de destruir el pedido y
   // su historial (detalles, envíos, recibo). El historial contable se conserva.
-  async remove(id: string) {
+  async remove(id: string, requester?: Requester) {
+    const order = await prisma.order.findFirst({ where: { id, deletedAt: null } });
+    if (!order) throw notFound('Pedido no encontrado.');
+    if (!isAdmin(requester)) throw forbidden('Solo el personal puede eliminar pedidos.');
     await prisma.order.update({
-      where: { id, deletedAt: null },
+      where: { id },
       data: { deletedAt: new Date() },
     });
     return null;
   },
 
   async applyPromotionalCode(id: string, code: string, requester: Requester) {
-    const order = await prisma.order.findUnique({ where: { id, deletedAt: null } });
+    const order = await prisma.order.findFirst({ where: { id, deletedAt: null } });
     if (!order) throw notFound('Pedido no encontrado.');
 
     const isOwner = order.customerId === requester?.id;

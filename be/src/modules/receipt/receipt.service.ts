@@ -1,5 +1,12 @@
 import { prisma } from '../../lib/prisma';
-import { notFound } from '../../lib/errors';
+import { forbidden, notFound } from '../../lib/errors';
+
+interface Requester {
+  id: string;
+  role: string;
+}
+
+const ADMIN_ROLES = ['admin', 'superadmin'];
 
 export const receiptService = {
   list() {
@@ -42,10 +49,18 @@ export const receiptService = {
 
   async update(
     id: string,
-    data: { customerId?: string; employeeId?: string; total?: number; paymentStatus?: string }
+    data: { customerId?: string; employeeId?: string; total?: number; paymentStatus?: string },
+    requester?: Requester
   ) {
     const existing = await prisma.receipt.findUnique({ where: { id } });
     if (!existing) throw notFound('Recibo no encontrado.');
+
+    // Solo el dueño del recibo o el personal puede modificarlo: antes
+    // cualquier usuario con sesión podía marcar como pagado un recibo ajeno.
+    const isOwner = !!requester && existing.customerId === requester.id;
+    if (!isOwner && !(requester && ADMIN_ROLES.includes(requester.role))) {
+      throw forbidden('No puedes modificar este recibo.');
+    }
 
     // Si el recibo está ligado a un pedido, su total siempre refleja el del
     // pedido en BD, aunque el cliente intente enviar otro valor (C-02).

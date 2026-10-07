@@ -5,6 +5,16 @@ import { API, authHeaders } from '../../../api/api';
 
 const emptyForm = { name: '', email: '', phone: '', address: '' };
 
+/** Convierte la respuesta del backend en un mensaje legible. */
+const readError = async (res: Response, fallback: string) => {
+  try {
+    const data = await res.json();
+    return data?.message ?? fallback;
+  } catch {
+    return fallback;
+  }
+};
+
 interface ProviderCategory {
   category: { name: string };
 }
@@ -23,20 +33,20 @@ export default function Provider() {
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const loadProviders = () => {
-    fetch(API.providers, { headers: authHeaders() })
-      .then((r) => r.json())
-      .then((data) => {
-        setProviders(data);
-        setLoading(false);
-      })
-      .catch(() => {
-        showMessage('Error al cargar proveedores.');
-        setLoading(false);
-      });
+  const loadProviders = async () => {
+    try {
+      const res = await fetch(API.providers, { headers: authHeaders() });
+      if (!res.ok) throw new Error(await readError(res, 'Error al cargar proveedores.'));
+      setProviders(await res.json());
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error al cargar proveedores.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -78,24 +88,23 @@ export default function Provider() {
       address: form.address,
     };
 
-    if (editingId !== null) {
-      await fetch(`${API.providers}/${editingId}`, {
-        method: 'PUT',
-        headers: authHeaders(),
-        body: JSON.stringify(body),
-      });
-      showMessage('Proveedor actualizado.');
-    } else {
-      await fetch(API.providers, {
-        method: 'POST',
-        headers: authHeaders(),
-        body: JSON.stringify(body),
-      });
-      showMessage('Proveedor agregado.');
-    }
+    setError('');
+    try {
+      const url = editingId !== null ? `${API.providers}/${editingId}` : API.providers;
+      const method = editingId !== null ? 'PUT' : 'POST';
+      const res = await fetch(url, { method, headers: authHeaders(), body: JSON.stringify(body) });
 
-    loadProviders();
-    closeModal();
+      if (!res.ok) {
+        setError(await readError(res, 'No se pudo guardar el proveedor.'));
+        return;
+      }
+
+      showMessage(editingId !== null ? 'Proveedor actualizado.' : 'Proveedor agregado.');
+      await loadProviders();
+      closeModal();
+    } catch {
+      setError('No se pudo conectar con el servidor.');
+    }
   };
 
   const handleEdit = (p: Provider) => {
@@ -110,9 +119,18 @@ export default function Provider() {
   };
 
   const handleDelete = async (id: string) => {
-    await fetch(`${API.providers}/${id}`, { method: 'DELETE', headers: authHeaders() });
-    setProviders(providers.filter((p) => p.id !== id));
-    showMessage('Proveedor eliminado.');
+    setError('');
+    try {
+      const res = await fetch(`${API.providers}/${id}`, { method: 'DELETE', headers: authHeaders() });
+      if (!res.ok) {
+        setError(await readError(res, 'No se pudo eliminar el proveedor.'));
+        return;
+      }
+      showMessage('Proveedor eliminado.');
+      await loadProviders();
+    } catch {
+      setError('No se pudo conectar con el servidor.');
+    }
   };
 
   return (
@@ -129,6 +147,7 @@ export default function Provider() {
         </div>
 
         {message && <div className="mensaje-proveedores">{message}</div>}
+        {error && <div className="mensaje-proveedores mensaje-proveedores-error">{error}</div>}
 
         {loading ? (
           <p style={{ color: 'var(--text)', padding: '20px 0' }}>Cargando proveedores...</p>

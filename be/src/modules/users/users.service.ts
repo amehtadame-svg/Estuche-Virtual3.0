@@ -17,8 +17,11 @@ const canAssignRole = (r: Requester | undefined, role?: string) =>
 
 export const userService = {
   list() {
+    // C-05: los usuarios con borrado lógico no aparecen en el listado.
     return prisma.user.findMany({
+      where: { deletedAt: null },
       select: { id: true, fullName: true, email: true, role: true },
+      orderBy: { fullName: 'asc' },
     });
   },
 
@@ -45,7 +48,9 @@ export const userService = {
   async create(data: { fullName: string; email: string; password: string; role?: string }, requester: Requester | undefined) {
     if (!canAssignRole(requester, data.role)) throw forbidden('No puedes crear usuarios con ese rol.');
 
-    const exists = await prisma.user.findUnique({ where: { email: data.email } });
+    // Se ignoran las cuentas con borrado lógico para que el correo pueda
+    // volver a usarse, pero sin duplicar el registro histórico.
+    const exists = await prisma.user.findFirst({ where: { email: data.email, deletedAt: null } });
     if (exists) throw badRequest('El correo ya está registrado');
 
     const hashed = await bcrypt.hash(data.password, 10);
@@ -90,26 +95,29 @@ export const userService = {
     };
   },
 
+  /**
+   * Borrado lógico (C-05 / Ley 1581).
+   *
+   * Antes se hacía un borrado físico en cascada que destruía los pedidos,
+   * detalles, envíos y recibos del cliente: al borrar una cuenta se perdía
+   * todo el historial de ventas. Ahora solo se marca `deletedAt` y se
+   * desactiva la cuenta; los pedidos y su contabilidad se conservan.
+   */
   async remove(id: string, requester: Requester | undefined) {
     if (!isSuperAdmin(requester)) throw forbidden('No tienes permisos para eliminar usuarios.');
 
-    const ordersAsCustomer = await prisma.order.findMany({
-      where: { customerId: id },
-      select: { id: true },
-    });
-    const orderIds = ordersAsCustomer.map((o) => o.id);
+    const user = await prisma.user.findFirst({ where: { id, deletedAt: null } });
+    if (!user) throw notFound('Usuario no encontrado.');
 
-    await prisma.$transaction(async (tx) => {
-      if (orderIds.length) {
-        await tx.orderDetail.deleteMany({ where: { orderId: { in: orderIds } } });
-        await tx.despatch.deleteMany({ where: { orderId: { in: orderIds } } });
-        await tx.receipt.deleteMany({ where: { orderId: { in: orderIds } } });
-        await tx.order.deleteMany({ where: { id: { in: orderIds } } });
-      }
-      await tx.order.updateMany({ where: { driverId: id }, data: { driverId: null } });
-      // NOTE: cascading hard-delete is kept from the original flow.
-      // `deletedAt` is available for implementing soft-delete in the future.
-      await tx.user.delete({ where: { id } });
+    await prisma.user.update({
+      where: { id },
+      data: {
+        deletedAt: new Date(),
+        isActive: false,
+        // Se anonimiza el correo para liberarlo y poder reutilizarlo sin
+        // perder el registro histórico del usuario.
+        email: `borrado+${id}@estuche.local`,
+      },
     });
 
     return null;

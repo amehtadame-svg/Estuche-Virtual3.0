@@ -54,6 +54,24 @@ const WRITE_ROUTES: Array<{ label: string; method: string; path: string }> = [
   { label: 'listar detalles de pedido', method: 'GET', path: '/api/order-details' },
   { label: 'editar detalle de pedido', method: 'PUT', path: `/api/order-details/${UUID}` },
   { label: 'borrar detalle de pedido', method: 'DELETE', path: `/api/order-details/${UUID}` },
+
+  // Rutas que quedaron abiertas y se cerraron al corregir la persistencia:
+  // cualquiera podía cambiar el estado de un pedido o el rol de un usuario.
+  { label: 'listar pedidos', method: 'GET', path: '/api/orders' },
+  { label: 'crear pedido', method: 'POST', path: '/api/orders' },
+  { label: 'editar pedido', method: 'PUT', path: `/api/orders/${UUID}` },
+  { label: 'borrar pedido', method: 'DELETE', path: `/api/orders/${UUID}` },
+  { label: 'pedidos del cliente', method: 'GET', path: '/api/orders/mine' },
+  { label: 'listar usuarios', method: 'GET', path: '/api/users' },
+  { label: 'crear usuario', method: 'POST', path: '/api/users' },
+  { label: 'editar usuario', method: 'PUT', path: `/api/users/${UUID}` },
+  { label: 'cambiar rol', method: 'PATCH', path: `/api/users/${UUID}/role` },
+  { label: 'borrar usuario', method: 'DELETE', path: `/api/users/${UUID}` },
+  { label: 'ver usuario', method: 'GET', path: `/api/users/${UUID}` },
+  { label: 'actualizar perfil', method: 'PATCH', path: `/api/users/${UUID}/profile` },
+  { label: 'ajustar stock', method: 'PATCH', path: `/api/products/${UUID}/stock` },
+  { label: 'registrar pago', method: 'POST', path: '/api/payouts' },
+  { label: 'resumen de reportes', method: 'GET', path: '/api/reports/summary' },
 ];
 
 test('C-01: las rutas protegidas responden 401 sin token', async () => {

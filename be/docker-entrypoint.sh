@@ -1,13 +1,25 @@
 #!/bin/sh
 set -e
 
+# Arranque del contenedor del backend.
+#
+# Regla de oro: las migraciones son la ÚNICA fuente de verdad del esquema.
+#   - NO se ejecuta `prisma migrate reset` (borra todos los datos).
+#   - NO se ejecuta `prisma db push` (ignora las migraciones).
+#   - El seed es idempotente y no destructivo: no reescribe roles,
+#     contraseñas ni stock de lo que ya existe (ver prisma/seed.ts).
+#
+# Variables:
+#   RUN_SEED=false  -> no ejecuta el seed en el arranque (por defecto: true)
+
 echo "🔧 Generating Prisma Client..."
 pnpm prisma generate
 
 echo "⏳ Waiting for database to be ready..."
 n=0
 while [ $n -lt 30 ]; do
-  if pnpm prisma migrate deploy 2>/dev/null; then
+  # `migrate deploy` solo aplica lo pendiente: nunca borra datos existentes.
+  if pnpm prisma migrate deploy; then
     echo "✅ Migrations applied successfully!"
     break
   fi
@@ -21,8 +33,12 @@ if [ $n -eq 30 ]; then
   exit 1
 fi
 
-echo "🌱 Running seed..."
-pnpm prisma db seed 2>/dev/null || echo "  (seed skipped or already applied)"
+if [ "${RUN_SEED:-true}" = "true" ]; then
+  echo "🌱 Running seed (idempotente, no destructivo)..."
+  pnpm prisma db seed
+else
+  echo "🌱 Seed omitido (RUN_SEED=false)."
+fi
 
 echo "🚀 Starting development server..."
 exec pnpm dev

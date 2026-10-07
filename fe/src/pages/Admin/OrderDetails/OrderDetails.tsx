@@ -5,6 +5,16 @@ import { API, authHeaders } from '../../../api/api';
 
 const emptyForm = { orderId: '', productId: '', quantity: '', unitPrice: '' };
 
+/** Convierte la respuesta del backend en un mensaje legible. */
+const readError = async (res: Response, fallback: string) => {
+  try {
+    const data = await res.json();
+    return data?.message ?? fallback;
+  } catch {
+    return fallback;
+  }
+};
+
 interface OrderDetail {
   id: string;
   orderId: string;
@@ -21,22 +31,23 @@ export default function OrderDetails() {
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
 
-  const loadDetails = () => {
-    fetch(API.orderDetails, { headers: authHeaders() })
-      .then((r) => r.json())
-      .then((data) => {
-        setDetails(data);
-        setFiltered(data);
-        setLoading(false);
-      })
-      .catch(() => {
-        showMessage('Error al cargar los detalles del pedido.');
-        setLoading(false);
-      });
+  const loadDetails = async () => {
+    try {
+      const res = await fetch(API.orderDetails, { headers: authHeaders() });
+      if (!res.ok) throw new Error(await readError(res, 'Error al cargar los detalles del pedido.'));
+      const data = await res.json();
+      setDetails(data);
+      setFiltered(data);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error al cargar los detalles del pedido.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -92,26 +103,22 @@ export default function OrderDetails() {
       unitPrice: Number(form.unitPrice),
     };
 
+    setError('');
     try {
-      if (editingId !== null) {
-        await fetch(`${API.orderDetails}/${editingId}`, {
-          method: 'PUT',
-          headers: authHeaders(),
-          body: JSON.stringify(body),
-        });
-        showMessage('Detalle actualizado.');
-      } else {
-        await fetch(API.orderDetails, {
-          method: 'POST',
-          headers: authHeaders(),
-          body: JSON.stringify(body),
-        });
-        showMessage('Artículo agregado.');
+      const url = editingId !== null ? `${API.orderDetails}/${editingId}` : API.orderDetails;
+      const method = editingId !== null ? 'PUT' : 'POST';
+      const res = await fetch(url, { method, headers: authHeaders(), body: JSON.stringify(body) });
+
+      if (!res.ok) {
+        setError(await readError(res, 'No se pudo guardar el detalle.'));
+        return;
       }
-      loadDetails();
+
+      showMessage(editingId !== null ? 'Detalle actualizado.' : 'Artículo agregado.');
+      await loadDetails();
       closeModal();
     } catch {
-      showMessage('Error al procesar la operación.');
+      setError('No se pudo conectar con el servidor.');
     }
   };
 
@@ -127,12 +134,17 @@ export default function OrderDetails() {
   };
 
   const handleDelete = async (id: string) => {
+    setError('');
     try {
-      await fetch(`${API.orderDetails}/${id}`, { method: 'DELETE', headers: authHeaders() });
-      setDetails(details.filter((d) => d.id !== id));
+      const res = await fetch(`${API.orderDetails}/${id}`, { method: 'DELETE', headers: authHeaders() });
+      if (!res.ok) {
+        setError(await readError(res, 'No se pudo eliminar el registro.'));
+        return;
+      }
       showMessage('Artículo eliminado.');
+      await loadDetails();
     } catch {
-      showMessage('Error al eliminar el registro.');
+      setError('No se pudo conectar con el servidor.');
     }
   };
 
@@ -161,6 +173,7 @@ export default function OrderDetails() {
         </div>
 
         {message && <div className="mensaje-detalle-pedidos">{message}</div>}
+        {error && <div className="mensaje-detalle-pedidos mensaje-detalle-pedidos-error">{error}</div>}
 
         {loading ? (
           <p className="detalle-pedidos-cargando">Cargando artículos...</p>

@@ -134,7 +134,8 @@ export const authService = {
     { name, email, password }: { name: string; email: string; password: string },
     ctx: RequestContext
   ) {
-    const exists = await prisma.user.findUnique({ where: { email } });
+    // Solo cuentas vivas: una cuenta con borrado lógico libera su correo.
+    const exists = await prisma.user.findFirst({ where: { email, deletedAt: null } });
     if (exists) throw badRequest('El correo ya está registrado');
 
     const hashed = await bcrypt.hash(password, 12);

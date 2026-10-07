@@ -13,6 +13,16 @@ const statusColor: Record<string, string> = {
 
 const emptyForm = { customerId: '', date: '', total: '', paymentStatus: 'pending' };
 
+/** Convierte la respuesta del backend en un mensaje legible. */
+const readError = async (res: Response, fallback: string) => {
+  try {
+    const data = await res.json();
+    return data?.message ?? fallback;
+  } catch {
+    return fallback;
+  }
+};
+
 interface Receipt {
   id: string;
   receiptNumber: number;
@@ -29,20 +39,20 @@ export default function Receipt() {
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const loadReceipts = () => {
-    fetch(API.receipts, { headers: authHeaders() })
-      .then((r) => r.json())
-      .then((data) => {
-        setReceipts(data);
-        setLoading(false);
-      })
-      .catch(() => {
-        showMessage('Error al cargar recibos.');
-        setLoading(false);
-      });
+  const loadReceipts = async () => {
+    try {
+      const res = await fetch(API.receipts, { headers: authHeaders() });
+      if (!res.ok) throw new Error(await readError(res, 'Error al cargar recibos.'));
+      setReceipts(await res.json());
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error al cargar recibos.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -83,24 +93,23 @@ export default function Receipt() {
       paymentStatus: form.paymentStatus,
     };
 
-    if (editingId !== null) {
-      await fetch(`${API.receipts}/${editingId}`, {
-        method: 'PUT',
-        headers: authHeaders(),
-        body: JSON.stringify(body),
-      });
-      showMessage('Recibo actualizado.');
-    } else {
-      await fetch(API.receipts, {
-        method: 'POST',
-        headers: authHeaders(),
-        body: JSON.stringify(body),
-      });
-      showMessage('Recibo agregado.');
-    }
+    setError('');
+    try {
+      const url = editingId !== null ? `${API.receipts}/${editingId}` : API.receipts;
+      const method = editingId !== null ? 'PUT' : 'POST';
+      const res = await fetch(url, { method, headers: authHeaders(), body: JSON.stringify(body) });
 
-    loadReceipts();
-    closeModal();
+      if (!res.ok) {
+        setError(await readError(res, 'No se pudo guardar el recibo.'));
+        return;
+      }
+
+      showMessage(editingId !== null ? 'Recibo actualizado.' : 'Recibo agregado.');
+      await loadReceipts();
+      closeModal();
+    } catch {
+      setError('No se pudo conectar con el servidor.');
+    }
   };
 
   const handleEdit = (f: Receipt) => {
@@ -115,22 +124,41 @@ export default function Receipt() {
   };
 
   const handleDelete = async (id: string) => {
-    await fetch(`${API.receipts}/${id}`, { method: 'DELETE', headers: authHeaders() });
-    setReceipts(receipts.filter((f) => f.id !== id));
-    showMessage('Recibo eliminado.');
+    setError('');
+    try {
+      const res = await fetch(`${API.receipts}/${id}`, { method: 'DELETE', headers: authHeaders() });
+      if (!res.ok) {
+        setError(await readError(res, 'No se pudo eliminar el recibo.'));
+        return;
+      }
+      showMessage('Recibo eliminado.');
+      await loadReceipts();
+    } catch {
+      setError('No se pudo conectar con el servidor.');
+    }
   };
 
   const changeStatus = async (id: string, newStatus: string) => {
-    const res = await fetch(`${API.receipts}/${id}`, {
-      method: 'PUT',
-      headers: authHeaders(),
-      body: JSON.stringify({ paymentStatus: newStatus }),
-    });
-    if (res.ok) {
-      setReceipts(receipts.map((f) => (f.id === id ? { ...f, paymentStatus: newStatus } : f)));
+    const previous = receipts;
+    setReceipts(receipts.map((f) => (f.id === id ? { ...f, paymentStatus: newStatus } : f)));
+    setError('');
+
+    try {
+      const res = await fetch(`${API.receipts}/${id}`, {
+        method: 'PUT',
+        headers: authHeaders(),
+        body: JSON.stringify({ paymentStatus: newStatus }),
+      });
+      if (!res.ok) {
+        setReceipts(previous);
+        setError(await readError(res, 'Error al actualizar el estado.'));
+        return;
+      }
       showMessage('Estado actualizado.');
-    } else {
-      showMessage('Error al actualizar el estado.');
+      await loadReceipts();
+    } catch {
+      setReceipts(previous);
+      setError('No se pudo conectar con el servidor.');
     }
   };
 
@@ -146,6 +174,7 @@ export default function Receipt() {
         </div>
 
         {message && <div className="mensaje-facturas">{message}</div>}
+        {error && <div className="mensaje-facturas mensaje-facturas-error">{error}</div>}
 
         {loading ? (
           <p style={{ color: 'var(--text)', padding: '20px 0' }}>Cargando recibos...</p>

@@ -26,7 +26,9 @@ function fakeTx(overrides: Record<string, any> = {}) {
   } = { orderCreate: null, createMany: null, updateMany: [], movements: [] };
   const tx = {
     product: {
+      // El servicio usa findFirst para excluir los productos con borrado lógico.
       findUnique: async () => PRODUCT,
+      findFirst: async () => PRODUCT,
       updateMany: async (args: any) => {
         calls.updateMany.push(args);
         return { count: 1 };
@@ -125,7 +127,10 @@ test('C-02: descuento fijo se aplica sobre el total calculado por el servidor', 
 
 test('C-02: valida stock contra la BD antes de crear el pedido', async () => {
   const { tx } = fakeTx({
-    product: { findUnique: async () => ({ ...PRODUCT, stock: 2 }) },
+    product: {
+      findUnique: async () => ({ ...PRODUCT, stock: 2 }),
+      findFirst: async () => ({ ...PRODUCT, stock: 2 }),
+    },
   });
   stubTransaction(tx);
 
@@ -193,6 +198,7 @@ test('C-03: si el stock ya no alcanza al descontar (carrera), el pedido falla', 
   const { tx } = fakeTx({
     product: {
       findUnique: async () => PRODUCT,
+      findFirst: async () => PRODUCT,
       updateMany: async () => ({ count: 0 }),
     },
   });

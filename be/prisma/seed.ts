@@ -1,6 +1,10 @@
 import { PrismaClient, Role, PromotionalCodeType } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
+// Con SEED_FORCE=true el seed vuelve a escribir roles y contraseñas de las
+// cuentas existentes (útil en ambientes de demo). Por defecto: NUNCA.
+const SEED_FORCE = process.env.SEED_FORCE === 'true';
+
 const prisma = new PrismaClient();
 
 const categoriesData = [
@@ -323,7 +327,8 @@ async function main() {
       });
       console.log(`  + Producto creado: ${prod.name}`);
     } else {
-      console.log(`  = Producto ya existe: ${prod.name}`);
+      // El stock real se respeta: el seed no repone ni reinicia inventario.
+      console.log(`  = Producto ya existe (stock actual: ${product.stock}): ${prod.name}`);
     }
 
     if (prod.imageUrl) {
@@ -345,12 +350,17 @@ async function main() {
   }
 
   // 3. Usuarios iniciales
+  //
+  // IMPORTANTE: el seed ya NO reescribe roles ni contraseñas de las cuentas
+  // existentes. Antes cada arranque del contenedor devolvía el rol y la clave
+  // del seed a los usuarios reales, borrando los cambios hechos desde el panel.
+  // Para forzar la reescritura: SEED_FORCE=true pnpm prisma db seed
   for (const usr of usersData) {
     const emailLower = usr.email.toLowerCase();
     const existing = await prisma.user.findUnique({ where: { email: emailLower } });
-    const hashedPassword = await bcrypt.hash(usr.password, 10);
 
     if (!existing) {
+      const hashedPassword = await bcrypt.hash(usr.password, 10);
       await prisma.user.create({
         data: {
           email: emailLower,
@@ -365,17 +375,18 @@ async function main() {
         },
       });
       console.log(`  + Usuario creado [${usr.role}]: ${emailLower}`);
-    } else {
-      // Si ya existía, actualizamos el rol y contraseña para asegurar acceso
+      continue;
+    }
+
+    if (SEED_FORCE) {
+      const hashedPassword = await bcrypt.hash(usr.password, 10);
       await prisma.user.update({
         where: { email: emailLower },
-        data: {
-          role: usr.role,
-          hashedPassword,
-          isActive: true,
-        },
+        data: { role: usr.role, hashedPassword, isActive: true },
       });
-      console.log(`  ✓ Usuario actualizado [${usr.role}]: ${emailLower}`);
+      console.log(`  ~ Usuario restaurado [${usr.role}]: ${emailLower} (SEED_FORCE)`);
+    } else {
+      console.log(`  = Usuario ya existe, se respeta su rol y contraseña: ${emailLower}`);
     }
   }
 

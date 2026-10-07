@@ -1,9 +1,42 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { API, authHeaders } from '../../api/api';
+import { orderStatusLabel } from '../../lib/statusLabels';
 import './ClientDashboard.css';
+
+interface Pedido {
+  id: string;
+  total: number | null;
+  status: string | null;
+  orderDate: string | null;
+}
 
 const ClientDashboard = () => {
   const { user } = useAuth();
+
+  // Historial real del cliente: antes esta pantalla no consultaba la BD y
+  // mostraba únicamente datos de ejemplo.
+  const [pedidos, setPedidos] = useState<Pedido[]>([]);
+  const [cargando, setCargando] = useState(true);
+
+  useEffect(() => {
+    if (!user) {
+      setCargando(false);
+      return;
+    }
+    const load = async () => {
+      try {
+        const res = await fetch(`${API.orders}/mine`, { headers: authHeaders() });
+        if (res.ok) setPedidos(await res.json());
+      } catch {
+        /* sin conexión el historial queda vacío */
+      } finally {
+        setCargando(false);
+      }
+    };
+    load();
+  }, [user]);
 
   const deals = [
     { name: 'Cuaderno universitario', price: 8500, previousPrice: 12000, icon: '📓' },
@@ -59,6 +92,30 @@ const ClientDashboard = () => {
           ))}
         </div>
       </section>
+
+      {user && (
+        <section className="section">
+          <h2 className="section-title">Mis pedidos</h2>
+          <p className="section-description">Historial real de tus compras</p>
+
+          {cargando ? (
+            <p>Cargando tus pedidos...</p>
+          ) : pedidos.length === 0 ? (
+            <p>Aún no has realizado pedidos.</p>
+          ) : (
+            <div className="cards-grid">
+              {pedidos.slice(0, 6).map((p) => (
+                <div key={p.id} className="card">
+                  <h3>PED-{p.id.slice(0, 6).toUpperCase()}</h3>
+                  <p className="price">${Number(p.total ?? 0).toLocaleString()}</p>
+                  <p>{p.orderDate ? p.orderDate.split('T')[0] : '—'}</p>
+                  <span className="badge">{orderStatusLabel[p.status ?? ''] ?? p.status}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
 
       <section className="section">
         <h2 className="section-title">Por qué elegirnos</h2>

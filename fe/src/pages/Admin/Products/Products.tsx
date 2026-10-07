@@ -3,8 +3,26 @@ import Modal from '../../../components/ui/Modal';
 import { API, authHeaders } from '../../../api/api';
 import './Products.css';
 
-const categories = ['Cuadernos', 'Colores', 'Carpetas', 'Lapiceros', 'Mochilas', 'Tijeras'];
-const emptyForm = { name: '', price: '', stock: '', stockMin: '', category: '', description: '', imageUrl: '' };
+interface Category {
+  id: string;
+  name: string;
+}
+
+interface Provider {
+  id: string;
+  name: string;
+}
+
+const emptyForm = {
+  name: '',
+  price: '',
+  stock: '',
+  stockMin: '',
+  categoryId: '',
+  supplierId: '',
+  description: '',
+  imageUrl: '',
+};
 
 interface Product {
   id: string;
@@ -15,39 +33,69 @@ interface Product {
   stockMin: number;
   categoryId: string | null;
   supplierId: string | null;
-  category: { name: string } | null;
-  supplier: { name: string } | null;
+  category: { id?: string; name: string } | null;
+  supplier: { id?: string; name: string } | null;
   images?: { url: string; isPrimary?: boolean }[];
 }
 
+/** Convierte la respuesta del backend en un mensaje legible para el usuario. */
+const readError = async (res: Response, fallback: string) => {
+  try {
+    const data = await res.json();
+    return data?.message ?? fallback;
+  } catch {
+    return fallback;
+  }
+};
+
 export default function Products() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [providers, setProviders] = useState<Provider[]>([]);
   const [filtered, setFiltered] = useState<Product[]>([]);
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
 
-  const loadProducts = () => {
-    fetch(API.products, { headers: authHeaders() })
-      .then((r) => r.json())
-      .then((data) => {
-        setProducts(data);
-        setFiltered(data);
-        setLoading(false);
-      })
-      .catch(() => {
-        showMessage('Error al cargar productos.');
-        setLoading(false);
-      });
+  const loadProducts = async () => {
+    try {
+      const res = await fetch(API.products, { headers: authHeaders() });
+      if (!res.ok) throw new Error(await readError(res, 'Error al cargar productos.'));
+      const data = await res.json();
+      setProducts(data);
+      setError('');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error al cargar productos.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Las categorías y proveedores salen de la BD: antes eran listas fijas en el
+  // código que no coincidían con los datos reales y hacían que el formulario
+  // guardara una categoría inexistente (o ninguna).
+  const loadCatalogs = async () => {
+    try {
+      const [resCat, resProv] = await Promise.all([
+        fetch(API.categories, { headers: authHeaders() }),
+        fetch(API.providers, { headers: authHeaders() }),
+      ]);
+      if (resCat.ok) setCategories(await resCat.json());
+      if (resProv.ok) setProviders(await resProv.json());
+    } catch {
+      /* el formulario sigue funcionando sin catálogos */
+    }
   };
 
   useEffect(() => {
     loadProducts();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    loadCatalogs();
   }, []);
 
   useEffect(() => {
@@ -86,40 +134,45 @@ export default function Products() {
   };
 
   const handleSave = async () => {
-    if (!form.name || !form.price || !form.stock) {
+    if (!form.name || !form.price || form.stock === '') {
       showMessage('Por favor completa todos los campos.');
       return;
     }
 
-    // Nota: la categoría del formulario es solo orientativa; no se envía porque
-    // el backend espera un categoryId (UUID) y aquí solo hay el nombre.
+    setSaving(true);
+    setError('');
+
+    // Se envía la categoría y el proveedor por su id real (UUID). Si el
+    // backend no los recibe, ahora los conserva en lugar de borrarlos.
     const body = {
       name: form.name,
       price: Number(form.price),
       stock: Number(form.stock),
       stockMin: Number(form.stockMin) || 5,
       description: form.description,
+      ...(form.categoryId ? { categoryId: form.categoryId } : { categoryId: null }),
+      ...(form.supplierId ? { supplierId: form.supplierId } : { supplierId: null }),
       ...(form.imageUrl ? { imageUrl: form.imageUrl } : {}),
     };
 
-    if (editingId !== null) {
-      await fetch(`${API.products}/${editingId}`, {
-        method: 'PUT',
-        headers: authHeaders(),
-        body: JSON.stringify(body),
-      });
-      showMessage('Producto actualizado.');
-    } else {
-      await fetch(API.products, {
-        method: 'POST',
-        headers: authHeaders(),
-        body: JSON.stringify(body),
-      });
-      showMessage('Producto agregado.');
-    }
+    try {
+      const url = editingId !== null ? `${API.products}/${editingId}` : API.products;
+      const method = editingId !== null ? 'PUT' : 'POST';
+      const res = await fetch(url, { method, headers: authHeaders(), body: JSON.stringify(body) });
 
-    loadProducts();
-    closeModal();
+      if (!res.ok) {
+        setError(await readError(res, 'No se pudo guardar el producto.'));
+        return;
+      }
+
+      showMessage(editingId !== null ? 'Producto actualizado.' : 'Producto agregado.');
+      await loadProducts();
+      closeModal();
+    } catch {
+      setError('No se pudo conectar con el servidor.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleEdit = (prod: Product) => {
@@ -128,7 +181,8 @@ export default function Products() {
       price: String(prod.price),
       stock: String(prod.stock ?? 0),
       stockMin: String(prod.stockMin ?? 5),
-      category: prod.category?.name ?? '',
+      categoryId: prod.category?.id ?? prod.categoryId ?? '',
+      supplierId: prod.supplierId ?? '',
       description: prod.description ?? '',
       imageUrl: prod.images?.find((i) => i.isPrimary)?.url ?? prod.images?.[0]?.url ?? '',
     });
@@ -137,9 +191,45 @@ export default function Products() {
   };
 
   const handleDelete = async (id: string) => {
-    await fetch(`${API.products}/${id}`, { method: 'DELETE', headers: authHeaders() });
-    setProducts(products.filter((p) => p.id !== id));
-    showMessage('Producto eliminado.');
+    setError('');
+    try {
+      const res = await fetch(`${API.products}/${id}`, { method: 'DELETE', headers: authHeaders() });
+      if (!res.ok) {
+        setError(await readError(res, 'No se pudo eliminar el producto.'));
+        return;
+      }
+      showMessage('Producto eliminado.');
+      await loadProducts();
+    } catch {
+      setError('No se pudo conectar con el servidor.');
+    }
+  };
+
+  /**
+   * Ajuste rápido de inventario (+ / −).
+   * Guarda el movimiento en la BD en el mismo instante: el stock y el kardex
+   * nunca quedan desincronizados.
+   */
+  const adjustStock = async (id: string, delta: number) => {
+    setError('');
+    try {
+      const res = await fetch(`${API.products}/${id}/stock`, {
+        method: 'PATCH',
+        headers: authHeaders(),
+        body: JSON.stringify({
+          delta,
+          reason: delta > 0 ? 'Entrada de mercancía' : 'Salida de mercancía',
+        }),
+      });
+      if (!res.ok) {
+        setError(await readError(res, 'No se pudo ajustar el stock.'));
+        return;
+      }
+      showMessage(`Stock ${delta > 0 ? 'aumentado' : 'disminuido'} en ${Math.abs(delta)}.`);
+      await loadProducts();
+    } catch {
+      setError('No se pudo conectar con el servidor.');
+    }
   };
 
   const lowStock = (prod: Product) => prod.stock <= prod.stockMin;
@@ -167,14 +257,15 @@ export default function Products() {
           <select className="productos-filtro-cat" value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
             <option value="">categorías</option>
             {categories.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
+              <option key={cat.id} value={cat.name}>
+                {cat.name}
               </option>
             ))}
           </select>
         </div>
 
         {message && <div className="mensaje-productos">{message}</div>}
+        {error && <div className="mensaje-productos mensaje-productos-error">{error}</div>}
 
         {loading ? (
           <p style={{ color: 'var(--text)', padding: '20px 0' }}>Cargando productos...</p>
@@ -204,6 +295,10 @@ export default function Products() {
                       {prod.stock ?? 0}
                       {lowStock(prod) && ' ⚠ bajo'}
                     </span>
+                    <span className="stock-ajuste">
+                      <button type="button" title="Quitar una unidad" onClick={() => adjustStock(prod.id, -1)}>−</button>
+                      <button type="button" title="Agregar una unidad" onClick={() => adjustStock(prod.id, 1)}>+</button>
+                    </span>
                   </td>
                   <td>
                     <button className="btn-editar-producto" onClick={() => handleEdit(prod)}>
@@ -231,8 +326,8 @@ export default function Products() {
               <button className="btn-cancelar-producto" onClick={closeModal}>
                 Cancelar
               </button>
-              <button className="btn-guardar-producto" onClick={handleSave}>
-                {editingId !== null ? 'Guardar cambios' : 'Agregar producto'}
+              <button className="btn-guardar-producto" onClick={handleSave} disabled={saving}>
+                {saving ? 'Guardando...' : editingId !== null ? 'Guardar cambios' : 'Agregar producto'}
               </button>
             </>
           }
@@ -264,11 +359,21 @@ export default function Products() {
           <input className="input-producto" type="number" name="stockMin" value={form.stockMin} onChange={handleChange} placeholder="Cantidad mínima antes de reabastecer" />
 
           <label className="label-producto">Categoría</label>
-          <select className="input-producto" name="category" value={form.category} onChange={handleChange}>
-            <option value="">Selecciona una categoría</option>
+          <select className="input-producto" name="categoryId" value={form.categoryId} onChange={handleChange}>
+            <option value="">Sin categoría</option>
             {categories.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
+              <option key={cat.id} value={cat.id}>
+                {cat.name}
+              </option>
+            ))}
+          </select>
+
+          <label className="label-producto">Proveedor</label>
+          <select className="input-producto" name="supplierId" value={form.supplierId} onChange={handleChange}>
+            <option value="">Sin proveedor</option>
+            {providers.map((prov) => (
+              <option key={prov.id} value={prov.id}>
+                {prov.name}
               </option>
             ))}
           </select>

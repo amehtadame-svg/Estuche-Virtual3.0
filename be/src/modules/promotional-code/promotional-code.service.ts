@@ -65,15 +65,24 @@ export const promotionalCodeService = {
     return promo;
   },
 
-  // Aplica el código: incrementa el contador de usos y devuelve el id.
+  /**
+   * Resuelve un código a su id.
+   *
+   * NO consume usos: el contador lo incrementa `orderService.create` cuando el
+   * pedido se graba de verdad. Antes el checkout llamaba a /apply y después
+   * creaba el pedido, así que cada compra descontaba dos usos del cupón.
+   */
   async apply(code: string) {
     const promo = await prisma.promotionalCode.findFirst({ where: { code: code.trim() } });
     if (!promo) throw notFound('Código inválido');
+    if (!promo.active) throw badRequest('Este código ya no está activo');
 
-    await prisma.promotionalCode.update({
-      where: { id: promo.id },
-      data: { currentUses: { increment: 1 } },
-    });
-    return { id: promo.id };
+    return {
+      id: promo.id,
+      code: promo.code,
+      type: promo.type,
+      value: Number(promo.value),
+      minPurchase: promo.minPurchase !== null ? Number(promo.minPurchase) : null,
+    };
   },
 };

@@ -323,3 +323,8 @@ height: fit-content;
   flex: 1;
   margin: 0;
 }
+/* Mensaje de error del servidor */
+.mensaje-proveedores-error {
+  background: rgba(231, 76, 60, 0.1);
+  color: #e74c3c;
+}

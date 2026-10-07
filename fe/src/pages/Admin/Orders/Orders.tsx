@@ -1,18 +1,25 @@
 import { useState, useEffect } from 'react';
 import Modal from '../../../components/ui/Modal';
 import { API, authHeaders } from '../../../api/api';
+import { orderStatusLabel } from '../../../lib/statusLabels';
 import './Orders.css';
 
 const statusColor: Record<string, string> = {
   pending: '#3498db',
-  in_transit: '#f39c12',
+  paid: '#2980b9',
+  preparing: '#8e44ad',
+  shipped: '#f39c12',
   delivered: '#27ae60',
   canceled: '#e74c3c',
+  returned: '#c0392b',
 };
 
+// Los valores son los del enum OrderStatus de la base de datos. Antes el
+// desplegable ofrecía "in_transit", que no existe en el enum: el backend
+// rechazaba el cambio y el estado del pedido nunca se guardaba.
+const STATUS_OPTIONS = Object.keys(orderStatusLabel);
+
 const emptyForm = {
-  customerId: '',
-  total: '',
   status: 'pending',
   promotionalCodeId: '',
 };
@@ -28,32 +35,41 @@ interface Order {
   driver: { fullName: string } | null;
 }
 
+const readError = async (res: Response, fallback: string) => {
+  try {
+    const data = await res.json();
+    return data?.message ?? fallback;
+  } catch {
+    return fallback;
+  }
+};
+
 export default function Orders() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [discountCode, setDiscountCode] = useState('');
   const [discountApplied, setDiscountApplied] = useState<string | null>(null);
 
-  const loadOrders = () => {
-    fetch(API.orders)
-      .then((r) => r.json())
-      .then((data) => {
-        setOrders(data);
-        setLoading(false);
-      })
-      .catch(() => {
-        showMessage('Error al cargar pedidos.');
-        setLoading(false);
-      });
+  const loadOrders = async () => {
+    try {
+      const res = await fetch(API.orders, { headers: authHeaders() });
+      if (!res.ok) throw new Error(await readError(res, 'Error al cargar pedidos.'));
+      setOrders(await res.json());
+      setError('');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Error al cargar pedidos.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     loadOrders();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const showMessage = (text: string) => {
@@ -65,14 +81,6 @@ export default function Orders() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const openNewModal = () => {
-    setForm(emptyForm);
-    setEditingId(null);
-    setDiscountCode('');
-    setDiscountApplied(null);
-    setModalOpen(true);
-  };
-
   const closeModal = () => {
     setModalOpen(false);
     setEditingId(null);
@@ -81,43 +89,40 @@ export default function Orders() {
     setDiscountApplied(null);
   };
 
+  // El total lo calcula el servidor a partir de los productos reales (C-02),
+  // aquí solo se envía el estado y los datos logísticos.
   const handleSave = async () => {
-    if (!form.customerId || !form.total) {
-      showMessage('Por favor completa todos los campos.');
+    if (!editingId) {
+      showMessage('Para crear un pedido usa el checkout de la tienda.');
       return;
     }
 
+    setError('');
     const body = {
-      customerId: form.customerId,
-      total: Number(form.total),
       status: form.status,
-      promotionalCodeId: form.promotionalCodeId || null,
+      ...(form.promotionalCodeId ? { promotionalCodeId: form.promotionalCodeId } : {}),
     };
 
-    if (editingId !== null) {
-      await fetch(`${API.orders}/${editingId}`, {
+    try {
+      const res = await fetch(`${API.orders}/${editingId}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-      showMessage('Pedido actualizado.');
-    } else {
-      await fetch(API.orders, {
-        method: 'POST',
         headers: authHeaders(),
         body: JSON.stringify(body),
       });
-      showMessage('Pedido agregado.');
+      if (!res.ok) {
+        setError(await readError(res, 'No se pudo actualizar el pedido.'));
+        return;
+      }
+      showMessage('Pedido actualizado.');
+      await loadOrders();
+      closeModal();
+    } catch {
+      setError('No se pudo conectar con el servidor.');
     }
-
-    loadOrders();
-    closeModal();
   };
 
   const handleEdit = (p: Order) => {
     setForm({
-      customerId: String(p.customerId ?? ''),
-      total: String(p.total ?? ''),
       status: p.status ?? 'pending',
       promotionalCodeId: '',
     });
@@ -128,22 +133,43 @@ export default function Orders() {
   };
 
   const handleDelete = async (id: string) => {
-    await fetch(`${API.orders}/${id}`, { method: 'DELETE' });
-    setOrders(orders.filter((p) => p.id !== id));
-    showMessage('Pedido eliminado.');
+    setError('');
+    try {
+      const res = await fetch(`${API.orders}/${id}`, { method: 'DELETE', headers: authHeaders() });
+      if (!res.ok) {
+        setError(await readError(res, 'No se pudo eliminar el pedido.'));
+        return;
+      }
+      showMessage('Pedido eliminado.');
+      await loadOrders();
+    } catch {
+      setError('No se pudo conectar con el servidor.');
+    }
   };
 
+  // Cambio de estado en la tabla: se guarda en el momento y se recarga la
+  // lista desde la BD, así lo que ves siempre es lo que quedó grabado.
   const changeStatus = async (id: string, newStatus: string) => {
-    const res = await fetch(`${API.orders}/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: newStatus }),
-    });
-    if (res.ok) {
-      setOrders(orders.map((p) => (p.id === id ? { ...p, status: newStatus } : p)));
+    const previous = orders;
+    setOrders(orders.map((p) => (p.id === id ? { ...p, status: newStatus } : p)));
+    setError('');
+
+    try {
+      const res = await fetch(`${API.orders}/${id}`, {
+        method: 'PUT',
+        headers: authHeaders(),
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (!res.ok) {
+        setOrders(previous); // se deshace el cambio si la BD lo rechaza
+        setError(await readError(res, 'Error al actualizar el estado.'));
+        return;
+      }
       showMessage('Estado actualizado.');
-    } else {
-      showMessage('Error al actualizar el estado.');
+      await loadOrders();
+    } catch {
+      setOrders(previous);
+      setError('No se pudo conectar con el servidor.');
     }
   };
 
@@ -153,19 +179,23 @@ export default function Orders() {
       return;
     }
 
-    const res = await fetch(`${API.orders}/${id}/apply-code`, {
-      method: 'POST',
-      headers: authHeaders(),
-      body: JSON.stringify({ code: discountCode }),
-    });
-    const data = await res.json();
-    if (res.ok) {
-      setForm((prev) => ({ ...prev, total: String(data.total) }));
+    setError('');
+    try {
+      const res = await fetch(`${API.orders}/${id}/apply-code`, {
+        method: 'PATCH',
+        headers: authHeaders(),
+        body: JSON.stringify({ code: discountCode }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        setError(await readError(res, 'Error al aplicar el descuento.'));
+        return;
+      }
       setDiscountApplied(`Descuento aplicado. Nuevo total: $${Number(data.total).toLocaleString()}`);
       setDiscountCode('');
-      loadOrders();
-    } else {
-      showMessage(data.message ?? 'Error al aplicar el descuento.');
+      await loadOrders();
+    } catch {
+      setError('No se pudo conectar con el servidor.');
     }
   };
 
@@ -175,12 +205,10 @@ export default function Orders() {
         <div className="pedidos-topbar">
           <h2 className="titulo-pedidos">Gestion de Pedidos</h2>
           <p className="subtitulo-usuarios">Administra los Pedidos registrados</p>
-          <button className="btn-nuevo-pedido" onClick={openNewModal}>
-            + Nuevo pedido
-          </button>
         </div>
 
         {message && <div className="mensaje-pedidos">{message}</div>}
+        {error && <div className="mensaje-pedidos mensaje-pedidos-error">{error}</div>}
 
         {loading ? (
           <p style={{ color: 'var(--text)', padding: '20px 0' }}>Cargando pedidos...</p>
@@ -212,14 +240,15 @@ export default function Orders() {
                       className="estado-select-pedido"
                       style={{ backgroundColor: statusColor[ped.status ?? ''] || '#999', color: '#fff' }}
                     >
-                      <option value="pending" style={{ backgroundColor: '#fff', color: '#1E2761' }}>Pendiente</option>
-                      <option value="in_transit" style={{ backgroundColor: '#fff', color: '#1E2761' }}>En camino</option>
-                      <option value="delivered" style={{ backgroundColor: '#fff', color: '#1E2761' }}>Entregado</option>
-                      <option value="canceled" style={{ backgroundColor: '#fff', color: '#1E2761' }}>Cancelado</option>
+                      {STATUS_OPTIONS.map((value) => (
+                        <option key={value} value={value} style={{ backgroundColor: '#fff', color: '#1E2761' }}>
+                          {orderStatusLabel[value]}
+                        </option>
+                      ))}
                     </select>
                   </td>
                   <td>
-                    <button className="btn-editar-pedido" onClick={() => handleEdit(ped)}>Editar</button>
+                    <button className="btn-editar-pedido" onClick={() => handleEdit(ped)}>Detalle</button>
                     <button className="btn-eliminar-pedido" onClick={() => handleDelete(ped.id)}>Eliminar</button>
                   </td>
                 </tr>
@@ -227,72 +256,54 @@ export default function Orders() {
             </tbody>
           </table>
         )}
+
+        {orders.length === 0 && !loading && <p className="pedidos-vacio">No hay pedidos registrados.</p>}
       </div>
 
       {modalOpen && (
         <Modal
-          titulo={editingId !== null ? 'Editar pedido' : 'Nuevo pedido'}
+          titulo="Detalle del pedido"
           onClose={closeModal}
           footer={
             <>
               <button className="btn-cancelar-pedido" onClick={closeModal}>Cancelar</button>
               <button className="btn-guardar-pedido" onClick={handleSave}>
-                {editingId !== null ? 'Guardar cambios' : 'Agregar pedido'}
+                Guardar cambios
               </button>
             </>
           }
         >
-          <label className="label-pedido">ID Cliente</label>
-          <input
-            className="input-pedido"
-            name="customerId"
-            value={form.customerId}
-            onChange={handleChange}
-            placeholder="UUID del cliente"
-          />
-
-          <label className="label-pedido">Total</label>
-          <input
-            className="input-pedido"
-            type="number"
-            name="total"
-            value={form.total}
-            onChange={handleChange}
-            placeholder="85000"
-          />
-
           <label className="label-pedido">Estado</label>
           <select className="input-pedido" name="status" value={form.status} onChange={handleChange}>
-            <option value="pending">Pendiente</option>
-            <option value="in_transit">En camino</option>
-            <option value="delivered">Entregado</option>
-            <option value="canceled">Cancelado</option>
+            {STATUS_OPTIONS.map((value) => (
+              <option key={value} value={value}>
+                {orderStatusLabel[value]}
+              </option>
+            ))}
           </select>
 
-          {editingId !== null && (
-            <div style={{ marginTop: 16 }}>
-              <label className="label-pedido">Código de descuento</label>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <input
-                  className="input-pedido"
-                  placeholder="Ej: REGRESO10"
-                  value={discountCode}
-                  onChange={(e) => setDiscountCode(e.target.value)}
-                  style={{ marginBottom: 0 }}
-                />
-                <button
-                  className="btn-guardar-pedido"
-                  onClick={() => handleApplyDiscount(editingId)}
-                  style={{ whiteSpace: 'nowrap' }}
-                >
-                  Aplicar
-                </button>
-              </div>
-              {discountApplied && (
-                <p style={{ color: '#27ae60', fontWeight: 600, fontSize: 13, marginTop: 8 }}>{discountApplied}</p>
-              )}
+          <div style={{ marginTop: 16 }}>
+            <label className="label-pedido">Código de descuento</label>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <input
+                className="input-pedido"
+                placeholder="Ej: REGRESO10"
+                value={discountCode}
+                onChange={(e) => setDiscountCode(e.target.value)}
+                style={{ marginBottom: 0 }}
+              />
+              <button
+                className="btn-guardar-pedido"
+                onClick={() => editingId && handleApplyDiscount(editingId)}
+                style={{ whiteSpace: 'nowrap' }}
+              >
+                Aplicar
+              </button>
             </div>
-          )}
+            {discountApplied && (
+              <p style={{ color: '#27ae60', fontWeight: 600, fontSize: 13, marginTop: 8 }}>{discountApplied}</p>
+            )}
+          </div>
         </Modal>
       )}
     </>
