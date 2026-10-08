@@ -1,0 +1,23 @@
+{
+  "name": "incidenthub-api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "API REST en memoria para la gestión de incidentes tecnológicos.",
+  "type": "commonjs",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "test": "npm run build && node --test dist/tests/*.test.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "express": "4.21.2"
+  },
+  "devDependencies": {
+    "@types/express": "4.17.21",
+    "@types/node": "22.15.30",
+    "tsx": "4.19.4",
+    "typescript": "5.8.3"
+  }
+}
