@@ -3,17 +3,6 @@ import assert from 'node:assert';
 import fs from 'node:fs';
 import path from 'node:path';
 
-/**
- * C-07 — La URL del API estaba fijada en el código del frontend
- * (http://localhost:4000) y no existía VITE_API_URL, de modo que la imagen
- * Docker del frontend no podía apuntar a ningún backend que no fuera el de la
- * máquina del navegador.
- *
- * Criteio de la auditoría: "el frontend apunta a otro host cambiando solo la
- * variable". Aquí se verifica que el código lee VITE_API_URL con prioridad y
- * que el .env-example la documenta.
- */
-
 const FE_ROOT = path.resolve(process.cwd(), '..', 'fe');
 const apiSource = fs.readFileSync(path.join(FE_ROOT, 'src/api/api.ts'), 'utf8');
 

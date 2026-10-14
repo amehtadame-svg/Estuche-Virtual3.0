@@ -8,12 +8,6 @@ importers:
 
   .:
     dependencies:
-      '@emailjs/browser':
-        specifier: 4.3.3
-        version: 4.3.3
-      gmail-js:
-        specifier: 1.1.15
-        version: 1.1.15
       lucide-react:
         specifier: 1.20.0
         version: 1.20.0(react@19.1.0)
@@ -164,10 +158,6 @@ packages:
   '@babel/types@7.29.7':
     resolution: {integrity: sha512-4zBIxpPzowiZpusoFkyGVwakdRJUyuH5PxQ/PrqghfdFWWasvnCdPfQXHrenDai+gyLARulZjZowCOj6fjT4pA==}
     engines: {node: '>=6.9.0'}
-
-  '@emailjs/browser@4.3.3':
-    resolution: {integrity: sha512-ltpt2S/WVREIBXptxYAVYBvXb2O6yTUYiRUWF8OLikMxlmiGsIgKpgHppikNd4Df0uAav7jCsQKcOJ3TJFUx5g==}
-    engines: {node: '>=14.0.0'}
 
   '@esbuild/aix-ppc64@0.21.5':
     resolution: {integrity: sha512-1SDgH6ZSPTlggy1yI6+Dbkiz8xzpHJEVAlF/AM1tHPLsf5STom9rwtjE4hKAF20FfXXNTFqEYXyJNWh1GiZedQ==}
@@ -1025,9 +1015,6 @@ packages:
     resolution: {integrity: sha512-OkToC372DtlQeje9/zHIo5CT8lRP/FUgEOKBEhU4e0abL7J7CD24fD9ohiLN5hagG/kWCYj4K5oaxxtj2Z0Dig==}
     engines: {node: '>=18'}
 
-  gmail-js@1.1.15:
-    resolution: {integrity: sha512-OntWb+mH3Yfv9ka3xMxp8mV0LZoxkclZp9StS1YKfC4D8FaSo/luv2YplYUFb/Lh5wzOP9p4dnVOK+Fkj1cHwQ==}
-
   graceful-fs@4.2.11:
     resolution: {integrity: sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ==}
 
@@ -1614,8 +1601,6 @@ snapshots:
     dependencies:
       '@babel/helper-string-parser': 7.29.7
       '@babel/helper-validator-identifier': 7.29.7
-
-  '@emailjs/browser@4.3.3': {}
 
   '@esbuild/aix-ppc64@0.21.5':
     optional: true
@@ -2372,8 +2357,6 @@ snapshots:
   globals@14.0.0: {}
 
   globals@15.14.0: {}
-
-  gmail-js@1.1.15: {}
 
   graceful-fs@4.2.11: {}
 

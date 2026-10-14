@@ -1,4 +1,4 @@
-import { FormEvent, useState } from "react";
+import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { Mail, Phone, Send, MapPin, Clock } from "lucide-react";
 import "./Footer.css";
