@@ -1,3 +1,5 @@
+/// <reference types="node" />
+
 import { PrismaClient, Role, PromotionalCodeType } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 
@@ -288,6 +290,17 @@ const promoCodesData = [
 ];
 
 async function main() {
+
+  // Guardia de seguridad: este seed actualiza rol y contraseña de los usuarios
+  // que ya existen, así que NO debe ejecutarse contra Supabase (base principal).
+  // Pensado para bases locales de prueba. Para forzarlo a conciencia:
+  //   ALLOW_SEED_SUPABASE=1 pnpm prisma db seed
+  const dbUrl = process.env.DATABASE_URL ?? '';
+  if (/supabase\.(co|com|net)/.test(dbUrl) && process.env.ALLOW_SEED_SUPABASE !== '1') {
+    console.error('❌ Seed bloqueado: DATABASE_URL apunta a Supabase. Usa una base local.');
+    process.exit(1);
+  }
+
   console.log('🌱 Iniciando seed de la base de datos...');
 
   // 1. Categorías
@@ -403,4 +416,3 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
-  
