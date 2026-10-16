@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "author": "Aprendices ADSO - Ficha 228118 - Estuche Virtual",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "board-esp32-devkit-c-v4",
+      "id": "esp",
+      "top": 0,
+      "left": 0,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-dht22",
+      "id": "dht1",
+      "top": -105.6,
+      "left": 216.8,
+      "attrs": { "temperature": "7.5", "humidity": "65" }
+    },
+    {
+      "type": "wokwi-photoresistor-sensor",
+      "id": "ldr1",
+      "top": 96,
+      "left": 216.8,
+      "attrs": { "lux": "430", "gamma": "0.7", "rl10": "50" }
+    }
+  ],
+  "connections": [
+    ["esp:TX", "$serialMonitor:RX", "", []],
+    ["esp:RX", "$serialMonitor:TX", "", []],
+    ["dht1:VCC", "esp:3V3", "red", []],
+    ["dht1:GND", "esp:GND.1", "black", []],
+    ["dht1:SDA", "esp:15", "green", []],
+    ["ldr1:VCC", "esp:3V3", "red", []],
+    ["ldr1:GND", "esp:GND.2", "black", []],
+    ["ldr1:AO", "esp:34", "blue", []]
+  ],
+  "dependencies": {},
+  "serialMonitor": {
+    "display": "always",
+    "convertEol": true
+  }
+}

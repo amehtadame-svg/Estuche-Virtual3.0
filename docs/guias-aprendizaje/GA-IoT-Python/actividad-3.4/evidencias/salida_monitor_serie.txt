@@ -1,0 +1,70 @@
+
+==============================================================
+SIMULADOR INTELIGENTE DE NODOS IoT
+==============================================================
+Nodo      : NODO-IOT-01 | Firmware: 1.0.0
+Sensores  : temperatura, humedad, luz
+Intervalo : 120 ms | Lecturas: 12
+Historico : historico_nodos.csv
+Rafagas de 5 lecturas
+# Fuente temperatura/humedad: simulado
+# Fuente luz: fisico
+# CSV creado con encabezado: historico_nodos.csv
+[1/12] 2026-10-16 19:13:37 | T=8.85C H=72.59% L=414lux ALERTA:TEMP_ALTA|APERTURA_PUERTA
+{"nodo_id":"NODO-IOT-01","ubicacion":"Nevera industrial - Bahia 3","firmware":"1.0.0","secuencia":1,"timestamp":1776000000,"fecha":"2026-10-16 19:13:37","uptime_s":0.0,"sensores":{"temperatura_c":8.85,"humedad_pct":72.59,"luz_lux":414},"unidades":{"temperatura_c":"C","humedad_pct":"%","luz_lux":"lux"},"evento":"APERTURA_PUERTA"}
+[2/12] 2026-10-16 19:13:37 | T=7.79C H=68.12% L=451lux ok
+{"nodo_id":"NODO-IOT-01","ubicacion":"Nevera industrial - Bahia 3","firmware":"1.0.0","secuencia":2,"timestamp":1776000000,"fecha":"2026-10-16 19:13:37","uptime_s":0.12,"sensores":{"temperatura_c":7.79,"humedad_pct":68.12,"luz_lux":451},"unidades":{"temperatura_c":"C","humedad_pct":"%","luz_lux":"lux"}}
+[3/12] 2026-10-16 19:13:38 | T=7.8C H=66.73% L=457lux ok
+{"nodo_id":"NODO-IOT-01","ubicacion":"Nevera industrial - Bahia 3","firmware":"1.0.0","secuencia":3,"timestamp":1776000000,"fecha":"2026-10-16 19:13:38","uptime_s":0.24,"sensores":{"temperatura_c":7.8,"humedad_pct":66.73,"luz_lux":457},"unidades":{"temperatura_c":"C","humedad_pct":"%","luz_lux":"lux"}}
+[4/12] 2026-10-16 19:13:38 | T=7.08C H=66.33% L=513lux ok
+{"nodo_id":"NODO-IOT-01","ubicacion":"Nevera industrial - Bahia 3","firmware":"1.0.0","secuencia":4,"timestamp":1776000000,"fecha":"2026-10-16 19:13:38","uptime_s":0.36,"sensores":{"temperatura_c":7.08,"humedad_pct":66.33,"luz_lux":513},"unidades":{"temperatura_c":"C","humedad_pct":"%","luz_lux":"lux"}}
+>>> TRAMA SERIAL: {"nodo_id":"NODO-IOT-01","firmware":"1.0.0","tipo":"rafaga_telemetria","motivo":"lote completo","cantidad":5,"generado_en":"2026-10-16 19:13:38","lecturas":[{"nodo_id":"NODO-IOT-01","ubicacion":"Nevera industrial - Bahia 3","firmware":"1.0.0","secuencia":1,"timestamp":1776000000,"fecha":"2026-10-16 19:13:37","uptime_s":0.0,"sensores":{"temperatura_c":8.85,"humedad_pct":72.59,"luz_lux":414},"unidades":{"temperatura_c":"C","humedad_pct":"%","luz_lux":"lux"},"evento":"APERTURA_PUERTA"},{"nodo_id":"NODO-IOT-01","ubicacion":"Nevera industrial - Bahia 3","firmware":"1.0.0","secuencia":2,"timestamp":1776000000,"fecha":"2026-10-16 19:13:37","uptime_s":0.12,"sensores":{"temperatura_c":7.79,"humedad_pct":68.12,"luz_lux":451},"unidades":{"temperatura_c":"C","humedad_pct":"%","luz_lux":"lux"}},{"nodo_id":"NODO-IOT-01","ubicacion":"Nevera industrial - Bahia 3","firmware":"1.0.0","secuencia":3,"timestamp":1776000000,"fecha":"2026-10-16 19:13:38","uptime_s":0.24,"sensores":{"temperatura_c":7.8,"humedad_pct":66.73,"luz_lux":457},"unidades":{"temperatura_c":"C","humedad_pct":"%","luz_lux":"lux"}},{"nodo_id":"NODO-IOT-01","ubicacion":"Nevera industrial - Bahia 3","firmware":"1.0.0","secuencia":4,"timestamp":1776000000,"fecha":"2026-10-16 19:13:38","uptime_s":0.36,"sensores":{"temperatura_c":7.08,"humedad_pct":66.33,"luz_lux":513},"unidades":{"temperatura_c":"C","humedad_pct":"%","luz_lux":"lux"}},{"nodo_id":"NODO-IOT-01","ubicacion":"Nevera industrial - Bahia 3","firmware":"1.0.0","secuencia":5,"timestamp":1776000000,"fecha":"2026-10-16 19:13:38","uptime_s":0.48,"sensores":{"temperatura_c":7.32,"humedad_pct":66.84,"luz_lux":434},"unidades":{"temperatura_c":"C","humedad_pct":"%","luz_lux":"lux"}}]}
+[RAFAGA] 5 lecturas enviadas (1708 bytes, motivo: lote completo)
+[5/12] 2026-10-16 19:13:38 | T=7.32C H=66.84% L=434lux ok
+{"nodo_id":"NODO-IOT-01","ubicacion":"Nevera industrial - Bahia 3","firmware":"1.0.0","secuencia":5,"timestamp":1776000000,"fecha":"2026-10-16 19:13:38","uptime_s":0.48,"sensores":{"temperatura_c":7.32,"humedad_pct":66.84,"luz_lux":434},"unidades":{"temperatura_c":"C","humedad_pct":"%","luz_lux":"lux"}}
+[6/12] 2026-10-16 19:13:38 | T=9.27C H=72.74% L=445lux ALERTA:TEMP_ALTA|APERTURA_PUERTA
+{"nodo_id":"NODO-IOT-01","ubicacion":"Nevera industrial - Bahia 3","firmware":"1.0.0","secuencia":6,"timestamp":1776000000,"fecha":"2026-10-16 19:13:38","uptime_s":0.6,"sensores":{"temperatura_c":9.27,"humedad_pct":72.74,"luz_lux":445},"unidades":{"temperatura_c":"C","humedad_pct":"%","luz_lux":"lux"},"evento":"APERTURA_PUERTA"}
+[7/12] 2026-10-16 19:13:38 | T=8.54C H=71.07% L=420lux ALERTA:TEMP_ALTA
+{"nodo_id":"NODO-IOT-01","ubicacion":"Nevera industrial - Bahia 3","firmware":"1.0.0","secuencia":7,"timestamp":1776000000,"fecha":"2026-10-16 19:13:38","uptime_s":0.72,"sensores":{"temperatura_c":8.54,"humedad_pct":71.07,"luz_lux":420},"unidades":{"temperatura_c":"C","humedad_pct":"%","luz_lux":"lux"}}
+[8/12] 2026-10-16 19:13:38 | T=8.04C H=68.23% L=445lux ALERTA:TEMP_ALTA
+{"nodo_id":"NODO-IOT-01","ubicacion":"Nevera industrial - Bahia 3","firmware":"1.0.0","secuencia":8,"timestamp":1776000000,"fecha":"2026-10-16 19:13:38","uptime_s":0.84,"sensores":{"temperatura_c":8.04,"humedad_pct":68.23,"luz_lux":445},"unidades":{"temperatura_c":"C","humedad_pct":"%","luz_lux":"lux"}}
+[9/12] 2026-10-16 19:13:38 | T=7.59C H=67.01% L=396lux ok
+{"nodo_id":"NODO-IOT-01","ubicacion":"Nevera industrial - Bahia 3","firmware":"1.0.0","secuencia":9,"timestamp":1776000000,"fecha":"2026-10-16 19:13:38","uptime_s":0.96,"sensores":{"temperatura_c":7.59,"humedad_pct":67.01,"luz_lux":396},"unidades":{"temperatura_c":"C","humedad_pct":"%","luz_lux":"lux"}}
+>>> TRAMA SERIAL: {"nodo_id":"NODO-IOT-01","firmware":"1.0.0","tipo":"rafaga_telemetria","motivo":"lote completo","cantidad":5,"generado_en":"2026-10-16 19:13:38","lecturas":[{"nodo_id":"NODO-IOT-01","ubicacion":"Nevera industrial - Bahia 3","firmware":"1.0.0","secuencia":6,"timestamp":1776000000,"fecha":"2026-10-16 19:13:38","uptime_s":0.6,"sensores":{"temperatura_c":9.27,"humedad_pct":72.74,"luz_lux":445},"unidades":{"temperatura_c":"C","humedad_pct":"%","luz_lux":"lux"},"evento":"APERTURA_PUERTA"},{"nodo_id":"NODO-IOT-01","ubicacion":"Nevera industrial - Bahia 3","firmware":"1.0.0","secuencia":7,"timestamp":1776000000,"fecha":"2026-10-16 19:13:38","uptime_s":0.72,"sensores":{"temperatura_c":8.54,"humedad_pct":71.07,"luz_lux":420},"unidades":{"temperatura_c":"C","humedad_pct":"%","luz_lux":"lux"}},{"nodo_id":"NODO-IOT-01","ubicacion":"Nevera industrial - Bahia 3","firmware":"1.0.0","secuencia":8,"timestamp":1776000000,"fecha":"2026-10-16 19:13:38","uptime_s":0.84,"sensores":{"temperatura_c":8.04,"humedad_pct":68.23,"luz_lux":445},"unidades":{"temperatura_c":"C","humedad_pct":"%","luz_lux":"lux"}},{"nodo_id":"NODO-IOT-01","ubicacion":"Nevera industrial - Bahia 3","firmware":"1.0.0","secuencia":9,"timestamp":1776000000,"fecha":"2026-10-16 19:13:38","uptime_s":0.96,"sensores":{"temperatura_c":7.59,"humedad_pct":67.01,"luz_lux":396},"unidades":{"temperatura_c":"C","humedad_pct":"%","luz_lux":"lux"}},{"nodo_id":"NODO-IOT-01","ubicacion":"Nevera industrial - Bahia 3","firmware":"1.0.0","secuencia":10,"timestamp":1776000001,"fecha":"2026-10-16 19:13:38","uptime_s":1.08,"sensores":{"temperatura_c":7.56,"humedad_pct":67.21,"luz_lux":363},"unidades":{"temperatura_c":"C","humedad_pct":"%","luz_lux":"lux"}}]}
+[RAFAGA] 5 lecturas enviadas (1710 bytes, motivo: lote completo)
+[10/12] 2026-10-16 19:13:38 | T=7.56C H=67.21% L=363lux ok
+{"nodo_id":"NODO-IOT-01","ubicacion":"Nevera industrial - Bahia 3","firmware":"1.0.0","secuencia":10,"timestamp":1776000001,"fecha":"2026-10-16 19:13:38","uptime_s":1.08,"sensores":{"temperatura_c":7.56,"humedad_pct":67.21,"luz_lux":363},"unidades":{"temperatura_c":"C","humedad_pct":"%","luz_lux":"lux"}}
+[11/12] 2026-10-16 19:13:39 | T=7.8C H=66.32% L=427lux ok
+{"nodo_id":"NODO-IOT-01","ubicacion":"Nevera industrial - Bahia 3","firmware":"1.0.0","secuencia":11,"timestamp":1776000001,"fecha":"2026-10-16 19:13:39","uptime_s":1.21,"sensores":{"temperatura_c":7.8,"humedad_pct":66.32,"luz_lux":427},"unidades":{"temperatura_c":"C","humedad_pct":"%","luz_lux":"lux"}}
+[12/12] 2026-10-16 19:13:39 | T=8.06C H=67.72% L=474lux ALERTA:TEMP_ALTA
+{"nodo_id":"NODO-IOT-01","ubicacion":"Nevera industrial - Bahia 3","firmware":"1.0.0","secuencia":12,"timestamp":1776000001,"fecha":"2026-10-16 19:13:39","uptime_s":1.32,"sensores":{"temperatura_c":8.06,"humedad_pct":67.72,"luz_lux":474},"unidades":{"temperatura_c":"C","humedad_pct":"%","luz_lux":"lux"}}
+>>> TRAMA SERIAL: {"nodo_id":"NODO-IOT-01","firmware":"1.0.0","tipo":"rafaga_telemetria","motivo":"cierre de simulacion","cantidad":2,"generado_en":"2026-10-16 19:13:39","lecturas":[{"nodo_id":"NODO-IOT-01","ubicacion":"Nevera industrial - Bahia 3","firmware":"1.0.0","secuencia":11,"timestamp":1776000001,"fecha":"2026-10-16 19:13:39","uptime_s":1.21,"sensores":{"temperatura_c":7.8,"humedad_pct":66.32,"luz_lux":427},"unidades":{"temperatura_c":"C","humedad_pct":"%","luz_lux":"lux"}},{"nodo_id":"NODO-IOT-01","ubicacion":"Nevera industrial - Bahia 3","firmware":"1.0.0","secuencia":12,"timestamp":1776000001,"fecha":"2026-10-16 19:13:39","uptime_s":1.32,"sensores":{"temperatura_c":8.06,"humedad_pct":67.72,"luz_lux":474},"unidades":{"temperatura_c":"C","humedad_pct":"%","luz_lux":"lux"}}]}
+[RAFAGA] 2 lecturas enviadas (776 bytes, motivo: cierre de simulacion)
+
+==============================================================
+RESUMEN DE LA SIMULACION
+==============================================================
+Lecturas generadas    : 12
+Con alerta de umbral  : 5 (42%)
+Eventos de ambiente   : 2 (aperturas de puerta)
+Temperatura en el ciclo: min 7.08C | max 9.27C
+Historico CSV         : historico_nodos.csv (898 bytes)
+Rotaciones de archivo : 0
+Rafagas enviadas      : 3 rafagas con 12 lecturas
+Lecturas no enviadas  : 0 (permanecen en el CSV local)
+Uptime total          : 1.45 s
+
+Ultimas filas del historico .csv:
+  1776000000,2026-10-16 19:13:38,0.96,NODO-IOT-01,7.59,67.01,396,OK
+  1776000001,2026-10-16 19:13:38,1.08,NODO-IOT-01,7.56,67.21,363,OK
+  1776000001,2026-10-16 19:13:39,1.21,NODO-IOT-01,7.8,66.32,427,OK
+  1776000001,2026-10-16 19:13:39,1.32,NODO-IOT-01,8.06,67.72,474,TEMP_ALTA
+
+FORMATO DEL HISTORICO (.csv):
+  timestamp,fecha,uptime_s,nodo_id,temperatura_c,humedad_pct,luz_lux,alertas
+
+FORMATO DE LA RAFAGA ENVIADA (JSON):
+  {"nodo_id","firmware","tipo":"rafaga_telemetria","motivo",
+   "cantidad","generado_en","lecturas":[{...},{...}]}
+
+Simulacion finalizada: arquitectura lista para la conexion serial fisica.

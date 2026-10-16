@@ -1,0 +1,6 @@
+# Archivos generados por Python
+__pycache__/
+*.pyc
+
+# Copias de rotacion del historico del nodo
+historico_nodos_[0-9]*.csv
