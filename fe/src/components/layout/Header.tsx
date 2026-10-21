@@ -53,6 +53,10 @@ export default function Header() {
       ? [
           ["/", "Inicio"],
           ["/superadmin", "Resumen"],
+          ["/admin/productos", "Productos"],
+          ["/admin/ingresos", "Ingresos"],
+          ["/admin/proveedores", "Proveedores"],
+          ["/admin/pedidos", "Pedidos"],
           ["/superadmin/usuarios", "Usuarios"],
           ["/superadmin/descuentos", "Descuentos"],
           ["/superadmin/pagos", "Pagos"],
@@ -64,6 +68,7 @@ export default function Header() {
             ["/", "Inicio"],
             ["/admin", "Resumen"],
             ["/admin/productos", "Productos"],
+            ["/admin/ingresos", "Ingresos"],
             ["/admin/pedidos", "Pedidos"],
             ["/admin/recibos", "Recibos"],
             ["/admin/envios", "Envíos"],

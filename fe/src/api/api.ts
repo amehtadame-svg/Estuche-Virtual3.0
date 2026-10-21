@@ -23,6 +23,7 @@ export const API = {
   orderDetails:      `${BASE}/api/order-details`,
   products:          `${BASE}/api/products`,
   categories:        `${BASE}/api/categories`,
+  inventory:         `${BASE}/api/inventory`,
   providers:         `${BASE}/api/providers`,
   despatches:        `${BASE}/api/despatches`,
   receipts:          `${BASE}/api/receipts`,
