@@ -8,12 +8,14 @@ export const listProducts = asyncHandler(async (_req: Request, res: Response) =>
 });
 
 export const createProduct = asyncHandler(async (req: Request, res: Response) => {
-  const product = await productService.create(req.body);
+  const userId = (req as any).user?.id;
+  const product = await productService.create(req.body, userId);
   return res.status(201).json(product);
 });
 
 export const updateProduct = asyncHandler(async (req: Request, res: Response) => {
-  const product = await productService.update(req.params.id, req.body);
+  const userId = (req as any).user?.id;
+  const product = await productService.update(req.params.id, req.body, userId);
   return res.json(product);
 });
 

@@ -319,15 +319,22 @@ async function main() {
   }
 
   // 2. Productos e Imágenes
-  for (const prod of productsData) {
+  for (let i = 0; i < productsData.length; i++) {
+    const prod = productsData[i];
     const categoryId = categoryMap.get(prod.categoryName);
+    const defaultSku = `EV-${String(i + 1).padStart(3, '0')}`;
+    const defaultBarcode = `7701234567${String(i + 1).padStart(3, '0')}`;
+    const defaultCost = Math.round(prod.price * 0.6);
     let product = await prisma.product.findFirst({ where: { name: prod.name } });
 
     if (!product) {
       product = await prisma.product.create({
         data: {
+          sku: defaultSku,
+          barcode: defaultBarcode,
           name: prod.name,
           description: prod.description,
+          cost: defaultCost,
           price: prod.price,
           stock: prod.stock,
           stockMin: prod.stockMin,
@@ -336,7 +343,16 @@ async function main() {
       });
       console.log(`  + Producto creado: ${prod.name}`);
     } else {
-      console.log(`  = Producto ya existe: ${prod.name}`);
+      product = await prisma.product.update({
+        where: { id: product.id },
+        data: {
+          sku: product.sku ?? defaultSku,
+          barcode: product.barcode ?? defaultBarcode,
+          cost: Number(product.cost) > 0 ? product.cost : defaultCost,
+          categoryId: product.categoryId ?? categoryId ?? null,
+        },
+      });
+      console.log(`  = Producto ya existe (actualizado SKU/costo): ${prod.name}`);
     }
 
     if (prod.imageUrl) {
@@ -356,7 +372,7 @@ async function main() {
       }
     }
   }
-
+  
   // 3. Usuarios iniciales
   for (const usr of usersData) {
     const emailLower = usr.email.toLowerCase();

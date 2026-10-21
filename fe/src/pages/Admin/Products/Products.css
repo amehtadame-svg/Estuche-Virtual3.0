@@ -382,3 +382,88 @@ textarea.input-producto {
   font-family: inherit;
   min-height: 80px;
 }
+
+/* ── HU-001: Ficha técnica completa y validaciones ─── */
+.campo-obligatorio {
+  color: #e74c3c;
+  font-weight: 700;
+}
+
+.tooltip-icon {
+  display: inline-block;
+  font-size: 12px;
+  color: var(--accent);
+  cursor: help;
+  margin-left: 2px;
+}
+
+.input-invalido {
+  border-color: #e74c3c !important;
+  background: rgba(231, 76, 60, 0.05) !important;
+}
+
+.alerta-error-producto {
+  background: rgba(231, 76, 60, 0.12);
+  border: 1px solid #e74c3c;
+  color: #c0392b;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  margin-bottom: 14px;
+  line-height: 1.4;
+}
+
+.fila-2-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.fila-3-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+}
+
+.resumen-utilidad-producto {
+  margin: -4px 0 12px;
+  padding: 8px 12px;
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  color: var(--text-h);
+}
+
+.sku-badge {
+  display: inline-block;
+  font-family: monospace;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--bg-subtle, rgba(170, 59, 255, 0.08));
+  color: var(--text-h);
+}
+
+.barcode-sub {
+  display: block;
+  font-family: monospace;
+  font-size: 11px;
+  color: var(--text);
+  margin-top: 2px;
+}
+
+.margen-badge {
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  background: rgba(59, 130, 246, 0.12);
+  color: #2563eb;
+}
+
+.stock-agotado {
+  background: rgba(192, 57, 43, 0.16);
+  color: #c0392b;
+}

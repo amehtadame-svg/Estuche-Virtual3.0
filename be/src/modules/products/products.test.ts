@@ -87,3 +87,108 @@ test('C-01: GET /api/products sigue siendo público (catálogo sin sesión)', as
   // otro código (p. ej. 500), pero jamás 401 por falta de token.
   assert.notStrictEqual(res.status, 401);
 });
+
+// ── Pruebas unitarias HU-001 (Registro de productos nuevos) ──────────────────
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { prisma } = require('../../lib/prisma') as { prisma: any };
+import { productService } from './products.service';
+import { HttpError } from '../../lib/errors';
+
+test('HU-001 (CA-001.2): rechaza precio <= 0, costo <= 0 o stock < 0', async () => {
+  await assert.rejects(
+    productService.create({ name: 'Regla 30cm', price: 0, cost: 1000, stock: 5 }),
+    (err: HttpError) =>
+      err.status === 400 &&
+      /El precio de venta y el costo de adquisición deben ser valores numéricos estrictamente mayores a cero/.test(
+        err.message
+      )
+  );
+
+  await assert.rejects(
+    productService.create({ name: 'Regla 30cm', price: 2500, cost: 0, stock: 5 }),
+    (err: HttpError) => err.status === 400
+  );
+
+  await assert.rejects(
+    productService.create({ name: 'Regla 30cm', price: 2500, cost: 1200, stock: -3 }),
+    (err: HttpError) => err.status === 400
+  );
+});
+
+test('HU-001 (CA-001.3): rechaza producto duplicado por SKU, código de barras o nombre', async () => {
+  const origFindFirst = prisma.product.findFirst;
+  prisma.product.findFirst = async () => ({
+    id: UUID,
+    name: 'Cuaderno Cosido 100 Hojas',
+    sku: 'EV-001',
+  });
+
+  try {
+    await assert.rejects(
+      productService.create({
+        name: 'Cuaderno Cosido 100 Hojas',
+        sku: 'EV-001',
+        price: 12500,
+        cost: 7500,
+        stock: 10,
+      }),
+      (err: HttpError) =>
+        err.status === 400 &&
+        /Ya existe un producto almacenado con el mismo código SKU o nombre comercial/.test(
+          err.message
+        )
+    );
+  } finally {
+    prisma.product.findFirst = origFindFirst;
+  }
+});
+
+test('HU-001 (CA-001.4): crea producto con SKU, código de barras, costo, categoría y movimiento inicial', async () => {
+  const origFindFirst = prisma.product.findFirst;
+  const origCreate = prisma.product.create;
+  const origMovCreate = prisma.inventoryMovement.create;
+
+  let createdData: any = null;
+  let createdMovement: any = null;
+
+  prisma.product.findFirst = async () => null;
+  prisma.product.create = async (args: any) => {
+    createdData = args.data;
+    return { id: UUID, ...args.data };
+  };
+  prisma.inventoryMovement.create = async (args: any) => {
+    createdMovement = args.data;
+    return { id: 'mov-1', ...args.data };
+  };
+
+  try {
+    const prod = await productService.create(
+      {
+        name: 'Compás de precisión metálico',
+        sku: 'EV-099',
+        barcode: '7701234567099',
+        cost: 6000,
+        price: 10500,
+        stock: 25,
+        stockMin: 6,
+        categoryId: UUID,
+      },
+      'admin-1'
+    );
+
+    assert.strictEqual(prod.sku, 'EV-099');
+    assert.strictEqual(prod.barcode, '7701234567099');
+    assert.strictEqual(createdData.cost, 6000);
+    assert.strictEqual(createdData.price, 10500);
+    assert.strictEqual(createdData.stock, 25);
+    assert.strictEqual(createdData.stockMin, 6);
+    assert.strictEqual(createdData.categoryId, UUID);
+    assert.ok(createdMovement, 'debe registrar movimiento inicial de entrada en inventario');
+    assert.strictEqual(createdMovement.type, 'in');
+    assert.strictEqual(createdMovement.quantity, 25);
+  } finally {
+    prisma.product.findFirst = origFindFirst;
+    prisma.product.create = origCreate;
+    prisma.inventoryMovement.create = origMovCreate;
+  }
+});

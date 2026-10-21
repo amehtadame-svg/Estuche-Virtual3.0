@@ -138,8 +138,11 @@ model Order {
 
 model Product {
   id          String   @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  sku         String?  @unique @db.VarChar(80)
+  barcode     String?  @unique @db.VarChar(80)
   name        String   @db.VarChar(150)
   description String?  @db.VarChar(500)
+  cost        Decimal  @default(0) @db.Decimal(14, 2)
   price       Decimal  @db.Decimal(14, 2)
   stock       Int      @default(0)
   stockMin    Int      @default(5) @map("stock_min")
