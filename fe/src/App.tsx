@@ -25,6 +25,7 @@ import ClienteDashboard from './pages/ClientDashboard/ClientDashboard';
 // Admin
 import AdminDashboard    from './pages/Admin/AdminDashboard';
 import ProductosAD       from './pages/Admin/Products/Products';
+import CombosAD          from './pages/Admin/Combos/Combos';
 import InventoryInbound  from './pages/Admin/Inventory/InventoryInbound';
 import Pedidos           from './pages/Admin/Orders/Orders';
 import Recibos           from './pages/Admin/Receipt/Receipt';
@@ -76,6 +77,7 @@ function App() {
             <Route element={<ProtectedRoute allowedRoles={['admin', 'superadmin']} />}>
               <Route path="/admin"                 element={<AdminDashboard />} />
               <Route path="/admin/productos"       element={<ProductosAD />} />
+              <Route path="/admin/combos"          element={<CombosAD />} />
               <Route path="/admin/ingresos"        element={<InventoryInbound />} />
               <Route path="/admin/pedidos"         element={<Pedidos />} />
               <Route path="/admin/recibos"         element={<Recibos />} />

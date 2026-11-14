@@ -103,6 +103,7 @@ model User {
   ordersAsDriver    Order[] @relation("OrderDriver")
   reviews           Review[]
   securityEvents    SecurityEvent[]
+  combosCreated     Combo[]
 
   @@index([lockedUntil], map: "idx_users_locked_until")
   @@index([deletedAt], map: "idx_users_deleted_at")
@@ -162,6 +163,7 @@ model Product {
   category           Category?  @relation(fields: [categoryId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   supplier           Provider?  @relation(fields: [supplierId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   reviews            Review[]
+  comboItems         ComboItem[]
 
   @@index([categoryId], map: "idx_products_category")
   @@index([supplierId], map: "idx_products_supplier")
@@ -487,4 +489,38 @@ model SecurityEvent {
   @@index([type, date], map: "idx_security_events_type_date")
   @@index([ip, date], map: "idx_security_events_ip_date")
   @@map("security_events")
+}
+
+model Combo {
+  id          String    @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  sku         String    @unique @db.VarChar(80)
+  name        String    @db.VarChar(150)
+  description String?   @db.VarChar(500)
+  price       Decimal   @db.Decimal(14, 2)
+  isActive    Boolean   @default(true) @map("is_active")
+  createdBy   String?   @db.Uuid @map("created_by")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  items   ComboItem[]
+  creator User? @relation(fields: [createdBy], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([deletedAt], map: "idx_combos_deleted_at")
+  @@map("combos")
+}
+
+model ComboItem {
+  id        String @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  comboId   String @db.Uuid @map("combo_id")
+  productId String @db.Uuid @map("product_id")
+  quantity  Int
+
+  combo   Combo   @relation(fields: [comboId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  product Product @relation(fields: [productId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([comboId, productId], map: "combo_items_combo_product_unique")
+  @@index([comboId], map: "idx_combo_items_combo")
+  @@index([productId], map: "idx_combo_items_product")
+  @@map("combo_items")
 }

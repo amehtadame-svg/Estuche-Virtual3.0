@@ -18,11 +18,9 @@ import promotionalCodeRoutes from './modules/promotional-code/promotional-code.r
 import payoutRoutes          from './modules/payout/payout.routes';
 import returnRoutes          from './modules/returns/returns.routes';
 import reportRoutes          from './modules/reports/reports.routes';
+import comboRoutes           from './modules/combos/combos.routes';
 import { errorHandler }      from './middlewares/error.middleware';
 
-// C-06 / RNF-001.4: CORS con lista blanca explícita por variable de entorno.
-// Nunca un comodín: en producción solo se aceptan los orígenes declarados.
-// Se admiten patrones con '*' en el subdominio (p. ej. https://*.app.github.dev)
 // para entornos de preview (Codespaces) cuyo host cambia en cada sesión.
 const CORS_ORIGINS = (
   process.env.CORS_ORIGINS ?? 'http://localhost:5173,https://*.app.github.dev'
@@ -41,7 +39,6 @@ const originIsAllowed = (origin: string) =>
     return new RegExp(`^${pattern}$`).test(origin);
   });
 
-// C-06 / RNF-001.3: rate limiting en los endpoints de autenticación.
 // Por defecto 10 peticiones cada 15 minutos por IP (configurable por env).
 const authLimiter = rateLimit({
   windowMs: Number(process.env.RATE_LIMIT_WINDOW_MS ?? 15 * 60 * 1000),
@@ -79,6 +76,7 @@ app.use('/api/despatches',         despatchRoutes);
 app.use('/api/order-details',      orderDetailRoutes);
 app.use('/api/receipts',           receiptRoutes);
 app.use('/api/shopping',           shoppingRoutes);
+app.use('/api/combos',             comboRoutes);
 
 // ── SuperAdmin ────────────────────────────────────────
 app.use('/api/promotional-codes',  promotionalCodeRoutes);

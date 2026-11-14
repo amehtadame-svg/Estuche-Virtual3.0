@@ -1,0 +1,38 @@
+.combo-item-row {
+  display: grid;
+  grid-template-columns: 1fr 90px 36px;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.btn-quitar-item {
+  height: 36px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.btn-quitar-item:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-agregar-item {
+  background: transparent;
+  border: 1px dashed var(--accent-border);
+  color: var(--accent);
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+.combo-ahorro {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: var(--text);
+}
