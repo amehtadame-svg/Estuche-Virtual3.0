@@ -27,6 +27,7 @@ import AdminDashboard    from './pages/Admin/AdminDashboard';
 import ProductosAD       from './pages/Admin/Products/Products';
 import CombosAD          from './pages/Admin/Combos/Combos';
 import InventoryInbound  from './pages/Admin/Inventory/InventoryInbound';
+import InventoryOutbound from './pages/Admin/Inventory/InventoryOutbound';
 import Pedidos           from './pages/Admin/Orders/Orders';
 import Recibos           from './pages/Admin/Receipt/Receipt';
 import Envios            from './pages/Admin/Despatch/Despatch';
@@ -77,6 +78,7 @@ function App() {
             <Route element={<ProtectedRoute allowedRoles={['admin', 'superadmin']} />}>
               <Route path="/admin"                 element={<AdminDashboard />} />
               <Route path="/admin/productos"       element={<ProductosAD />} />
+              <Route path="/admin/salidas"         element={<InventoryOutbound />} />
               <Route path="/admin/combos"          element={<CombosAD />} />
               <Route path="/admin/ingresos"        element={<InventoryInbound />} />
               <Route path="/admin/pedidos"         element={<Pedidos />} />

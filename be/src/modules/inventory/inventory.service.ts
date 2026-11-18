@@ -4,6 +4,11 @@ import { badRequest, notFound } from '../../lib/errors';
 const QUANTITY_RULE_ALERT =
   'La cantidad de mercancía a ingresar debe ser un número entero mayor a cero';
 
+const OUTBOUND_QUANTITY_RULE_ALERT =
+  'La cantidad a retirar debe ser un número entero mayor a cero';
+
+const REASON_RULE_ALERT = 'La justificación del retiro es obligatoria';
+
 export interface InboundInput {
   productId: string;
   quantity: number;
@@ -11,6 +16,13 @@ export interface InboundInput {
   supplierId?: string | null;
   invoiceNumber?: string | null;
   reason?: string | null;
+}
+
+export interface OutboundInput {
+  productId: string;
+  quantity: number;
+  reasonType: string;
+  reason: string;
 }
 
 export const inventoryService = {
@@ -93,6 +105,83 @@ export const inventoryService = {
           type: 'in',
           quantity: qty,
           reason: parts.join(' · ').slice(0, 500),
+          userId: userId ?? null,
+        },
+        include: {
+          product: { select: { id: true, name: true, sku: true, stock: true } },
+          user: { select: { id: true, fullName: true } },
+        },
+      });
+
+      return {
+        product: updatedProduct,
+        movement,
+        previousStock: product.stock,
+        newStock: updatedProduct.stock,
+      };
+    });
+  },
+
+  /**
+   * HU-003 · Registro de salida manual de productos.
+   *
+   * CA-003.1: exige motivo del egreso y justificación.
+   * CA-003.2: descuenta el stock en la misma transacción (atómico).
+   * CA-003.3: bloquea la salida si la cantidad excede el stock disponible.
+   * CA-003.4: devuelve el resumen que la UI muestra en el modal de confirmación.
+   */
+  async registerOutbound(data: OutboundInput, userId?: string) {
+    const qty = Number(data.quantity);
+    if (!Number.isInteger(qty) || qty <= 0) {
+      throw badRequest(OUTBOUND_QUANTITY_RULE_ALERT);
+    }
+
+    const reasonType = typeof data.reasonType === 'string' ? data.reasonType.trim() : '';
+    const reasonDetail = typeof data.reason === 'string' ? data.reason.trim() : '';
+
+    if (!reasonType) {
+      throw badRequest(REASON_RULE_ALERT);
+    }
+    if (reasonDetail.length < 3) {
+      throw badRequest(REASON_RULE_ALERT);
+    }
+
+    return prisma.$transaction(async (tx) => {
+      const product = await tx.product.findUnique({
+        where: { id: data.productId, deletedAt: null },
+      });
+
+      if (!product) {
+        throw notFound('Producto no encontrado en el catálogo activo.');
+      }
+
+      // CA-003.3: bloqueo de egreso por existencias insuficientes
+      if (product.stock < qty) {
+        throw badRequest(
+          `No se puede procesar la salida: La cantidad solicitada excede el stock actual disponible en el almacén (Disponible: ${product.stock} unidades)`,
+          { available: product.stock, requested: qty }
+        );
+      }
+
+      // CA-003.2: descuento atómico del stock
+      const updatedProduct = await tx.product.update({
+        where: { id: data.productId },
+        data: { stock: { decrement: qty } },
+        include: {
+          category: { select: { id: true, name: true } },
+          supplier: { select: { id: true, name: true } },
+        },
+      });
+
+      // Auditoría del egreso en inventory_movements (type: 'out')
+      const auditDetail = `Salida manual · Motivo: ${reasonType} · ${reasonDetail}`;
+
+      const movement = await tx.inventoryMovement.create({
+        data: {
+          productId: data.productId,
+          type: 'out',
+          quantity: qty,
+          reason: auditDetail.slice(0, 500),
           userId: userId ?? null,
         },
         include: {

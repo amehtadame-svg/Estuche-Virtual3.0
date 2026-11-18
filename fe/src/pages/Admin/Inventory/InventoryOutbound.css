@@ -1,0 +1,177 @@
+/* HU-003 · Salida manual de productos — estilos propios (el shell viene de InventoryInbound.css) */
+
+.outbound-arrow {
+  font-weight: 700;
+  color: #e74c3c;
+  font-size: 14px;
+}
+
+.outbound-new-stock {
+  color: #e74c3c !important;
+}
+
+.outbound-shortage {
+  font-size: 12px;
+  font-weight: 600;
+  color: #c0392b;
+  background: rgba(231, 76, 60, 0.12);
+  border: 1px solid #e74c3c;
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+
+.inbound-stock-pill.empty {
+  background: rgba(231, 76, 60, 0.12);
+  color: #c0392b;
+}
+
+.outbound-submit-btn {
+  width: 100%;
+  padding: 12px 18px;
+  border: none;
+  border-radius: var(--radius-md, 8px);
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(231, 76, 60, 0.25);
+  transition: opacity 0.2s;
+}
+
+.outbound-submit-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.outbound-hint {
+  margin-top: 10px;
+  text-align: center;
+}
+
+.outbound-qty-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  background: rgba(231, 76, 60, 0.15);
+  color: #c0392b;
+}
+
+/* CA-003.4 · modal de confirmación */
+.outbound-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 1000;
+}
+
+.outbound-modal {
+  width: 100%;
+  max-width: 480px;
+  background: var(--bg, #fff);
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 14px;
+  padding: 24px;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.28);
+}
+
+.outbound-modal-title {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-h, #111827);
+}
+
+.outbound-modal-text {
+  margin: 0 0 16px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text, #4b5563);
+}
+
+.outbound-modal-list {
+  margin: 0 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.outbound-modal-list > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed var(--border, #e5e7eb);
+}
+
+.outbound-modal-list > div:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.outbound-modal-list dt {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text, #6b7280);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+}
+
+.outbound-modal-list dd {
+  margin: 0;
+  font-size: 13px;
+  text-align: right;
+  color: var(--text-h, #111827);
+  word-break: break-word;
+}
+
+.outbound-modal-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.outbound-btn-cancel {
+  padding: 11px 16px;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-h, #111827);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.outbound-btn-cancel:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.outbound-btn-confirm {
+  padding: 11px 16px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.outbound-btn-confirm:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+
+.outbound-btn-confirm:disabled,
+.outbound-btn-cancel:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
