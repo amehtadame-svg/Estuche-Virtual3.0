@@ -82,8 +82,10 @@
 }
 
 .nombre-producto {
-  font-weight: 500;
-  color: var(--text-h);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--accent);
 }
 
 .precio-producto {
@@ -344,10 +346,29 @@
 }
 
 .stock-badge {
-  padding: 4px 10px;
-  border-radius: 999px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  padding: 6px 9px;
+  border-radius: 12px;
   font-size: 12px;
   font-weight: 600;
+  line-height: 1.25;
+  white-space: normal;
+  vertical-align: middle;
+}
+
+.stock-count {
+  white-space: nowrap;
+}
+
+.stock-status {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
 }
 
 .stock-ok {
@@ -361,7 +382,11 @@
 }
 
 .desc-producto {
+  display: block;
   max-width: 200px;
+  margin: 6px auto 0;
+  font-weight: 400;
+  line-height: 1.4;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -466,4 +491,46 @@ textarea.input-producto {
 .stock-agotado {
   background: rgba(192, 57, 43, 0.16);
   color: #c0392b;
+}
+
+/* Anchos equilibrados: damos más espacio al nombre del producto y a acciones. */
+@media (min-width: 601px) {
+  .productos-page .tabla-productos {
+    width: 100%;
+    table-layout: fixed;
+  }
+
+  .productos-page .tabla-productos thead th:nth-child(1) { width: 10%; }
+  .productos-page .tabla-productos thead th:nth-child(2) { width: 24%; }
+  .productos-page .tabla-productos thead th:nth-child(3) { width: 11%; }
+  .productos-page .tabla-productos thead th:nth-child(4) { width: 10%; }
+  .productos-page .tabla-productos thead th:nth-child(5) { width: 8%; }
+  .productos-page .tabla-productos thead th:nth-child(6) { width: 9%; }
+  .productos-page .tabla-productos thead th:nth-child(7) { width: 7%; }
+  .productos-page .tabla-productos thead th:nth-child(8) { width: 8%; }
+  .productos-page .tabla-productos thead th:nth-child(9) { width: 13%; }
+
+  .productos-page .tabla-productos thead th,
+  .productos-page .tabla-productos tbody td {
+    box-sizing: border-box;
+    padding: 10px 8px;
+    text-align: center;
+    overflow-wrap: anywhere;
+  }
+
+  .productos-page .tabla-productos tbody td .desc-producto {
+    max-width: 100%;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    overflow-wrap: anywhere;
+  }
+
+  .productos-page .tabla-productos tbody td:last-child button {
+    display: inline-block;
+    width: auto;
+    margin: 0 3px;
+    padding: 5px 8px;
+    white-space: nowrap;
+  }
 }

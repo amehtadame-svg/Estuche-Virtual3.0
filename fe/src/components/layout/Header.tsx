@@ -25,7 +25,7 @@ const announcements = [
 ];
 
 export default function Header() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const { totalItems } = useCart();
   const navigate = useNavigate();
   const [isDarkMode, setIsDarkMode] = useState(true);
@@ -63,6 +63,7 @@ export default function Header() {
           ["/superadmin/descuentos", "Descuentos"],
           ["/superadmin/pagos", "Pagos"],
           ["/superadmin/devoluciones", "Devoluciones"],
+          ["/admin/pqr", "PQR"],
           ["/superadmin/reportes", "Reportes"],
         ]
       : user?.role === "admin"
@@ -74,6 +75,7 @@ export default function Header() {
             ["/admin/ingresos", "Ingresos"],
             ["/admin/salidas", "Salidas"], 
             ["/admin/pedidos", "Pedidos"],
+            ["/admin/pqr", "PQR"],
             ["/admin/recibos", "Recibos"],
             ["/admin/envios", "Envíos"],
             ["/admin/proveedores", "Proveedores"],
@@ -86,6 +88,9 @@ export default function Header() {
             ["/catalogo", "Catálogo"],
             ["/Nosotros", "Nosotros"],
             ["/Contacto", "Contacto"],
+            ...(user?.role === "client"
+              ? [["/cliente/pqr", "PQR y soporte"]]
+              : []),
           ];
 
   return (
@@ -153,6 +158,7 @@ export default function Header() {
             >
               <Search size={18} />
             </button>
+
             <button
               className="header-icon-btn theme-toggle"
               onClick={toggleTheme}
@@ -162,6 +168,7 @@ export default function Header() {
             >
               {isDarkMode ? <Moon size={18} /> : <Sun size={18} />}
             </button>
+
             <button
               className="header-icon-btn cart-btn"
               onClick={() => {
@@ -177,18 +184,19 @@ export default function Header() {
                 </span>
               )}
             </button>
+
             {user ? (
               <button
                 className="header-profile-btn"
                 onClick={() => {
-                  logout();
-                  navigate("/");
+                  navigate("/perfil");
                   closeMenu();
                 }}
-                title="Cerrar sesión"
+                title="Ver mi perfil"
+                aria-label={`Hola, ${user.name.trim().split(/\s+/)[0]}. Abrir perfil`}
               >
-                <UserRound size={16} />
-                <span>Hola, {user.name.split(" ")[0]}</span>
+                <UserRound size={13} aria-hidden="true" />
+                <span>Hola, {user.name.trim().split(/\s+/)[0]}</span>
               </button>
             ) : (
               <Link

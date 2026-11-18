@@ -6,6 +6,7 @@ export const createUserSchema = z.object({
   fullName: z.string().min(1),
   email: z.string().email(),
   password: z.string().min(6),
+  phone: z.string().optional(),
   role: z.enum(validRoles).optional(),
 });
 
@@ -16,15 +17,11 @@ export const editUserSchema = z.object({
 });
 
 export const updateProfileSchema = z.object({
-  phone: z.string().optional(),
-  address: z.string().optional(),
+  fullName: z.string().trim().min(1).max(150).optional(),
+  phone: z.string().trim().max(30).optional(),
+  address: z.string().trim().max(255).optional(),
 });
 
 export const updateRoleSchema = z.object({
   role: z.enum(validRoles),
-});
-
-// HU-018 · Activar o desactivar una cuenta sin borrar historial.
-export const setActiveSchema = z.object({
-  isActive: z.boolean({ message: 'El campo isActive debe ser verdadero o falso' }),
 });

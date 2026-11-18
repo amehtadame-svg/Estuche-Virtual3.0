@@ -4,6 +4,7 @@ import { Bell, Gift, Lock, Mail, Phone, Sparkles, User } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import PasswordInput from "../../components/ui/PasswordInput";
 import { validarPassword } from "../../utils/validarPassword";
+import { notify } from "../../lib/notifications";
 import "../ResetPassword/Auth.css";
 
 const Register = () => {
@@ -47,6 +48,7 @@ const Register = () => {
       return;
     }
     setSuccess("¡Cuenta creada! Redirigiendo...");
+    notify.success("Tu cuenta se creó correctamente. Te estamos llevando a tu perfil.", "Registro exitoso");
     setTimeout(() => navigate("/cliente"), 1500);
   };
 

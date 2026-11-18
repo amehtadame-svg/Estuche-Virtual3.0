@@ -19,8 +19,13 @@ export const providerService = {
   },
 
   async remove(id: string) {
-    await prisma.product.updateMany({ where: { supplierId: id }, data: { supplierId: null } });
-    await prisma.provider.delete({ where: { id } });
+    await prisma.$transaction(async (tx) => {
+      // Desvincula las categorías y productos antes de borrar el proveedor,
+      // porque sus relaciones usan onDelete: NoAction en la base de datos.
+      await tx.providerCategory.deleteMany({ where: { providerId: id } });
+      await tx.product.updateMany({ where: { supplierId: id }, data: { supplierId: null } });
+      await tx.provider.delete({ where: { id } });
+    });
     return null;
   },
 };
