@@ -3,17 +3,17 @@ import cors from 'cors';
 import helmet from 'helmet';
 import { rateLimit } from 'express-rate-limit';
 
-import authRoutes            from './modules/auth/auth.routes';
-import userRoutes            from './modules/users/users.routes';
-import orderRoutes           from './modules/orders/orders.routes';
-import productRoutes         from './modules/products/products.routes';
-import categoryRoutes        from './modules/categories/categories.routes';
-import inventoryRoutes       from './modules/inventory/inventory.routes';
-import providerRoutes        from './modules/provider/provider.routes';
-import despatchRoutes        from './modules/despatch/despatch.routes';
-import orderDetailRoutes     from './modules/order-details/order-details.routes';
-import receiptRoutes         from './modules/receipt/receipt.routes';
-import shoppingRoutes        from './modules/shopping/shopping.routes';
+import authRoutes from './modules/auth/auth.routes';
+import userRoutes from './modules/users/users.routes';
+import orderRoutes from './modules/orders/orders.routes';
+import productRoutes from './modules/products/products.routes';
+import categoryRoutes from './modules/categories/categories.routes';
+import inventoryRoutes from './modules/inventory/inventory.routes';
+import providerRoutes from './modules/provider/provider.routes';
+import despatchRoutes from './modules/despatch/despatch.routes';
+import orderDetailRoutes from './modules/order-details/order-details.routes';
+import receiptRoutes from './modules/receipt/receipt.routes';
+import shoppingRoutes from './modules/shopping/shopping.routes';
 import promotionalCodeRoutes from './modules/promotional-code/promotional-code.routes';
 import payoutRoutes          from './modules/payout/payout.routes';
 import returnRoutes          from './modules/returns/returns.routes';
@@ -32,10 +32,12 @@ const CORS_ORIGINS = (
 const originIsAllowed = (origin: string) =>
   CORS_ORIGINS.some((allowed) => {
     if (!allowed.includes('*')) return allowed === origin;
+
     const pattern = allowed
       .split('*')
       .map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
       .join('.*');
+
     return new RegExp(`^${pattern}$`).test(origin);
   });
 
@@ -50,18 +52,23 @@ const authLimiter = rateLimit({
 
 const app = express();
 
-// Cabeceras de seguridad HTTP (helmet) antes que cualquier ruta.
+// Cabeceras de seguridad antes que cualquier ruta.
 app.use(helmet());
+
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Peticiones sin origin (curl, Postman, server-to-server) se permiten.
-      if (!origin || originIsAllowed(origin)) return callback(null, true);
-      return callback(null, false); // bloquea: no fija header CORS
+      // Las peticiones sin origin (por ejemplo, Postman) se permiten.
+      if (!origin || originIsAllowed(origin)) {
+        return callback(null, true);
+      }
+
+      return callback(null, false);
     },
     credentials: true,
-  })
+  }),
 );
+
 app.use(express.json());
 
 // ── Públicas / compartidas ────────────────────────────
@@ -78,13 +85,14 @@ app.use('/api/receipts',           receiptRoutes);
 app.use('/api/shopping',           shoppingRoutes);
 app.use('/api/combos',             comboRoutes);
 
-// ── SuperAdmin ────────────────────────────────────────
-app.use('/api/promotional-codes',  promotionalCodeRoutes);
-app.use('/api/payouts',            payoutRoutes);
-app.use('/api/returns',            returnRoutes);
-app.use('/api/reports',            reportRoutes);
+// Gestión administrativa.
+app.use('/api/promotional-codes', promotionalCodeRoutes);
+app.use('/api/payouts', payoutRoutes);
+app.use('/api/returns', returnRoutes);
+app.use('/api/pqr', pqrRoutes);
+app.use('/api/reports', reportRoutes);
 
-// Manejador global de errores (debe ir al final)
+// El manejador global de errores debe ir al final.
 app.use(errorHandler);
 
 export default app;

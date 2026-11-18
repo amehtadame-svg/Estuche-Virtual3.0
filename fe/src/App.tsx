@@ -1,26 +1,29 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { AuthProvider }  from './context/AuthContext';
-import { CartProvider }  from './context/CartContext';
+import { AuthProvider } from './context/AuthContext';
+import { CartProvider } from './context/CartContext';
 import AccessDenied from './pages/AccessDenied/AccessDenied';
-import ProtectedRoute    from './components/ui/ProtectedRoute';
-import Header            from './components/layout/Header';
-import Footer            from './components/layout/Footer';
+import ProtectedRoute from './components/ui/ProtectedRoute';
+import Header from './components/layout/Header';
+import Footer from './components/layout/Footer';
+import ToastProvider from './components/ui/ToastProvider';
 
 // Páginas públicas
-import Pago           from './pages/Checkout/Checkout';
-import Home           from './pages/Home/Home';
-import Login          from './pages/Login/Login';
-import Register       from './pages/Register/Register';
-import Catalogo       from './pages/Catalog/Catalog';
-import Producto       from './pages/Product/Product';
-import Carrito        from './pages/Shopping/Shopping';
-import Contacto       from './pages/Contact/Contact';
-import Nosotros       from './pages/About/About';
+import Pago from './pages/Checkout/Checkout';
+import Home from './pages/Home/Home';
+import Login from './pages/Login/Login';
+import Register from './pages/Register/Register';
+import Catalogo from './pages/Catalog/Catalog';
+import Producto from './pages/Product/Product';
+import Carrito from './pages/Shopping/Shopping';
+import Contacto from './pages/Contact/Contact';
+import Nosotros from './pages/About/About';
 import ForgotPassword from './pages/ResetPassword/ForgotPassword';
-import ResetPassword  from './pages/ResetPassword/ResetPassword';
+import ResetPassword from './pages/ResetPassword/ResetPassword';
+import Profile from './pages/Profile/Profile';
 
 // Cliente
 import ClienteDashboard from './pages/ClientDashboard/ClientDashboard';
+import ClientPqr from './pages/PQR/ClientPqr';
 
 // Admin
 import AdminDashboard    from './pages/Admin/AdminDashboard';
@@ -37,42 +40,51 @@ import DetallePedidos    from './pages/Admin/OrderDetails/OrderDetails';
 
 // SuperAdmin
 import SuperAdminDashboard from './pages/SuperAdmin/SuperAdminDashboard';
-import Descuentos          from './pages/SuperAdmin/PromotionalCode/PromotionalCode';
-import Pagos               from './pages/SuperAdmin/Payout/Payout';
-import Devoluciones        from './pages/SuperAdmin/Returns/Returns';
-import Reportes            from './pages/SuperAdmin/Reports/Reports';
-import UsuariosSA          from './pages/SuperAdmin/UsuariosSA/SuperAdminUsers';
+import Descuentos from './pages/SuperAdmin/PromotionalCode/PromotionalCode';
+import Pagos from './pages/SuperAdmin/Payout/Payout';
+import Devoluciones from './pages/SuperAdmin/Returns/Returns';
+import Reportes from './pages/SuperAdmin/Reports/Reports';
+import UsuariosSA from './pages/SuperAdmin/UsuariosSA/SuperAdminUsers';
 
 function App() {
   return (
     <AuthProvider>
-      <CartProvider>
-        <BrowserRouter>
-          <Header />
-          <Routes>
+      <ToastProvider>
+        <CartProvider>
+          <BrowserRouter>
+            <Header />
+            <Routes>
+              {/* Páginas públicas */}
+              <Route path="/" element={<Home />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/catalogo" element={<Catalogo />} />
+              <Route path="/producto/:id" element={<Producto />} />
+              <Route path="/carrito" element={<Carrito />} />
+              <Route path="/Contacto" element={<Contacto />} />
+              <Route path="/Nosotros" element={<Nosotros />} />
+              <Route path="/no-acceso" element={<AccessDenied />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
 
-            {/* ── Públicas ─────────────────────────────── */}
-            <Route path="/"                element={<Home />} />
-            <Route path="/login"           element={<Login />} />
-            <Route path="/register"        element={<Register />} />
-            <Route path="/catalogo"        element={<Catalogo />} />
-            <Route path="/producto/:id"    element={<Producto />} />
-            <Route path="/carrito"         element={<Carrito />} />
-            <Route path="/Contacto"        element={<Contacto />} />
-            <Route path="/Nosotros"        element={<Nosotros />} />
-            <Route path="/no-acceso"      element={<AccessDenied />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password"  element={<ResetPassword />} />
+              {/* Cliente */}
+              <Route
+                element={
+                  <ProtectedRoute allowedRoles={['client', 'employee']} />
+                }
+              >
+                <Route path="/cliente" element={<ClienteDashboard />} />
+              </Route>
 
-            {/* ── Cliente ──────────────────────────────── */}
-            <Route element={<ProtectedRoute allowedRoles={['client', 'employee']} />}>
-              <Route path="/cliente" element={<ClienteDashboard />} />
-            </Route>
+              <Route element={<ProtectedRoute allowedRoles={['client']} />}>
+                <Route path="/cliente/pqr" element={<ClientPqr />} />
+              </Route>
 
-            {/* ── Pago ─────────────────────────────────── */}
-            <Route element={<ProtectedRoute />}>
-              <Route path="/Pago" element={<Pago />} />
-            </Route>
+              {/* Pago y perfil */}
+              <Route element={<ProtectedRoute />}>
+                <Route path="/Pago" element={<Pago />} />
+                <Route path="/perfil" element={<Profile />} />
+              </Route>
 
             {/* ── Admin ────────────────────────────────── */}
             <Route element={<ProtectedRoute allowedRoles={['admin', 'superadmin']} />}>
@@ -89,20 +101,29 @@ function App() {
               <Route path="/admin/detallepedidos"  element={<DetallePedidos />} />
             </Route>
 
-            {/* ── SuperAdmin ───────────────────────────── */}
-            <Route element={<ProtectedRoute allowedRoles={['superadmin']} />}>
-              <Route path="/superadmin"                element={<SuperAdminDashboard />} />
-              <Route path="/superadmin/usuarios"       element={<UsuariosSA />} />
-              <Route path="/superadmin/descuentos"     element={<Descuentos />} />
-              <Route path="/superadmin/pagos"          element={<Pagos />} />
-              <Route path="/superadmin/devoluciones"   element={<Devoluciones />} />
-              <Route path="/superadmin/reportes"       element={<Reportes />} />
-            </Route>
-
-          </Routes>
-          <Footer />
-        </BrowserRouter>
-      </CartProvider>
+              {/* Solo SuperAdmin */}
+              <Route element={<ProtectedRoute allowedRoles={['superadmin']} />}>
+                <Route path="/superadmin" element={<SuperAdminDashboard />} />
+                <Route
+                  path="/superadmin/usuarios"
+                  element={<UsuariosSA />}
+                />
+                <Route
+                  path="/superadmin/descuentos"
+                  element={<Descuentos />}
+                />
+                <Route path="/superadmin/pagos" element={<Pagos />} />
+                <Route
+                  path="/superadmin/devoluciones"
+                  element={<Devoluciones />}
+                />
+                <Route path="/superadmin/reportes" element={<Reportes />} />
+              </Route>
+            </Routes>
+            <Footer />
+          </BrowserRouter>
+        </CartProvider>
+      </ToastProvider>
     </AuthProvider>
   );
 }

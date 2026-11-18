@@ -81,6 +81,7 @@ export const userService = {
         fullName: data.fullName,
         email: data.email,
         hashedPassword: hashed,
+        phone: data.phone?.trim() || null,
         role: (data.role || 'client') as any,
         passwordUpdatedAt: new Date(),
         dataConsentAt: new Date(),

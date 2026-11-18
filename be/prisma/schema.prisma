@@ -55,6 +55,19 @@ enum ReturnStatus {
   refunded
 }
 
+enum PqrType {
+  petition
+  complaint
+  claim
+}
+
+enum PqrStatus {
+  received
+  in_progress
+  answered
+  closed
+}
+
 enum MovementType {
   in
   out
@@ -67,35 +80,35 @@ enum PromotionalCodeType {
 }
 
 model User {
-  id                 String   @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
-  email              String   @unique @db.VarChar(255)
-  fullName           String   @db.VarChar(150) @map("full_name")
-  hashedPassword     String   @db.VarChar(255) @map("hashed_password")
+  id                 String    @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  email              String    @unique @db.VarChar(255)
+  fullName           String    @map("full_name") @db.VarChar(150)
+  hashedPassword     String    @map("hashed_password") @db.VarChar(255)
   passwordUpdatedAt  DateTime? @default(now()) @map("password_updated_at")
-  mustChangePassword Boolean  @default(false) @map("must_change_password")
-  phone              String?  @db.VarChar(30)
-  address            String?  @db.VarChar(255)
-  role               Role     @default(client)
-  isActive           Boolean  @default(true) @map("is_active")
-  isEmailVerified    Boolean  @default(false) @map("is_email_verified")
-  mfaEnabled         Boolean  @default(false) @map("mfa_enabled")
-  mfaSecret          String?  @db.VarChar(255) @map("mfa_secret")
-  failedAttempts     Int      @default(0) @map("failed_attempts")
+  mustChangePassword Boolean   @default(false) @map("must_change_password")
+  phone              String?   @db.VarChar(30)
+  address            String?   @db.VarChar(255)
+  role               Role      @default(client)
+  isActive           Boolean   @default(true) @map("is_active")
+  isEmailVerified    Boolean   @default(false) @map("is_email_verified")
+  mfaEnabled         Boolean   @default(false) @map("mfa_enabled")
+  mfaSecret          String?   @map("mfa_secret") @db.VarChar(255)
+  failedAttempts     Int       @default(0) @map("failed_attempts")
   lockedUntil        DateTime? @map("locked_until")
   lastLogin          DateTime? @map("last_login")
   dataConsentAt      DateTime? @map("data_consent_at")
   deletedAt          DateTime? @map("deleted_at")
-  createdAt          DateTime @default(now()) @map("created_at")
-  updatedAt          DateTime @default(now()) @map("updated_at")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @default(now()) @map("updated_at")
 
-  shopping          Shopping[]
-  returns           OrderReturn[]
-  deliveryAddresses DeliveryAddress[]
-  shipments         Despatch[]
-  receipts          Receipt[]
-  receiptsAsEmployee Receipt[] @relation("ReceiptEmployee")
-  priceHistory      PriceHistory[]
-  wishlist          Wishlist[]
+  shopping           Shopping[]
+  returns            OrderReturn[]
+  deliveryAddresses  DeliveryAddress[]
+  shipments          Despatch[]
+  receipts           Receipt[]
+  receiptsAsEmployee Receipt[]           @relation("ReceiptEmployee")
+  priceHistory       PriceHistory[]
+  wishlist           Wishlist[]
   inventoryMovements InventoryMovement[]
   notifications     Notification[]
   payouts           Payout[]
@@ -111,25 +124,25 @@ model User {
 }
 
 model Order {
-  id               String      @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
-  customerId       String?     @db.Uuid @map("customer_id")
-  driverId         String?     @db.Uuid @map("driver_id")
-  promotionalCodeId String?    @db.Uuid @map("promotional_code_id")
-  deliveryAddressId String?    @db.Uuid @map("delivery_address_id")
-  orderDate        DateTime?   @default(now()) @map("order_date")
-  status           OrderStatus @default(pending)
-  total            Decimal     @default(0) @db.Decimal(14, 2)
-  updatedAt        DateTime?   @default(now()) @map("updated_at")
-  deletedAt        DateTime?   @map("deleted_at")
+  id                String      @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  customerId        String?     @map("customer_id") @db.Uuid
+  driverId          String?     @map("driver_id") @db.Uuid
+  promotionalCodeId String?     @map("promotional_code_id") @db.Uuid
+  deliveryAddressId String?     @map("delivery_address_id") @db.Uuid
+  orderDate         DateTime?   @default(now()) @map("order_date")
+  status            OrderStatus @default(pending)
+  total             Decimal     @default(0) @db.Decimal(14, 2)
+  updatedAt         DateTime?   @default(now()) @map("updated_at")
+  deletedAt         DateTime?   @map("deleted_at")
 
-  details          OrderDetail[]
-  returns          OrderReturn[]
-  shipments        Despatch[]
-  receipt          Receipt?
-  customer         User?           @relation("OrderCustomer", fields: [customerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  promotionalCode  PromotionalCode? @relation(fields: [promotionalCodeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  deliveryAddress  DeliveryAddress? @relation(fields: [deliveryAddressId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  driver           User?           @relation("OrderDriver", fields: [driverId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  details         OrderDetail[]
+  returns         OrderReturn[]
+  shipments       Despatch[]
+  receipt         Receipt?
+  customer        User?            @relation("OrderCustomer", fields: [customerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  promotionalCode PromotionalCode? @relation(fields: [promotionalCodeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  deliveryAddress DeliveryAddress? @relation(fields: [deliveryAddressId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  driver          User?            @relation("OrderDriver", fields: [driverId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([customerId], map: "idx_orders_customer")
   @@index([driverId], map: "idx_orders_driver")
@@ -138,18 +151,18 @@ model Order {
 }
 
 model Product {
-  id          String   @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
-  sku         String?  @unique @db.VarChar(80)
-  barcode     String?  @unique @db.VarChar(80)
-  name        String   @db.VarChar(150)
-  description String?  @db.VarChar(500)
-  cost        Decimal  @default(0) @db.Decimal(14, 2)
-  price       Decimal  @db.Decimal(14, 2)
-  stock       Int      @default(0)
-  stockMin    Int      @default(5) @map("stock_min")
-  categoryId  String?  @db.Uuid @map("category_id")
-  supplierId  String?  @db.Uuid @map("supplier_id")
-  createdAt   DateTime @default(now()) @map("created_at")
+  id          String    @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  sku         String?   @unique @db.VarChar(80)
+  barcode     String?   @unique @db.VarChar(80)
+  name        String    @db.VarChar(150)
+  description String?   @db.VarChar(500)
+  cost        Decimal   @default(0) @db.Decimal(14, 2)
+  price       Decimal   @db.Decimal(14, 2)
+  stock       Int       @default(0)
+  stockMin    Int       @default(5) @map("stock_min")
+  categoryId  String?   @map("category_id") @db.Uuid
+  supplierId  String?   @map("supplier_id") @db.Uuid
+  createdAt   DateTime  @default(now()) @map("created_at")
   deletedAt   DateTime? @map("deleted_at")
 
   shopping           Shopping[]
@@ -160,8 +173,8 @@ model Product {
   images             ProductImage[]
   wishlist           Wishlist[]
   inventoryMovements InventoryMovement[]
-  category           Category?  @relation(fields: [categoryId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  supplier           Provider?  @relation(fields: [supplierId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  category           Category?           @relation(fields: [categoryId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  supplier           Provider?           @relation(fields: [supplierId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   reviews            Review[]
   comboItems         ComboItem[]
 
@@ -172,33 +185,33 @@ model Product {
 }
 
 model Category {
-  id          String   @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
-  name        String   @db.VarChar(150)
-  description String?  @db.VarChar(500)
-  products    Product[]
+  id                 String             @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  name               String             @db.VarChar(150)
+  description        String?            @db.VarChar(500)
+  products           Product[]
   providerCategories ProviderCategory[]
 
   @@map("categories")
 }
 
 model Provider {
-  id       String  @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
-  name     String  @db.VarChar(150)
-  phone    String? @db.VarChar(30)
-  email    String? @db.VarChar(255)
-  address  String? @db.VarChar(255)
-  products Product[]
+  id                 String             @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  name               String             @db.VarChar(150)
+  phone              String?            @db.VarChar(30)
+  email              String?            @db.VarChar(255)
+  address            String?            @db.VarChar(255)
+  products           Product[]
   providerCategories ProviderCategory[]
 
   @@map("providers")
 }
 
 model OrderDetail {
-  id        String  @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
-  orderId   String  @db.Uuid @map("order_id")
-  productId String  @db.Uuid @map("product_id")
+  id        String   @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  orderId   String   @map("order_id") @db.Uuid
+  productId String   @map("product_id") @db.Uuid
   quantity  Int
-  unitPrice Decimal @db.Decimal(14, 2) @map("unit_price")
+  unitPrice Decimal  @map("unit_price") @db.Decimal(14, 2)
   subtotal  Decimal? @db.Decimal(14, 2)
 
   order   Order   @relation(fields: [orderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -209,29 +222,29 @@ model OrderDetail {
 }
 
 model Despatch {
-  id          String          @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
-  orderId     String          @db.Uuid @map("order_id")
-  shipDate    DateTime?       @default(now()) @map("ship_date")
-  deliveredAt DateTime?       @map("delivered_at")
-  status      DespatchStatus  @default(in_transit)
-  driverId    String?         @db.Uuid @map("driver_id")
-  address     String?         @db.VarChar(255)
+  id          String         @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  orderId     String         @map("order_id") @db.Uuid
+  shipDate    DateTime?      @default(now()) @map("ship_date")
+  deliveredAt DateTime?      @map("delivered_at")
+  status      DespatchStatus @default(in_transit)
+  driverId    String?        @map("driver_id") @db.Uuid
+  address     String?        @db.VarChar(255)
 
-  order   Order @relation(fields: [orderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  driver  User? @relation(fields: [driverId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  order  Order @relation(fields: [orderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  driver User? @relation(fields: [driverId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([orderId], map: "idx_despatches_order")
   @@map("despatches")
 }
 
 model InventoryMovement {
-  id        String        @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
-  productId String        @db.Uuid @map("product_id")
+  id        String       @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  productId String       @map("product_id") @db.Uuid
   type      MovementType
   quantity  Int
-  reason    String?       @db.VarChar(500)
-  userId    String?       @db.Uuid @map("user_id")
-  date      DateTime?     @default(now())
+  reason    String?      @db.VarChar(500)
+  userId    String?      @map("user_id") @db.Uuid
+  date      DateTime?    @default(now())
 
   product Product @relation(fields: [productId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   user    User?   @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -241,19 +254,19 @@ model InventoryMovement {
 }
 
 model Receipt {
-  id             String        @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
-  receiptNumber  Int           @unique @default(autoincrement()) @map("receipt_number")
-  customerId     String?       @db.Uuid @map("customer_id")
-  employeeId     String?       @db.Uuid @map("employee_id")
-  orderId        String?       @unique @db.Uuid @map("order_id")
-  date           DateTime?     @default(now())
-  total          Decimal       @default(0) @db.Decimal(14, 2)
-  paymentStatus  ReceiptStatus @default(pending) @map("payment_status")
+  id            String        @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  receiptNumber Int           @unique @default(autoincrement()) @map("receipt_number")
+  customerId    String?       @map("customer_id") @db.Uuid
+  employeeId    String?       @map("employee_id") @db.Uuid
+  orderId       String?       @unique @map("order_id") @db.Uuid
+  date          DateTime?     @default(now())
+  total         Decimal       @default(0) @db.Decimal(14, 2)
+  paymentStatus ReceiptStatus @default(pending) @map("payment_status")
 
   receiptItems ReceiptItem[]
-  customer     User?  @relation(fields: [customerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  employee     User?  @relation("ReceiptEmployee", fields: [employeeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  order        Order? @relation(fields: [orderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  customer     User?         @relation(fields: [customerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  employee     User?         @relation("ReceiptEmployee", fields: [employeeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  order        Order?        @relation(fields: [orderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   payouts      Payout[]
 
   @@index([customerId], map: "idx_receipts_customer")
@@ -263,9 +276,9 @@ model Receipt {
 }
 
 model Shopping {
-  id        String   @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
-  userId    String   @db.Uuid @map("user_id")
-  productId String   @db.Uuid @map("product_id")
+  id        String    @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  productId String    @map("product_id") @db.Uuid
   quantity  Int
   addedAt   DateTime? @default(now()) @map("added_at")
 
@@ -278,29 +291,29 @@ model Shopping {
 }
 
 model PromotionalCode {
-  id           String              @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
-  code         String              @unique @db.VarChar(50)
-  description  String?             @db.VarChar(500)
-  type         PromotionalCodeType
-  value        Decimal             @db.Decimal(14, 2)
-  minPurchase  Decimal?            @default(0) @db.Decimal(14, 2) @map("min_purchase")
-  startDate    DateTime            @db.Date @map("start_date")
-  endDate      DateTime            @db.Date @map("end_date")
-  maxUses      Int?                @map("max_uses")
-  currentUses  Int?                @default(0) @map("current_uses")
-  active       Boolean?            @default(true)
-  version      Int                 @default(0)
-  orders       Order[]
+  id          String              @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  code        String              @unique @db.VarChar(50)
+  description String?             @db.VarChar(500)
+  type        PromotionalCodeType
+  value       Decimal             @db.Decimal(14, 2)
+  minPurchase Decimal?            @default(0) @map("min_purchase") @db.Decimal(14, 2)
+  startDate   DateTime            @map("start_date") @db.Date
+  endDate     DateTime            @map("end_date") @db.Date
+  maxUses     Int?                @map("max_uses")
+  currentUses Int?                @default(0) @map("current_uses")
+  active      Boolean?            @default(true)
+  version     Int                 @default(0)
+  orders      Order[]
 
   @@map("promotional_codes")
 }
 
 model ReceiptItem {
-  id        String  @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
-  receiptId String  @db.Uuid @map("receipt_id")
-  productId String  @db.Uuid @map("product_id")
+  id        String   @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  receiptId String   @map("receipt_id") @db.Uuid
+  productId String   @map("product_id") @db.Uuid
   quantity  Int
-  unitPrice Decimal @db.Decimal(14, 2) @map("unit_price")
+  unitPrice Decimal  @map("unit_price") @db.Decimal(14, 2)
   subtotal  Decimal? @db.Decimal(14, 2)
 
   receipt Receipt @relation(fields: [receiptId], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -311,18 +324,18 @@ model ReceiptItem {
 }
 
 model OrderReturn {
-  id              String       @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
-  orderId         String       @db.Uuid @map("order_id")
-  customerId      String       @db.Uuid @map("customer_id")
-  productId       String       @db.Uuid @map("product_id")
-  quantity        Int
-  reason          String       @db.VarChar(500)
-  status          ReturnStatus @default(requested)
-  productCondition String      @default("good") @db.VarChar(30) @map("product_condition")
-  refund          Decimal?     @default(0) @db.Decimal(14, 2)
-  requestedAt     DateTime?    @default(now()) @map("requested_at")
-  resolvedAt      DateTime?    @map("resolved_at")
-  updatedAt       DateTime?    @default(now()) @map("updated_at")
+  id               String       @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  orderId          String       @map("order_id") @db.Uuid
+  customerId       String       @map("customer_id") @db.Uuid
+  productId        String       @map("product_id") @db.Uuid
+  quantity         Int
+  reason           String       @db.VarChar(500)
+  status           ReturnStatus @default(requested)
+  productCondition String       @default("good") @map("product_condition") @db.VarChar(30)
+  refund           Decimal?     @default(0) @db.Decimal(14, 2)
+  requestedAt      DateTime?    @default(now()) @map("requested_at")
+  resolvedAt       DateTime?    @map("resolved_at")
+  updatedAt        DateTime?    @default(now()) @map("updated_at")
 
   customer User    @relation(fields: [customerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   order    Order   @relation(fields: [orderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -332,15 +345,36 @@ model OrderReturn {
   @@map("returns")
 }
 
+model PqrRequest {
+  id            String    @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  customerId    String    @map("customer_id") @db.Uuid
+  type          PqrType
+  subject       String    @db.VarChar(160)
+  description   String    @db.Text
+  status        PqrStatus @default(received)
+  response      String?   @db.Text
+  respondedById String?   @map("responded_by_id") @db.Uuid
+  respondedAt   DateTime? @map("responded_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  customer    User  @relation("PqrCustomer", fields: [customerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  respondedBy User? @relation("PqrResponder", fields: [respondedById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([customerId, createdAt], map: "idx_pqr_customer_created")
+  @@index([status, createdAt], map: "idx_pqr_status_created")
+  @@map("pqr_requests")
+}
+
 model DeliveryAddress {
-  id           String   @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
-  userId       String   @db.Uuid @map("user_id")
-  contactName  String?  @db.VarChar(150) @map("contact_name")
-  phone        String?  @db.VarChar(30)
-  address      String   @db.VarChar(255)
-  city         String?  @db.VarChar(150)
-  state        String?  @db.VarChar(150)
-  isPrimary    Boolean? @default(false) @map("is_primary")
+  id          String   @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  contactName String?  @map("contact_name") @db.VarChar(150)
+  phone       String?  @db.VarChar(30)
+  address     String   @db.VarChar(255)
+  city        String?  @db.VarChar(150)
+  state       String?  @db.VarChar(150)
+  isPrimary   Boolean? @default(false) @map("is_primary")
 
   user   User    @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   orders Order[]
@@ -350,12 +384,12 @@ model DeliveryAddress {
 }
 
 model PriceHistory {
-  id            String   @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
-  productId     String   @db.Uuid @map("product_id")
-  previousPrice Decimal  @db.Decimal(14, 2) @map("previous_price")
-  newPrice      Decimal  @db.Decimal(14, 2) @map("new_price")
+  id            String    @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  productId     String    @map("product_id") @db.Uuid
+  previousPrice Decimal   @map("previous_price") @db.Decimal(14, 2)
+  newPrice      Decimal   @map("new_price") @db.Decimal(14, 2)
   changedAt     DateTime? @default(now()) @map("changed_at")
-  userId        String?  @db.Uuid @map("user_id")
+  userId        String?   @map("user_id") @db.Uuid
 
   product Product @relation(fields: [productId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   user    User?   @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -366,7 +400,7 @@ model PriceHistory {
 
 model ProductImage {
   id        String   @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
-  productId String   @db.Uuid @map("product_id")
+  productId String   @map("product_id") @db.Uuid
   url       String   @db.VarChar(500)
   name      String?  @db.VarChar(150)
   isPrimary Boolean? @default(false) @map("is_primary")
@@ -380,8 +414,8 @@ model ProductImage {
 
 model Wishlist {
   id        String    @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
-  userId    String    @db.Uuid @map("user_id")
-  productId String    @db.Uuid @map("product_id")
+  userId    String    @map("user_id") @db.Uuid
+  productId String    @map("product_id") @db.Uuid
   addedAt   DateTime? @default(now()) @map("added_at")
 
   product Product @relation(fields: [productId], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -393,13 +427,13 @@ model Wishlist {
 }
 
 model Notification {
-  id        String    @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
-  userId    String    @db.Uuid @map("user_id")
-  title     String    @db.VarChar(150)
-  message   String    @db.VarChar(500)
-  type      String    @db.VarChar(50)
-  isRead    Boolean?  @default(false) @map("is_read")
-  date      DateTime? @default(now())
+  id      String    @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  userId  String    @map("user_id") @db.Uuid
+  title   String    @db.VarChar(150)
+  message String    @db.VarChar(500)
+  type    String    @db.VarChar(50)
+  isRead  Boolean?  @default(false) @map("is_read")
+  date    DateTime? @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
@@ -408,18 +442,18 @@ model Notification {
 }
 
 model Payout {
-  id              String        @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
-  receiptId       String        @db.Uuid @map("receipt_id")
-  userId          String        @db.Uuid @map("user_id")
-  gateway         String        @db.VarChar(50)
-  transactionId   String        @unique @db.VarChar(255) @map("transaction_id")
-  status          PaymentStatus @default(pending)
-  method          String?       @db.VarChar(50)
-  amount          Decimal       @db.Decimal(14, 2)
-  currency        String        @default("COP") @db.VarChar(10)
-  paidAt          DateTime?     @default(now()) @map("paid_at")
-  confirmedAt     DateTime?     @map("confirmed_at")
-  gatewayToken    String?       @db.VarChar(255) @map("gateway_token")
+  id            String        @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  receiptId     String        @map("receipt_id") @db.Uuid
+  userId        String        @map("user_id") @db.Uuid
+  gateway       String        @db.VarChar(50)
+  transactionId String        @unique @map("transaction_id") @db.VarChar(255)
+  status        PaymentStatus @default(pending)
+  method        String?       @db.VarChar(50)
+  amount        Decimal       @db.Decimal(14, 2)
+  currency      String        @default("COP") @db.VarChar(10)
+  paidAt        DateTime?     @default(now()) @map("paid_at")
+  confirmedAt   DateTime?     @map("confirmed_at")
+  gatewayToken  String?       @map("gateway_token") @db.VarChar(255)
 
   receipt Receipt @relation(fields: [receiptId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   user    User    @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -430,17 +464,17 @@ model Payout {
 }
 
 model Report {
-  id               String   @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
-  date             DateTime @unique @db.Date
-  totalOrders      Int      @default(0) @map("total_orders")
-  deliveredOrders  Int      @default(0) @map("delivered_orders")
-  canceledOrders   Int      @default(0) @map("canceled_orders")
-  totalSold        Decimal  @default(0) @db.Decimal(14, 2) @map("total_sold")
-  totalPaid        Decimal  @default(0) @db.Decimal(14, 2) @map("total_paid")
-  totalRefunded    Decimal  @default(0) @db.Decimal(14, 2) @map("total_refunded")
-  productsSold     Int      @default(0) @map("products_sold")
-  newCustomers     Int      @default(0) @map("new_customers")
-  generatedAt      DateTime? @default(now()) @map("generated_at")
+  id              String    @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  date            DateTime  @unique @db.Date
+  totalOrders     Int       @default(0) @map("total_orders")
+  deliveredOrders Int       @default(0) @map("delivered_orders")
+  canceledOrders  Int       @default(0) @map("canceled_orders")
+  totalSold       Decimal   @default(0) @map("total_sold") @db.Decimal(14, 2)
+  totalPaid       Decimal   @default(0) @map("total_paid") @db.Decimal(14, 2)
+  totalRefunded   Decimal   @default(0) @map("total_refunded") @db.Decimal(14, 2)
+  productsSold    Int       @default(0) @map("products_sold")
+  newCustomers    Int       @default(0) @map("new_customers")
+  generatedAt     DateTime? @default(now()) @map("generated_at")
 
   @@index([date], map: "idx_reports_date")
   @@map("reports")
@@ -448,8 +482,8 @@ model Report {
 
 model Review {
   id        String    @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
-  productId String    @db.Uuid @map("product_id")
-  userId    String    @db.Uuid @map("user_id")
+  productId String    @map("product_id") @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
   rating    Int
   comment   String?   @db.VarChar(1000)
   date      DateTime? @default(now())
@@ -463,8 +497,8 @@ model Review {
 }
 
 model ProviderCategory {
-  providerId String   @db.Uuid @map("provider_id")
-  categoryId String   @db.Uuid @map("category_id")
+  providerId String @map("provider_id") @db.Uuid
+  categoryId String @map("category_id") @db.Uuid
 
   category Category @relation(fields: [categoryId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   provider Provider @relation(fields: [providerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -475,10 +509,10 @@ model ProviderCategory {
 
 model SecurityEvent {
   id        String   @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
-  userId    String?  @db.Uuid @map("user_id")
+  userId    String?  @map("user_id") @db.Uuid
   type      String   @db.VarChar(50)
   ip        String?  @db.VarChar(45)
-  userAgent String?  @db.VarChar(255) @map("user_agent")
+  userAgent String?  @map("user_agent") @db.VarChar(255)
   detail    Json?
   success   Boolean  @default(true)
   date      DateTime @default(now())

@@ -67,6 +67,15 @@ function publicUser(user: AuthUser) {
 }
 
 export const authService = {
+  async currentUser(id: string) {
+    const user = await prisma.user.findUnique({
+      where: { id },
+      select: { id: true, fullName: true, email: true, role: true, isActive: true, deletedAt: true },
+    });
+    if (!user || !user.isActive || user.deletedAt) throw unauthorized('Cuenta no disponible.');
+    return publicUser(user);
+  },
+
   async login({ email, password }: { email: string; password: string }, ctx: RequestContext) {
     const user = await prisma.user.findUnique({ where: { email } });
 

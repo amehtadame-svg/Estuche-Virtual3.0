@@ -1,9 +1,6 @@
 /* Devoluciones.css */
 
-/* ═══════════════════════════════════════════════════════
-   DEVOLUCIONES
-═══════════════════════════════════════════════════════ */
-
+/* DEVOLUCIONES */
 .devoluciones-page {
   padding: 0 30px 50px;
 }
@@ -35,7 +32,7 @@
   margin-bottom: 20px;
 }
 
-/* ── Filtros ─────────────────────────────────────────── */
+/* Filtros */
 .devoluciones-filtros {
   display: flex;
   gap: 8px;
@@ -70,21 +67,25 @@
   color: #fff;
 }
 
-/* ── Tabla ───────────────────────────────────────────── */
+/* Tabla */
 .tabla-devoluciones {
   width: 100%;
   border-collapse: collapse;
   font-size: 14px;
 }
 
-.tabla-devoluciones thead tr { border-bottom: 2px solid var(--border); }
+.tabla-devoluciones thead tr {
+  border-bottom: 2px solid var(--border);
+}
 
 .tabla-devoluciones tbody tr {
   border-bottom: 1px solid var(--border);
   transition: background 0.15s;
 }
 
-.tabla-devoluciones tbody tr:hover { background: var(--bg-subtle); }
+.tabla-devoluciones tbody tr:hover {
+  background: var(--bg-subtle);
+}
 
 .tabla-devoluciones th {
   padding: 10px;
@@ -94,7 +95,10 @@
   white-space: nowrap;
 }
 
-.tabla-devoluciones td { padding: 10px; color: var(--text); }
+.tabla-devoluciones td {
+  padding: 10px;
+  color: var(--text);
+}
 
 .id-devolucion {
   font-weight: 700;
@@ -131,7 +135,7 @@
   color: var(--text-h);
 }
 
-/* ── Badges ──────────────────────────────────────────── */
+/* Badges */
 .badge-estado-dev {
   display: inline-block;
   padding: 3px 10px;
@@ -150,12 +154,27 @@
   font-weight: 500;
 }
 
-.badge-producto-bueno      { background: #d1fae5; color: #065f46; }
-.badge-producto-dañado     { background: #fee2e2; color: #991b1b; }
-.badge-producto-modificado { background: #fef3c7; color: #92400e; }
-.badge-producto-incompleto { background: #e0e7ff; color: #3730a3; }
+.badge-producto-bueno {
+  background: #d1fae5;
+  color: #065f46;
+}
 
-/* ── Botón resolver ──────────────────────────────────── */
+.badge-producto-dañado {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.badge-producto-modificado {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.badge-producto-incompleto {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+
+/* Botón resolver */
 .btn-resolver-dev {
   padding: 6px 14px;
   border-radius: var(--radius-sm);
@@ -168,14 +187,16 @@
   white-space: nowrap;
 }
 
-.btn-resolver-dev:hover { opacity: 0.8; }
+.btn-resolver-dev:hover {
+  opacity: 0.8;
+}
 
 .btn-resolver-dev:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
 
-/* ── Modal ───────────────────────────────────────────── */
+/* Modal */
 .modal-overlay-dev {
   position: fixed;
   inset: 0;
@@ -191,7 +212,7 @@
 
 @keyframes fadeInDev {
   from { opacity: 0; }
-  to   { opacity: 1; }
+  to { opacity: 1; }
 }
 
 .modal-devoluciones {
@@ -206,7 +227,7 @@
 
 @keyframes slideUpDev {
   from { opacity: 0; transform: translateY(16px); }
-  to   { opacity: 1; transform: translateY(0); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .modal-header-dev {
@@ -256,8 +277,13 @@
   color: var(--text);
 }
 
-.dev-info-card p { margin: 0; }
-.dev-info-card strong { color: var(--text-h); }
+.dev-info-card p {
+  margin: 0;
+}
+
+.dev-info-card strong {
+  color: var(--text-h);
+}
 
 .label-dev {
   display: block;
@@ -313,21 +339,62 @@
 }
 
 .btn-guardar-dev:hover,
-.btn-cancelar-dev:hover { opacity: 0.85; }
-
-/* ═══════════════════════════════════════════════════════
-   RESPONSIVE
-═══════════════════════════════════════════════════════ */
-
-@media (max-width: 900px) {
-  .devoluciones-topbar { flex-direction: column; align-items: flex-start; }
-  .motivo-dev { max-width: 120px; }
+.btn-cancelar-dev:hover {
+  opacity: 0.85;
 }
 
-@media (max-width: 600px) {
-  .devoluciones-page { padding: 0 16px 40px; }
+/* En pantallas medianas */
+@media (max-width: 900px) {
+  .devoluciones-topbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 
-  .tabla-devoluciones thead { display: none; }
+  .motivo-dev {
+    max-width: 120px;
+  }
+}
+
+/* En escritorio: diez columnas iguales, datos alineados bajo sus títulos */
+@media (min-width: 601px) {
+  .devoluciones-page .tabla-devoluciones {
+    width: 100%;
+    table-layout: fixed;
+  }
+
+  .devoluciones-page .tabla-devoluciones thead th {
+    width: 10%;
+  }
+
+  .devoluciones-page .tabla-devoluciones thead th,
+  .devoluciones-page .tabla-devoluciones tbody td {
+    box-sizing: border-box;
+    padding: 10px 6px;
+    text-align: center;
+    overflow-wrap: anywhere;
+  }
+
+  .devoluciones-page .tabla-devoluciones td .cliente-dev-email {
+    overflow-wrap: anywhere;
+  }
+
+  .devoluciones-page .tabla-devoluciones td.motivo-dev {
+    max-width: none;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+}
+
+/* En móvil */
+@media (max-width: 600px) {
+  .devoluciones-page {
+    padding: 0 16px 40px;
+  }
+
+  .tabla-devoluciones thead {
+    display: none;
+  }
 
   .tabla-devoluciones tbody tr {
     display: flex;
@@ -337,10 +404,24 @@
     border-bottom: 1px solid var(--border);
   }
 
-  .tabla-devoluciones td { padding: 2px 0; }
-  .tabla-devoluciones td:last-child { padding-top: 8px; }
+  .tabla-devoluciones td {
+    padding: 2px 0;
+  }
 
-  .devoluciones-filtros { width: 100%; }
-  .btn-filtro-dev { flex: 1; text-align: center; }
-  .motivo-dev { max-width: 100%; }
+  .tabla-devoluciones td:last-child {
+    padding-top: 8px;
+  }
+
+  .devoluciones-filtros {
+    width: 100%;
+  }
+
+  .btn-filtro-dev {
+    flex: 1;
+    text-align: center;
+  }
+
+  .motivo-dev {
+    max-width: 100%;
+  }
 }

@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import Modal from '../../../components/ui/Modal';
 import { API, authHeaders } from '../../../api/api';
+import { runDeleteAction } from '../../../lib/deleteAction';
+import { runApiAction } from '../../../lib/apiAction';
+import { notify } from '../../../lib/notifications';
 import './SuperAdminUsers.css';
 
 interface User {
@@ -28,18 +31,13 @@ export default function SuperAdminUsers() {
   const [users, setUsers] = useState<User[]>([]);
   const [roleFilter, setRoleFilter] = useState('todos');
   const [search, setSearch] = useState('');
-  const [message, setMessage] = useState('');
   const [modalNew, setModalNew] = useState(false);
+  const [createError, setCreateError] = useState('');
+  const [creating, setCreating] = useState(false);
   const [modalEdit, setModalEdit] = useState(false);
-  const [modalDelete, setModalDelete] = useState<User | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
   const headers = authHeaders();
-
-  const showMessage = (text: string) => {
-    setMessage(text);
-    setTimeout(() => setMessage(''), 2500);
-  };
 
   const load = async () => {
     const res = await fetch(API.users, { headers });
@@ -53,6 +51,7 @@ export default function SuperAdminUsers() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+    if (modalNew) setCreateError('');
   };
 
   const handleCreate = async () => {
@@ -65,7 +64,16 @@ export default function SuperAdminUsers() {
       showMessage('Usuario creado.');
       setModalNew(false);
       setForm(emptyForm);
-      load();
+      await load();
+      notify.success('El usuario se creó correctamente.', 'Usuario creado');
+    } catch (error) {
+      const errorMessage = error instanceof Error
+        ? error.message
+        : 'No se pudo crear el usuario.';
+      setCreateError(errorMessage);
+      notify.error(errorMessage);
+    } finally {
+      setCreating(false);
     }
   };
 
@@ -77,18 +85,17 @@ export default function SuperAdminUsers() {
 
   const handleEdit = async () => {
     if (!editingId) return;
-    const res = await fetch(`${API.users}/${editingId}`, {
-      method: 'PUT',
-      headers,
-      body: JSON.stringify({ fullName: form.fullName, email: form.email, role: form.role }),
+    const response = await runApiAction({
+      url: `${API.users}/${editingId}`,
+      init: { method: 'PUT', headers, body: JSON.stringify({ fullName: form.fullName, email: form.email, role: form.role }) },
+      successMessage: 'Usuario actualizado exitosamente.',
+      errorMessage: 'No se pudo actualizar el usuario.',
     });
-    if (res.ok) {
-      showMessage('Usuario actualizado.');
-      setModalEdit(false);
-      setEditingId(null);
-      setForm(emptyForm);
-      load();
-    }
+    if (!response) return;
+    setModalEdit(false);
+    setEditingId(null);
+    setForm(emptyForm);
+    await load();
   };
 
   // HU-018 · "Desactivar" ya no borra: solo inactiva la cuenta y conserva el historial.
@@ -111,15 +118,14 @@ export default function SuperAdminUsers() {
   };
 
   const handleRole = async (id: string, role: string) => {
-    const res = await fetch(`${API.users}/${id}/role`, {
-      method: 'PATCH',
-      headers,
-      body: JSON.stringify({ role }),
+    const response = await runApiAction({
+      url: `${API.users}/${id}/role`,
+      init: { method: 'PATCH', headers, body: JSON.stringify({ role }) },
+      successMessage: 'Rol actualizado exitosamente.',
+      errorMessage: 'No se pudo actualizar el rol.',
     });
-    if (res.ok) {
-      showMessage('Rol actualizado.');
-      load();
-    }
+    if (!response) return;
+    await load();
   };
 
   const filteredUsers = users
@@ -134,12 +140,17 @@ export default function SuperAdminUsers() {
     <div className="usuariossa-page">
       <div className="usuariossa-topbar">
         <h2 className="titulo-usuariossa">Gestión de Usuarios</h2>
-        <button className="btn-nuevo-usuariossa" onClick={() => setModalNew(true)}>
+        <button
+          className="btn-nuevo-usuariossa"
+          onClick={() => {
+            setForm(emptyForm);
+            setCreateError('');
+            setModalNew(true);
+          }}
+        >
           + Nuevo usuario
         </button>
       </div>
-
-      {message && <div className="mensaje-usuariossa">{message}</div>}
 
       {/* Filtros */}
       <div className="usuariossa-controles">
@@ -231,6 +242,7 @@ export default function SuperAdminUsers() {
           onClose={() => {
             setModalNew(false);
             setForm(emptyForm);
+            setCreateError('');
           }}
           footer={
             <>
@@ -239,12 +251,18 @@ export default function SuperAdminUsers() {
                 onClick={() => {
                   setModalNew(false);
                   setForm(emptyForm);
+                  setCreateError('');
                 }}
               >
                 Cancelar
               </button>
-              <button className="btn-guardar-sa" onClick={handleCreate}>
-                Crear usuario
+              <button
+                type="button"
+                className="btn-guardar-sa"
+                onClick={handleCreate}
+                disabled={creating}
+              >
+                {creating ? 'Creando usuario...' : 'Crear usuario'}
               </button>
             </>
           }
@@ -269,6 +287,7 @@ export default function SuperAdminUsers() {
               </option>
             ))}
           </select>
+          {createError && <p className="error-crear-usuariossa">⚠️ {createError}</p>}
         </Modal>
       )}
 

@@ -2,7 +2,7 @@
    USUARIOS
 ═══════════════════════════════════════════════════════ */
 
-/* ── Página ──────────────────────────────────────────── */
+/* Página */
 .usuarios-page {
   padding: 0 30px 50px;
 }
@@ -16,7 +16,7 @@
   padding-top: 10px;
 }
 
-/* ── Encabezado ──────────────────────────────────────── */
+/* Encabezado */
 .titulo-usuarios {
   font-size: 28px;
   font-weight: 700;
@@ -30,7 +30,7 @@
   margin: 0;
 }
 
-/* ── Botón nuevo ─────────────────────────────────────── */
+/* Botón nuevo */
 .usr-btn-nuevo {
   flex-shrink: 0;
   background: var(--gradient-accent);
@@ -49,7 +49,7 @@
   opacity: 0.88;
 }
 
-/* ── Tabla ───────────────────────────────────────────── */
+/* Tabla */
 .usuarios-loading {
   color: var(--text);
   font-size: 15px;
@@ -93,7 +93,7 @@
   color: var(--text);
 }
 
-/* ── Badge rol ───────────────────────────────────────── */
+/* Badge de rol */
 .rol-badge {
   display: inline-block;
   padding: 3px 10px;
@@ -112,7 +112,7 @@
   color: #d97706;
 }
 
-/* ── Acciones tabla ──────────────────────────────────── */
+/* Acciones de la tabla */
 .usr-acciones {
   display: flex;
   gap: 8px;
@@ -145,7 +145,7 @@
   opacity: 0.8;
 }
 
-/* ── Modal overlay ───────────────────────────────────── */
+/* Modal overlay */
 .usr-overlay {
   position: fixed;
   inset: 0;
@@ -161,10 +161,10 @@
 
 @keyframes fadeInUsr {
   from { opacity: 0; }
-  to   { opacity: 1; }
+  to { opacity: 1; }
 }
 
-/* ── Modal box ───────────────────────────────────────── */
+/* Modal */
 .usr-modal {
   background: var(--bg);
   border: 1px solid var(--border);
@@ -180,7 +180,7 @@
 
 @keyframes slideUpUsr {
   from { opacity: 0; transform: translateY(16px); }
-  to   { opacity: 1; transform: translateY(0); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .usr-modal-header {
@@ -304,10 +304,7 @@
   margin: 0;
 }
 
-/* ═══════════════════════════════════════════════════════
-   RESPONSIVE
-═══════════════════════════════════════════════════════ */
-
+/* Responsive */
 @media (max-width: 600px) {
   .usuarios-page {
     padding: 0 16px 40px;

@@ -181,13 +181,20 @@
 }
 
 .btn-eliminar-usuariossa {
-  background: #fff0f0;
-  color: #e74c3c;
-  border: 1px solid #e74c3c;
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--accent-border);
 }
 
-.btn-editar-usuariossa:hover,
-.btn-eliminar-usuariossa:hover { opacity: 0.8; }
+.btn-editar-usuariossa:hover {
+  opacity: 0.8;
+}
+
+.btn-eliminar-usuariossa:hover {
+  border-color: #e74c3c;
+  color: #e74c3c;
+  background: rgba(231, 76, 60, 0.06);
+}
 
 /* ── Botones modal ───────────────────────────────────── */
 .btn-guardar-sa {
@@ -205,30 +212,20 @@
 .btn-guardar-sa:hover,
 .btn-cancelar-sa:hover { opacity: 0.85; }
 
-.btn-eliminar-confirm-sa {
-  background: #e74c3c;
-  color: #fff;
-  border: none;
+.btn-guardar-sa:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
-.btn-eliminar-confirm-sa:hover { opacity: 0.85; }
-
-/* ── Eliminar warning ────────────────────────────────── */
-.eliminar-warning {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.eliminar-warning p {
-  margin: 0;
-  font-size: 14px;
-  color: var(--text-h);
-}
-
-.eliminar-warning-sub {
-  font-size: 13px;
+.error-crear-usuariossa {
+  margin: 0 0 12px;
+  padding: 9px 11px;
+  border: 1px solid rgba(231, 76, 60, 0.35);
+  border-radius: var(--radius-sm);
+  background: rgba(231, 76, 60, 0.08);
   color: #e74c3c;
+  font-size: 13px;
+  line-height: 1.4;
 }
 
 /* ═══════════════════════════════════════════════════════

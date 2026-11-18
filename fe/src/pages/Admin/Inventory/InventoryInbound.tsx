@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { API, authHeaders } from '../../../api/api';
+import { notify } from '../../../lib/notifications';
 import './InventoryInbound.css';
 
 interface ProductItem {
@@ -59,7 +60,6 @@ export default function InventoryInbound() {
   const [reason, setReason] = useState('');
 
   const [error, setError] = useState('');
-  const [successMsg, setSuccessMsg] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   const loadData = async () => {
@@ -112,7 +112,6 @@ export default function InventoryInbound() {
     setSelectedProductId(prod.id);
     setUnitCost(prod.cost && Number(prod.cost) > 0 ? String(prod.cost) : '');
     setError('');
-    setSuccessMsg('');
   };
 
   const parsedQty = Number(quantity);
@@ -130,7 +129,6 @@ export default function InventoryInbound() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSuccessMsg('');
 
     if (!selectedProduct) {
       setError('Selecciona primero un producto del catálogo para registrar el ingreso.');
@@ -166,8 +164,9 @@ export default function InventoryInbound() {
       }
 
       const data = await res.json();
-      setSuccessMsg(
-        `Ingreso confirmado: "${selectedProduct.name}" pasó de ${data.previousStock} a ${data.newStock} unidades (+${parsedQty}).`
+      notify.success(
+        `Ingreso confirmado: "${selectedProduct.name}" pasó de ${data.previousStock} a ${data.newStock} unidades (+${parsedQty}).`,
+        'Ingreso exitoso',
       );
       setQuantity('');
       setInvoiceNumber('');
@@ -195,12 +194,6 @@ export default function InventoryInbound() {
           </p>
         </div>
       </div>
-
-      {successMsg && (
-        <div className="inbound-alert-success" role="status">
-          ✅ {successMsg}
-        </div>
-      )}
 
       {error && (
         <div className="inbound-alert-error" role="alert">

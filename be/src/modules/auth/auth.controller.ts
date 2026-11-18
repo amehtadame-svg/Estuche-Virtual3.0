@@ -31,6 +31,7 @@ export const resetPassword = asyncHandler(async (req: Request, res: Response) =>
   return res.json(result);
 });
 
-export const getMe = (req: Request, res: Response) => {
-  return res.json((req as any).user);
-};
+export const getMe = asyncHandler(async (req: Request, res: Response) => {
+  const user = await authService.currentUser((req as any).user.id);
+  return res.json(user);
+});

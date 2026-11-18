@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { API, authHeaders } from '../../../api/api';
+import { runApiAction } from '../../../lib/apiAction';
+import { notify } from '../../../lib/notifications';
 import './PromotionalCode.css';
 
 interface PromotionalCode {
@@ -11,7 +13,6 @@ interface PromotionalCode {
   minPurchase: number;
   startDate: string;
   endDate: string;
-  maxUses: number | null;
   currentUses: number;
   active: boolean;
 }
@@ -24,7 +25,6 @@ const emptyForm = {
   minPurchase: '',
   startDate: '',
   endDate: '',
-  maxUses: '',
 };
 
 export default function PromotionalCode() {
@@ -32,17 +32,15 @@ export default function PromotionalCode() {
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const [message, setMessage] = useState('');
   const headers = authHeaders();
 
-  const showMessage = (text: string) => {
-    setMessage(text);
-    setTimeout(() => setMessage(''), 2500);
-  };
-
   const load = async () => {
-    const res = await fetch(API.promotionalCodes, { headers });
-    if (res.ok) setCodes(await res.json());
+    const response = await fetch(API.promotionalCodes, { headers });
+    if (response.ok) {
+      setCodes(await response.json());
+    } else {
+      notify.error('No se pudieron cargar los descuentos.');
+    }
   };
 
   useEffect(() => {
@@ -62,68 +60,90 @@ export default function PromotionalCode() {
     setModalOpen(true);
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (
+    event: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >,
+  ) => {
+    setForm({ ...form, [event.target.name]: event.target.value });
   };
 
   const handleSave = async () => {
-    if (!form.code || !form.type || !form.value || !form.startDate || !form.endDate) {
-      showMessage('Completa los campos obligatorios.');
+    if (
+      !form.code.trim() ||
+      !form.type ||
+      !form.value ||
+      !form.startDate ||
+      !form.endDate
+    ) {
+      notify.error('Completa los campos obligatorios del descuento.');
       return;
     }
 
     const body = {
-      code: form.code,
-      description: form.description,
+      code: form.code.trim(),
+      description: form.description.trim(),
       type: form.type,
       value: Number(form.value),
       minPurchase: Number(form.minPurchase) || 0,
       startDate: form.startDate,
       endDate: form.endDate,
-      maxUses: form.maxUses ? Number(form.maxUses) : null,
     };
 
-    const url = editingId ? `${API.promotionalCodes}/${editingId}` : API.promotionalCodes;
-    const method = editingId ? 'PUT' : 'POST';
+    const editing = editingId !== null;
+    const response = await runApiAction({
+      url: editing
+        ? `${API.promotionalCodes}/${editingId}`
+        : API.promotionalCodes,
+      init: {
+        method: editing ? 'PUT' : 'POST',
+        headers,
+        body: JSON.stringify(body),
+      },
+      successMessage: editing
+        ? 'Descuento actualizado exitosamente.'
+        : 'Descuento creado exitosamente.',
+      errorMessage: 'No se pudo guardar el descuento.',
+    });
 
-    const res = await fetch(url, { method, headers, body: JSON.stringify(body) });
-    if (res.ok) {
-      showMessage(editingId ? 'Descuento actualizado.' : 'Descuento creado.');
-      closeModal();
-      load();
-    }
+    if (!response) return;
+
+    closeModal();
+    await load();
   };
 
-  const handleEdit = (d: PromotionalCode) => {
+  const handleEdit = (discount: PromotionalCode) => {
     setForm({
-      code: d.code,
-      description: d.description ?? '',
-      type: d.type,
-      value: String(d.value),
-      minPurchase: String(d.minPurchase),
-      startDate: d.startDate.slice(0, 10),
-      endDate: d.endDate.slice(0, 10),
-      maxUses: d.maxUses ? String(d.maxUses) : '',
+      code: discount.code,
+      description: discount.description ?? '',
+      type: discount.type,
+      value: String(discount.value),
+      minPurchase: String(discount.minPurchase ?? 0),
+      startDate: discount.startDate.slice(0, 10),
+      endDate: discount.endDate.slice(0, 10),
     });
-    setEditingId(d.id);
+    setEditingId(discount.id);
     setModalOpen(true);
   };
 
-  const handleToggle = async (id: string) => {
-    const res = await fetch(`${API.promotionalCodes}/${id}/toggle`, { method: 'PATCH', headers });
-    if (res.ok) {
-      showMessage('Estado actualizado.');
-      load();
-    }
-  };
+  const handleToggle = async (discount: PromotionalCode) => {
+    const nextActive = !discount.active;
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('¿Eliminar este descuento?')) return;
-    const res = await fetch(`${API.promotionalCodes}/${id}`, { method: 'DELETE', headers });
-    if (res.ok) {
-      showMessage('Descuento eliminado.');
-      load();
-    }
+    const response = await runApiAction({
+      url: `${API.promotionalCodes}/${discount.id}/toggle`,
+      init: {
+        method: 'PATCH',
+        headers,
+      },
+      successMessage: nextActive
+        ? `Descuento "${discount.code}" activado exitosamente.`
+        : `Descuento "${discount.code}" desactivado exitosamente.`,
+      errorMessage: 'No se pudo actualizar el estado del descuento.',
+    });
+
+    if (!response) return;
+
+    await load();
   };
 
   return (
@@ -131,12 +151,14 @@ export default function PromotionalCode() {
       <div className="descuentos-page">
         <div className="descuentos-topbar">
           <h2 className="titulo-descuentos">Gestión de Descuentos</h2>
-          <button className="btn-nuevo-descuento" onClick={openNewModal}>
+
+          <button
+            className="btn-nuevo-descuento"
+            onClick={openNewModal}
+          >
             + Nuevo descuento
           </button>
         </div>
-
-        {message && <div className="mensaje-descuentos">{message}</div>}
 
         <div className="table-wrapper">
           <table className="tabla-descuentos">
@@ -152,34 +174,51 @@ export default function PromotionalCode() {
                 <th>Acciones</th>
               </tr>
             </thead>
+
             <tbody>
-              {codes.map((d) => (
-                <tr key={d.id}>
-                  <td className="codigo-descuento">{d.code}</td>
-                  <td>{d.type === 'percentage' ? 'Porcentaje' : 'Valor fijo'}</td>
-                  <td>{d.type === 'percentage' ? `${d.value}%` : `$${Number(d.value).toLocaleString()}`}</td>
-                  <td>${Number(d.minPurchase).toLocaleString()}</td>
+              {codes.map((discount) => (
+                <tr key={discount.id}>
+                  <td className="codigo-descuento">{discount.code}</td>
+                  <td>
+                    {discount.type === 'percentage'
+                      ? 'Porcentaje'
+                      : 'Valor fijo'}
+                  </td>
+                  <td>
+                    {discount.type === 'percentage'
+                      ? `${discount.value}%`
+                      : `$${Number(discount.value).toLocaleString()}`}
+                  </td>
+                  <td>
+                    ${Number(discount.minPurchase).toLocaleString()}
+                  </td>
                   <td className="vigencia-descuento">
-                    {d.startDate.slice(0, 10)} → {d.endDate.slice(0, 10)}
+                    {discount.startDate.slice(0, 10)} →{' '}
+                    {discount.endDate.slice(0, 10)}
                   </td>
+                  <td>{discount.currentUses}</td>
                   <td>
-                    {d.currentUses}
-                    {d.maxUses ? ` / ${d.maxUses}` : ''}
-                  </td>
-                  <td>
-                    <span className={`badge-estado ${d.active ? 'badge-activo' : 'badge-inactivo'}`}>
-                      {d.active ? 'Activo' : 'Inactivo'}
+                    <span
+                      className={`badge-estado ${
+                        discount.active ? 'badge-activo' : 'badge-inactivo'
+                      }`}
+                    >
+                      {discount.active ? 'Activo' : 'Inactivo'}
                     </span>
                   </td>
                   <td className="acciones-descuento">
-                    <button className="btn-toggle-descuento" onClick={() => handleToggle(d.id)}>
-                      {d.active ? 'Desactivar' : 'Activar'}
+                    <button
+                      className="btn-toggle-descuento"
+                      onClick={() => handleToggle(discount)}
+                    >
+                      {discount.active ? 'Desactivar' : 'Activar'}
                     </button>
-                    <button className="btn-editar-descuento" onClick={() => handleEdit(d)}>
+
+                    <button
+                      className="btn-editar-descuento"
+                      onClick={() => handleEdit(discount)}
+                    >
                       Editar
-                    </button>
-                    <button className="btn-eliminar-descuento" onClick={() => handleDelete(d.id)}>
-                      Eliminar
                     </button>
                   </td>
                 </tr>
@@ -188,13 +227,25 @@ export default function PromotionalCode() {
           </table>
         </div>
 
-        {/* Modal */}
         {modalOpen && (
-          <div className="modal-overlay-descuento" onClick={closeModal}>
-            <div className="modal-descuentos" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="modal-overlay-descuento"
+            onClick={closeModal}
+          >
+            <div
+              className="modal-descuentos"
+              onClick={(event) => event.stopPropagation()}
+            >
               <div className="modal-header-descuento">
-                <h3 className="modal-titulo-descuento">{editingId ? 'Editar descuento' : 'Nuevo descuento'}</h3>
-                <button className="modal-cerrar-descuento" onClick={closeModal}>
+                <h3 className="modal-titulo-descuento">
+                  {editingId ? 'Editar descuento' : 'Nuevo descuento'}
+                </h3>
+
+                <button
+                  className="modal-cerrar-descuento"
+                  onClick={closeModal}
+                  aria-label="Cerrar"
+                >
                   ✕
                 </button>
               </div>
@@ -203,15 +254,32 @@ export default function PromotionalCode() {
                 <p className="label-descuento">
                   Código <span className="required">*</span>
                 </p>
-                <input className="input-descuento" name="code" value={form.code} onChange={handleChange} placeholder="Ej: REGRESO10" />
+                <input
+                  className="input-descuento"
+                  name="code"
+                  value={form.code}
+                  onChange={handleChange}
+                  placeholder="Ej: REGRESO10"
+                />
 
                 <p className="label-descuento">Descripción</p>
-                <input className="input-descuento" name="description" value={form.description} onChange={handleChange} placeholder="Descripción opcional" />
+                <input
+                  className="input-descuento"
+                  name="description"
+                  value={form.description}
+                  onChange={handleChange}
+                  placeholder="Descripción opcional"
+                />
 
                 <p className="label-descuento">
                   Tipo <span className="required">*</span>
                 </p>
-                <select className="input-descuento" name="type" value={form.type} onChange={handleChange}>
+                <select
+                  className="input-descuento"
+                  name="type"
+                  value={form.type}
+                  onChange={handleChange}
+                >
                   <option value="percentage">Porcentaje</option>
                   <option value="fixed">Valor fijo</option>
                 </select>
@@ -223,33 +291,60 @@ export default function PromotionalCode() {
                   className="input-descuento"
                   name="value"
                   type="number"
+                  min="0"
                   value={form.value}
                   onChange={handleChange}
-                  placeholder={form.type === 'percentage' ? 'Ej: 10' : 'Ej: 5000'}
+                  placeholder={
+                    form.type === 'percentage' ? 'Ej: 10' : 'Ej: 5000'
+                  }
                 />
 
                 <p className="label-descuento">Compra mínima</p>
-                <input className="input-descuento" name="minPurchase" type="number" value={form.minPurchase} onChange={handleChange} placeholder="0" />
+                <input
+                  className="input-descuento"
+                  name="minPurchase"
+                  type="number"
+                  min="0"
+                  value={form.minPurchase}
+                  onChange={handleChange}
+                  placeholder="0"
+                />
 
                 <p className="label-descuento">
                   Fecha inicio <span className="required">*</span>
                 </p>
-                <input className="input-descuento" name="startDate" type="date" value={form.startDate} onChange={handleChange} />
+                <input
+                  className="input-descuento"
+                  name="startDate"
+                  type="date"
+                  value={form.startDate}
+                  onChange={handleChange}
+                />
 
                 <p className="label-descuento">
                   Fecha fin <span className="required">*</span>
                 </p>
-                <input className="input-descuento" name="endDate" type="date" value={form.endDate} onChange={handleChange} />
-
-                <p className="label-descuento">Usos máximos</p>
-                <input className="input-descuento" name="maxUses" type="number" value={form.maxUses} onChange={handleChange} placeholder="Sin límite" />
+                <input
+                  className="input-descuento"
+                  name="endDate"
+                  type="date"
+                  value={form.endDate}
+                  onChange={handleChange}
+                />
               </div>
 
               <div className="modal-footer-descuento">
-                <button className="btn-cancelar-descuento" onClick={closeModal}>
+                <button
+                  className="btn-cancelar-descuento"
+                  onClick={closeModal}
+                >
                   Cancelar
                 </button>
-                <button className="btn-guardar-descuento" onClick={handleSave}>
+
+                <button
+                  className="btn-guardar-descuento"
+                  onClick={handleSave}
+                >
                   {editingId ? 'Guardar cambios' : 'Crear descuento'}
                 </button>
               </div>
