@@ -261,3 +261,27 @@
   .filtros-rol { width: 100%; }
   .btn-filtro-rol { flex: 1; text-align: center; }
 }
+
+/* HU-018 · estado de la cuenta */
+.badge-estado {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.badge-estado-activo {
+  background: rgba(39, 174, 96, 0.15);
+  color: #27ae60;
+}
+
+.badge-estado-inactivo {
+  background: rgba(107, 114, 128, 0.18);
+  color: #6b7280;
+}
+
+.fila-inactiva {
+  opacity: 0.65;
+}

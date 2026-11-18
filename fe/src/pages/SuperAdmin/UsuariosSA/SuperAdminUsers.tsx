@@ -9,6 +9,7 @@ interface User {
   email: string;
   phone: string | null;
   role: string;
+  isActive: boolean;
 }
 
 const roles = ['superadmin', 'admin', 'employee', 'delivery', 'client'];
@@ -55,14 +56,10 @@ export default function SuperAdminUsers() {
   };
 
   const handleCreate = async () => {
-    if (!form.fullName || !form.email || !form.password) {
-      showMessage('Nombre, email y contraseña son obligatorios.');
-      return;
-    }
     const res = await fetch(API.users, {
       method: 'POST',
       headers,
-      body: JSON.stringify({ fullName: form.fullName, email: form.email, password: form.password, role: form.role }),
+      body: JSON.stringify(form),
     });
     if (res.ok) {
       showMessage('Usuario creado.');
@@ -94,14 +91,23 @@ export default function SuperAdminUsers() {
     }
   };
 
-  const handleDelete = async () => {
-    if (!modalDelete) return;
-    const res = await fetch(`${API.users}/${modalDelete.id}`, { method: 'DELETE', headers });
+  // HU-018 · "Desactivar" ya no borra: solo inactiva la cuenta y conserva el historial.
+  const handleToggleActive = async (id: string, isActive: boolean) => {
+    const res = await fetch(`${API.users}/${id}/status`, {
+      method: 'PATCH',
+      headers,
+      body: JSON.stringify({ isActive }),
+    });
+
     if (res.ok) {
-      showMessage('Usuario eliminado.');
+      showMessage(isActive ? 'Cuenta reactivada.' : 'Cuenta desactivada. Su historial se conserva.');
       setModalDelete(null);
       load();
+      return;
     }
+
+    const data = await res.json().catch(() => null);
+    showMessage(data?.message || 'No se pudo actualizar la cuenta.');
   };
 
   const handleRole = async (id: string, role: string) => {
@@ -164,13 +170,14 @@ export default function SuperAdminUsers() {
               <th>Nombre</th>
               <th>Email</th>
               <th>Rol</th>
+              <th>Estado</th>
               <th>Cambiar rol</th>
               <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
             {filteredUsers.map((u) => (
-              <tr key={u.id}>
+              <tr key={u.id} className={u.isActive ? undefined : 'fila-inactiva'}>
                 <td className="id-usuariossa">#{u.id.slice(0, 6).toUpperCase()}</td>
                 <td className="nombre-usuariossa">{u.fullName}</td>
                 <td className="email-usuariossa">{u.email}</td>
@@ -180,7 +187,16 @@ export default function SuperAdminUsers() {
                   </span>
                 </td>
                 <td>
-                  <select className="select-rol-usuariossa" value={u.role} onChange={(e) => handleRole(u.id, e.target.value)}>
+                  <span className={`badge-estado ${u.isActive ? 'badge-estado-activo' : 'badge-estado-inactivo'}`}>
+                    {u.isActive ? '● Activa' : '○ Inactiva'}
+                  </span>
+                </td>
+                <td>
+                  <select
+                    className="select-rol-usuariossa"
+                    value={u.role}
+                    onChange={(e) => handleRole(u.id, e.target.value)}
+                  >
                     {roles.map((r) => (
                       <option key={r} value={r}>
                         {r}
@@ -192,9 +208,15 @@ export default function SuperAdminUsers() {
                   <button className="btn-editar-usuariossa" onClick={() => openEdit(u)}>
                     Editar
                   </button>
-                  <button className="btn-eliminar-usuariossa" onClick={() => setModalDelete(u)}>
-                    Eliminar
-                  </button>
+                  {u.isActive ? (
+                    <button className="btn-eliminar-usuariossa" onClick={() => setModalDelete(u)}>
+                      Desactivar
+                    </button>
+                  ) : (
+                    <button className="btn-editar-usuariossa" onClick={() => handleToggleActive(u.id, true)}>
+                      Reactivar
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}
@@ -292,27 +314,33 @@ export default function SuperAdminUsers() {
         </Modal>
       )}
 
-      {/* Modal Eliminar */}
+      {/* Modal Desactivar */}
       {modalDelete && (
         <Modal
-          titulo="Eliminar usuario"
+          titulo="Desactivar cuenta"
           onClose={() => setModalDelete(null)}
           footer={
             <>
               <button className="btn-cancelar-sa" onClick={() => setModalDelete(null)}>
                 Cancelar
               </button>
-              <button className="btn-eliminar-confirm-sa" onClick={handleDelete}>
-                Sí, eliminar
+              <button
+                className="btn-eliminar-confirm-sa"
+                onClick={() => handleToggleActive(modalDelete.id, false)}
+              >
+                Sí, desactivar
               </button>
             </>
           }
         >
           <div className="eliminar-warning">
             <p>
-              ¿Estás seguro de que deseas eliminar a <strong>{modalDelete.fullName}</strong>?
+              ¿Desactivar la cuenta de <strong>{modalDelete.fullName}</strong>?
             </p>
-            <p className="eliminar-warning-sub">Esta acción eliminará también sus pedidos, envíos y recibos asociados.</p>
+            <p className="eliminar-warning-sub">
+              El usuario no podrá iniciar sesión, pero <strong>no se borra nada</strong>: sus pedidos, recibos,
+              envíos y movimientos se conservan intactos. Puedes reactivarla cuando quieras.
+            </p>
           </div>
         </Modal>
       )}

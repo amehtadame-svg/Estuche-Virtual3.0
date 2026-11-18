@@ -39,7 +39,14 @@ export const previewDeleteUser = asyncHandler(async (req: Request, res: Response
   return res.json(summary);
 });
 
+// HU-018 · Activar o desactivar una cuenta (no borra nada del historial).
+export const setUserActive = asyncHandler(async (req: Request, res: Response) => {
+  const user = await userService.setActive(req.params.id, req.body.isActive, requesterFrom(req));
+  return res.json(user);
+});
+
+// Se conserva DELETE por compatibilidad: ahora desactiva en lugar de borrar.
 export const deleteUser = asyncHandler(async (req: Request, res: Response) => {
-  await userService.remove(req.params.id, requesterFrom(req));
-  return res.status(204).send();
+  const user = await userService.remove(req.params.id, requesterFrom(req));
+  return res.json(user);
 });
