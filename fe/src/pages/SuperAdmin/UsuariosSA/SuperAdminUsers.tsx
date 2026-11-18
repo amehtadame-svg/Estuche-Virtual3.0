@@ -12,6 +12,7 @@ interface User {
   email: string;
   phone: string | null;
   role: string;
+  isActive: boolean;
 }
 
 const roles = ['superadmin', 'admin', 'employee', 'delivery', 'client'];
@@ -54,52 +55,13 @@ export default function SuperAdminUsers() {
   };
 
   const handleCreate = async () => {
-    setCreateError('');
-
-    const fullName = form.fullName.trim();
-    const email = form.email.trim();
-    const password = form.password;
-
-    if (!fullName || !email || !password) {
-      const errorMessage = 'Nombre, correo y contraseña son obligatorios.';
-      setCreateError(errorMessage);
-      notify.error(errorMessage);
-      return;
-    }
-
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      const errorMessage = 'Escribe un correo electrónico válido.';
-      setCreateError(errorMessage);
-      notify.error(errorMessage);
-      return;
-    }
-
-    if (password.length < 6) {
-      const errorMessage = 'La contraseña debe tener al menos 6 caracteres.';
-      setCreateError(errorMessage);
-      notify.error(errorMessage);
-      return;
-    }
-
-    setCreating(true);
-    try {
-      const response = await fetch(API.users, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          fullName,
-          email,
-          password,
-          phone: form.phone.trim() || undefined,
-          role: form.role,
-        }),
-      });
-      const data = await response.json().catch(() => null);
-
-      if (!response.ok) {
-        throw new Error(data?.message || 'No se pudo crear el usuario.');
-      }
-
+    const res = await fetch(API.users, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(form),
+    });
+    if (res.ok) {
+      showMessage('Usuario creado.');
       setModalNew(false);
       setForm(emptyForm);
       await load();
@@ -136,15 +98,23 @@ export default function SuperAdminUsers() {
     await load();
   };
 
-  const handleDelete = async (user: User) => {
-    const deleted = await runDeleteAction({
-      url: `${API.users}/${user.id}`,
+  // HU-018 · "Desactivar" ya no borra: solo inactiva la cuenta y conserva el historial.
+  const handleToggleActive = async (id: string, isActive: boolean) => {
+    const res = await fetch(`${API.users}/${id}/status`, {
+      method: 'PATCH',
       headers,
-      confirmMessage: `¿Eliminar a ${user.fullName}? Esta acción también eliminará sus pedidos, envíos y recibos asociados.`,
-      successMessage: 'Usuario eliminado exitosamente.',
+      body: JSON.stringify({ isActive }),
     });
-    if (!deleted) return;
-    await load();
+
+    if (res.ok) {
+      showMessage(isActive ? 'Cuenta reactivada.' : 'Cuenta desactivada. Su historial se conserva.');
+      setModalDelete(null);
+      load();
+      return;
+    }
+
+    const data = await res.json().catch(() => null);
+    showMessage(data?.message || 'No se pudo actualizar la cuenta.');
   };
 
   const handleRole = async (id: string, role: string) => {
@@ -211,13 +181,14 @@ export default function SuperAdminUsers() {
               <th>Nombre</th>
               <th>Email</th>
               <th>Rol</th>
+              <th>Estado</th>
               <th>Cambiar rol</th>
               <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
             {filteredUsers.map((u) => (
-              <tr key={u.id}>
+              <tr key={u.id} className={u.isActive ? undefined : 'fila-inactiva'}>
                 <td className="id-usuariossa">#{u.id.slice(0, 6).toUpperCase()}</td>
                 <td className="nombre-usuariossa">{u.fullName}</td>
                 <td className="email-usuariossa">{u.email}</td>
@@ -227,7 +198,16 @@ export default function SuperAdminUsers() {
                   </span>
                 </td>
                 <td>
-                  <select className="select-rol-usuariossa" value={u.role} onChange={(e) => handleRole(u.id, e.target.value)}>
+                  <span className={`badge-estado ${u.isActive ? 'badge-estado-activo' : 'badge-estado-inactivo'}`}>
+                    {u.isActive ? '● Activa' : '○ Inactiva'}
+                  </span>
+                </td>
+                <td>
+                  <select
+                    className="select-rol-usuariossa"
+                    value={u.role}
+                    onChange={(e) => handleRole(u.id, e.target.value)}
+                  >
                     {roles.map((r) => (
                       <option key={r} value={r}>
                         {r}
@@ -239,9 +219,15 @@ export default function SuperAdminUsers() {
                   <button className="btn-editar-usuariossa" onClick={() => openEdit(u)}>
                     Editar
                   </button>
-                  <button className="btn-eliminar-usuariossa" onClick={() => handleDelete(u)}>
-                    Eliminar
-                  </button>
+                  {u.isActive ? (
+                    <button className="btn-eliminar-usuariossa" onClick={() => setModalDelete(u)}>
+                      Desactivar
+                    </button>
+                  ) : (
+                    <button className="btn-editar-usuariossa" onClick={() => handleToggleActive(u.id, true)}>
+                      Reactivar
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}
@@ -347,6 +333,36 @@ export default function SuperAdminUsers() {
         </Modal>
       )}
 
+      {/* Modal Desactivar */}
+      {modalDelete && (
+        <Modal
+          titulo="Desactivar cuenta"
+          onClose={() => setModalDelete(null)}
+          footer={
+            <>
+              <button className="btn-cancelar-sa" onClick={() => setModalDelete(null)}>
+                Cancelar
+              </button>
+              <button
+                className="btn-eliminar-confirm-sa"
+                onClick={() => handleToggleActive(modalDelete.id, false)}
+              >
+                Sí, desactivar
+              </button>
+            </>
+          }
+        >
+          <div className="eliminar-warning">
+            <p>
+              ¿Desactivar la cuenta de <strong>{modalDelete.fullName}</strong>?
+            </p>
+            <p className="eliminar-warning-sub">
+              El usuario no podrá iniciar sesión, pero <strong>no se borra nada</strong>: sus pedidos, recibos,
+              envíos y movimientos se conservan intactos. Puedes reactivarla cuando quieras.
+            </p>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

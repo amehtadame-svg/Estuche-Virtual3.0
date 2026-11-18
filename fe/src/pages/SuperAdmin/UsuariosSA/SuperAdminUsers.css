@@ -259,40 +259,26 @@
   .btn-filtro-rol { flex: 1; text-align: center; }
 }
 
-/* Tabla uniforme: seis columnas del mismo ancho, títulos y datos centrados. */
-@media (min-width: 601px) {
-  .usuariossa-page .tabla-usuariossa {
-    width: 100%;
-    table-layout: fixed;
-  }
-
-  .usuariossa-page .tabla-usuariossa thead th {
-    width: 16.6667%;
-  }
-
-  .usuariossa-page .tabla-usuariossa thead th,
-  .usuariossa-page .tabla-usuariossa tbody td {
-    box-sizing: border-box;
-    padding: 10px 8px;
-    text-align: center;
-    overflow-wrap: anywhere;
-  }
-
-  .usuariossa-page .tabla-usuariossa td.acciones-usuariossa {
-    display: table-cell;
-    white-space: normal;
-  }
-
-  .usuariossa-page .tabla-usuariossa td.acciones-usuariossa button + button {
-    margin-left: 8px;
-  }
+/* HU-018 · estado de la cuenta */
+.badge-estado {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
-@media (max-width: 600px) {
-  .usuariossa-page .tabla-usuariossa td.acciones-usuariossa {
-    display: flex;
-    justify-content: flex-start;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
+.badge-estado-activo {
+  background: rgba(39, 174, 96, 0.15);
+  color: #27ae60;
+}
+
+.badge-estado-inactivo {
+  background: rgba(107, 114, 128, 0.18);
+  color: #6b7280;
+}
+
+.fila-inactiva {
+  opacity: 0.65;
 }

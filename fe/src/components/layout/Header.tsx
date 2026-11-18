@@ -54,7 +54,9 @@ export default function Header() {
           ["/", "Inicio"],
           ["/superadmin", "Resumen"],
           ["/admin/productos", "Productos"],
+          ["/admin/combos", "Combos"],
           ["/admin/ingresos", "Ingresos"],
+          ["/admin/salidas", "Salidas"], 
           ["/admin/proveedores", "Proveedores"],
           ["/admin/pedidos", "Pedidos"],
           ["/superadmin/usuarios", "Usuarios"],
@@ -69,7 +71,9 @@ export default function Header() {
             ["/", "Inicio"],
             ["/admin", "Resumen"],
             ["/admin/productos", "Productos"],
+            ["/admin/combos", "Combos"],
             ["/admin/ingresos", "Ingresos"],
+            ["/admin/salidas", "Salidas"], 
             ["/admin/pedidos", "Pedidos"],
             ["/admin/pqr", "PQR"],
             ["/admin/recibos", "Recibos"],
@@ -78,6 +82,7 @@ export default function Header() {
             ["/admin/usuarios", "Usuarios"],
             ["/admin/detallepedidos", "Detalle pedidos"],
           ]
+          
         : [
             ["/", "Inicio"],
             ["/catalogo", "Catálogo"],

@@ -25,3 +25,8 @@ export const updateProfileSchema = z.object({
 export const updateRoleSchema = z.object({
   role: z.enum(validRoles),
 });
+
+// HU-018 · Activar o desactivar una cuenta sin borrar historial.
+export const setActiveSchema = z.object({
+  isActive: z.boolean({ message: 'El campo isActive debe ser verdadero o falso' }),
+});

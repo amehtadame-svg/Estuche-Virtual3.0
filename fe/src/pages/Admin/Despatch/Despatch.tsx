@@ -57,7 +57,7 @@ export default function Despatch() {
   };
 
   const loadDrivers = () => {
-    fetch(API.users)
+    fetch(API.users, { headers: authHeaders() })
       .then((r) => r.json())
       .then((data) => setDrivers(data.filter((u: any) => u.role === 'delivery')))
       .catch(() => {});

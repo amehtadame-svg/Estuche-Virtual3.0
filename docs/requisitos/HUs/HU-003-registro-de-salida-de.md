@@ -14,7 +14,7 @@
 | **Título** | Registro de salida de productos |
 | **Módulo** | Inventario |
 | **Prioridad** | Alta |
-| **Estado** | Por Implementar |
+| **Estado** | implementado |
 | **RF asociados** | RF-016|
 
 ---
@@ -62,3 +62,18 @@
 ## Notas técnicas
 - Aplicar validación de condición de carrera (race condition) o bloqueo optimista/pesimista (`SELECT FOR UPDATE`) para evitar que el stock sea menor que cero.
 - Registrar el movimiento en `inventory_movements` con el tipo `OUTBOUND`.
+
+---
+
+## ✅ Implementación (verificada)
+
+| Elemento | Ubicación |
+|----------|-----------|
+| Ruta | `POST /api/inventory/outbound` (protegida con `verifyToken + verifyAdmin`) |
+| Catálogo de motivos | `GET /api/inventory/outbound/reasons` |
+| Service | `be/src/modules/inventory/inventory.service.ts` → `registerOutbound` |
+| Validación | `createOutboundSchema` en `inventory.schema.ts` |
+| Pantalla | `fe/src/pages/Admin/Inventory/InventoryOutbound.tsx` → ruta `/admin/salidas` |
+| Pruebas | `inventory.outbound.test.ts` (6 casos) |
+
+**Criterios cubiertos:** CA-003.1 ✅ · CA-003.2 ✅ · CA-003.3 ✅ · CA-003.4 ✅

@@ -341,26 +341,22 @@
   }
 }
 
-/* En escritorio, cinco columnas iguales y contenido centrado. */
-@media (min-width: 601px) {
-  .usuarios-page .usuarios-table {
-    width: 100%;
-    table-layout: fixed;
-  }
+/* HU-018 · estado de la cuenta */
+.usr-estado {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
 
-  .usuarios-page .usuarios-table thead th {
-    width: 20%;
-  }
+.usr-estado.activo {
+  background: rgba(39, 174, 96, 0.15);
+  color: #27ae60;
+}
 
-  .usuarios-page .usuarios-table thead th,
-  .usuarios-page .usuarios-table tbody td {
-    box-sizing: border-box;
-    padding: 10px 8px;
-    text-align: center;
-    overflow-wrap: anywhere;
-  }
-
-  .usuarios-page .usuarios-table td:last-child .usr-acciones {
-    justify-content: center;
-  }
+.usr-estado.inactivo {
+  background: rgba(107, 114, 128, 0.18);
+  color: #6b7280;
 }

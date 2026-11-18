@@ -43,7 +43,7 @@ services:
       # cuenta de prueba Ethereal y el enlace del codigo aparece en los logs.
       EMAIL_USER: ${EMAIL_USER:-}
       EMAIL_PASS: ${EMAIL_PASS:-}
-    command: sh -c "pnpm prisma generate && pnpm dev"
+    command: sh -c "pnpm prisma generate && pnpm prisma migrate deploy && pnpm dev"
     volumes:
       - ./be:/app
       - be_node_modules:/app/node_modules

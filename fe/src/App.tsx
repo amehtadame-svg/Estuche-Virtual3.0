@@ -26,16 +26,17 @@ import ClienteDashboard from './pages/ClientDashboard/ClientDashboard';
 import ClientPqr from './pages/PQR/ClientPqr';
 
 // Admin
-import AdminDashboard from './pages/Admin/AdminDashboard';
-import ProductosAD from './pages/Admin/Products/Products';
-import InventoryInbound from './pages/Admin/Inventory/InventoryInbound';
-import Pedidos from './pages/Admin/Orders/Orders';
-import Recibos from './pages/Admin/Receipt/Receipt';
-import Envios from './pages/Admin/Despatch/Despatch';
-import Proveedores from './pages/Admin/Provider/Provider';
-import Usuarios from './pages/Admin/Users/AdminUsers';
-import DetallePedidos from './pages/Admin/OrderDetails/OrderDetails';
-import AdminPqr from './pages/PQR/AdminPqr';
+import AdminDashboard    from './pages/Admin/AdminDashboard';
+import ProductosAD       from './pages/Admin/Products/Products';
+import CombosAD          from './pages/Admin/Combos/Combos';
+import InventoryInbound  from './pages/Admin/Inventory/InventoryInbound';
+import InventoryOutbound from './pages/Admin/Inventory/InventoryOutbound';
+import Pedidos           from './pages/Admin/Orders/Orders';
+import Recibos           from './pages/Admin/Receipt/Receipt';
+import Envios            from './pages/Admin/Despatch/Despatch';
+import Proveedores       from './pages/Admin/Provider/Provider';
+import Usuarios          from './pages/Admin/Users/AdminUsers';
+import DetallePedidos    from './pages/Admin/OrderDetails/OrderDetails';
 
 // SuperAdmin
 import SuperAdminDashboard from './pages/SuperAdmin/SuperAdminDashboard';
@@ -85,26 +86,20 @@ function App() {
                 <Route path="/perfil" element={<Profile />} />
               </Route>
 
-              {/* Admin y SuperAdmin */}
-              <Route
-                element={
-                  <ProtectedRoute allowedRoles={['admin', 'superadmin']} />
-                }
-              >
-                <Route path="/admin" element={<AdminDashboard />} />
-                <Route path="/admin/productos" element={<ProductosAD />} />
-                <Route path="/admin/ingresos" element={<InventoryInbound />} />
-                <Route path="/admin/pedidos" element={<Pedidos />} />
-                <Route path="/admin/recibos" element={<Recibos />} />
-                <Route path="/admin/envios" element={<Envios />} />
-                <Route path="/admin/proveedores" element={<Proveedores />} />
-                <Route path="/admin/usuarios" element={<Usuarios />} />
-                <Route
-                  path="/admin/detallepedidos"
-                  element={<DetallePedidos />}
-                />
-                <Route path="/admin/pqr" element={<AdminPqr />} />
-              </Route>
+            {/* ── Admin ────────────────────────────────── */}
+            <Route element={<ProtectedRoute allowedRoles={['admin', 'superadmin']} />}>
+              <Route path="/admin"                 element={<AdminDashboard />} />
+              <Route path="/admin/productos"       element={<ProductosAD />} />
+              <Route path="/admin/salidas"         element={<InventoryOutbound />} />
+              <Route path="/admin/combos"          element={<CombosAD />} />
+              <Route path="/admin/ingresos"        element={<InventoryInbound />} />
+              <Route path="/admin/pedidos"         element={<Pedidos />} />
+              <Route path="/admin/recibos"         element={<Recibos />} />
+              <Route path="/admin/envios"          element={<Envios />} />
+              <Route path="/admin/proveedores"     element={<Proveedores />} />
+              <Route path="/admin/usuarios"        element={<Usuarios />} />
+              <Route path="/admin/detallepedidos"  element={<DetallePedidos />} />
+            </Route>
 
               {/* Solo SuperAdmin */}
               <Route element={<ProtectedRoute allowedRoles={['superadmin']} />}>

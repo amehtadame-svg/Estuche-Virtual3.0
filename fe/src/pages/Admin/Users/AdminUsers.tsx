@@ -1,15 +1,16 @@
 import { useEffect, useState } from 'react';
 import './AdminUsers.css';
-import { API } from '../../../api/api';
+import { API, authHeaders } from '../../../api/api';
 
 interface User {
   id: string;
   fullName: string;
   email: string;
   role: string;
+  isActive: boolean;
 }
 
-const EMPTY: Omit<User, 'id'> & { password: string } = {
+const EMPTY: Omit<User, 'id' | 'isActive'> & { password: string } = {
   fullName: '',
   email: '',
   role: 'client',
@@ -26,7 +27,7 @@ export default function AdminUsers() {
 
   const load = () => {
     setLoading(true);
-    fetch(API.users)
+    fetch(API.users, { headers: authHeaders() })
       .then((r) => r.json())
       .then((data) => {
         const filtered = data.filter((u: User) => u.role === 'client' || u.role === 'employee');
@@ -80,7 +81,7 @@ export default function AdminUsers() {
 
     const res = await fetch(url, {
       method,
-      headers: { 'Content-Type': 'application/json' },
+      headers: authHeaders(),
       body: JSON.stringify(body),
     });
 
@@ -118,6 +119,7 @@ export default function AdminUsers() {
                   <th>Nombre</th>
                   <th>Email</th>
                   <th>Rol</th>
+                  <th>Estado</th>
                   <th>Acciones</th>
                 </tr>
               </thead>
@@ -129,6 +131,11 @@ export default function AdminUsers() {
                     <td>{u.email}</td>
                     <td>
                       <span className={`rol-badge ${u.role}`}>{u.role}</span>
+                    </td>
+                    <td>
+                      <span className={`usr-estado ${u.isActive ? 'activo' : 'inactivo'}`}>
+                        {u.isActive ? '● Activa' : '○ Inactiva'}
+                      </span>
                     </td>
                     <td>
                       <div className="usr-acciones">
@@ -157,15 +164,29 @@ export default function AdminUsers() {
 
             <div className="usr-modal-body">
               <label>Nombre</label>
-              <input value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })} placeholder="Nombre completo" />
+              <input
+                value={form.fullName}
+                onChange={(e) => setForm({ ...form, fullName: e.target.value })}
+                placeholder="Nombre completo"
+              />
 
               <label>Email</label>
-              <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="correo@ejemplo.com" />
+              <input
+                type="email"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                placeholder="correo@ejemplo.com"
+              />
 
               {modal === 'crear' && (
                 <>
                   <label>Contraseña</label>
-                  <input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="Mínimo 6 caracteres" />
+                  <input
+                    type="password"
+                    value={form.password}
+                    onChange={(e) => setForm({ ...form, password: e.target.value })}
+                    placeholder="Mínimo 6 caracteres"
+                  />
                 </>
               )}
 

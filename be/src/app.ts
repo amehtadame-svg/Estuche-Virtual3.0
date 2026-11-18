@@ -15,14 +15,13 @@ import orderDetailRoutes from './modules/order-details/order-details.routes';
 import receiptRoutes from './modules/receipt/receipt.routes';
 import shoppingRoutes from './modules/shopping/shopping.routes';
 import promotionalCodeRoutes from './modules/promotional-code/promotional-code.routes';
-import payoutRoutes from './modules/payout/payout.routes';
-import returnRoutes from './modules/returns/returns.routes';
-import pqrRoutes from './modules/pqr/pqr.routes';
-import reportRoutes from './modules/reports/reports.routes';
-import { errorHandler } from './middlewares/error.middleware';
+import payoutRoutes          from './modules/payout/payout.routes';
+import returnRoutes          from './modules/returns/returns.routes';
+import reportRoutes          from './modules/reports/reports.routes';
+import comboRoutes           from './modules/combos/combos.routes';
+import { errorHandler }      from './middlewares/error.middleware';
 
-// CORS: la lista blanca viene de variables de entorno.
-// Se permiten patrones con * para los hosts cambiantes de Codespaces.
+// para entornos de preview (Codespaces) cuyo host cambia en cada sesión.
 const CORS_ORIGINS = (
   process.env.CORS_ORIGINS ?? 'http://localhost:5173,https://*.app.github.dev'
 )
@@ -42,7 +41,7 @@ const originIsAllowed = (origin: string) =>
     return new RegExp(`^${pattern}$`).test(origin);
   });
 
-// Limita los intentos a las rutas de autenticación.
+// Por defecto 10 peticiones cada 15 minutos por IP (configurable por env).
 const authLimiter = rateLimit({
   windowMs: Number(process.env.RATE_LIMIT_WINDOW_MS ?? 15 * 60 * 1000),
   limit: Number(process.env.RATE_LIMIT_MAX ?? 10),
@@ -72,18 +71,19 @@ app.use(
 
 app.use(express.json());
 
-// Rutas públicas y compartidas.
-app.use('/api/auth', authLimiter, authRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/orders', orderRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api/categories', categoryRoutes);
-app.use('/api/inventory', inventoryRoutes);
-app.use('/api/providers', providerRoutes);
-app.use('/api/despatches', despatchRoutes);
-app.use('/api/order-details', orderDetailRoutes);
-app.use('/api/receipts', receiptRoutes);
-app.use('/api/shopping', shoppingRoutes);
+// ── Públicas / compartidas ────────────────────────────
+app.use('/api/auth',               authLimiter, authRoutes);
+app.use('/api/users',              userRoutes);
+app.use('/api/orders',             orderRoutes);
+app.use('/api/products',           productRoutes);
+app.use('/api/categories',         categoryRoutes);
+app.use('/api/inventory',          inventoryRoutes);
+app.use('/api/providers',          providerRoutes);
+app.use('/api/despatches',         despatchRoutes);
+app.use('/api/order-details',      orderDetailRoutes);
+app.use('/api/receipts',           receiptRoutes);
+app.use('/api/shopping',           shoppingRoutes);
+app.use('/api/combos',             comboRoutes);
 
 // Gestión administrativa.
 app.use('/api/promotional-codes', promotionalCodeRoutes);
