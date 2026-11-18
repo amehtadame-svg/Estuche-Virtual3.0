@@ -117,6 +117,8 @@ model User {
   reviews           Review[]
   securityEvents    SecurityEvent[]
   combosCreated     Combo[]
+  pqrRequests        PqrRequest[]        @relation("PqrCustomer")
+  pqrResponses       PqrRequest[]        @relation("PqrResponder")
 
   @@index([lockedUntil], map: "idx_users_locked_until")
   @@index([deletedAt], map: "idx_users_deleted_at")

@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type ChangeEvent } from 'react';
 import Modal from '../../../components/ui/Modal';
 import { API, authHeaders } from '../../../api/api';
-import { runDeleteAction } from '../../../lib/deleteAction';
 import { runApiAction } from '../../../lib/apiAction';
 import { notify } from '../../../lib/notifications';
 import './SuperAdminUsers.css';
@@ -35,6 +34,7 @@ export default function SuperAdminUsers() {
   const [createError, setCreateError] = useState('');
   const [creating, setCreating] = useState(false);
   const [modalEdit, setModalEdit] = useState(false);
+  const [modalDelete, setModalDelete] = useState<User | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
   const headers = authHeaders();
@@ -49,19 +49,58 @@ export default function SuperAdminUsers() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
     if (modalNew) setCreateError('');
   };
 
   const handleCreate = async () => {
-    const res = await fetch(API.users, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(form),
-    });
-    if (res.ok) {
-      showMessage('Usuario creado.');
+    setCreateError('');
+
+    const fullName = form.fullName.trim();
+    const email = form.email.trim();
+    const password = form.password;
+
+    if (!fullName || !email || !password) {
+      const errorMessage = 'Nombre, correo y contraseña son obligatorios.';
+      setCreateError(errorMessage);
+      notify.error(errorMessage);
+      return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      const errorMessage = 'Escribe un correo electrónico válido.';
+      setCreateError(errorMessage);
+      notify.error(errorMessage);
+      return;
+    }
+
+    if (password.length < 6) {
+      const errorMessage = 'La contraseña debe tener al menos 6 caracteres.';
+      setCreateError(errorMessage);
+      notify.error(errorMessage);
+      return;
+    }
+
+    setCreating(true);
+    try {
+      const response = await fetch(API.users, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          fullName,
+          email,
+          password,
+          phone: form.phone.trim() || undefined,
+          role: form.role,
+        }),
+      });
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(data?.message || 'No se pudo crear el usuario.');
+      }
+
       setModalNew(false);
       setForm(emptyForm);
       await load();
@@ -100,21 +139,17 @@ export default function SuperAdminUsers() {
 
   // HU-018 · "Desactivar" ya no borra: solo inactiva la cuenta y conserva el historial.
   const handleToggleActive = async (id: string, isActive: boolean) => {
-    const res = await fetch(`${API.users}/${id}/status`, {
-      method: 'PATCH',
-      headers,
-      body: JSON.stringify({ isActive }),
+    const response = await runApiAction({
+      url: `${API.users}/${id}/status`,
+      init: { method: 'PATCH', headers, body: JSON.stringify({ isActive }) },
+      successMessage: isActive
+        ? 'Cuenta reactivada correctamente.'
+        : 'Cuenta desactivada. Su historial se conserva.',
+      errorMessage: 'No se pudo actualizar la cuenta.',
     });
-
-    if (res.ok) {
-      showMessage(isActive ? 'Cuenta reactivada.' : 'Cuenta desactivada. Su historial se conserva.');
-      setModalDelete(null);
-      load();
-      return;
-    }
-
-    const data = await res.json().catch(() => null);
-    showMessage(data?.message || 'No se pudo actualizar la cuenta.');
+    if (!response) return;
+    setModalDelete(null);
+    await load();
   };
 
   const handleRole = async (id: string, role: string) => {

@@ -37,6 +37,7 @@ import Envios            from './pages/Admin/Despatch/Despatch';
 import Proveedores       from './pages/Admin/Provider/Provider';
 import Usuarios          from './pages/Admin/Users/AdminUsers';
 import DetallePedidos    from './pages/Admin/OrderDetails/OrderDetails';
+import AdminPqr          from './pages/PQR/AdminPqr';
 
 // SuperAdmin
 import SuperAdminDashboard from './pages/SuperAdmin/SuperAdminDashboard';
@@ -86,38 +87,30 @@ function App() {
                 <Route path="/perfil" element={<Profile />} />
               </Route>
 
-            {/* ── Admin ────────────────────────────────── */}
-            <Route element={<ProtectedRoute allowedRoles={['admin', 'superadmin']} />}>
-              <Route path="/admin"                 element={<AdminDashboard />} />
-              <Route path="/admin/productos"       element={<ProductosAD />} />
-              <Route path="/admin/salidas"         element={<InventoryOutbound />} />
-              <Route path="/admin/combos"          element={<CombosAD />} />
-              <Route path="/admin/ingresos"        element={<InventoryInbound />} />
-              <Route path="/admin/pedidos"         element={<Pedidos />} />
-              <Route path="/admin/recibos"         element={<Recibos />} />
-              <Route path="/admin/envios"          element={<Envios />} />
-              <Route path="/admin/proveedores"     element={<Proveedores />} />
-              <Route path="/admin/usuarios"        element={<Usuarios />} />
-              <Route path="/admin/detallepedidos"  element={<DetallePedidos />} />
-            </Route>
+              {/* Admin y SuperAdmin */}
+              <Route element={<ProtectedRoute allowedRoles={['admin', 'superadmin']} />}>
+                <Route path="/admin"                 element={<AdminDashboard />} />
+                <Route path="/admin/productos"       element={<ProductosAD />} />
+                <Route path="/admin/salidas"         element={<InventoryOutbound />} />
+                <Route path="/admin/combos"          element={<CombosAD />} />
+                <Route path="/admin/ingresos"        element={<InventoryInbound />} />
+                <Route path="/admin/pedidos"         element={<Pedidos />} />
+                <Route path="/admin/recibos"         element={<Recibos />} />
+                <Route path="/admin/envios"          element={<Envios />} />
+                <Route path="/admin/proveedores"     element={<Proveedores />} />
+                <Route path="/admin/usuarios"        element={<Usuarios />} />
+                <Route path="/admin/detallepedidos"  element={<DetallePedidos />} />
+                <Route path="/admin/pqr"             element={<AdminPqr />} />
+              </Route>
 
               {/* Solo SuperAdmin */}
               <Route element={<ProtectedRoute allowedRoles={['superadmin']} />}>
-                <Route path="/superadmin" element={<SuperAdminDashboard />} />
-                <Route
-                  path="/superadmin/usuarios"
-                  element={<UsuariosSA />}
-                />
-                <Route
-                  path="/superadmin/descuentos"
-                  element={<Descuentos />}
-                />
-                <Route path="/superadmin/pagos" element={<Pagos />} />
-                <Route
-                  path="/superadmin/devoluciones"
-                  element={<Devoluciones />}
-                />
-                <Route path="/superadmin/reportes" element={<Reportes />} />
+                <Route path="/superadmin"              element={<SuperAdminDashboard />} />
+                <Route path="/superadmin/usuarios"     element={<UsuariosSA />} />
+                <Route path="/superadmin/descuentos"   element={<Descuentos />} />
+                <Route path="/superadmin/pagos"        element={<Pagos />} />
+                <Route path="/superadmin/devoluciones" element={<Devoluciones />} />
+                <Route path="/superadmin/reportes"     element={<Reportes />} />
               </Route>
             </Routes>
             <Footer />

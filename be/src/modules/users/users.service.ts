@@ -17,8 +17,15 @@ const canAssignRole = (r: Requester | undefined, role?: string) =>
   !(r?.role === 'admin' && (role === 'superadmin' || role === 'admin'));
 
 // Campos públicos: nunca devolver hashedPassword al cliente.
-const publicFields = { id: true, fullName: true, email: true, role: true, isActive: true } as const;
-const profileFields = { ...publicFields, phone: true, address: true } as const;
+const publicFields = {
+  id: true,
+  fullName: true,
+  email: true,
+  phone: true,
+  role: true,
+  isActive: true,
+} as const;
+const profileFields = { ...publicFields, address: true } as const;
 
 export const userService = {
   list() {
@@ -43,14 +50,20 @@ export const userService = {
 
   async updateProfile(
     id: string,
-    data: { phone?: string; address?: string },
+    data: { fullName?: string; phone?: string; address?: string },
     requester: Requester | undefined
   ) {
     if (!isOwner(requester, id) && !isAdmin(requester)) throw forbidden('No puedes modificar este perfil.');
 
+    const profileData = {
+      ...(data.fullName !== undefined ? { fullName: data.fullName.trim() } : {}),
+      ...(data.phone !== undefined ? { phone: data.phone.trim() || null } : {}),
+      ...(data.address !== undefined ? { address: data.address.trim() || null } : {}),
+    };
+
     return prisma.user.update({
       where: { id },
-      data,
+      data: profileData,
       select: { ...profileFields },
     });
   },
@@ -66,7 +79,7 @@ export const userService = {
   },
 
   async create(
-    data: { fullName: string; email: string; password: string; role?: string },
+    data: { fullName: string; email: string; password: string; phone?: string; role?: string },
     requester: Requester | undefined
   ) {
     if (!canAssignRole(requester, data.role)) throw forbidden('No puedes crear usuarios con ese rol.');
@@ -108,10 +121,6 @@ export const userService = {
     });
   },
 
-  /**
-   * Vista previa del impacto de desactivar una cuenta.
-   * No borra nada: solo informa cuánto historial se conserva.
-   */
   async previewDelete(id: string, requester: Requester | undefined) {
     if (!isSuperAdmin(requester)) throw forbidden('No tienes permisos.');
 
@@ -119,7 +128,7 @@ export const userService = {
       where: { customerId: id },
       select: { id: true },
     });
-    const orderIds = ordersAsCustomer.map((o) => o.id);
+    const orderIds = ordersAsCustomer.map((o: { id: string }) => o.id);
 
     const [details, despatches, ordersAsDriver] = await Promise.all([
       orderIds.length
@@ -132,7 +141,7 @@ export const userService = {
     ]);
 
     return {
-      action: 'deactivate', // no se borra nada: solo se inactiva la cuenta
+      action: 'deactivate',
       orders_as_customer: orderIds.length,
       order_details: details,
       shipments_of_those_orders: despatches,
@@ -140,18 +149,7 @@ export const userService = {
     };
   },
 
-  /**
-   * HU-018 · Activa o desactiva una cuenta SIN borrar nada.
-   *
-   * El historial (pedidos, recibos, movimientos de inventario, reportes) se
-   * conserva intacto: el usuario simplemente deja de poder iniciar sesión,
-   * porque `auth.login` y `verifyToken` rechazan las cuentas con isActive=false.
-   *
-   * Reglas:
-   *  - Solo admin o superadmin.
-   *  - Nadie puede desactivarse a sí mismo.
-   *  - Un admin no puede desactivar a otro admin/superadmin.
-   */
+  // HU-018 · Activa o desactiva una cuenta SIN borrar historial.
   async setActive(id: string, isActive: boolean, requester: Requester | undefined) {
     if (!isAdmin(requester)) {
       throw forbidden('No tienes permisos para activar o desactivar usuarios.');
@@ -175,7 +173,6 @@ export const userService = {
       where: { id },
       data: {
         isActive,
-        // Se limpia cualquier bloqueo pendiente; al reactivar se reinicia el contador.
         lockedUntil: null,
         ...(isActive ? { failedAttempts: 0 } : {}),
       },
@@ -183,10 +180,7 @@ export const userService = {
     });
   },
 
-  /**
-   * Se conserva el endpoint DELETE por compatibilidad, pero ya no destruye nada:
-   * delega en setActive(id, false).
-   */
+  // DELETE conservado por compatibilidad: desactiva en lugar de borrar.
   async remove(id: string, requester: Requester | undefined) {
     return userService.setActive(id, false, requester);
   },
