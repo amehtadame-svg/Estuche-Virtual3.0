@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { API, authHeaders } from '../../../api/api';
+import { runApiAction } from '../../../lib/apiAction';
 import { returnStatusLabel } from '../../../lib/statusLabels';
 import './Returns.css';
 
@@ -44,14 +45,8 @@ export default function Returns() {
   const [modalOpen, setModalOpen] = useState(false);
   const [selected, setSelected] = useState<OrderReturn | null>(null);
   const [form, setForm] = useState(emptyForm);
-  const [message, setMessage] = useState('');
   const [filter, setFilter] = useState('all');
   const headers = authHeaders();
-
-  const showMessage = (text: string) => {
-    setMessage(text);
-    setTimeout(() => setMessage(''), 2500);
-  };
 
   const load = async () => {
     const res = await fetch(API.returns, { headers });
@@ -85,20 +80,26 @@ export default function Returns() {
 
   const handleResolve = async () => {
     if (!selected) return;
-    const res = await fetch(`${API.returns}/${selected.id}/resolve`, {
-      method: 'PATCH',
-      headers,
-      body: JSON.stringify({
-        status: form.status,
-        productCondition: form.productCondition,
-        refund: Number(form.refund) || 0,
-      }),
+    const successMessage = selected.status === 'requested'
+      ? 'Solicitud de devolución resuelta exitosamente.'
+      : 'Devolución actualizada exitosamente.';
+    const response = await runApiAction({
+      url: `${API.returns}/${selected.id}/resolve`,
+      init: {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({
+          status: form.status,
+          productCondition: form.productCondition,
+          refund: Number(form.refund) || 0,
+        }),
+      },
+      successMessage,
+      errorMessage: 'No se pudieron guardar los cambios de la devolución.',
     });
-    if (res.ok) {
-      showMessage('Devolución resuelta.');
-      closeModal();
-      load();
-    }
+    if (!response) return;
+    closeModal();
+    await load();
   };
 
   const filteredReturns = filter === 'all' ? returns : returns.filter((d) => d.status === filter);
@@ -120,8 +121,6 @@ export default function Returns() {
             ))}
           </div>
         </div>
-
-        {message && <div className="mensaje-devoluciones">{message}</div>}
 
         <div className="table-wrapper">
           <table className="tabla-devoluciones">

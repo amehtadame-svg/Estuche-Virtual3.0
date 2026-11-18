@@ -32,9 +32,24 @@ export const userService = {
     return user;
   },
 
-  async updateProfile(id: string, data: { phone?: string; address?: string }, requester: Requester | undefined) {
+  async updateProfile(
+    id: string,
+    data: { fullName?: string; phone?: string; address?: string },
+    requester: Requester | undefined,
+  ) {
     if (!isOwner(requester, id) && !isAdmin(requester)) throw forbidden('No puedes modificar este perfil.');
-    return prisma.user.update({ where: { id }, data });
+
+    const profileData = {
+      ...(data.fullName !== undefined ? { fullName: data.fullName.trim() } : {}),
+      ...(data.phone !== undefined ? { phone: data.phone.trim() || null } : {}),
+      ...(data.address !== undefined ? { address: data.address.trim() || null } : {}),
+    };
+
+    return prisma.user.update({
+      where: { id },
+      data: profileData,
+      select: { id: true, fullName: true, email: true, role: true, phone: true, address: true },
+    });
   },
 
   async updateRole(id: string, role: string, requester: Requester | undefined) {
@@ -42,7 +57,7 @@ export const userService = {
     return prisma.user.update({ where: { id }, data: { role: role as any } });
   },
 
-  async create(data: { fullName: string; email: string; password: string; role?: string }, requester: Requester | undefined) {
+  async create(data: { fullName: string; email: string; password: string; phone?: string; role?: string }, requester: Requester | undefined) {
     if (!canAssignRole(requester, data.role)) throw forbidden('No puedes crear usuarios con ese rol.');
 
     const exists = await prisma.user.findUnique({ where: { email: data.email } });
@@ -54,6 +69,7 @@ export const userService = {
         fullName: data.fullName,
         email: data.email,
         hashedPassword: hashed,
+        phone: data.phone?.trim() || null,
         role: (data.role || 'client') as any,
         passwordUpdatedAt: new Date(),
         dataConsentAt: new Date(),

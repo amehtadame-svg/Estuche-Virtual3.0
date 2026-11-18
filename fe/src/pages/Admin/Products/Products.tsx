@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import Modal from '../../../components/ui/Modal';
 import { API, authHeaders } from '../../../api/api';
+import { runDeleteAction } from '../../../lib/deleteAction';
+import { notify } from '../../../lib/notifications';
 import './Products.css';
 
 interface CategoryItem {
@@ -253,22 +255,18 @@ export default function Products() {
 
       if (!res.ok) {
         const errData = await res.json().catch(() => null);
-        setFormError(
-          errData?.message ||
-            'No se puede completar el registro: Ya existe un producto almacenado con el mismo código SKU o nombre comercial dentro del sistema'
-        );
+        const message = errData?.message || 'No se pudo guardar el producto. Revisa los datos e inténtalo de nuevo.';
+        setFormError(message);
+        notify.error(message);
         return;
       }
 
       loadProducts();
       closeModal();
-      showMessage(
-        editingId !== null
-          ? 'Producto actualizado exitosamente.'
-          : 'Producto registrado exitosamente en el catálogo'
-      );
+      notify.success(editingId !== null ? 'Producto actualizado exitosamente.' : 'Producto registrado exitosamente en el catálogo.');
     } catch {
       setFormError('Error de conexión al guardar el producto.');
+      notify.error('Error de conexión al guardar el producto.');
     }
   };
 
@@ -301,9 +299,13 @@ export default function Products() {
   };
 
   const handleDelete = async (id: string) => {
-    await fetch(`${API.products}/${id}`, { method: 'DELETE', headers: authHeaders() });
-    setProducts(products.filter((p) => p.id !== id));
-    showMessage('Producto eliminado.');
+    const deleted = await runDeleteAction({
+      url: `${API.products}/${id}`, headers: authHeaders(),
+      confirmMessage: '¿Deseas eliminar este producto del catálogo? El historial de ventas se conservará.',
+      successMessage: 'Producto eliminado exitosamente.',
+    });
+    if (!deleted) return;
+    setProducts((current) => current.filter((product) => product.id !== id));
   };
 
   const lowStock = (prod: Product) => prod.stock <= prod.stockMin;
@@ -405,8 +407,14 @@ export default function Products() {
                             : 'stock-ok'
                         }`}
                       >
-                        {prod.stock ?? 0} / mín. {prod.stockMin ?? 5}
-                        {prod.stock === 0 ? ' ⛔ agotado' : lowStock(prod) ? ' ⚠ bajo' : ''}
+                        <span className="stock-count">
+                          {prod.stock ?? 0} / mín. {prod.stockMin ?? 5}
+                        </span>
+                        {prod.stock === 0 ? (
+                          <span className="stock-status">⛔ Agotado</span>
+                        ) : lowStock(prod) ? (
+                          <span className="stock-status">⚠ Bajo</span>
+                        ) : null}
                       </span>
                     </td>
                     <td>

@@ -31,6 +31,7 @@ export const API = {
   promotionalCodes:  `${BASE}/api/promotional-codes`,
   payouts:           `${BASE}/api/payouts`,
   returns:           `${BASE}/api/returns`,
+  pqr:               `${BASE}/api/pqr`,
   reports:           `${BASE}/api/reports`,
 };
 

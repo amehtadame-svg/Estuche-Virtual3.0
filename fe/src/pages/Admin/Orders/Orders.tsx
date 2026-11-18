@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import Modal from '../../../components/ui/Modal';
 import { API, authHeaders } from '../../../api/api';
+import { runDeleteAction } from '../../../lib/deleteAction';
+import { runApiAction } from '../../../lib/apiAction';
+import { notify } from '../../../lib/notifications';
 import './Orders.css';
 
 const statusColor: Record<string, string> = {
@@ -17,6 +20,13 @@ const emptyForm = {
   promotionalCodeId: '',
 };
 
+interface Customer {
+  id: string;
+  fullName: string;
+  email: string;
+  role: string;
+}
+
 interface Order {
   id: string;
   customerId: string | null;
@@ -30,6 +40,7 @@ interface Order {
 
 export default function Orders() {
   const [orders, setOrders] = useState<Order[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [message, setMessage] = useState('');
@@ -51,8 +62,24 @@ export default function Orders() {
       });
   };
 
+  const loadCustomers = async () => {
+    try {
+      const response = await fetch(API.users, { headers: authHeaders() });
+      const data = await response.json().catch(() => null);
+      if (!response.ok) throw new Error(data?.message || 'No se pudieron cargar los clientes.');
+      setCustomers(
+        Array.isArray(data)
+          ? data.filter((user: Customer) => user.role === 'client')
+          : [],
+      );
+    } catch {
+      notify.error('No se pudieron cargar los clientes para el pedido.');
+    }
+  };
+
   useEffect(() => {
     loadOrders();
+    loadCustomers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -63,14 +90,6 @@ export default function Orders() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const openNewModal = () => {
-    setForm(emptyForm);
-    setEditingId(null);
-    setDiscountCode('');
-    setDiscountApplied(null);
-    setModalOpen(true);
   };
 
   const closeModal = () => {
@@ -94,23 +113,15 @@ export default function Orders() {
       promotionalCodeId: form.promotionalCodeId || null,
     };
 
-    if (editingId !== null) {
-      await fetch(`${API.orders}/${editingId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-      showMessage('Pedido actualizado.');
-    } else {
-      await fetch(API.orders, {
-        method: 'POST',
-        headers: authHeaders(),
-        body: JSON.stringify(body),
-      });
-      showMessage('Pedido agregado.');
-    }
-
-    loadOrders();
+    const editing = editingId !== null;
+    const response = await runApiAction({
+      url: editing ? `${API.orders}/${editingId}` : API.orders,
+      init: { method: editing ? 'PUT' : 'POST', headers: authHeaders(), body: JSON.stringify(body) },
+      successMessage: editing ? 'Pedido actualizado exitosamente.' : 'Pedido creado exitosamente.',
+      errorMessage: 'No se pudo guardar el pedido.',
+    });
+    if (!response) return;
+    await loadOrders();
     closeModal();
   };
 
@@ -128,56 +139,59 @@ export default function Orders() {
   };
 
   const handleDelete = async (id: string) => {
-    await fetch(`${API.orders}/${id}`, { method: 'DELETE' });
-    setOrders(orders.filter((p) => p.id !== id));
-    showMessage('Pedido eliminado.');
+    const deleted = await runDeleteAction({
+      url: `${API.orders}/${id}`, headers: authHeaders(),
+      confirmMessage: '¿Eliminar este pedido? El historial se conservará.',
+      successMessage: 'Pedido eliminado exitosamente.',
+    });
+    if (!deleted) return;
+    setOrders((current) => current.filter((order) => order.id !== id));
   };
 
   const changeStatus = async (id: string, newStatus: string) => {
-    const res = await fetch(`${API.orders}/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: newStatus }),
+    const response = await runApiAction({
+      url: `${API.orders}/${id}`,
+      init: { method: 'PUT', headers: authHeaders(), body: JSON.stringify({ status: newStatus }) },
+      successMessage: 'Estado del pedido actualizado exitosamente.',
+      errorMessage: 'No se pudo actualizar el estado del pedido.',
     });
-    if (res.ok) {
-      setOrders(orders.map((p) => (p.id === id ? { ...p, status: newStatus } : p)));
-      showMessage('Estado actualizado.');
-    } else {
-      showMessage('Error al actualizar el estado.');
-    }
+    if (!response) return;
+    setOrders((current) => current.map((order) => order.id === id ? { ...order, status: newStatus } : order));
   };
 
   const handleApplyDiscount = async (id: string) => {
-    if (!discountCode) {
+    if (!discountCode.trim()) {
       showMessage('Ingresa un código de descuento.');
+      notify.error('Ingresa un código de descuento.');
       return;
     }
 
-    const res = await fetch(`${API.orders}/${id}/apply-code`, {
-      method: 'POST',
-      headers: authHeaders(),
-      body: JSON.stringify({ code: discountCode }),
+    const response = await runApiAction({
+      url: `${API.orders}/${id}/apply-code`,
+      init: { method: 'POST', headers: authHeaders(), body: JSON.stringify({ code: discountCode.trim() }) },
+      successMessage: 'Descuento aplicado exitosamente al pedido.',
+      errorMessage: 'No se pudo aplicar el descuento.',
     });
-    const data = await res.json();
-    if (res.ok) {
-      setForm((prev) => ({ ...prev, total: String(data.total) }));
-      setDiscountApplied(`Descuento aplicado. Nuevo total: $${Number(data.total).toLocaleString()}`);
-      setDiscountCode('');
-      loadOrders();
-    } else {
-      showMessage(data.message ?? 'Error al aplicar el descuento.');
+    if (!response) return;
+    const data = await response.json().catch(() => null);
+    if (!data) {
+      notify.error('El servidor no devolvió los datos actualizados del pedido.');
+      return;
     }
+    setForm((prev) => ({ ...prev, total: String(data.total) }));
+    setDiscountApplied(`Descuento aplicado. Nuevo total: $${Number(data.total).toLocaleString()}`);
+    setDiscountCode('');
+    await loadOrders();
   };
 
   return (
     <>
       <div className="pedidos-page">
         <div className="pedidos-topbar">
-          <h2 className="titulo-pedidos">Gestion de Pedidos</h2>
-          <p className="subtitulo-usuarios">Administra los Pedidos registrados</p>
-          <button className="btn-nuevo-pedido" onClick={openNewModal}>
-            + Nuevo pedido
-          </button>
+          <div className="pedidos-heading">
+            <h2 className="titulo-pedidos">Gestión de pedidos</h2>
+            <p className="subtitulo-pedidos">Administra los pedidos registrados</p>
+          </div>
         </div>
 
         {message && <div className="mensaje-pedidos">{message}</div>}
@@ -242,14 +256,26 @@ export default function Orders() {
             </>
           }
         >
-          <label className="label-pedido">ID Cliente</label>
-          <input
+          <label className="label-pedido">Cliente</label>
+          <select
             className="input-pedido"
             name="customerId"
             value={form.customerId}
             onChange={handleChange}
-            placeholder="UUID del cliente"
-          />
+            required
+          >
+            <option value="">Selecciona un cliente</option>
+            {customers.map((customer) => (
+              <option key={customer.id} value={customer.id}>
+                {customer.fullName} — {customer.email}
+              </option>
+            ))}
+          </select>
+          {customers.length === 0 && (
+            <p className="mensaje-pedidos">
+              No hay clientes registrados. Crea primero un usuario con rol cliente.
+            </p>
+          )}
 
           <label className="label-pedido">Total</label>
           <input

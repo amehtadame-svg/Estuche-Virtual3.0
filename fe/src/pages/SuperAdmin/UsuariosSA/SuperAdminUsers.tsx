@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import Modal from '../../../components/ui/Modal';
 import { API, authHeaders } from '../../../api/api';
+import { runDeleteAction } from '../../../lib/deleteAction';
+import { runApiAction } from '../../../lib/apiAction';
+import { notify } from '../../../lib/notifications';
 import './SuperAdminUsers.css';
 
 interface User {
@@ -27,18 +30,13 @@ export default function SuperAdminUsers() {
   const [users, setUsers] = useState<User[]>([]);
   const [roleFilter, setRoleFilter] = useState('todos');
   const [search, setSearch] = useState('');
-  const [message, setMessage] = useState('');
   const [modalNew, setModalNew] = useState(false);
+  const [createError, setCreateError] = useState('');
+  const [creating, setCreating] = useState(false);
   const [modalEdit, setModalEdit] = useState(false);
-  const [modalDelete, setModalDelete] = useState<User | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
   const headers = authHeaders();
-
-  const showMessage = (text: string) => {
-    setMessage(text);
-    setTimeout(() => setMessage(''), 2500);
-  };
 
   const load = async () => {
     const res = await fetch(API.users, { headers });
@@ -52,23 +50,68 @@ export default function SuperAdminUsers() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+    if (modalNew) setCreateError('');
   };
 
   const handleCreate = async () => {
-    if (!form.fullName || !form.email || !form.password) {
-      showMessage('Nombre, email y contraseña son obligatorios.');
+    setCreateError('');
+
+    const fullName = form.fullName.trim();
+    const email = form.email.trim();
+    const password = form.password;
+
+    if (!fullName || !email || !password) {
+      const errorMessage = 'Nombre, correo y contraseña son obligatorios.';
+      setCreateError(errorMessage);
+      notify.error(errorMessage);
       return;
     }
-    const res = await fetch(API.users, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({ fullName: form.fullName, email: form.email, password: form.password, role: form.role }),
-    });
-    if (res.ok) {
-      showMessage('Usuario creado.');
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      const errorMessage = 'Escribe un correo electrónico válido.';
+      setCreateError(errorMessage);
+      notify.error(errorMessage);
+      return;
+    }
+
+    if (password.length < 6) {
+      const errorMessage = 'La contraseña debe tener al menos 6 caracteres.';
+      setCreateError(errorMessage);
+      notify.error(errorMessage);
+      return;
+    }
+
+    setCreating(true);
+    try {
+      const response = await fetch(API.users, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          fullName,
+          email,
+          password,
+          phone: form.phone.trim() || undefined,
+          role: form.role,
+        }),
+      });
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(data?.message || 'No se pudo crear el usuario.');
+      }
+
       setModalNew(false);
       setForm(emptyForm);
-      load();
+      await load();
+      notify.success('El usuario se creó correctamente.', 'Usuario creado');
+    } catch (error) {
+      const errorMessage = error instanceof Error
+        ? error.message
+        : 'No se pudo crear el usuario.';
+      setCreateError(errorMessage);
+      notify.error(errorMessage);
+    } finally {
+      setCreating(false);
     }
   };
 
@@ -80,40 +123,39 @@ export default function SuperAdminUsers() {
 
   const handleEdit = async () => {
     if (!editingId) return;
-    const res = await fetch(`${API.users}/${editingId}`, {
-      method: 'PUT',
-      headers,
-      body: JSON.stringify({ fullName: form.fullName, email: form.email, role: form.role }),
+    const response = await runApiAction({
+      url: `${API.users}/${editingId}`,
+      init: { method: 'PUT', headers, body: JSON.stringify({ fullName: form.fullName, email: form.email, role: form.role }) },
+      successMessage: 'Usuario actualizado exitosamente.',
+      errorMessage: 'No se pudo actualizar el usuario.',
     });
-    if (res.ok) {
-      showMessage('Usuario actualizado.');
-      setModalEdit(false);
-      setEditingId(null);
-      setForm(emptyForm);
-      load();
-    }
+    if (!response) return;
+    setModalEdit(false);
+    setEditingId(null);
+    setForm(emptyForm);
+    await load();
   };
 
-  const handleDelete = async () => {
-    if (!modalDelete) return;
-    const res = await fetch(`${API.users}/${modalDelete.id}`, { method: 'DELETE', headers });
-    if (res.ok) {
-      showMessage('Usuario eliminado.');
-      setModalDelete(null);
-      load();
-    }
+  const handleDelete = async (user: User) => {
+    const deleted = await runDeleteAction({
+      url: `${API.users}/${user.id}`,
+      headers,
+      confirmMessage: `¿Eliminar a ${user.fullName}? Esta acción también eliminará sus pedidos, envíos y recibos asociados.`,
+      successMessage: 'Usuario eliminado exitosamente.',
+    });
+    if (!deleted) return;
+    await load();
   };
 
   const handleRole = async (id: string, role: string) => {
-    const res = await fetch(`${API.users}/${id}/role`, {
-      method: 'PATCH',
-      headers,
-      body: JSON.stringify({ role }),
+    const response = await runApiAction({
+      url: `${API.users}/${id}/role`,
+      init: { method: 'PATCH', headers, body: JSON.stringify({ role }) },
+      successMessage: 'Rol actualizado exitosamente.',
+      errorMessage: 'No se pudo actualizar el rol.',
     });
-    if (res.ok) {
-      showMessage('Rol actualizado.');
-      load();
-    }
+    if (!response) return;
+    await load();
   };
 
   const filteredUsers = users
@@ -128,12 +170,17 @@ export default function SuperAdminUsers() {
     <div className="usuariossa-page">
       <div className="usuariossa-topbar">
         <h2 className="titulo-usuariossa">Gestión de Usuarios</h2>
-        <button className="btn-nuevo-usuariossa" onClick={() => setModalNew(true)}>
+        <button
+          className="btn-nuevo-usuariossa"
+          onClick={() => {
+            setForm(emptyForm);
+            setCreateError('');
+            setModalNew(true);
+          }}
+        >
           + Nuevo usuario
         </button>
       </div>
-
-      {message && <div className="mensaje-usuariossa">{message}</div>}
 
       {/* Filtros */}
       <div className="usuariossa-controles">
@@ -192,7 +239,7 @@ export default function SuperAdminUsers() {
                   <button className="btn-editar-usuariossa" onClick={() => openEdit(u)}>
                     Editar
                   </button>
-                  <button className="btn-eliminar-usuariossa" onClick={() => setModalDelete(u)}>
+                  <button className="btn-eliminar-usuariossa" onClick={() => handleDelete(u)}>
                     Eliminar
                   </button>
                 </td>
@@ -209,6 +256,7 @@ export default function SuperAdminUsers() {
           onClose={() => {
             setModalNew(false);
             setForm(emptyForm);
+            setCreateError('');
           }}
           footer={
             <>
@@ -217,12 +265,18 @@ export default function SuperAdminUsers() {
                 onClick={() => {
                   setModalNew(false);
                   setForm(emptyForm);
+                  setCreateError('');
                 }}
               >
                 Cancelar
               </button>
-              <button className="btn-guardar-sa" onClick={handleCreate}>
-                Crear usuario
+              <button
+                type="button"
+                className="btn-guardar-sa"
+                onClick={handleCreate}
+                disabled={creating}
+              >
+                {creating ? 'Creando usuario...' : 'Crear usuario'}
               </button>
             </>
           }
@@ -247,6 +301,7 @@ export default function SuperAdminUsers() {
               </option>
             ))}
           </select>
+          {createError && <p className="error-crear-usuariossa">⚠️ {createError}</p>}
         </Modal>
       )}
 
@@ -292,30 +347,6 @@ export default function SuperAdminUsers() {
         </Modal>
       )}
 
-      {/* Modal Eliminar */}
-      {modalDelete && (
-        <Modal
-          titulo="Eliminar usuario"
-          onClose={() => setModalDelete(null)}
-          footer={
-            <>
-              <button className="btn-cancelar-sa" onClick={() => setModalDelete(null)}>
-                Cancelar
-              </button>
-              <button className="btn-eliminar-confirm-sa" onClick={handleDelete}>
-                Sí, eliminar
-              </button>
-            </>
-          }
-        >
-          <div className="eliminar-warning">
-            <p>
-              ¿Estás seguro de que deseas eliminar a <strong>{modalDelete.fullName}</strong>?
-            </p>
-            <p className="eliminar-warning-sub">Esta acción eliminará también sus pedidos, envíos y recibos asociados.</p>
-          </div>
-        </Modal>
-      )}
     </div>
   );
 }

@@ -28,7 +28,7 @@
   margin-bottom: 20px;
 }
 
-/* ── Botón nuevo ─────────────────────────────────────── */
+/* Botón nuevo */
 .btn-nuevo-descuento {
   flex-shrink: 0;
   background: var(--gradient-accent);
@@ -43,33 +43,73 @@
   box-shadow: var(--shadow-accent);
 }
 
-.btn-nuevo-descuento:hover { opacity: 0.88; }
+.btn-nuevo-descuento:hover {
+  opacity: 0.88;
+}
 
-/* ── Tabla ───────────────────────────────────────────── */
+/* Tabla */
+.descuentos-page .table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
 .tabla-descuentos {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
   font-size: 14px;
 }
 
-.tabla-descuentos thead tr { border-bottom: 2px solid var(--border); }
+/* Las ocho columnas tienen el mismo ancho. */
+@media (min-width: 601px) {
+  .tabla-descuentos th {
+    width: 12.5%;
+  }
+}
+
+.tabla-descuentos thead tr {
+  border-bottom: 2px solid var(--border);
+}
 
 .tabla-descuentos tbody tr {
   border-bottom: 1px solid var(--border);
   transition: background 0.15s;
 }
 
-.tabla-descuentos tbody tr:hover { background: var(--bg-subtle); }
+.tabla-descuentos tbody tr:hover {
+  background: var(--bg-subtle);
+}
+
+.tabla-descuentos th,
+.tabla-descuentos td {
+  box-sizing: border-box;
+  padding: 10px 14px;
+}
 
 .tabla-descuentos th {
-  padding: 10px;
   text-align: left;
   color: var(--text);
   font-weight: 600;
   white-space: nowrap;
 }
 
-.tabla-descuentos td { padding: 10px; color: var(--text); }
+.tabla-descuentos td {
+  color: var(--text);
+  vertical-align: middle;
+}
+
+/* Centra cada título sobre su dato. */
+@media (min-width: 601px) {
+  .descuentos-page .tabla-descuentos thead th,
+  .descuentos-page .tabla-descuentos tbody td {
+    text-align: center;
+  }
+
+  .descuentos-page .tabla-descuentos td:nth-child(5) {
+    font-size: 12px;
+    white-space: nowrap;
+  }
+}
 
 .codigo-descuento {
   font-weight: 700;
@@ -77,9 +117,11 @@
   letter-spacing: 0.5px;
 }
 
-.vigencia-descuento { font-size: 13px; }
+.vigencia-descuento {
+  font-size: 13px;
+}
 
-/* ── Badges estado ───────────────────────────────────── */
+/* Badges de estado */
 .badge-estado {
   display: inline-block;
   padding: 3px 10px;
@@ -88,16 +130,41 @@
   font-weight: 500;
 }
 
-.badge-activo   { background: #d1fae5; color: #065f46; }
-.badge-inactivo { background: #fee2e2; color: #991b1b; }
+.badge-activo {
+  background: #d1fae5;
+  color: #065f46;
+}
 
-/* ── Acciones ────────────────────────────────────────── */
-.acciones-descuento { display: flex; gap: 6px; align-items: center; }
+.badge-inactivo {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.badge-programado {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.badge-vencido {
+  background: #e5e7eb;
+  color: #4b5563;
+}
+
+/* Acciones */
+.descuentos-page .tabla-descuentos td.acciones-descuento {
+  display: table-cell;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.acciones-descuento > button + button {
+  margin-left: 6px;
+}
 
 .btn-toggle-descuento,
 .btn-editar-descuento,
 .btn-eliminar-descuento {
-  padding: 5px 12px;
+  padding: 5px 8px;
   border-radius: var(--radius-sm);
   font-size: 12px;
   cursor: pointer;
@@ -125,9 +192,11 @@
 
 .btn-toggle-descuento:hover,
 .btn-editar-descuento:hover,
-.btn-eliminar-descuento:hover { opacity: 0.8; }
+.btn-eliminar-descuento:hover {
+  opacity: 0.8;
+}
 
-/* ── Formulario modal ────────────────────────────────── */
+/* Formulario modal */
 .label-descuento {
   display: block;
   font-size: 13px;
@@ -135,7 +204,9 @@
   margin: 0 0 4px;
 }
 
-.required { color: #e74c3c; }
+.required {
+  color: #e74c3c;
+}
 
 .input-descuento {
   width: 100%;
@@ -154,7 +225,7 @@
   outline: none;
 }
 
-/* ── Modal ───────────────────────────────────────────── */
+/* Modal */
 .modal-overlay-descuento {
   position: fixed;
   inset: 0;
@@ -170,7 +241,7 @@
 
 @keyframes fadeInDesc {
   from { opacity: 0; }
-  to   { opacity: 1; }
+  to { opacity: 1; }
 }
 
 .modal-descuentos {
@@ -185,7 +256,7 @@
 
 @keyframes slideUpDesc {
   from { opacity: 0; transform: translateY(16px); }
-  to   { opacity: 1; transform: translateY(0); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .modal-header-descuento {
@@ -254,24 +325,36 @@
 }
 
 .btn-guardar-descuento:hover,
-.btn-cancelar-descuento:hover { opacity: 0.85; }
+.btn-cancelar-descuento:hover {
+  opacity: 0.85;
+}
 
-/* ═══════════════════════════════════════════════════════
-   RESPONSIVE
-═══════════════════════════════════════════════════════ */
-
-@media (max-width: 900px) {
-  .tabla-descuentos td:nth-child(5) {
-    white-space: nowrap;
+/* En pantallas medianas permite desplazarse por la tabla completa. */
+@media (min-width: 601px) and (max-width: 1300px) {
+  .tabla-descuentos {
+    min-width: 1280px;
   }
 }
 
+/* Móvil */
 @media (max-width: 600px) {
-  .descuentos-page   { padding: 0 16px 40px; }
-  .descuentos-topbar { flex-direction: column; align-items: flex-start; }
-  .btn-nuevo-descuento { width: 100%; text-align: center; }
+  .descuentos-page {
+    padding: 0 16px 40px;
+  }
 
-  .tabla-descuentos thead { display: none; }
+  .descuentos-topbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .btn-nuevo-descuento {
+    width: 100%;
+    text-align: center;
+  }
+
+  .tabla-descuentos thead {
+    display: none;
+  }
 
   .tabla-descuentos tbody tr {
     display: flex;
@@ -281,8 +364,18 @@
     border-bottom: 1px solid var(--border);
   }
 
-  .tabla-descuentos td { padding: 2px 0; }
-  .tabla-descuentos td:last-child { padding-top: 8px; }
+  .tabla-descuentos td {
+    padding: 2px 0;
+  }
 
-  .acciones-descuento { flex-wrap: wrap; }
+  .tabla-descuentos td:last-child {
+    padding-top: 8px;
+  }
+
+  .descuentos-page .tabla-descuentos td.acciones-descuento {
+    display: flex;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
 }

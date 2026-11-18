@@ -395,3 +395,37 @@ body:not(.dark-mode) .pd-desc,
 body:not(.dark-mode) .pd-fold p {
   color: #3f3a4a;
 }
+@media (min-width: 601px) {
+  /* Mantiene una altura pareja para las filas. */
+  .productos-page .tabla-productos tbody tr {
+    height: 88px;
+  }
+
+  /* Reserva dos renglones para cada descripción. */
+  .productos-page .tabla-productos tbody td .desc-producto {
+    display: -webkit-box;
+    max-width: 100%;
+    height: 2.8em;
+    margin: 6px auto 0;
+    line-height: 1.4;
+    white-space: normal;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    text-overflow: ellipsis;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  /* Centra el texto dentro del badge de stock. */
+  .productos-page .tabla-productos .stock-badge {
+    align-items: center;
+    text-align: center;
+  }
+
+  .productos-page .tabla-productos .stock-count,
+  .productos-page .tabla-productos .stock-status {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
+}

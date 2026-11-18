@@ -5,11 +5,16 @@
 
 .pedidos-topbar {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
+  justify-content: flex-start;
+  align-items: flex-start;
   margin-bottom: 32px;
   padding-top: 10px;
+}
+
+.pedidos-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
 }
 
 /* ── Encabezado ──────────────────────────────────────── */
@@ -17,7 +22,14 @@
   font-size: 28px;
   font-weight: 700;
   color: var(--text-h);
-  margin: 0 0 4px;
+  margin: 0;
+}
+
+.subtitulo-pedidos {
+  margin: 0;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.45;
 }
 
 .mensaje-pedidos {
@@ -28,25 +40,6 @@
   color: var(--accent);
   font-size: 14px;
   margin-bottom: 20px;
-}
-
-/* ── Botón nuevo ─────────────────────────────────────── */
-.btn-nuevo-pedido {
-  flex-shrink: 0;
-  background: var(--gradient-accent);
-  color: #fff;
-  border: none;
-  padding: 10px 20px;
-  border-radius: var(--radius-md);
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: opacity 0.2s, transform 0.15s;
-  box-shadow: var(--shadow-accent);
-}
-
-.btn-nuevo-pedido:hover {
-  opacity: 0.88;
 }
 
 /* ── Tabla ───────────────────────────────────────────── */
@@ -295,11 +288,6 @@
     align-items: flex-start;
   }
 
-  .btn-nuevo-pedido {
-    width: 100%;
-    text-align: center;
-  }
-
   .tabla-pedidos thead {
     display: none;
   }
@@ -322,5 +310,37 @@
 
   .btn-editar-pedido {
     margin-right: 6px;
+  }
+}
+
+/* Tabla uniforme: siete columnas del mismo ancho, títulos y datos centrados. */
+@media (min-width: 601px) {
+  .pedidos-page .tabla-pedidos {
+    width: 100%;
+    table-layout: fixed;
+  }
+
+  .pedidos-page .tabla-pedidos thead th {
+    width: 14.2857%;
+  }
+
+  .pedidos-page .tabla-pedidos thead th,
+  .pedidos-page .tabla-pedidos tbody td {
+    box-sizing: border-box;
+    padding: 10px 8px;
+    text-align: center;
+    overflow-wrap: anywhere;
+  }
+
+  .pedidos-page .estado-select-pedido {
+    max-width: 100%;
+  }
+
+  .pedidos-page .tabla-pedidos tbody td:last-child button {
+    display: inline-block;
+    width: auto;
+    margin: 0 3px;
+    padding: 5px 8px;
+    white-space: nowrap;
   }
 }

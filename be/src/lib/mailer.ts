@@ -131,6 +131,74 @@ export interface SendResult {
   error?: string;
 }
 
+function escapeHtml(value: string): string {
+  const entities: Record<string, string> = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  };
+  return value.replace(/[&<>"']/g, (character) => entities[character] ?? character);
+}
+
+/** Notifica al cliente cuando el equipo guarda una respuesta nueva en su PQR. */
+export async function sendPqrResponseNotification(
+  email: string,
+  customerName: string,
+  pqrSubject: string,
+  response: string,
+): Promise<SendResult> {
+  try {
+    const transporter = await getTransporter();
+    const safeCustomerName = escapeHtml(customerName);
+    const safePqrSubject = escapeHtml(pqrSubject);
+    const safeResponse = escapeHtml(response);
+    const cleanSubject = pqrSubject.replace(/[\r\n]+/g, ' ').trim();
+    const info = await transporter.sendMail({
+      from: `"${EMAIL_FROM_NAME}" <${EMAIL_USER ?? 'no-reply@estuchevirtual.com'}>`,
+      to: email,
+      subject: `Respondimos tu solicitud PQR: ${cleanSubject}`,
+      text:
+        `Hola ${customerName},\n\n` +
+        `El equipo respondió tu solicitud PQR: ${cleanSubject}.\n\n` +
+        `Respuesta:\n${response}\n\n` +
+        `Consulta el estado y el historial desde tu cuenta, en PQR y soporte > Mis PQR.`,
+      html: `
+        <div style="font-family:Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:#f5f6fa;padding:32px 16px;">
+          <div style="max-width:520px;margin:auto;background:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08);">
+            <div style="background:linear-gradient(135deg,#aa3bff,#6d28d9);padding:24px;text-align:center;">
+              <h1 style="margin:0;color:#fff;font-size:1.25rem;letter-spacing:.5px;">Estuche Virtual</h1>
+            </div>
+            <div style="padding:28px 32px;color:#1f2937;">
+              <h2 style="margin:0 0 12px;font-size:1.15rem;">Respondimos tu solicitud PQR</h2>
+              <p style="margin:0 0 16px;color:#4b5563;line-height:1.5;">Hola ${safeCustomerName}, el equipo respondió tu solicitud <strong>${safePqrSubject}</strong>.</p>
+              <div style="background:#f8f5fc;border-left:4px solid #a855f7;border-radius:8px;padding:16px;white-space:pre-wrap;line-height:1.55;">${safeResponse}</div>
+              <p style="margin:18px 0 0;color:#4b5563;line-height:1.5;">Consulta el estado y el historial desde tu cuenta, en <strong>PQR y soporte &gt; Mis PQR</strong>.</p>
+            </div>
+          </div>
+        </div>
+      `,
+    });
+
+    const previewUrl = usingEthereal
+      ? (nodemailer.getTestMessageUrl(info) as string | false) || undefined
+      : undefined;
+
+    if (previewUrl) {
+      console.log(`[mailer] 📬 Aviso PQR de prueba para ${email}. Míralo aquí: ${previewUrl}`);
+    } else {
+      console.log(`[mailer] 📤 Aviso de respuesta PQR enviado (messageId: ${info.messageId})`);
+    }
+
+    return { sent: true, previewUrl: previewUrl || undefined };
+  } catch (err) {
+    const detail = explainSmtpError(err);
+    console.error(`[mailer] ❌ Falló el aviso de respuesta PQR para ${email}:\n  ${detail}`);
+    return { sent: false, error: detail };
+  }
+}
+
 export async function sendVerificationCode(
   email: string,
   code: string,
