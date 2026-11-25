@@ -131,8 +131,7 @@ pnpm prisma generate && pnpm prisma migrate deploy
 pnpm test:integration                                          # → 26/26
 ```
 
-Opcional (mismo entorno que la CI, sin instalar Postgres localmente):
-
-```bash
-docker compose -f - up  # ver sección 6.2 de docs/INSTALACION_Y_DESPLIEGUE.md
-```
+Opcional (mismo entorno que la CI, sin instalar Postgres localmente): usa el
+service de PostgreSQL que la CI levanta — ver `be/docker` alternativo en
+sección 6.2 de `docs/INSTALACION_Y_DESPLIEGUE.md` (un `docker run` de
+`postgres:16-alpine` con base `estuche_virtual_test`).
