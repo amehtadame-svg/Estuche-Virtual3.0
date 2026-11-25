@@ -16,7 +16,12 @@ export const verifyToken = async (req: Request, res: Response, next: NextFunctio
       return res.status(401).json({ message: 'Cuenta no disponible' });
     }
 
-    (req as any).user = decoded;
+    (req as any).user = {
+      id: user.id,
+      name: user.fullName,
+      email: user.email,
+      role: user.role,
+  };
     next();
   } catch (err) {
     return res.status(401).json({ message: 'Token inválido o expirado' });

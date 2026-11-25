@@ -1,0 +1,99 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { createServer } from 'node:http';
+import type { AddressInfo } from 'node:net';
+import jwt from 'jsonwebtoken';
+import { prisma } from '../../lib/prisma';
+import { HttpError } from '../../lib/errors';
+import { orderService } from './orders.service';
+import { verifyToken } from '../../middlewares/auth.middleware';
+import type { Request, Response, NextFunction } from 'express';
+import app from '../../app';
+
+const db = prisma as any;
+const client = { id: 'user-1', role: 'client' };
+const hasStatus = (status: number) => (error: unknown) =>
+  error instanceof HttpError && error.status === status;
+
+async function withServer(run: (base: string) => Promise<void>) {
+  const server = createServer(app);
+  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+  try {
+    await run(base);
+  } finally {
+    server.closeAllConnections();
+    await new Promise<void>((resolve, reject) =>
+      server.close((error) => error ? reject(error) : resolve()),
+    );
+  }
+}
+
+test('Las rutas de pedidos y recibos rechazan peticiones sin token', async () => {
+  const id = '11111111-1111-4111-8111-111111111111';
+  await withServer(async (base) => {
+    for (const [method, path] of [
+      ['GET', '/api/orders'], ['GET', `/api/orders/${id}`],
+      ['POST', '/api/orders'], ['PUT', `/api/orders/${id}`],
+      ['DELETE', `/api/orders/${id}`], ['PATCH', `/api/orders/${id}/apply-code`],
+      ['GET', '/api/receipts'], ['POST', '/api/receipts'],
+      ['PUT', `/api/receipts/${id}`], ['DELETE', `/api/receipts/${id}`],
+    ]) {
+      assert.equal((await fetch(base + path, { method })).status, 401, `${method} ${path}`);
+    }
+  });
+});
+
+test('Un cliente autenticado no puede editar ni eliminar pedidos o recibos', async () => {
+  process.env.JWT_SECRET = 'test-permissions-secret-only-not-production';
+  db.user.findUnique = async () => ({ ...client, isActive: true, deletedAt: null });
+  const token = jwt.sign(client, process.env.JWT_SECRET);
+  const id = '11111111-1111-4111-8111-111111111111';
+  await withServer(async (base) => {
+    for (const path of [`/api/orders/${id}`, `/api/receipts/${id}`]) {
+      for (const method of ['PUT', 'DELETE']) {
+        const response = await fetch(base + path, {
+          method, headers: { Authorization: `Bearer ${token}` },
+        });
+        assert.equal(response.status, 403, `${method} ${path}`);
+      }
+    }
+  });
+});
+
+test('El listado de cliente se filtra por propietario', async () => {
+  let where: any;
+  db.order.findMany = async (args: any) => { where = args.where; return []; };
+  await orderService.list(client);
+  assert.deepEqual(where, { deletedAt: null, customerId: client.id });
+  await orderService.list({ id: 'admin-1', role: 'admin' });
+  assert.deepEqual(where, { deletedAt: null });
+});
+
+test('No se puede consultar un pedido ajeno', async () => {
+  db.order.findUnique = async () => ({ id: 'order-1', customerId: 'other' });
+  await assert.rejects(orderService.getById('order-1', client), hasStatus(403));
+});
+
+test('Empleado no hereda permisos de pedidos', async () => {
+  await assert.rejects(
+    orderService.getById('order-1', { id: 'employee-1', role: 'employee' }),
+    hasStatus(403),
+  );
+});
+
+test('No se puede crear ni marcar un pedido pagado mediante el CRUD', async () => {
+  await assert.rejects(orderService.create({ status: 'paid' }, client), hasStatus(400));
+  assert.throws(() => orderService.update('order-1', { status: 'paid' }), hasStatus(400));
+});
+
+test('El rol vigente de BD prevalece sobre el rol antiguo del token', async () => {
+  process.env.JWT_SECRET = 'test-permissions-secret-only-not-production';
+  db.user.findUnique = async () => ({ ...client, isActive: true, deletedAt: null });
+  const token = jwt.sign({ id: client.id, role: 'superadmin' }, process.env.JWT_SECRET);
+  const req = { headers: { authorization: `Bearer ${token}` } } as Request;
+  let nextCalled = false;
+  await verifyToken(req, {} as Response, (() => { nextCalled = true; }) as NextFunction);
+  assert.equal(nextCalled, true);
+  assert.equal((req as any).user.role, 'client');
+});

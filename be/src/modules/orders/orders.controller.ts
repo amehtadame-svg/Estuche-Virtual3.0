@@ -4,13 +4,13 @@ import { asyncHandler } from '../../middlewares/asyncHandler';
 
 const requesterFrom = (req: Request) => (req as any).user as { id: string; role: string };
 
-export const listOrders = asyncHandler(async (_req: Request, res: Response) => {
-  const orders = await orderService.list();
+export const listOrders = asyncHandler(async (req: Request, res: Response) => {
+  const orders = await orderService.list(requesterFrom(req));
   return res.json(orders);
 });
 
 export const getOrder = asyncHandler(async (req: Request, res: Response) => {
-  const order = await orderService.getById(req.params.id);
+  const order = await orderService.getById(req.params.id, requesterFrom(req));
   return res.json(order);
 });
 

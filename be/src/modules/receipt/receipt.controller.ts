@@ -8,7 +8,7 @@ export const listReceipts = asyncHandler(async (_req: Request, res: Response) =>
 });
 
 export const createReceipt = asyncHandler(async (req: Request, res: Response) => {
-  const receipt = await receiptService.create(req.body);
+  const receipt = await receiptService.create(req.body, (req as any).user);
   return res.status(201).json(receipt);
 });
 
