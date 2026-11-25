@@ -18,6 +18,7 @@ Registro inicial basado en el README, las restricciones y los manifiestos revisa
 | DOC-006 | RH-002 enumera solo main y dev; se utilizan ramas de trabajo adicionales. | Conciliar la política con ramas por tarea y PR. | Requiere acuerdo |
 | DOC-007 | README general sin guía suficiente de instalación, ejecución, pruebas y API. | Incorporar instrucciones comprobadas y enlaces. | Pendiente de elaboración |
 | DOC-008 | README incluye un enlace de invitación a Trello. | Revisar permisos y evitar publicar tokens de invitación. | Revisión de acceso pendiente |
+| DOC-009 | El README presentaba Proveedor como rol y omitía employee, delivery y superadmin. | Corregidos el objetivo y la sección Roles en [README general](../../README.md), según el enum Role y el middleware. | Corregido documentalmente; permisos completos y recorridos no certificados |
 
 ## Fuentes
 

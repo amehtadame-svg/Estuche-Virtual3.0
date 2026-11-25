@@ -26,7 +26,7 @@ Desarrollar una plataforma web integral que optimice la compra y venta de útile
 
 ## Objetivos Específicos
 
-- Implementar un sistema de gestión de usuarios con autenticación y control de roles (Administrador, Proveedor y Cliente).
+- Implementar un sistema de gestión de usuarios con autenticación y control de roles (Cliente, Empleado, Repartidor, Administrador y Superadministrador).
 - Diseñar e integrar un catálogo dinámico de productos que permita visualizar información detallada y disponibilidad en tiempo real.
 - Desarrollar un carrito de compras funcional que facilite el proceso de selección y adquisición de productos.
 - Permitir el seguimiento de pedidos, brindando información actualizada sobre el estado de las compras.
@@ -47,9 +47,24 @@ Desarrollar una plataforma web integral que optimice la compra y venta de útile
 
 ## Roles
 
-- Administrador: gestiona usuarios, productos y pedidos  
-- Proveedor: registra y actualiza productos  
-- Cliente: explora, compra y consulta pedidos  
+Roles definidos en el modelo de datos:
+
+- Cliente: `client`.
+- Empleado: `employee`.
+- Repartidor: `delivery`.
+- Administrador: `admin`.
+- Superadministrador: `superadmin`.
+
+Proveedor no es un rol de autenticación en el modelo actual.
+Su gestión comercial no implica acceso propio al sistema.
+
+El middleware verifica la sesión y consulta el rol vigente en la base de datos.
+`verifyAdmin` admite admin y superadmin; `verifySuperAdmin` solo superadmin.
+Los permisos concretos también dependen de las rutas y servicios.
+Esta lista no certifica un panel o recorrido completo para cada rol.
+
+Fuentes: [modelo Prisma](be/prisma/schema.prisma) y
+[middleware de autenticación](be/src/middlewares/auth.middleware.ts).
 
 ---
 
