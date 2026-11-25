@@ -68,9 +68,11 @@ jobs:
         with:
           version: 10.12.4
 
+      # Node 22: el test C-07 es un .ts ejecutado con `node --test` sin
+      # bundler; requiere el type-stripping nativo de Node >= 22.
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: pnpm
           cache-dependency-path: fe/pnpm-lock.yaml
 
