@@ -73,10 +73,25 @@ export default function Header() {
   useEffect(() => {
     const stored = localStorage.getItem('theme');
 
+    const prefersDark =
+      window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? true;
+
     applyTheme(
-      stored ? stored === 'dark' : true
+      stored ? stored === 'dark' : prefersDark
     );
   }, []);
+
+  const isStaff =
+    user?.role === 'admin' ||
+    user?.role === 'superadmin' ||
+    user?.role === 'employee';
+
+  const roleLabel: Record<string, string> = {
+    superadmin: 'Superadmin',
+    admin: 'Administración',
+    employee: 'Operaciones',
+    delivery: 'Domicilios',
+  };
 
   const toggleTheme = () =>
     applyTheme(!isDarkMode);
@@ -145,6 +160,7 @@ export default function Header() {
 
   return (
     <>
+      {!isStaff && (
       <div
         className="announcement-bar"
         aria-label="Promociones"
@@ -165,8 +181,9 @@ export default function Header() {
           })}
         </div>
       </div>
+      )}
 
-      <header className="header">
+      <header className={`header ${isStaff ? 'header--staff' : ''}`}>
         <div className="header-inner">
           <Link
             to="/"
@@ -184,7 +201,14 @@ export default function Header() {
               alt="Estuche Virtual"
               className="logo-img logo-for-light"
             />
+            {user && roleLabel[user.role] && (
+              <span className="header-role">
+                {roleLabel[user.role]}
+              </span>
+            )}
           </Link>
+
+          <div className={`header-menu ${menuOpen ? 'open' : ''}`}>
 
           <nav
             className={`header-nav ${
@@ -217,6 +241,7 @@ export default function Header() {
               menuOpen ? 'open' : ''
             }`}
           >
+            {!isStaff && (
             <button
               className="header-icon-btn"
               onClick={() => {
@@ -227,6 +252,7 @@ export default function Header() {
             >
               <Search size={18} />
             </button>
+            )}
 
             <button
               className="header-icon-btn theme-toggle"
@@ -238,12 +264,13 @@ export default function Header() {
               }
             >
               {isDarkMode ? (
-                <Moon size={18} />
-              ) : (
                 <Sun size={18} />
+              ) : (
+                <Moon size={18} />
               )}
             </button>
 
+            {!isStaff && (
             <button
               className="header-icon-btn cart-btn"
               onClick={() => {
@@ -262,6 +289,7 @@ export default function Header() {
                 </span>
               )}
             </button>
+            )}
 
             {user ? (
               <button
@@ -295,13 +323,14 @@ export default function Header() {
               </Link>
             )}
           </div>
+          </div>
 
           <button
             className="header-menu-toggle"
             onClick={() =>
               setMenuOpen(!menuOpen)
             }
-            aria-label="Abrir menú"
+            aria-label={menuOpen ? 'Cerrar menú' : 'Abrir menú'}
             aria-expanded={menuOpen}
           >
             {menuOpen ? (

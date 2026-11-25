@@ -39,3 +39,11 @@ export const returnStatusLabel: Record<string, string> = {
   rejected: 'Rechazada',
   refunded: 'Reembolsada',
 };
+
+export const roleLabel: Record<string, string> = {
+  superadmin: 'Superadmin',
+  admin: 'Administrador',
+  employee: 'Empleado',
+  delivery: 'Domiciliario',
+  client: 'Cliente',
+};

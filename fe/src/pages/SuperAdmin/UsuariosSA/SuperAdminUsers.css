@@ -1,5 +1,7 @@
 .usuariossa-page {
-  padding: 0 30px 50px;
+  width: min(1320px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 32px 0 56px;
 }
 
 .usuariossa-topbar {
@@ -32,7 +34,7 @@
 .btn-nuevo-usuariossa {
   flex-shrink: 0;
   background: var(--gradient-accent);
-  color: #fff;
+  color: var(--on-accent);
   border: none;
   padding: 10px 20px;
   border-radius: var(--radius-md);
@@ -95,13 +97,13 @@
 
 .btn-filtro-rol-activo {
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   border-color: var(--accent);
 }
 
 .btn-filtro-rol-activo:hover {
   opacity: 0.88;
-  color: #fff;
+  color: var(--text-h);
 }
 
 /* ── Tabla ───────────────────────────────────────────── */
@@ -141,7 +143,7 @@
   border-radius: 20px;
   font-size: 12px;
   font-weight: 500;
-  color: #fff;
+  color: var(--text-h);
   white-space: nowrap;
 }
 
@@ -191,15 +193,15 @@
 }
 
 .btn-eliminar-usuariossa:hover {
-  border-color: #e74c3c;
-  color: #e74c3c;
-  background: rgba(231, 76, 60, 0.06);
+  border-color: var(--danger);
+  color: var(--danger);
+  background: rgba(200, 30, 30, 0.06);
 }
 
 /* ── Botones modal ───────────────────────────────────── */
 .btn-guardar-sa {
   background: var(--gradient-accent);
-  color: #fff;
+  color: var(--on-accent);
   border: none;
 }
 
@@ -220,10 +222,10 @@
 .error-crear-usuariossa {
   margin: 0 0 12px;
   padding: 9px 11px;
-  border: 1px solid rgba(231, 76, 60, 0.35);
+  border: 1px solid rgba(200, 30, 30, 0.35);
   border-radius: var(--radius-sm);
-  background: rgba(231, 76, 60, 0.08);
-  color: #e74c3c;
+  background: rgba(200, 30, 30, 0.08);
+  color: var(--danger);
   font-size: 13px;
   line-height: 1.4;
 }
@@ -238,7 +240,7 @@
 }
 
 @media (max-width: 600px) {
-  .usuariossa-page { padding: 0 16px 40px; }
+  .usuariossa-page { width: calc(100% - 28px); padding: 20px 0 40px; }
   .busqueda-usuariossa { max-width: 100%; }
 
   .tabla-usuariossa thead { display: none; }
@@ -271,20 +273,20 @@
 
 .badge-estado-activo {
   background: rgba(39, 174, 96, 0.15);
-  color: #27ae60;
+  color: var(--success);
 }
 
 .badge-estado-inactivo {
   background: rgba(107, 114, 128, 0.18);
-  color: #6b7280;
+  color: var(--muted);
 }
 
 .fila-inactiva {
   opacity: 0.65;
 }
 .btn-eliminar-confirm-sa {
-  background: #e74c3c;
-  color: #fff;
+  background: var(--danger-solid);
+  color: var(--on-accent);
   border: none;
 }
 
@@ -306,11 +308,11 @@
 
 .eliminar-warning-sub {
   font-size: 13px;
-  color: #e74c3c;
+  color: var(--danger);
 }
 .btn-eliminar-confirm-sa {
-  background: #e74c3c;
-  color: #fff;
+  background: var(--danger-solid);
+  color: var(--on-accent);
   border: none;
 }
 
@@ -332,5 +334,5 @@
 
 .eliminar-warning-sub {
   font-size: 13px;
-  color: #e74c3c;
+  color: var(--danger);
 }

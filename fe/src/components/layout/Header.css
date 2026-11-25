@@ -1,3 +1,4 @@
+/* ── Barra de anuncios (solo tienda pública / clientes) ─────────────── */
 .announcement-bar {
   height: 34px;
   overflow: hidden;
@@ -26,22 +27,48 @@
 }
 
 .announcement-track svg {
-  color: #c084fc;
+  color: #d58bff;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .announcement-track {
+    animation: none;
+  }
+}
+
+/* ── Encabezado ─────────────────────────────────────────────────────── */
 .header {
+  --header-bg: rgba(255, 255, 255, 0.78);
+  --header-border: rgba(88, 28, 135, 0.08);
+  --header-link: #2a2233;
+  --header-link-active-bg: var(--grape-100);
+  --header-hover-bg: rgba(176, 38, 234, 0.1);
+  --header-hover-ring: rgba(176, 38, 234, 0.28);
+  --header-menu-bg: #ffffff;
+
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(11, 9, 15, 0.28);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background: var(--header-bg);
+  border-bottom: 1px solid var(--header-border);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
+}
+
+body.dark-mode .header {
+  --header-bg: rgba(11, 9, 15, 0.72);
+  --header-border: rgba(255, 255, 255, 0.06);
+  --header-link: #d4d0db;
+  --header-link-active-bg: #241c2e;
+  --header-hover-bg: rgba(192, 38, 245, 0.18);
+  --header-hover-ring: rgba(192, 38, 245, 0.35);
+  --header-menu-bg: #141018;
 }
 
 .header-inner {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas: "logo nav actions";
   align-items: center;
   gap: 24px;
   width: min(1600px, calc(100% - 48px));
@@ -50,8 +77,10 @@
 }
 
 .header-logo {
+  grid-area: logo;
   display: flex;
   align-items: center;
+  gap: 12px;
 }
 
 .logo-img {
@@ -72,39 +101,59 @@ body.dark-mode .logo-for-light {
   display: none;
 }
 
+.header-role {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border: 1px solid var(--accent-border);
+  border-radius: 999px;
+  background: var(--accent-bg);
+  color: var(--accent-text);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
 .header-nav {
+  grid-area: nav;
   display: flex;
   justify-content: center;
   gap: 4px;
+  min-width: 0;
 }
 
 .header-nav a {
   padding: 8px 16px;
   border-radius: 999px;
-  color: #d4d0db;
+  color: var(--header-link);
   font-size: 14px;
   font-weight: 600;
+  white-space: nowrap;
   transition:
     background 0.2s,
     color 0.2s,
-    transform 0.2s,
     box-shadow 0.2s;
 }
 
-.header-nav a:hover,
-.header-nav a.active:hover {
-  background: rgba(192, 38, 245, 0.18);
-  box-shadow: 0 0 0 1px rgba(192, 38, 245, 0.35);
-  color: #fff;
-  transform: translateY(-1px) scale(1.03);
+.header-nav a:hover {
+  background: var(--header-hover-bg);
+  box-shadow: 0 0 0 1px var(--header-hover-ring);
+  color: var(--text-h);
 }
 
 .header-nav a.active {
-  background: #1c1724;
+  background: var(--header-link-active-bg);
+  color: var(--accent-text);
+}
+
+body.dark-mode .header-nav a.active {
   color: #fff;
 }
 
 .header-actions {
+  grid-area: actions;
   display: flex;
   width: max-content;
   align-items: center;
@@ -121,7 +170,7 @@ body.dark-mode .logo-for-light {
   border: 0;
   border-radius: 50%;
   background: transparent;
-  color: #ece8f2;
+  color: var(--header-link);
   transition:
     background 0.2s,
     color 0.2s,
@@ -130,10 +179,9 @@ body.dark-mode .logo-for-light {
 }
 
 .header-icon-btn:hover {
-  background: rgba(192, 38, 245, 0.18);
-  box-shadow: 0 0 0 1px rgba(192, 38, 245, 0.35);
-  color: #fff;
-  transform: translateY(-1px) scale(1.06);
+  background: var(--header-hover-bg);
+  box-shadow: 0 0 0 1px var(--header-hover-ring);
+  color: var(--text-h);
 }
 
 .header-icon-btn:active {
@@ -148,15 +196,6 @@ body.dark-mode .logo-for-light {
   transform: rotate(20deg);
 }
 
-.cart-btn:hover {
-  background: rgba(192, 38, 245, 0.22);
-}
-
-.header-login-btn:hover {
-  filter: brightness(1.08);
-  transform: translateY(-1px);
-}
-
 .cart-badge {
   position: absolute;
   top: 2px;
@@ -167,8 +206,8 @@ body.dark-mode .logo-for-light {
   padding: 0 3px;
   place-items: center;
   border-radius: 99px;
-  background: #c026f5;
-  color: #fff;
+  background: var(--accent);
+  color: var(--on-accent);
   font-size: 9px;
   font-weight: 800;
 }
@@ -177,72 +216,91 @@ body.dark-mode .logo-for-light {
   margin-left: 6px;
   padding: 10px 18px;
   border-radius: 999px;
-  background: linear-gradient(180deg, #c026f5, #a21caf);
-  box-shadow: 0 8px 20px rgba(168, 85, 247, 0.35);
-  color: #fff;
+  background: var(--accent);
+  box-shadow: var(--shadow-accent);
+  color: var(--on-accent);
   font-size: 13px;
   font-weight: 700;
   white-space: nowrap;
+  transition:
+    background 0.2s,
+    transform 0.2s;
 }
 
-.header-profile-btn {
+.header-login-btn:hover {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+}
+
+.header .header-actions .header-profile-btn {
   display: inline-flex;
-  width: max-content;
-  min-width: max-content;
-  flex: 0 0 auto;
-  align-items: center;
   box-sizing: border-box;
-  gap: 4px;
+  max-width: 176px;
+  flex: 0 1 auto;
+  align-items: center;
+  gap: 6px;
   margin-left: 4px;
-  margin-right: 14px;
-  padding: 6px 7px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 7px 12px;
+  overflow: hidden;
+  border: 1px solid var(--accent-border);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.03);
-  color: #fff;
-  font-size: 11px;
+  background: var(--accent-bg);
+  color: var(--text-h);
+  font-size: 12px;
   font-weight: 700;
   line-height: 1.2;
-  text-align: left;
   white-space: nowrap;
 }
 
-.header-profile-btn span {
+.header .header-actions .header-profile-btn:hover {
+  border-color: var(--accent);
+}
+
+.header .header-actions .header-profile-btn span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
-  line-height: 1.3;
 }
 
 .header-menu-toggle {
   display: none;
 }
 
-body:not(.dark-mode) .header {
-  background: rgba(246, 242, 251, 0.55);
-  border-bottom: 1px solid rgba(88, 28, 135, 0.06);
-}
+/* ── Personal (empleado, admin, superadmin): menú en segunda fila ───── */
+@media (min-width: 901px) {
+  .header--staff .header-inner {
+    grid-template-columns: auto 1fr;
+    grid-template-areas:
+      "logo actions"
+      "nav nav";
+    row-gap: 0;
+    min-height: 0;
+    padding-top: 8px;
+  }
 
-body:not(.dark-mode) .logo-word,
-body:not(.dark-mode) .header-nav a,
-body:not(.dark-mode) .header-icon-btn,
-body:not(.dark-mode) .header-profile-btn {
-  color: #1c1724;
-}
+  .header--staff .logo-img {
+    height: 44px;
+  }
 
-body:not(.dark-mode) .header-nav a.active {
-  background: #f3e8ff;
-  color: #7c3aed;
-}
+  .header--staff .header-actions {
+    justify-self: end;
+  }
 
-body:not(.dark-mode) .header-nav a:hover,
-body:not(.dark-mode) .header-nav a.active:hover {
-  background: rgba(192, 38, 245, 0.12);
-  box-shadow: 0 0 0 1px rgba(192, 38, 245, 0.3);
-  color: #7c3aed;
-}
+  .header--staff .header-nav {
+    justify-content: flex-start;
+    margin: 6px -4px 0;
+    padding: 4px 4px 10px;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    -webkit-mask-image: linear-gradient(to right, #000 92%, transparent);
+    mask-image: linear-gradient(to right, #000 92%, transparent);
+  }
 
-body:not(.dark-mode) .header-icon-btn:hover {
-  background: rgba(192, 38, 245, 0.12);
-  color: #7c3aed;
+  .header--staff .header-nav a {
+    padding: 7px 14px;
+    font-size: 13px;
+  }
 }
 
 @keyframes announcement-scroll {
@@ -251,155 +309,83 @@ body:not(.dark-mode) .header-icon-btn:hover {
   }
 }
 
+/* ── Móvil ──────────────────────────────────────────────────────────── */
+.header-menu {
+  display: contents;
+}
+
 @media (max-width: 900px) {
   .header-inner {
     grid-template-columns: 1fr auto;
+    grid-template-areas: "logo toggle";
     width: min(1280px, calc(100% - 28px));
     min-height: 64px;
   }
 
-  .header-menu-toggle {
-    display: grid;
-    width: 38px;
-    height: 38px;
-    padding: 0;
-    place-items: center;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 50%;
-    background: transparent;
-    color: #fff;
+  .logo-img {
+    height: 44px;
   }
 
-  .header-nav,
-  .header-actions {
+  .header-menu-toggle {
+    grid-area: toggle;
+    display: grid;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    place-items: center;
+    border: 1px solid var(--border-strong);
+    border-radius: 50%;
+    background: transparent;
+    color: var(--text-h);
+  }
+
+  .header-menu {
     display: none;
   }
 
-  .header-nav.open,
-  .header-actions.open {
+  .header-menu.open {
     position: absolute;
+    top: calc(100% + 6px);
     right: 12px;
     left: 12px;
     display: flex;
-    width: auto;
+    max-height: calc(100vh - 110px);
     flex-direction: column;
+    gap: 10px;
     padding: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    overflow-y: auto;
+    border: 1px solid var(--border);
     border-radius: 18px;
-    background: #141018;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    background: var(--header-menu-bg);
+    box-shadow: var(--shadow-lg);
   }
 
-  .header-nav.open {
-    top: 64px;
+  .header-menu.open .header-nav {
+    flex-direction: column;
+    gap: 2px;
   }
 
-  .header-actions.open {
-    top: auto;
-    margin-top: 8px;
-    flex-direction: row;
-    flex-wrap: wrap;
-  }
-}
-
-/* Evita que el saludo del perfil se recorte dentro del encabezado. */
-.header .header-actions .header-profile-btn {
-  width: max-content;
-  min-width: max-content;
-  max-width: none;
-  flex: 0 0 auto;
-  overflow: visible;
-  padding-right: 10px;
-  padding-left: 10px;
-  margin-right: 0;
-  border: 1px solid rgba(192, 38, 245, 0.7);
-  background: rgba(192, 38, 245, 0.06);
-  box-shadow: 0 0 0 3px rgba(192, 38, 245, 0.09);
-  text-overflow: clip;
-  white-space: nowrap;
-}
-
-.header .header-actions .header-profile-btn span {
-  display: inline-block;
-  width: max-content;
-  max-width: none;
-  overflow: visible;
-  text-overflow: clip;
-  white-space: nowrap;
-}
-
-/* El grupo de acciones conserva su posición natural al usar todo el ancho disponible. */
-@media (min-width: 901px) {
-  .header .header-actions {
-    transform: none;
+  .header-menu.open .header-nav a {
+    padding: 11px 14px;
+    border-radius: 12px;
   }
 
-  .header .header-actions .header-profile-btn {
-    margin-right: 0;
-  }
-
-  .header .header-nav {
-    transform: translateX(24px);
-  }
-
-  .header .header-actions > .header-icon-btn:first-child {
-    left: auto;
-  }
-}
-
-@media (max-width: 900px) {
-  .header .header-actions.open {
-    box-sizing: border-box;
-    width: auto;
-    max-width: calc(100vw - 24px);
-    align-items: center;
-    overflow: visible;
-  }
-
-  /* Dale al saludo su propia fila para que nunca quede cortado por los iconos. */
-  .header .header-actions.open > .header-profile-btn {
-    box-sizing: border-box;
+  .header-menu.open .header-actions {
     width: 100%;
-    min-width: 0;
-    max-width: 100%;
-    flex: 0 0 100%;
-    justify-content: flex-start;
-    margin: 8px 0 0;
-    transform: none;
-    white-space: normal;
-    overflow: visible;
+    flex-wrap: wrap;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
   }
 
-  .header .header-actions.open > .header-profile-btn span {
-    width: auto;
-    min-width: 0;
-    max-width: 100%;
-    white-space: normal;
-    overflow-wrap: anywhere;
-  }
-}
-@media (min-width: 901px) {
-  .header .header-nav {
-    transform: none;
+  .header .header-menu.open .header-actions .header-profile-btn {
+    max-width: none;
+    flex: 1 1 auto;
+    justify-content: center;
+    padding: 10px 14px;
   }
 
-  .header .header-actions .header-profile-btn {
-    box-sizing: border-box;
-    width: auto;
-    min-width: 0;
-    max-width: 176px;
-    flex: 0 1 auto;
-    overflow: hidden;
-    white-space: nowrap;
-  }
-
-  .header .header-actions .header-profile-btn span {
-    display: block;
-    width: auto;
-    min-width: 0;
-    max-width: 120px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  .header-menu.open .header-login-btn {
+    flex: 1 1 auto;
+    text-align: center;
   }
 }

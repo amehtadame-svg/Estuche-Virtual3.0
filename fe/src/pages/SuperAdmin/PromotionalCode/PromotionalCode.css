@@ -1,5 +1,7 @@
 .descuentos-page {
-  padding: 0 30px 50px;
+  width: min(1320px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 32px 0 56px;
 }
 
 .descuentos-topbar {
@@ -32,7 +34,7 @@
 .btn-nuevo-descuento {
   flex-shrink: 0;
   background: var(--gradient-accent);
-  color: #fff;
+  color: var(--on-accent);
   border: none;
   padding: 10px 20px;
   border-radius: var(--radius-md);
@@ -60,11 +62,12 @@
   font-size: 14px;
 }
 
-/* Las ocho columnas tienen el mismo ancho. */
+/* Anchos por columna: Acciones necesita espacio para tres botones. */
 @media (min-width: 601px) {
-  .tabla-descuentos th {
-    width: 12.5%;
-  }
+  .tabla-descuentos th { width: 10%; }
+  .tabla-descuentos th:nth-child(5) { width: 16%; }
+  .tabla-descuentos th:nth-child(6) { width: 7%; }
+  .tabla-descuentos th:last-child { width: 247px; }
 }
 
 .tabla-descuentos thead tr {
@@ -88,7 +91,10 @@
 
 .tabla-descuentos th {
   text-align: left;
-  color: var(--text);
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -108,6 +114,12 @@
   .descuentos-page .tabla-descuentos td:nth-child(5) {
     font-size: 12px;
     white-space: nowrap;
+  }
+}
+
+@media (min-width: 601px) and (max-width: 1100px) {
+  .tabla-descuentos {
+    min-width: 980px;
   }
 }
 
@@ -131,23 +143,23 @@
 }
 
 .badge-activo {
-  background: #d1fae5;
-  color: #065f46;
+  background: var(--success-bg);
+  color: var(--success);
 }
 
 .badge-inactivo {
-  background: #fee2e2;
-  color: #991b1b;
+  background: var(--danger-bg);
+  color: var(--danger);
 }
 
 .badge-programado {
-  background: #dbeafe;
-  color: #1e40af;
+  background: var(--info-bg);
+  color: var(--info);
 }
 
 .badge-vencido {
-  background: #e5e7eb;
-  color: #4b5563;
+  background: var(--surface-2);
+  color: var(--muted);
 }
 
 /* Acciones */
@@ -173,9 +185,9 @@
 }
 
 .btn-toggle-descuento {
-  background: #eff6ff;
-  color: #1d4ed8;
-  border: 1px solid #bfdbfe;
+  background: var(--info-bg);
+  color: var(--info);
+  border: 1px solid var(--info-bg);
 }
 
 .btn-editar-descuento {
@@ -185,9 +197,9 @@
 }
 
 .btn-eliminar-descuento {
-  background: #fff0f0;
-  color: #e74c3c;
-  border: 1px solid #e74c3c;
+  background: var(--danger-bg);
+  color: var(--danger);
+  border: 1px solid var(--danger);
 }
 
 .btn-toggle-descuento:hover,
@@ -205,7 +217,7 @@
 }
 
 .required {
-  color: #e74c3c;
+  color: var(--danger);
 }
 
 .input-descuento {
@@ -314,7 +326,7 @@
 
 .btn-guardar-descuento {
   background: var(--gradient-accent);
-  color: #fff;
+  color: var(--on-accent);
   border: none;
 }
 
@@ -339,7 +351,7 @@
 /* Móvil */
 @media (max-width: 600px) {
   .descuentos-page {
-    padding: 0 16px 40px;
+    width: calc(100% - 28px); padding: 20px 0 40px;
   }
 
   .descuentos-topbar {

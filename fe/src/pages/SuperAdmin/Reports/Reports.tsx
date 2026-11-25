@@ -1,7 +1,15 @@
 import { useEffect, useState } from 'react';
+import { CreditCard, ShoppingCart, Tag, Undo2, UserPlus, Wallet, type LucideIcon } from 'lucide-react';
 import { API, authHeaders } from '../../../api/api';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
 import './Reports.css';
+
+const chartTooltip = {
+  background: 'var(--surface)',
+  border: '1px solid var(--border)',
+  borderRadius: 12,
+  color: 'var(--text-h)',
+};
 
 interface Report {
   id: string;
@@ -44,15 +52,14 @@ export default function Reports() {
   }, []);
 
   const last6 = [...reports].slice(0, 6).reverse();
-
-  const stats = summary
+  const stats: { label: string; value: string; icon: LucideIcon; color: string }[] = summary
     ? [
-        { label: 'Total vendido', value: `$${Number(summary.total_sold).toLocaleString()}`, icon: '💰', color: 'stat-purple' },
-        { label: 'Total pagado', value: `$${Number(summary.total_paid).toLocaleString()}`, icon: '💳', color: 'stat-blue' },
-        { label: 'Reembolsos', value: `$${Number(summary.total_refunded).toLocaleString()}`, icon: '↩️', color: 'stat-green' },
-        { label: 'Descuentos activos', value: String(summary.active_promotional_codes), icon: '🏷️', color: 'stat-orange' },
-        { label: 'Pedidos hoy', value: String(summary.orders_today), icon: '🛒', color: 'stat-blue' },
-        { label: 'Clientes nuevos hoy', value: String(summary.new_customers_today), icon: '👤', color: 'stat-purple' },
+        { label: 'Total vendido', value: `$${Number(summary.total_sold).toLocaleString()}`, icon: Wallet, color: 'stat-purple' },
+        { label: 'Total pagado', value: `$${Number(summary.total_paid).toLocaleString()}`, icon: CreditCard, color: 'stat-blue' },
+        { label: 'Reembolsos', value: `$${Number(summary.total_refunded).toLocaleString()}`, icon: Undo2, color: 'stat-green' },
+        { label: 'Descuentos activos', value: String(summary.active_promotional_codes), icon: Tag, color: 'stat-orange' },
+        { label: 'Pedidos hoy', value: String(summary.orders_today), icon: ShoppingCart, color: 'stat-blue' },
+        { label: 'Clientes nuevos hoy', value: String(summary.new_customers_today), icon: UserPlus, color: 'stat-purple' },
       ]
     : [];
 
@@ -67,7 +74,7 @@ export default function Reports() {
         <div className="stats-grid reportes-stats">
           {stats.map((s) => (
             <div key={s.label} className={`stat-card ${s.color}`}>
-              <span className="stat-icon">{s.icon}</span>
+              <span className="stat-icon" aria-hidden="true"><s.icon size={20} /></span>
               <div>
                 <p className="stat-value">{s.value}</p>
                 <p className="stat-label">{s.label}</p>
@@ -85,20 +92,20 @@ export default function Reports() {
             <AreaChart data={last6}>
               <defs>
                 <linearGradient id="gVentas" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#aa3bff" stopOpacity={0.25} />
-                  <stop offset="95%" stopColor="#aa3bff" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#b026ea" stopOpacity={0.25} />
+                  <stop offset="95%" stopColor="#b026ea" stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="gPagos" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#10b981" stopOpacity={0.25} />
                   <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={(v) => v.slice(5)} />
-              <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
-              <Tooltip formatter={(v) => [`$${Number(v).toLocaleString()}`, '']} />
-              <Legend />
-              <Area type="monotone" dataKey="totalSold" name="Vendido" stroke="#aa3bff" strokeWidth={2} fill="url(#gVentas)" />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+              <XAxis dataKey="date" tick={{ fontSize: 11, fill: 'var(--muted)' }} stroke="var(--border)" tickFormatter={(v) => v.slice(5)} />
+              <YAxis tick={{ fontSize: 11, fill: 'var(--muted)' }} stroke="var(--border)" tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
+              <Tooltip formatter={(v) => [`$${Number(v).toLocaleString()}`, '']} contentStyle={chartTooltip} />
+              <Legend wrapperStyle={{ fontSize: 12, color: 'var(--muted)' }} />
+              <Area type="monotone" dataKey="totalSold" name="Vendido" stroke="#b026ea" strokeWidth={2} fill="url(#gVentas)" />
               <Area type="monotone" dataKey="totalPaid" name="Pagado" stroke="#10b981" strokeWidth={2} fill="url(#gPagos)" />
             </AreaChart>
           </ResponsiveContainer>
@@ -109,12 +116,12 @@ export default function Reports() {
           <h2 className="section-heading">Pedidos por día</h2>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={last6}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={(v) => v.slice(5)} />
-              <YAxis tick={{ fontSize: 11 }} />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="totalOrders" name="Total" fill="#aa3bff" radius={[4, 4, 0, 0]} />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+              <XAxis dataKey="date" tick={{ fontSize: 11, fill: 'var(--muted)' }} stroke="var(--border)" tickFormatter={(v) => v.slice(5)} />
+              <YAxis tick={{ fontSize: 11, fill: 'var(--muted)' }} stroke="var(--border)" />
+              <Tooltip contentStyle={chartTooltip} />
+              <Legend wrapperStyle={{ fontSize: 12, color: 'var(--muted)' }} />
+              <Bar dataKey="totalOrders" name="Total" fill="#b026ea" radius={[4, 4, 0, 0]} />
               <Bar dataKey="deliveredOrders" name="Entregados" fill="#10b981" radius={[4, 4, 0, 0]} />
               <Bar dataKey="canceledOrders" name="Cancelados" fill="#e74c3c" radius={[4, 4, 0, 0]} />
             </BarChart>
@@ -126,10 +133,10 @@ export default function Reports() {
           <h2 className="section-heading">Reembolsos</h2>
           <ResponsiveContainer width="100%" height={180}>
             <BarChart data={last6}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={(v) => v.slice(5)} />
-              <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
-              <Tooltip formatter={(v) => [`$${Number(v).toLocaleString()}`, 'Reembolsos']} />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+              <XAxis dataKey="date" tick={{ fontSize: 11, fill: 'var(--muted)' }} stroke="var(--border)" tickFormatter={(v) => v.slice(5)} />
+              <YAxis tick={{ fontSize: 11, fill: 'var(--muted)' }} stroke="var(--border)" tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
+              <Tooltip formatter={(v) => [`$${Number(v).toLocaleString()}`, 'Reembolsos']} contentStyle={chartTooltip} />
               <Bar dataKey="totalRefunded" name="Reembolsado" fill="#e74c3c" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>

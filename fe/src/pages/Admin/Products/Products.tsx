@@ -317,7 +317,7 @@ export default function Products() {
           <div>
             <h2 className="titulo-productos">Gestión de Productos</h2>
             <p className="subtitulo-usuarios">
-              Administra la ficha técnica completa del catálogo de inventario (HU-001)
+              Administra la ficha técnica, precios y existencias del catálogo
             </p>
           </div>
           <button className="btn-nuevo-producto" onClick={openNewModal}>
@@ -328,7 +328,7 @@ export default function Products() {
         <div className="productos-filtros">
           <input
             className="productos-busqueda"
-            placeholder="🔍 Buscar por nombre, SKU o código de barras..."
+            placeholder="Buscar por nombre, SKU o código de barras..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -411,9 +411,9 @@ export default function Products() {
                           {prod.stock ?? 0} / mín. {prod.stockMin ?? 5}
                         </span>
                         {prod.stock === 0 ? (
-                          <span className="stock-status">⛔ Agotado</span>
+                          <span className="stock-status">Agotado</span>
                         ) : lowStock(prod) ? (
-                          <span className="stock-status">⚠ Bajo</span>
+                          <span className="stock-status">Bajo</span>
                         ) : null}
                       </span>
                     </td>

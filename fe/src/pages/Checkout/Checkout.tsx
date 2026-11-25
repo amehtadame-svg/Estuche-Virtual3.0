@@ -4,6 +4,7 @@ import { useCart } from '../../hooks/useCart';
 import { useAuth } from '../../hooks/useAuth';
 import { API, authHeaders } from '../../api/api';
 import Modal from '../../components/ui/Modal';
+import { Banknote, CheckCircle2, CreditCard, Landmark, ShoppingCart, Smartphone } from 'lucide-react';
 import './Checkout.css';
 
 type PaymentMethod =
@@ -345,23 +346,28 @@ export default function Checkout() {
 
   if (items.length === 0 && !success) {
     return (
-      <div className="pago-vacio">
-        <p>No tienes productos en el carrito.</p>
-
+      <main className="empty-state">
+        <span className="empty-state-icon" aria-hidden="true">
+          <ShoppingCart size={34} />
+        </span>
+        <h1>No hay nada para pagar</h1>
+        <p>Tu carrito está vacío. Agrega productos desde el catálogo para continuar.</p>
         <button
+          type="button"
+          className="ui-btn ui-btn--primary"
           onClick={() => navigate('/catalogo')}
         >
           Ir al catálogo
         </button>
-      </div>
+      </main>
     );
   }
 
   if (success) {
     return (
       <div className="pago-exito">
-        <div className="pago-exito-icono">
-          ✅
+        <div className="pago-exito-icono" aria-hidden="true">
+          <CheckCircle2 size={56} strokeWidth={1.75} />
         </div>
 
         <h2>
@@ -467,16 +473,16 @@ export default function Checkout() {
 
                   <span className="pago-metodo-radio" />
 
-                  <span className="pago-metodo-icono">
-                    {paymentMethod === 'tarjeta'
-                      ? '💳'
-                      : paymentMethod === 'nequi'
-                        ? '📱'
-                        : paymentMethod === 'daviplata'
-                          ? '📲'
-                          : paymentMethod === 'transferencia'
-                            ? '🏦'
-                            : '💵'}
+                  <span className="pago-metodo-icono" aria-hidden="true">
+                    {paymentMethod === 'tarjeta' ? (
+                      <CreditCard size={20} />
+                    ) : paymentMethod === 'nequi' || paymentMethod === 'daviplata' ? (
+                      <Smartphone size={20} />
+                    ) : paymentMethod === 'transferencia' ? (
+                      <Landmark size={20} />
+                    ) : (
+                      <Banknote size={20} />
+                    )}
                   </span>
 
                   <span className="pago-metodo-label">
@@ -500,7 +506,7 @@ export default function Checkout() {
                   className="pago-linea"
                 >
                   <span>
-                    {item.icon} {item.name} ×{item.quantity}
+                    {item.name} ×{item.quantity}
                   </span>
 
                   <span>

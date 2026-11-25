@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, type FormEvent } from 'react';
+import { AlertTriangle, CheckCircle2, Package } from 'lucide-react';
 import { API, authHeaders } from '../../../api/api';
 // Reutiliza el shell visual del módulo de inventario (tarjetas, tabla, inputs)
 import './InventoryInbound.css';
@@ -213,7 +214,7 @@ export default function InventoryOutbound() {
     <div className="inbound-page">
       <div className="inbound-header">
         <div>
-          <h1 className="inbound-title">Salida Manual de Productos (HU-003)</h1>
+          <h1 className="inbound-title">Salida manual de productos</h1>
           <p className="inbound-subtitle">
             Registra retiros que no son ventas (traslados, muestras, consumo interno o mermas) y descuenta el stock
             con trazabilidad de auditoría
@@ -223,13 +224,13 @@ export default function InventoryOutbound() {
 
       {successMsg && (
         <div className="inbound-alert-success" role="status">
-          ✅ {successMsg}
+          <CheckCircle2 size={16} aria-hidden="true" /> {successMsg}
         </div>
       )}
 
       {error && (
         <div className="inbound-alert-error" role="alert">
-          ⚠️ {error}
+          <AlertTriangle size={16} aria-hidden="true" /> {error}
         </div>
       )}
 
@@ -240,7 +241,7 @@ export default function InventoryOutbound() {
           <input
             type="text"
             className="inbound-input"
-            placeholder="🔍 Escribe nombre, código SKU (ej. EV-001) o código de barras..."
+            placeholder="Escribe nombre, código SKU (ej. EV-001) o código de barras..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -278,7 +279,7 @@ export default function InventoryOutbound() {
                 {primaryImage ? (
                   <img src={primaryImage} alt={selectedProduct.name} />
                 ) : (
-                  <span className="inbound-no-img">📦</span>
+                  <span className="inbound-no-img"><Package size={22} aria-hidden="true" /></span>
                 )}
               </div>
               <div className="inbound-summary-info">
@@ -297,7 +298,7 @@ export default function InventoryOutbound() {
                   </div>
                   {isQuantityValid && !exceedsStock && (
                     <>
-                      <span className="outbound-arrow">−{parsedQty} ➔</span>
+                      <span className="outbound-arrow">−{parsedQty} →</span>
                       <div className="inbound-new-stock">
                         <small>Stock tras la salida</small>
                         <b className="outbound-new-stock">{selectedProduct.stock - parsedQty} uds.</b>
@@ -306,7 +307,7 @@ export default function InventoryOutbound() {
                   )}
                   {exceedsStock && (
                     <div className="outbound-shortage">
-                      ⚠️ Disponible: {selectedProduct.stock} uds. — solicitadas: {parsedQty}
+                      <AlertTriangle size={15} aria-hidden="true" /> Disponible: {selectedProduct.stock} uds. — solicitadas: {parsedQty}
                     </div>
                   )}
                 </div>
@@ -379,7 +380,7 @@ export default function InventoryOutbound() {
 
       {/* Bitácora de salidas manuales */}
       <div className="inbound-card inbound-history-card">
-        <h2 className="inbound-card-title">Bitácora de Salidas Manuales (`inventory_movements`)</h2>
+        <h2 className="inbound-card-title">Salidas recientes</h2>
         {movements.length === 0 ? (
           <p className="inbound-muted">Aún no se han registrado salidas de mercancía.</p>
         ) : (
@@ -451,7 +452,7 @@ export default function InventoryOutbound() {
               <div>
                 <dt>Stock resultante</dt>
                 <dd>
-                  {selectedProduct.stock} ➔ <strong>{selectedProduct.stock - parsedQty} uds.</strong>
+                  {selectedProduct.stock} → <strong>{selectedProduct.stock - parsedQty} uds.</strong>
                 </dd>
               </div>
             </dl>

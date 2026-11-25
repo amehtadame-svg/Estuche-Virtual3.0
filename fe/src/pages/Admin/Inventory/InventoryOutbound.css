@@ -1,28 +1,31 @@
-/* HU-003 · Salida manual de productos — estilos propios (el shell viene de InventoryInbound.css) */
+/* Salida manual de productos — estilos propios (el shell viene de InventoryInbound.css) */
 
 .outbound-arrow {
   font-weight: 700;
-  color: #e74c3c;
+  color: var(--danger);
   font-size: 14px;
 }
 
 .outbound-new-stock {
-  color: #e74c3c !important;
+  color: var(--danger) !important;
 }
 
 .outbound-shortage {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-size: 12px;
   font-weight: 600;
-  color: #c0392b;
-  background: rgba(231, 76, 60, 0.12);
-  border: 1px solid #e74c3c;
+  color: var(--danger);
+  background: rgba(200, 30, 30, 0.12);
+  border: 1px solid var(--danger);
   border-radius: 8px;
   padding: 6px 10px;
 }
 
 .inbound-stock-pill.empty {
-  background: rgba(231, 76, 60, 0.12);
-  color: #c0392b;
+  background: rgba(200, 30, 30, 0.12);
+  color: var(--danger);
 }
 
 .outbound-submit-btn {
@@ -30,12 +33,12 @@
   padding: 12px 18px;
   border: none;
   border-radius: var(--radius-md, 8px);
-  background: linear-gradient(135deg, #e74c3c, #c0392b);
-  color: #fff;
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  color: var(--on-accent);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 6px 18px rgba(231, 76, 60, 0.25);
+  box-shadow: 0 6px 18px rgba(200, 30, 30, 0.25);
   transition: opacity 0.2s;
 }
 
@@ -56,8 +59,8 @@
   border-radius: 999px;
   font-size: 12px;
   font-weight: 700;
-  background: rgba(231, 76, 60, 0.15);
-  color: #c0392b;
+  background: rgba(200, 30, 30, 0.15);
+  color: var(--danger);
 }
 
 /* CA-003.4 · modal de confirmación */
@@ -76,8 +79,8 @@
 .outbound-modal {
   width: 100%;
   max-width: 480px;
-  background: var(--bg, #fff);
-  border: 1px solid var(--border, #e5e7eb);
+  background: var(--bg);
+  border: 1px solid var(--border);
   border-radius: 14px;
   padding: 24px;
   box-shadow: 0 24px 60px rgba(15, 23, 42, 0.28);
@@ -87,14 +90,14 @@
   margin: 0 0 8px;
   font-size: 18px;
   font-weight: 700;
-  color: var(--text-h, #111827);
+  color: var(--text-h);
 }
 
 .outbound-modal-text {
   margin: 0 0 16px;
   font-size: 13px;
   line-height: 1.5;
-  color: var(--text, #4b5563);
+  color: var(--text);
 }
 
 .outbound-modal-list {
@@ -109,7 +112,7 @@
   justify-content: space-between;
   gap: 16px;
   padding-bottom: 8px;
-  border-bottom: 1px dashed var(--border, #e5e7eb);
+  border-bottom: 1px dashed var(--border);
 }
 
 .outbound-modal-list > div:last-child {
@@ -120,7 +123,7 @@
 .outbound-modal-list dt {
   font-size: 12px;
   font-weight: 600;
-  color: var(--text, #6b7280);
+  color: var(--text);
   text-transform: uppercase;
   letter-spacing: 0.02em;
   flex-shrink: 0;
@@ -130,7 +133,7 @@
   margin: 0;
   font-size: 13px;
   text-align: right;
-  color: var(--text-h, #111827);
+  color: var(--text-h);
   word-break: break-word;
 }
 
@@ -142,10 +145,10 @@
 
 .outbound-btn-cancel {
   padding: 11px 16px;
-  border: 1px solid var(--border, #e5e7eb);
+  border: 1px solid var(--border);
   border-radius: 8px;
   background: transparent;
-  color: var(--text-h, #111827);
+  color: var(--text-h);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -159,8 +162,8 @@
   padding: 11px 16px;
   border: none;
   border-radius: 8px;
-  background: linear-gradient(135deg, #e74c3c, #c0392b);
-  color: #fff;
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  color: var(--on-accent);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;

@@ -1,5 +1,7 @@
 .proveedores-page {
-  padding: 0 30px 50px;
+  width: min(1320px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 32px 0 56px;
 }
 
 .proveedores-topbar {
@@ -87,14 +89,14 @@ height: fit-content;
 }
 
 .btn-cancelar-proveedor:hover {
-  border-color: #e74c3c;
-  color: #e74c3c;
+  border-color: var(--danger);
+  color: var(--danger);
   background: rgba(231,76,60,.06);
 }
 
 .btn-guardar-proveedor {
   background: var(--gradient-accent);
-  color: #fff;
+  color: var(--on-accent);
   border: none;
   margin-bottom: 8px;
 }
@@ -170,8 +172,8 @@ height: fit-content;
 }
 
 .btn-eliminar-proveedor:hover {
-  border-color: #e74c3c;
-  color: #e74c3c;
+  border-color: var(--danger);
+  color: var(--danger);
   background: rgba(231,76,60,.06);
 }
 
@@ -227,7 +229,7 @@ height: fit-content;
 .btn-nuevo-proveedor {
   flex-shrink: 0;
   background: var(--gradient-accent);
-  color: #fff;
+  color: var(--on-accent);
   border: none;
   padding: 10px 20px;
   border-radius: var(--radius-md);

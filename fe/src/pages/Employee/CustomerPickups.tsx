@@ -112,7 +112,7 @@ export default function CustomerPickups() {
           key={order.id}
         >
           <h2>
-            Pedido {order.id.slice(0, 8)}
+            Pedido {order.id.slice(-6).toUpperCase()}
           </h2>
 
           <p>

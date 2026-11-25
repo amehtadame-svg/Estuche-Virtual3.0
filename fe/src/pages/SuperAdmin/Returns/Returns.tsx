@@ -19,11 +19,11 @@ interface OrderReturn {
   order: { id: string };
 }
 
-const statusColor: Record<string, string> = {
-  requested: '#f59e0b',
-  approved: '#10b981',
-  rejected: '#e74c3c',
-  refunded: '#3b82f6',
+const statusTone: Record<string, string> = {
+  requested: 'tone-warning',
+  approved: 'tone-success',
+  rejected: 'tone-danger',
+  refunded: 'tone-info',
 };
 
 const filters: { value: string; label: string }[] = [
@@ -139,9 +139,10 @@ export default function Returns() {
               </tr>
             </thead>
             <tbody>
+              {filteredReturns.length === 0 && (<tr><td colSpan={10} className="table-empty">No hay devoluciones para mostrar.</td></tr>)}
               {filteredReturns.map((d) => (
                 <tr key={d.id}>
-                  <td className="id-devolucion">#{d.id.slice(0, 6).toUpperCase()}</td>
+                  <td className="id-devolucion">#{d.id.slice(-6).toUpperCase()}</td>
                   <td>
                     <p className="cliente-dev-nombre">{d.customer.fullName}</p>
                     <p className="cliente-dev-email">{d.customer.email}</p>
@@ -155,7 +156,7 @@ export default function Returns() {
                   <td className="reembolso-dev">{Number(d.refund) > 0 ? `$${Number(d.refund).toLocaleString()}` : '—'}</td>
                   <td>{d.requestedAt.slice(0, 10)}</td>
                   <td>
-                    <span className="badge-estado-dev" style={{ backgroundColor: statusColor[d.status] ?? '#999' }}>
+                    <span className={`badge-estado-dev ${statusTone[d.status] ?? 'tone-neutral'}`}>
                       {returnStatusLabel[d.status] ?? d.status}
                     </span>
                   </td>
@@ -175,7 +176,7 @@ export default function Returns() {
           <div className="modal-overlay-dev" onClick={closeModal}>
             <div className="modal-devoluciones" onClick={(e) => e.stopPropagation()}>
               <div className="modal-header-dev">
-                <h3 className="modal-titulo-dev">Resolver devolución #{selected.id.slice(0, 6).toUpperCase()}</h3>
+                <h3 className="modal-titulo-dev">Resolver devolución #{selected.id.slice(-6).toUpperCase()}</h3>
                 <button className="modal-cerrar-dev" onClick={closeModal}>
                   ✕
                 </button>
