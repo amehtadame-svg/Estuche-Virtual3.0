@@ -63,6 +63,7 @@ export default function InventoryOutbound() {
   const [showConfirm, setShowConfirm] = useState(false);
 
   const [error, setError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   const loadData = async () => {
@@ -175,6 +176,7 @@ export default function InventoryOutbound() {
     }
 
     setError('');
+    setSuccessMsg('');
     setShowConfirm(true);
   };
 
@@ -207,10 +209,9 @@ export default function InventoryOutbound() {
 
       const data = await res.json();
       setShowConfirm(false);
-      notify.success(
-        `Salida confirmada: "${selectedProduct.name}" pasó de ${data.previousStock} a ${data.newStock} unidades (−${parsedQty}).`,
-        'Salida exitosa',
-      );
+      const successText = `Salida confirmada: "${selectedProduct.name}" pasó de ${data.previousStock} a ${data.newStock} unidades (−${parsedQty}).`;
+      setSuccessMsg(successText);
+      notify.success(successText, 'Salida exitosa');
       setQuantity('');
       setReasonType('');
       setReasonDetail('');
@@ -489,7 +490,7 @@ export default function InventoryOutbound() {
                 {submitting ? 'Procesando...' : 'Confirmar salida'}
               </button>
             </footer>
-          </section>
+          </div>
         </div>
       )}
     </div>
