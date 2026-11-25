@@ -100,7 +100,7 @@ Punto de entrada a la documentación del proyecto.
 
 | Entregable | Situación en este índice |
 |---|---|
-| Matriz de los 14 criterios del profesor | Pendiente de incorporar |
+| [Matriz de los 14 criterios del profesor](matriz-evidencias.md) | Borrador creado; evidencias en revisión |
 | MER y modelo relacional con PK y FK | Pendientes de incorporar y revisar |
 | Casos de uso y modelo de dominio | Pendientes de incorporar y revisar |
 | Secuencias de compra e inventario | Pendientes de incorporar y revisar |
