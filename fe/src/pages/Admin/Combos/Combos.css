@@ -1,18 +1,27 @@
 .combo-item-row {
   display: grid;
-  grid-template-columns: 1fr 90px 36px;
+  grid-template-columns: 1fr 84px 36px;
   gap: 8px;
   align-items: center;
   margin-bottom: 8px;
 }
 
+.combo-item-row .input-producto {
+  margin-bottom: 0;
+}
+
 .btn-quitar-item {
-  height: 36px;
+  height: 38px;
   border: 1px solid var(--border);
   background: transparent;
   color: var(--text);
   border-radius: var(--radius-sm);
   cursor: pointer;
+}
+
+.btn-quitar-item:hover:not(:disabled) {
+  border-color: #e74c3c;
+  color: #e74c3c;
 }
 
 .btn-quitar-item:disabled {
@@ -28,11 +37,144 @@
   border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: 13px;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
-.combo-ahorro {
-  margin: 6px 0 0;
+.combo-descuento-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.combo-presets {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.combo-preset-chip {
+  padding: 3px 9px !important;
+  border-radius: 999px !important;
+  border: 1px solid var(--accent-border);
+  background: var(--bg);
+  color: var(--accent);
+  font-size: 11px !important;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.combo-preset-chip.active,
+.combo-preset-chip:hover {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.combo-precios-grid {
+  margin-top: 4px;
+}
+
+.combo-resumen-descuento {
+  margin: 2px 0 12px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md, 12px);
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-border);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.combo-resumen-linea {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   font-size: 13px;
   color: var(--text);
+}
+
+.combo-resumen-linea strong {
+  color: var(--ink);
+}
+
+.combo-resumen-ahorro strong {
+  color: #16a34a;
+}
+
+.combo-resumen-total {
+  padding-top: 6px;
+  border-top: 1px dashed var(--accent-border);
+  font-weight: 600;
+}
+
+.combo-resumen-total strong {
+  color: var(--accent);
+  font-size: 15px;
+}
+
+.combo-activo {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  cursor: pointer;
+}
+
+.combo-activo input[type='checkbox'] {
+  width: auto !important;
+  margin: 0 !important;
+}
+
+.combo-precio-regular {
+  text-decoration: line-through;
+  color: var(--muted, #9b93a8);
+  font-size: 13px;
+}
+
+.combo-descuento-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  background: rgba(22, 163, 74, 0.14);
+  color: #16a34a;
+  white-space: nowrap;
+}
+
+.combo-sin-descuento {
+  font-size: 12px;
+  color: var(--muted, #9b93a8);
+}
+
+.combo-estado-pill {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.combo-estado-pill.activo {
+  background: rgba(39, 174, 96, 0.14);
+  color: #27ae60;
+}
+
+.combo-estado-pill.inactivo {
+  background: rgba(107, 114, 128, 0.18);
+  color: #6b7280;
+}
+
+@media (min-width: 601px) {
+  .combos-page .tabla-combos thead th:nth-child(1) { width: 12%; }
+  .combos-page .tabla-combos thead th:nth-child(2) { width: 24%; }
+  .combos-page .tabla-combos thead th:nth-child(3) { width: 10%; }
+  .combos-page .tabla-combos thead th:nth-child(4) { width: 14%; }
+  .combos-page .tabla-combos thead th:nth-child(5) { width: 10%; }
+  .combos-page .tabla-combos thead th:nth-child(6) { width: 10%; }
+  .combos-page .tabla-combos thead th:nth-child(7) { width: 7%; }
+  .combos-page .tabla-combos thead th:nth-child(8) { width: 13%; }
 }

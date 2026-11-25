@@ -7,7 +7,8 @@
 .reportes-topbar {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-end;
+  flex-wrap: wrap;
   gap: 16px;
   margin-bottom: 32px;
   padding-top: 10px;
@@ -17,16 +18,72 @@
   font-size: 28px;
   font-weight: 700;
   color: var(--text-h);
-  margin: 0;
+  margin: 0 0 4px;
 }
 
-/* ── Stats ───────────────────────────────────────────── */
+.reportes-filtro-fechas {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.reportes-fecha-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.reportes-fecha-campo input {
+  padding: 8px 12px;
+  border-radius: var(--radius-sm, 8px);
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-h);
+  font-size: 13px;
+}
+
+.reportes-btn-filtrar {
+  padding: 9px 16px;
+  border: none;
+  border-radius: var(--radius-sm, 8px);
+  background: var(--gradient-accent);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: var(--shadow-accent);
+  cursor: pointer;
+}
+
+.reportes-btn-limpiar {
+  padding: 9px 14px;
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius-sm, 8px);
+  background: transparent;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.reportes-vacio-aviso {
+  padding: 12px 16px;
+  margin-bottom: 24px;
+  border-radius: var(--radius-md, 12px);
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-border);
+  color: var(--text-h);
+  font-size: 14px;
+}
+
 .reportes-stats {
   grid-template-columns: repeat(3, 1fr);
   margin-bottom: 32px;
 }
 
-/* ── Gráficas ────────────────────────────────────────── */
 .reportes-graficas {
   display: flex;
   flex-direction: column;
@@ -34,7 +91,6 @@
   margin-bottom: 32px;
 }
 
-/* ── Tabla ───────────────────────────────────────────── */
 .reportes-tabla-section {
   background: var(--bg);
   border: 1px solid var(--border);
@@ -73,10 +129,6 @@
 .cancelados-reporte   { color: var(--danger); font-weight: 500; }
 .reembolsado-reporte  { color: var(--info); font-weight: 500; }
 
-/* ═══════════════════════════════════════════════════════
-   RESPONSIVE
-═══════════════════════════════════════════════════════ */
-
 @media (max-width: 1024px) {
   .reportes-stats {
     grid-template-columns: repeat(2, 1fr);
@@ -101,5 +153,5 @@
 }
 
 @media (max-width: 380px) {
-  .reportes-stats { grid-template-columns: 1fr; }
+  .reportes-stats { grid-template-columns: repeat(1, 1fr); }
 }

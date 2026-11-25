@@ -22,7 +22,7 @@ export default function ToastProvider({ children }: { children: ReactNode }) {
     ? activeConfirmation.message.slice(confirmationQuestionEnd + 1).trim()
     : '';
   const inboundSuccessParts = successNotice?.message.match(
-    /^(Ingreso confirmado:)\s*"([^"]+)"\s*(.+)$/,
+    /^((?:Ingreso confirmado|Salida confirmada):)\s*"([^"]+)"\s*(.+)$/,
   );
 
   useEffect(() => {

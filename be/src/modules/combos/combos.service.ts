@@ -5,13 +5,19 @@ import { badRequest, conflict, notFound } from '../../lib/errors';
 const MIN_ITEMS_ALERT =
   'Un combo o paquete promocional debe estar integrado por al menos dos productos del catálogo';
 const PRICE_ALERT = 'El precio total del combo debe ser un monto numérico positivo mayor a cero';
+const DISCOUNT_ALERT =
+  'El descuento aplicado no puede ser negativo ni igualar o superar el valor total de los productos';
 const PRODUCTS_ALERT =
   'Uno o más productos del combo no existen o fueron eliminados del catálogo';
+
+const round2 = (n: number) => Math.round(n * 100) / 100;
 
 export interface CreateComboInput {
   name: string;
   description?: string | null;
-  price: number;
+  price?: number;
+  discountPercent?: number;
+  discountAmount?: number;
   items: { productId: string; quantity: number }[];
 }
 
@@ -19,11 +25,12 @@ export interface UpdateComboInput {
   name?: string;
   description?: string | null;
   price?: number;
+  discountPercent?: number;
+  discountAmount?: number;
   isActive?: boolean;
   items?: { productId: string; quantity: number }[];
 }
 
-// Si repiten un producto, se suman sus cantidades (3 + 2 cuadernos = 5)
 const mergeItems = (items: { productId: string; quantity: number }[]) => {
   const merged = new Map<string, number>();
   for (const item of items) {
@@ -38,16 +45,67 @@ const comboInclude = {
   },
 } satisfies Prisma.ComboInclude;
 
-// Un combo no tiene stock propio: se calcula con sus productos componentes.
-// Ej.: 2 cuadernos + 1 lápiz, con 10 cuadernos y 3 lápices → alcanza para 3 combos.
-const withAvailableStock = <T extends { items: { quantity: number; product: { stock: number } }[] }>(
+const enrichCombo = <
+  T extends {
+    price: Prisma.Decimal | number | string;
+    items: { quantity: number; product: { stock: number; price: Prisma.Decimal | number | string } }[];
+  },
+>(
   combo: T
-) => ({
-  ...combo,
-  availableStock: combo.items.length
+) => {
+  const availableStock = combo.items.length
     ? Math.min(...combo.items.map((i) => Math.floor(i.product.stock / i.quantity)))
-    : 0,
-});
+    : 0;
+  const regularPrice = round2(
+    combo.items.reduce((sum, i) => sum + Number(i.product.price) * i.quantity, 0)
+  );
+  const comboPrice = round2(Number(combo.price));
+  const discountAmount = round2(Math.max(0, regularPrice - comboPrice));
+  const discountPercent =
+    regularPrice > 0 && discountAmount > 0
+      ? Number(((discountAmount / regularPrice) * 100).toFixed(1))
+      : 0;
+
+  return {
+    ...combo,
+    availableStock,
+    regularPrice,
+    discountAmount,
+    discountPercent,
+  };
+};
+
+const resolveComboPrice = (
+  regularPrice: number,
+  input: { price?: number; discountAmount?: number; discountPercent?: number }
+): number => {
+  if (input.discountAmount !== undefined) {
+    const amt = Number(input.discountAmount);
+    if (!Number.isFinite(amt) || amt < 0 || (regularPrice > 0 && amt >= regularPrice)) {
+      throw badRequest(DISCOUNT_ALERT);
+    }
+    if (input.price === undefined) {
+      return round2(regularPrice - amt);
+    }
+  }
+
+  if (input.discountPercent !== undefined) {
+    const pct = Number(input.discountPercent);
+    if (!Number.isFinite(pct) || pct < 0 || pct >= 100) {
+      throw badRequest(DISCOUNT_ALERT);
+    }
+    if (input.price === undefined) {
+      const amt = Math.round(regularPrice * (pct / 100));
+      return round2(regularPrice - amt);
+    }
+  }
+
+  if (input.price !== undefined) {
+    return round2(Number(input.price));
+  }
+
+  return round2(regularPrice);
+};
 
 export const comboService = {
   async list() {
@@ -56,33 +114,38 @@ export const comboService = {
       include: comboInclude,
       orderBy: { createdAt: 'desc' },
     });
-    return combos.map(withAvailableStock);
+    return combos.map(enrichCombo);
   },
 
   async create(data: CreateComboInput, userId?: string) {
-    const price = Number(data.price);
-
-    // CA-012.3: precio válido
-    if (!Number.isFinite(price) || price <= 0) throw badRequest(PRICE_ALERT);
+    if (data.price !== undefined) {
+      const explicitPrice = Number(data.price);
+      if (!Number.isFinite(explicitPrice) || explicitPrice <= 0) throw badRequest(PRICE_ALERT);
+    }
 
     const merged = mergeItems(data.items ?? []);
-
-    // CA-012.2: mínimo dos productos distintos
     if (merged.size < 2) throw badRequest(MIN_ITEMS_ALERT);
 
-    // Todos los productos deben existir y no estar eliminados
     const ids = [...merged.keys()];
-    const found = await prisma.product.count({ where: { id: { in: ids }, deletedAt: null } });
-    if (found !== ids.length) throw badRequest(PRODUCTS_ALERT);
+    const catalogProducts = await prisma.product.findMany({
+      where: { id: { in: ids }, deletedAt: null },
+      select: { id: true, price: true },
+    });
+    if (catalogProducts.length !== ids.length) throw badRequest(PRODUCTS_ALERT);
 
-    // CA-012.4: SKU único generado por el sistema. Se cuentan también los combos
-    // eliminados para no reutilizar nunca un SKU; si dos admins crean a la vez
-    // y chocan (P2002), se reintenta con el siguiente número.
+    const priceMap = new Map(catalogProducts.map((p) => [p.id, Number(p.price)]));
+    const regularPrice = round2(
+      ids.reduce((sum, id) => sum + (priceMap.get(id) ?? 0) * (merged.get(id) ?? 0), 0)
+    );
+
+    const price = resolveComboPrice(regularPrice, data);
+    if (!Number.isFinite(price) || price <= 0) throw badRequest(PRICE_ALERT);
+
     const total = await prisma.combo.count();
     for (let attempt = 0; attempt < 5; attempt++) {
       const sku = `COMBO-${String(total + 1 + attempt).padStart(6, '0')}`;
       try {
-        return await prisma.combo.create({
+        const created = await prisma.combo.create({
           data: {
             sku,
             name: data.name.trim(),
@@ -96,6 +159,7 @@ export const comboService = {
           },
           include: comboInclude,
         });
+        return enrichCombo(created);
       } catch (err) {
         if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') continue;
         throw err;
@@ -105,27 +169,50 @@ export const comboService = {
   },
 
   async update(id: string, data: UpdateComboInput) {
-    const existing = await prisma.combo.findFirst({ where: { id, deletedAt: null } });
+    const existing = await prisma.combo.findFirst({
+      where: { id, deletedAt: null },
+      include: comboInclude,
+    });
     if (!existing) throw notFound('Combo no encontrado.');
 
     if (data.price !== undefined) {
-      const price = Number(data.price);
-      if (!Number.isFinite(price) || price <= 0) throw badRequest(PRICE_ALERT);
+      const explicitPrice = Number(data.price);
+      if (!Number.isFinite(explicitPrice) || explicitPrice <= 0) throw badRequest(PRICE_ALERT);
     }
     if (data.name !== undefined && !data.name.trim()) {
       throw badRequest('El nombre del combo es obligatorio');
     }
 
-    // Si mandan items, reemplazan por completo la composición anterior
     const merged = data.items !== undefined ? mergeItems(data.items) : null;
+    let regularPrice = round2(
+      existing.items.reduce((sum, i) => sum + Number(i.product.price) * i.quantity, 0)
+    );
+
     if (merged) {
       if (merged.size < 2) throw badRequest(MIN_ITEMS_ALERT);
       const ids = [...merged.keys()];
-      const found = await prisma.product.count({ where: { id: { in: ids }, deletedAt: null } });
-      if (found !== ids.length) throw badRequest(PRODUCTS_ALERT);
+      const catalogProducts = await prisma.product.findMany({
+        where: { id: { in: ids }, deletedAt: null },
+        select: { id: true, price: true },
+      });
+      if (catalogProducts.length !== ids.length) throw badRequest(PRODUCTS_ALERT);
+      const priceMap = new Map(catalogProducts.map((p) => [p.id, Number(p.price)]));
+      regularPrice = round2(
+        ids.reduce((sum, pid) => sum + (priceMap.get(pid) ?? 0) * (merged.get(pid) ?? 0), 0)
+      );
     }
 
-    return prisma.$transaction(async (tx) => {
+    const hasPricingPatch =
+      data.price !== undefined ||
+      data.discountAmount !== undefined ||
+      data.discountPercent !== undefined;
+
+    const nextPrice = hasPricingPatch ? resolveComboPrice(regularPrice, data) : undefined;
+    if (nextPrice !== undefined && (!Number.isFinite(nextPrice) || nextPrice <= 0)) {
+      throw badRequest(PRICE_ALERT);
+    }
+
+    const updated = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       if (merged) {
         await tx.comboItem.deleteMany({ where: { comboId: id } });
         await tx.comboItem.createMany({
@@ -137,15 +224,16 @@ export const comboService = {
         data: {
           ...(data.name !== undefined ? { name: data.name.trim() } : {}),
           ...(data.description !== undefined ? { description: data.description?.trim() || null } : {}),
-          ...(data.price !== undefined ? { price: Number(data.price) } : {}),
+          ...(nextPrice !== undefined ? { price: nextPrice } : {}),
           ...(data.isActive !== undefined ? { isActive: data.isActive } : {}),
         },
         include: comboInclude,
       });
     });
+
+    return enrichCombo(updated);
   },
 
-  // Borrado lógico, igual que en productos: se conserva el historial.
   async remove(id: string) {
     const existing = await prisma.combo.findFirst({ where: { id, deletedAt: null } });
     if (!existing) throw notFound('Combo no encontrado.');

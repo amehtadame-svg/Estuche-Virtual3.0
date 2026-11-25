@@ -1,72 +1,25 @@
-import { useEffect, useState } from 'react';
-import {
-  Link,
-  NavLink,
-  useNavigate,
-} from 'react-router-dom';
-import {
-  Menu,
-  Moon,
-  RotateCcw,
-  Search,
-  ShieldCheck,
-  ShoppingBag,
-  Sparkles,
-  Sun,
-  Truck,
-  UserRound,
-  X,
-} from 'lucide-react';
-import { useAuth } from '../../hooks/useAuth';
-import { useCart } from '../../hooks/useCart';
-import './Header.css';
-
-const announcements = [
-  {
-    icon: Truck,
-    text: 'Envío gratis en pedidos superiores a $120.000',
-  },
-  {
-    icon: Sparkles,
-    text: 'Nueva colección 2026 ya disponible',
-  },
-  {
-    icon: RotateCcw,
-    text: 'Devoluciones fáciles hasta 30 días',
-  },
-  {
-    icon: ShieldCheck,
-    text: 'Compra protegida · Pago 100% seguro',
-  },
-];
+import { useEffect, useState } from "react";
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
+import { Menu, Moon, Search, ShoppingBag, Sun, UserRound, X } from "lucide-react";
+import { useAuth } from "../../hooks/useAuth";
+import { useCart } from "../../hooks/useCart";
+import "./Header.css";
 
 export default function Header() {
   const { user } = useAuth();
   const { totalItems } = useCart();
   const navigate = useNavigate();
-
+  const location = useLocation();
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
 
+  const isStaff = user?.role === "admin" || user?.role === "superadmin";
+
   const applyTheme = (isDark: boolean) => {
-    document.body.classList.toggle(
-      'dark-mode',
-      isDark
-    );
-
-    document.documentElement.classList.toggle(
-      'dark-mode',
-      isDark
-    );
-
-    document.documentElement.style.colorScheme =
-      isDark ? 'dark' : 'light';
-
-    localStorage.setItem(
-      'theme',
-      isDark ? 'dark' : 'light'
-    );
-
+    document.body.classList.toggle("dark-mode", isDark);
+    document.documentElement.classList.toggle("dark-mode", isDark);
+    document.documentElement.style.colorScheme = isDark ? "dark" : "light";
+    localStorage.setItem("theme", isDark ? "dark" : "light");
     setIsDarkMode(isDark);
   };
 
@@ -98,65 +51,56 @@ export default function Header() {
 
   const closeMenu = () =>
     setMenuOpen(false);
+  }, [location.pathname]);
 
-  const links =
-    user?.role === 'superadmin'
+  const toggleTheme = () => applyTheme(!isDarkMode);
+  const closeMenu = () => setMenuOpen(false);
+
+  const firstName = user?.name?.trim().split(/\s+/)[0] || "Usuario";
+
+  const links: [string, string][] =
+    user?.role === "superadmin"
       ? [
-          ['/', 'Inicio'],
-          ['/superadmin', 'Resumen'],
-          ['/empleado/supervision', 'Equipo'],
-          ['/admin/productos', 'Productos'],
-          ['/admin/combos', 'Combos'],
-          ['/admin/ingresos', 'Ingresos'],
-          ['/admin/salidas', 'Salidas'],
-          ['/admin/proveedores', 'Proveedores'],
-          ['/admin/pedidos', 'Pedidos'],
-          ['/superadmin/usuarios', 'Usuarios'],
-          ['/superadmin/descuentos', 'Descuentos'],
-          ['/superadmin/pagos', 'Pagos'],
-          ['/superadmin/devoluciones', 'Devoluciones'],
-          ['/admin/pqr', 'PQR'],
-          ['/superadmin/reportes', 'Reportes'],
+          ["/", "Inicio"],
+          ["/superadmin", "Resumen"],
+          ["/admin/productos", "Productos"],
+          ["/admin/combos", "Combos"],
+          ["/admin/ingresos", "Ingresos"],
+          ["/admin/salidas", "Salidas"],
+          ["/admin/proveedores", "Proveedores"],
+          ["/admin/pedidos", "Pedidos"],
+          ["/superadmin/usuarios", "Usuarios"],
+          ["/superadmin/descuentos", "Descuentos"],
+          ["/superadmin/pagos", "Pagos"],
+          ["/superadmin/devoluciones", "Devoluciones"],
+          ["/admin/pqr", "PQR"],
+          ["/superadmin/reportes", "Reportes"],
         ]
-      : user?.role === 'admin'
+      : user?.role === "admin"
         ? [
-            ['/', 'Inicio'],
-            ['/admin', 'Resumen'],
-            ['/empleado/supervision', 'Equipo'],
-            ['/admin/productos', 'Productos'],
-            ['/admin/combos', 'Combos'],
-            ['/admin/ingresos', 'Ingresos'],
-            ['/admin/salidas', 'Salidas'],
-            ['/admin/pedidos', 'Pedidos'],
-            ['/admin/pqr', 'PQR'],
-            ['/admin/recibos', 'Recibos'],
-            ['/admin/envios', 'Envíos'],
-            ['/admin/proveedores', 'Proveedores'],
-            ['/admin/usuarios', 'Usuarios'],
-            ['/admin/detallepedidos', 'Detalle pedidos'],
+            ["/", "Inicio"],
+            ["/admin", "Resumen"],
+            ["/admin/productos", "Productos"],
+            ["/admin/combos", "Combos"],
+            ["/admin/ingresos", "Ingresos"],
+            ["/admin/salidas", "Salidas"],
+            ["/admin/pedidos", "Pedidos"],
+            ["/admin/pqr", "PQR"],
+            ["/admin/recibos", "Recibos"],
+            ["/admin/envios", "Envíos"],
+            ["/admin/proveedores", "Proveedores"],
+            ["/admin/usuarios", "Usuarios"],
+            ["/admin/detallepedidos", "Detalle pedidos"],
           ]
-        : user?.role === 'employee'
-          ? [
-              ['/empleado', 'Mi panel'],
-              ['/empleado/nuevo', 'Crear pedido'],
-              ['/empleado/cola', 'Cola pagada'],
-              ['/empleado/pedidos', 'Mis pedidos'],
-              ['/empleado/inventario', 'Inventario'],
-            ]
-          : [
-              ['/', 'Inicio'],
-              ['/catalogo', 'Catálogo'],
-              ['/Nosotros', 'Nosotros'],
-              ['/Contacto', 'Contacto'],
-              ...(
-                user?.role === 'client'
-                  ? [
-                      ['/cliente/pqr', 'PQR y soporte'],
-                      ['/cliente/retiros', 'Mis retiros'],
-                    ]
-                  : []
-              ),
-            ];
+        : [
+            ["/", "Inicio"],
+            ["/catalogo", "Catálogo"],
+            ["/Nosotros", "Nosotros"],
+            ["/Contacto", "Contacto"],
+            ...(user?.role === "client"
+              ? ([["/cliente/pqr", "PQR y soporte"]] as [string, string][])
+              : []),
+          ];
 
   return (
     <>
@@ -243,9 +187,10 @@ export default function Header() {
           >
             {!isStaff && (
             <button
+              type="button"
               className="header-icon-btn"
               onClick={() => {
-                navigate('/catalogo');
+                navigate("/catalogo");
                 closeMenu();
               }}
               aria-label="Buscar productos"
@@ -272,21 +217,17 @@ export default function Header() {
 
             {!isStaff && (
             <button
+              type="button"
               className="header-icon-btn cart-btn"
               onClick={() => {
-                navigate('/carrito');
+                navigate("/carrito");
                 closeMenu();
               }}
               aria-label="Ver carrito"
             >
               <ShoppingBag size={18} />
-
               {totalItems > 0 && (
-                <span className="cart-badge">
-                  {totalItems > 99
-                    ? '99+'
-                    : totalItems}
-                </span>
+                <span className="cart-badge">{totalItems > 99 ? "99+" : totalItems}</span>
               )}
             </button>
             )}
@@ -340,7 +281,17 @@ export default function Header() {
             )}
           </button>
         </div>
-      </header>
-    </>
+
+        <button
+          type="button"
+          className="header-menu-toggle"
+          onClick={() => setMenuOpen((prev) => !prev)}
+          aria-label={menuOpen ? "Cerrar menú" : "Abrir menú"}
+          aria-expanded={menuOpen}
+        >
+          {menuOpen ? <X size={20} /> : <Menu size={20} />}
+        </button>
+      </div>
+    </header>
   );
 }
