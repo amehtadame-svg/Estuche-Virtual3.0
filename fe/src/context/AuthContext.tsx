@@ -53,10 +53,21 @@ export const AuthContext = createContext<AuthContextType | undefined>(
   undefined,
 );
 
+/** Payload JSON que el backend puede devolver en auth. */
+interface AuthPayload {
+  message?: string;
+  locked?: boolean;
+  remainingAttempts?: number;
+  previewUrl?: string;
+  user?: User;
+  token?: string;
+  [key: string]: unknown;
+}
+
 async function postJson(
   url: string,
   body: unknown,
-): Promise<AuthResult & { data?: any }> {
+): Promise<AuthResult & { data?: AuthPayload }> {
   try {
     const response = await fetch(url, {
       method: 'POST',
@@ -64,7 +75,7 @@ async function postJson(
       body: JSON.stringify(body),
     });
 
-    let data: any = null;
+    let data: AuthPayload | null = null;
 
     try {
       data = await response.json();
@@ -160,7 +171,10 @@ export const AuthProvider = ({
 
     if (!result.ok) return result;
 
-    const { user: loggedInUser, token } = result.data;
+    const { user: loggedInUser, token } = result.data ?? {};
+    if (!loggedInUser || !token) {
+      return { ok: false, message: 'Respuesta inesperada del servidor.' };
+    }
     setUser(loggedInUser);
     localStorage.setItem('user', JSON.stringify(loggedInUser));
     localStorage.setItem('token', token);
@@ -181,7 +195,10 @@ export const AuthProvider = ({
 
     if (!result.ok) return result;
 
-    const { user: registeredUser, token } = result.data;
+    const { user: registeredUser, token } = result.data ?? {};
+    if (!registeredUser || !token) {
+      return { ok: false, message: 'Respuesta inesperada del servidor.' };
+    }
     setUser(registeredUser);
     localStorage.setItem('user', JSON.stringify(registeredUser));
     localStorage.setItem('token', token);
