@@ -3,7 +3,7 @@
 | Campo | Valor |
 | --- | --- |
 | **Fecha** | 2026-11-25 |
-| **Commit** | `883cf20` (PR #84) |
+| **Commit** | Rama `arena/bec2ab3d-estuche-virtual3-0` (PR #84) — ver `git log` del PR para el hash vigente |
 | **Alcance** | Credenciales en código e historial, datos personales, ejemplos `.env`, variables necesarias |
 
 ---

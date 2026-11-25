@@ -2,7 +2,8 @@
 
 > Guía para que **cualquier miembro del equipo** pueda clonar, configurar,
 > ejecutar y probar el proyecto siguiendo únicamente este documento.
-> Última verificación: **2026-11-25** (commit `883cf20`, CI verde).
+> Última verificación: **2026-11-25** (PR #84, CI verde — ver run vigente en
+> la pestaña *Actions* de este repositorio).
 
 ---
 

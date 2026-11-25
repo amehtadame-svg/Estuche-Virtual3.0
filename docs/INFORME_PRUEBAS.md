@@ -3,9 +3,9 @@
 | Campo | Valor |
 | --- | --- |
 | **Fecha del informe** | 2026-11-25 |
-| **Commit evaluado** | `883cf20` (rama `arena/bec2ab3d-estuche-virtual3-0`, PR #84) |
+| **Commit evaluado** | `3998245` (rama `arena/bec2ab3d-estuche-virtual3-0`, PR #84) — los commits posteriores del PR solo tocan documentación, no código |
 | **Entorno local** | Sandbox Linux, Node.js v22.22.3, pnpm 10.12.4, TypeScript 5.5.4 |
-| **CI (GitHub Actions)** | Run [45708752716](https://github.com/amehtadame-svg/Estuche-Virtual3.0/actions/runs/45708752716) — **verde (3/3 jobs)** |
+| **CI (GitHub Actions)** | Run [45710304036](https://github.com/amehtadame-svg/Estuche-Virtual3.0/actions/runs/45710304036) — **verde (3/3 jobs)** |
 | **Resultado global** | **102 pruebas: 102 pasan, 0 fallan** |
 
 ---
@@ -100,14 +100,14 @@ representativos:
 
 ## 4. Resultado de CI del commit presentado
 
-**Run:** https://github.com/amehtadame-svg/Estuche-Virtual3.0/actions/runs/45708752716
-**Rama:** `arena/bec2ab3d-estuche-virtual3-0` → `main` (PR #84) · **2026-11-25**
+**Run:** https://github.com/amehtadame-svg/Estuche-Virtual3.0/actions/runs/45710304036
+**Commit:** `3998245` · **Rama:** `arena/bec2ab3d-estuche-virtual3-0` → `main` (PR #84) · **2026-11-25**
 
 | Job | Contenido | Resultado |
 | --- | --- | --- |
-| Backend (build + tests unitarios) | pnpm 10.12.4 + caché por lockfile → install congelado → `prisma generate` → `tsc` → 73 tests | ✅ 54 s |
+| Backend (build + tests unitarios) | pnpm 10.12.4 + caché por lockfile → install congelado → `prisma generate` → `tsc` → 73 tests | ✅ 44 s |
 | Frontend (lint + build + tests) | install congelado → ESLint 0 errores → `tsc -b + vite build` → 3 tests C-07 | ✅ 31 s |
-| Integración (PostgreSQL real) | service Postgres 16 → `migrate deploy` → 26 tests de integración | ✅ 42 s |
+| Integración (PostgreSQL real) | service Postgres 16 → `migrate deploy` → 26 tests de integración | ✅ 33 s |
 
 > **GitGuardian:** el check del PR señala un incidente en el commit intermedio
 > `9f62728` (literal `POSTGRES_PASSWORD: postgres` en el service de CI — una
