@@ -1,0 +1,2 @@
+ALTER TABLE "despatches"
+ALTER COLUMN "address" TYPE VARCHAR(500);

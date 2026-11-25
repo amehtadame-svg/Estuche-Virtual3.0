@@ -260,7 +260,7 @@ model Despatch {
   deliveredAt DateTime?      @map("delivered_at")
   status      DespatchStatus @default(in_transit)
   driverId    String?        @map("driver_id") @db.Uuid
-  address     String?        @db.VarChar(255)
+  address     String?        @db.VarChar(500)
 
   order  Order @relation(fields: [orderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   driver User? @relation(fields: [driverId], references: [id], onDelete: NoAction, onUpdate: NoAction)
