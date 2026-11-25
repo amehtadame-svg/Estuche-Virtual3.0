@@ -1,5 +1,7 @@
 .pagos-page {
-  padding: 0 30px 50px;
+  width: min(1320px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 32px 0 56px;
 }
 
 .pagos-topbar {
@@ -55,13 +57,13 @@
 
 .btn-filtro-activo {
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   border-color: var(--accent);
 }
 
 .btn-filtro-activo:hover {
   opacity: 0.88;
-  color: #fff;
+  color: var(--text-h);
 }
 
 /* ── Resumen ─────────────────────────────────────────── */
@@ -136,7 +138,6 @@
   border-radius: 20px;
   font-size: 12px;
   font-weight: 500;
-  color: #fff;
   white-space: nowrap;
 }
 
@@ -166,7 +167,7 @@
 }
 
 @media (max-width: 600px) {
-  .pagos-page { padding: 0 16px 40px; }
+  .pagos-page { width: calc(100% - 28px); padding: 20px 0 40px; }
 
   .tabla-pagos thead { display: none; }
 

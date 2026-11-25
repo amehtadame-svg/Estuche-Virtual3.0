@@ -3,11 +3,11 @@ import Modal from '../../../components/ui/Modal';
 import { API, authHeaders } from '../../../api/api';
 import './Despatch.css';
 
-const statusColor: Record<string, string> = {
-  in_transit: '#f39c12',
-  delivered: '#27ae60',
-  returned: '#e74c3c',
-  canceled: '#999',
+const statusTone: Record<string, string> = {
+  in_transit: 'tone-warning',
+  delivered: 'tone-success',
+  returned: 'tone-danger',
+  canceled: 'tone-neutral',
 };
 
 const emptyForm = {
@@ -270,15 +270,16 @@ export default function Despatch() {
               </thead>
 
               <tbody>
+                {despatches.length === 0 && (<tr><td colSpan={8} className="table-empty">Todavía no hay envíos registrados.</td></tr>)}
                 {despatches.map((despatch) => (
                   <tr key={despatch.id}>
                     <td className="numero-envio">
-                      ENV-{despatch.id.slice(0, 6).toUpperCase()}
+                      ENV-{despatch.id.slice(-6).toUpperCase()}
                     </td>
 
                     <td>
                       {despatch.order
-                        ? `PED-${despatch.order.id.slice(0, 6).toUpperCase()}`
+                        ? `PED-${despatch.order.id.slice(-6).toUpperCase()}`
                         : '—'}
                     </td>
 
@@ -311,39 +312,22 @@ export default function Despatch() {
                             e.target.value
                           )
                         }
-                        className="estado-select"
-                        style={{
-                          backgroundColor:
-                            statusColor[despatch.status] ?? '#999',
-                          color: '#fff',
-                        }}
+                        className={`estado-select ${statusTone[despatch.status] ?? 'tone-neutral'}`}
                       >
                         <option
                           value="in_transit"
-                          style={{
-                            backgroundColor: '#fff',
-                            color: '#1E2761',
-                          }}
                         >
                           En camino
                         </option>
 
                         <option
                           value="delivered"
-                          style={{
-                            backgroundColor: '#fff',
-                            color: '#1E2761',
-                          }}
                         >
                           Entregado
                         </option>
 
                         <option
                           value="returned"
-                          style={{
-                            backgroundColor: '#fff',
-                            color: '#1E2761',
-                          }}
                         >
                           Devuelto
                         </option>

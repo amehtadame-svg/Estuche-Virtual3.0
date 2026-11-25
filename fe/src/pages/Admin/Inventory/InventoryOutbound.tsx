@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, type FormEvent } from 'react';
+import { AlertTriangle, CheckCircle2, Package } from 'lucide-react';
 import { API, authHeaders } from '../../../api/api';
 import { notify } from '../../../lib/notifications';
 import './InventoryInbound.css';
@@ -231,7 +232,7 @@ export default function InventoryOutbound() {
     <div className="inbound-page">
       <div className="inbound-header">
         <div>
-          <h1 className="inbound-title">Salida Manual de Productos (HU-003)</h1>
+          <h1 className="inbound-title">Salida manual de productos</h1>
           <p className="inbound-subtitle">
             Registra retiros que no son ventas (traslados, muestras, consumo interno o mermas) y descuenta el stock
             con trazabilidad de auditoría
@@ -239,9 +240,15 @@ export default function InventoryOutbound() {
         </div>
       </div>
 
+      {successMsg && (
+        <div className="inbound-alert-success" role="status">
+          <CheckCircle2 size={16} aria-hidden="true" /> {successMsg}
+        </div>
+      )}
+
       {error && (
         <div className="inbound-alert-error" role="alert">
-          ⚠️ {error}
+          <AlertTriangle size={16} aria-hidden="true" /> {error}
         </div>
       )}
 
@@ -251,7 +258,7 @@ export default function InventoryOutbound() {
           <input
             type="text"
             className="inbound-input"
-            placeholder="🔍 Escribe nombre, código SKU (ej. EV-001) o código de barras..."
+            placeholder="Escribe nombre, código SKU (ej. EV-001) o código de barras..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -289,7 +296,7 @@ export default function InventoryOutbound() {
                 {primaryImage ? (
                   <img src={primaryImage} alt={selectedProduct.name} />
                 ) : (
-                  <span className="inbound-no-img">📦</span>
+                  <span className="inbound-no-img"><Package size={22} aria-hidden="true" /></span>
                 )}
               </div>
               <div className="inbound-summary-info">
@@ -308,7 +315,7 @@ export default function InventoryOutbound() {
                   </div>
                   {isQuantityValid && !exceedsStock && (
                     <>
-                      <span className="outbound-arrow">−{parsedQty} ➔</span>
+                      <span className="outbound-arrow">−{parsedQty} →</span>
                       <div className="inbound-new-stock">
                         <small>Stock tras la salida</small>
                         <b className="outbound-new-stock">{selectedProduct.stock - parsedQty} uds.</b>
@@ -317,7 +324,7 @@ export default function InventoryOutbound() {
                   )}
                   {exceedsStock && (
                     <div className="outbound-shortage">
-                      ⚠️ Disponible: {selectedProduct.stock} uds. — solicitadas: {parsedQty}
+                      <AlertTriangle size={15} aria-hidden="true" /> Disponible: {selectedProduct.stock} uds. — solicitadas: {parsedQty}
                     </div>
                   )}
                 </div>
@@ -388,7 +395,7 @@ export default function InventoryOutbound() {
       </div>
 
       <div className="inbound-card inbound-history-card">
-        <h2 className="inbound-card-title">Bitácora de Salidas Manuales (`inventory_movements`)</h2>
+        <h2 className="inbound-card-title">Salidas recientes</h2>
         {movements.length === 0 ? (
           <p className="inbound-muted">Aún no se han registrado salidas de mercancía.</p>
         ) : (
@@ -426,76 +433,43 @@ export default function InventoryOutbound() {
       </div>
 
       {showConfirm && selectedProduct && (
-        <div className="confirm-delete-overlay" onClick={closeConfirm}>
-          <section
-            className="confirm-delete-dialog outbound-confirm-dialog"
-            role="alertdialog"
-            aria-modal="true"
-            aria-labelledby="outbound-confirm-title"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <header className="confirm-delete-header">
-              <span className="confirm-delete-icon" aria-hidden="true">
-                !
-              </span>
-              <h2 id="outbound-confirm-title">Confirmar salida de mercancía</h2>
-              <button
-                type="button"
-                className="confirm-delete-close"
-                aria-label="Cerrar confirmación"
-                onClick={closeConfirm}
-                disabled={submitting}
-              >
-                ×
-              </button>
-            </header>
+        <div className="outbound-modal-backdrop" role="dialog" aria-modal="true">
+          <div className="outbound-modal">
+            <h3 className="outbound-modal-title">Confirmar salida de mercancía</h3>
+            <p className="outbound-modal-text">
+              Esta acción descontará existencias de forma permanente. Revisa el resumen antes de continuar.
+            </p>
 
-            <div className="confirm-delete-body">
-              <p className="confirm-delete-message">
-                ¿Confirmar el retiro de {parsedQty} {parsedQty === 1 ? 'unidad' : 'unidades'} de “
-                {selectedProduct.name}”?
-              </p>
-              <p className="confirm-delete-note">
-                Esta acción descontará existencias de forma permanente. Revisa el resumen antes de continuar.
-              </p>
-
-              <dl className="outbound-confirm-summary">
-                <div>
-                  <dt>Producto</dt>
-                  <dd>{selectedProduct.name}</dd>
-                </div>
-                <div>
-                  <dt>SKU</dt>
-                  <dd>
-                    <span className="inbound-sku">{selectedProduct.sku || '—'}</span>
-                  </dd>
-                </div>
-                <div>
-                  <dt>Cantidad a retirar</dt>
-                  <dd>
-                    <span className="outbound-qty-badge">−{parsedQty} uds.</span>
-                  </dd>
-                </div>
-                <div>
-                  <dt>Motivo</dt>
-                  <dd>{reasonType}</dd>
-                </div>
-                <div>
-                  <dt>Justificación</dt>
-                  <dd>{reasonDetail.trim()}</dd>
-                </div>
-                <div className="outbound-confirm-stock-row">
-                  <dt>Stock resultante</dt>
-                  <dd>
-                    <span>{selectedProduct.stock} uds.</span>
-                    <span className="outbound-confirm-arrow">➔</span>
-                    <strong className="outbound-confirm-stock-final">
-                      {selectedProduct.stock - parsedQty} uds.
-                    </strong>
-                  </dd>
-                </div>
-              </dl>
-            </div>
+            <dl className="outbound-modal-list">
+              <div>
+                <dt>Producto</dt>
+                <dd>{selectedProduct.name}</dd>
+              </div>
+              <div>
+                <dt>SKU</dt>
+                <dd>{selectedProduct.sku || '—'}</dd>
+              </div>
+              <div>
+                <dt>Cantidad a retirar</dt>
+                <dd>
+                  <strong>{parsedQty} uds.</strong>
+                </dd>
+              </div>
+              <div>
+                <dt>Motivo</dt>
+                <dd>{reasonType}</dd>
+              </div>
+              <div>
+                <dt>Justificación</dt>
+                <dd>{reasonDetail.trim()}</dd>
+              </div>
+              <div>
+                <dt>Stock resultante</dt>
+                <dd>
+                  {selectedProduct.stock} → <strong>{selectedProduct.stock - parsedQty} uds.</strong>
+                </dd>
+              </div>
+            </dl>
 
             <footer className="confirm-delete-footer">
               <button

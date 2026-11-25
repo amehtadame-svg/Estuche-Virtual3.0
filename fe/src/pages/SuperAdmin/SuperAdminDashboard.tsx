@@ -1,10 +1,19 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { BarChart3, CreditCard, ShoppingCart, Tag, Undo2, UserPlus, Users, Wallet, type LucideIcon } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { API, authHeaders } from '../../api/api';
 import { notify } from '../../lib/notifications';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
+import { roleLabel } from '../../lib/statusLabels';
 import './SuperAdminDashboard.css';
+
+const chartTooltip = {
+  background: 'var(--surface)',
+  border: '1px solid var(--border)',
+  borderRadius: 12,
+  color: 'var(--text-h)',
+};
 
 interface Summary {
   total_sold: number;
@@ -90,19 +99,19 @@ export default function SuperAdminDashboard() {
   const last6 = [...reports].slice(0, 6).reverse();
   const maxRoleTotal = Math.max(1, ...rolesCount.map((r) => r.total));
 
-  const stats = summary
+  const stats: { label: string; value: string; icon: LucideIcon; color: string }[] = summary
     ? [
-        { label: 'Total vendido', value: `$${Number(summary.total_sold).toLocaleString('es-CO')}`, icon: '💰', color: 'stat-purple' },
-        { label: 'Total pagado', value: `$${Number(summary.total_paid).toLocaleString('es-CO')}`, icon: '💳', color: 'stat-blue' },
-        { label: 'Reembolsos', value: `$${Number(summary.total_refunded).toLocaleString('es-CO')}`, icon: '↩️', color: 'stat-red' },
-        { label: 'Descuentos activos', value: String(summary.active_promotional_codes), icon: '🏷️', color: 'stat-orange' },
-        { label: 'Pedidos hoy', value: String(summary.orders_today), icon: '🛒', color: 'stat-green' },
-        { label: 'Clientes nuevos hoy', value: String(summary.new_customers_today), icon: '👤', color: 'stat-blue' },
+        { label: 'Total vendido', value: `$${Number(summary.total_sold).toLocaleString()}`, icon: Wallet, color: 'stat-purple' },
+        { label: 'Total pagado', value: `$${Number(summary.total_paid).toLocaleString()}`, icon: CreditCard, color: 'stat-blue' },
+        { label: 'Reembolsos', value: `$${Number(summary.total_refunded).toLocaleString()}`, icon: Undo2, color: 'stat-red' },
+        { label: 'Descuentos activos', value: String(summary.active_promotional_codes), icon: Tag, color: 'stat-orange' },
+        { label: 'Pedidos hoy', value: String(summary.orders_today), icon: ShoppingCart, color: 'stat-green' },
+        { label: 'Clientes nuevos hoy', value: String(summary.new_customers_today), icon: UserPlus, color: 'stat-blue' },
       ]
     : [];
 
   const roleColor: Record<string, string> = {
-    superadmin: '#7c3aed',
+    superadmin: '#b026ea',
     admin: '#2563eb',
     employee: '#0891b2',
     delivery: '#d97706',
@@ -132,7 +141,7 @@ export default function SuperAdminDashboard() {
             <div className="sa-stats-grid">
               {stats.map((s) => (
                 <div key={s.label} className={`stat-card ${s.color}`}>
-                  <span className="stat-icon">{s.icon}</span>
+                  <span className="stat-icon" aria-hidden="true"><s.icon size={20} /></span>
                   <div>
                     <p className="stat-value">{s.value}</p>
                     <p className="stat-label">{s.label}</p>
@@ -151,23 +160,20 @@ export default function SuperAdminDashboard() {
                     <AreaChart data={last6}>
                       <defs>
                         <linearGradient id="saVentas" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#7c3aed" stopOpacity={0.25} />
-                          <stop offset="95%" stopColor="#7c3aed" stopOpacity={0} />
+                          <stop offset="5%" stopColor="#b026ea" stopOpacity={0.25} />
+                          <stop offset="95%" stopColor="#b026ea" stopOpacity={0} />
                         </linearGradient>
                         <linearGradient id="saPagos" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="5%" stopColor="#10b981" stopOpacity={0.25} />
                           <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                      <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={(v) => String(v).slice(5, 10)} />
-                      <YAxis
-                        tick={{ fontSize: 11 }}
-                        tickFormatter={(v) => (v >= 1000 ? `$${(v / 1000).toFixed(0)}k` : `$${v}`)}
-                      />
-                      <Tooltip formatter={(v) => [`$${Number(v).toLocaleString('es-CO')}`, '']} />
-                      <Legend />
-                      <Area type="monotone" dataKey="totalSold" name="Vendido" stroke="#7c3aed" strokeWidth={2} fill="url(#saVentas)" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                      <XAxis dataKey="date" tick={{ fontSize: 11, fill: 'var(--muted)' }} stroke="var(--border)" tickFormatter={(v) => v.slice(5)} />
+                      <YAxis tick={{ fontSize: 11, fill: 'var(--muted)' }} stroke="var(--border)" tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
+                      <Tooltip formatter={(v) => [`$${Number(v).toLocaleString()}`, '']} contentStyle={chartTooltip} />
+                      <Legend wrapperStyle={{ fontSize: 12, color: 'var(--muted)' }} />
+                      <Area type="monotone" dataKey="totalSold" name="Vendido" stroke="#b026ea" strokeWidth={2} fill="url(#saVentas)" />
                       <Area type="monotone" dataKey="totalPaid" name="Pagado" stroke="#10b981" strokeWidth={2} fill="url(#saPagos)" />
                     </AreaChart>
                   </ResponsiveContainer>
@@ -181,12 +187,12 @@ export default function SuperAdminDashboard() {
                 {last6.length > 0 ? (
                   <ResponsiveContainer width="100%" height={200}>
                     <BarChart data={last6}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                      <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={(v) => String(v).slice(5, 10)} />
-                      <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
-                      <Tooltip />
-                      <Legend />
-                      <Bar dataKey="totalOrders" name="Total" fill="#7c3aed" radius={[4, 4, 0, 0]} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                      <XAxis dataKey="date" tick={{ fontSize: 11, fill: 'var(--muted)' }} stroke="var(--border)" tickFormatter={(v) => v.slice(5)} />
+                      <YAxis tick={{ fontSize: 11, fill: 'var(--muted)' }} stroke="var(--border)" />
+                      <Tooltip contentStyle={chartTooltip} />
+                      <Legend wrapperStyle={{ fontSize: 12, color: 'var(--muted)' }} />
+                      <Bar dataKey="totalOrders" name="Total" fill="#b026ea" radius={[4, 4, 0, 0]} />
                       <Bar dataKey="deliveredOrders" name="Entregados" fill="#10b981" radius={[4, 4, 0, 0]} />
                       <Bar dataKey="canceledOrders" name="Cancelados" fill="#e74c3c" radius={[4, 4, 0, 0]} />
                     </BarChart>
@@ -200,26 +206,21 @@ export default function SuperAdminDashboard() {
             <div className="sa-right">
               <div className="sa-chart-section">
                 <h2 className="sa-section-heading">Usuarios por rol</h2>
-                {rolesCount.length === 0 ? (
-                  <p className="sa-no-data">Sin usuarios registrados</p>
-                ) : (
-                  <div className="sa-roles-list">
-                    {rolesCount.map(({ role, total }) => (
-                      <div key={role} className="sa-rol-item">
-                        <div className="sa-rol-info">
-                          <span className="sa-rol-dot" style={{ backgroundColor: roleColor[role] ?? '#6b7280' }} />
-                          <span className="sa-rol-nombre">{roleLabel[role] ?? role}</span>
-                        </div>
-                        <div className="sa-rol-bar-wrap">
-                          <div
-                            className="sa-rol-bar"
-                            style={{
-                              width: `${Math.min((total / maxRoleTotal) * 100, 100)}%`,
-                              backgroundColor: roleColor[role] ?? '#6b7280',
-                            }}
-                          />
-                        </div>
-                        <span className="sa-rol-total">{total}</span>
+                <div className="sa-roles-list">
+                  {rolesCount.map(({ role, total }) => (
+                    <div key={role} className="sa-rol-item">
+                      <div className="sa-rol-info">
+                        <span className="sa-rol-dot" style={{ backgroundColor: roleColor[role] ?? '#6b7280' }} />
+                        <span className="sa-rol-nombre">{roleLabel[role] ?? role}</span>
+                      </div>
+                      <div className="sa-rol-bar-wrap">
+                        <div
+                          className="sa-rol-bar"
+                          style={{
+                            width: `${Math.min((total / Math.max(...rolesCount.map((r) => r.total))) * 100, 100)}%`,
+                            backgroundColor: roleColor[role] ?? '#6b7280',
+                          }}
+                        />
                       </div>
                     ))}
                   </div>
@@ -230,16 +231,16 @@ export default function SuperAdminDashboard() {
                 <h2 className="sa-section-heading">Accesos rápidos</h2>
                 <div className="sa-accesos">
                   {[
-                    { label: 'Gestionar usuarios', icon: '👥', href: '/superadmin/usuarios' },
-                    { label: 'Ver pagos', icon: '💳', href: '/superadmin/pagos' },
-                    { label: 'Descuentos', icon: '🏷️', href: '/superadmin/descuentos' },
-                    { label: 'Devoluciones', icon: '↩️', href: '/superadmin/devoluciones' },
-                    { label: 'Reportes completos', icon: '📊', href: '/superadmin/reportes' },
+                    { label: 'Gestionar usuarios', icon: Users, href: '/superadmin/usuarios' },
+                    { label: 'Ver pagos', icon: CreditCard, href: '/superadmin/pagos' },
+                    { label: 'Descuentos', icon: Tag, href: '/superadmin/descuentos' },
+                    { label: 'Devoluciones', icon: Undo2, href: '/superadmin/devoluciones' },
+                    { label: 'Reportes completos', icon: BarChart3, href: '/superadmin/reportes' },
                   ].map((a) => (
                     <Link key={a.label} to={a.href} className="sa-acceso-item">
-                      <span className="sa-acceso-icon">{a.icon}</span>
+                      <span className="sa-acceso-icon" aria-hidden="true"><a.icon size={18} /></span>
                       <span className="sa-acceso-label">{a.label}</span>
-                      <span className="sa-acceso-arrow">→</span>
+                      <span className="sa-acceso-arrow" aria-hidden="true">→</span>
                     </Link>
                   ))}
                 </div>

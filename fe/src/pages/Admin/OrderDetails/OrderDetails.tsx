@@ -154,7 +154,9 @@ export default function OrderDetails() {
         <div className="detalle-pedidos-filtros">
           <input
             className="detalle-pedidos-busqueda"
-            placeholder="🔍 Buscar por N° pedido o producto..."
+            type="search"
+            aria-label="Buscar artículos de pedidos"
+            placeholder="Buscar por N° pedido o producto..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -178,12 +180,19 @@ export default function OrderDetails() {
                 </tr>
               </thead>
               <tbody>
+                {filtered.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="table-empty">
+                      {search ? 'Ningún artículo coincide con la búsqueda.' : 'Todavía no hay artículos asignados a pedidos.'}
+                    </td>
+                  </tr>
+                )}
                 {filtered.map((d) => {
                   const subtotal = d.subtotal ?? d.quantity * d.unitPrice;
                   return (
                     <tr key={d.id}>
-                      <td className="numero-detalle-pedido">PED-{d.orderId.slice(0, 6).toUpperCase()}</td>
-                      <td className="producto-detalle-pedido">{d.product?.name ?? `Producto #${d.productId.slice(0, 6)}`}</td>
+                      <td className="numero-detalle-pedido">PED-{d.orderId.slice(-6).toUpperCase()}</td>
+                      <td className="producto-detalle-pedido">{d.product?.name ?? `Producto #${d.productId.slice(-6).toUpperCase()}`}</td>
                       <td>{d.quantity}</td>
                       <td>${Number(d.unitPrice).toLocaleString()}</td>
                       <td className="subtotal-detalle-pedido">${Number(subtotal).toLocaleString()}</td>
@@ -197,7 +206,7 @@ export default function OrderDetails() {
               </tbody>
             </table>
 
-            {filtered.length === 0 && <p className="detalle-pedidos-vacio">No se encontraron artículos.</p>}
+
 
             {filtered.length > 0 && (
               <div className="detalle-pedidos-total">

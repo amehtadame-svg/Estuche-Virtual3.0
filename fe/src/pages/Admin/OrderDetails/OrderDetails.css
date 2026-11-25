@@ -1,6 +1,8 @@
 /* Página  */
 .detalle-pedidos-page {
-  padding: 0 30px 50px;
+  width: min(1320px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 32px 0 56px;
 }
 
 .detalle-pedidos-topbar {
@@ -34,7 +36,7 @@
 .btn-nuevo-detalle-pedido {
   flex-shrink: 0;
   background: var(--gradient-accent);
-  color: #fff;
+  color: var(--on-accent);
   border: none;
   padding: 10px 20px;
   border-radius: var(--radius-md);
@@ -126,8 +128,8 @@
 
 
 .btn-eliminar-detalle-pedido:hover {
-  border-color: #e74c3c;
-  color: #e74c3c;
+  border-color: var(--danger);
+  color: var(--danger);
   background: rgba(231,76,60,.06);
 }
 
@@ -169,7 +171,7 @@
 
 .btn-guardar-detalle-pedido {
   background: var(--gradient-accent);
-  color: #fff;
+  color: var(--on-accent);
   border: none;
 }
 .btn-guardar-detalle-pedido:hover {
@@ -184,8 +186,8 @@
 
 
 .btn-cancelar-detalle-pedido:hover {
-  border-color: #e74c3c;
-  color: #e74c3c;
+  border-color: var(--danger);
+  color: var(--danger);
   background: rgba(231,76,60,.06);
 }
 
@@ -194,7 +196,7 @@
 
 @media (max-width: 600px) {
   .detalle-pedidos-page {
-    padding: 0 16px 40px;
+    width: calc(100% - 28px); padding: 20px 0 40px;
   }
 
   .detalle-pedidos-topbar {

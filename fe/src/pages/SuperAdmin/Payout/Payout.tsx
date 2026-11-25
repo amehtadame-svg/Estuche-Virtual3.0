@@ -18,11 +18,11 @@ interface Payout {
   receipt: { receiptNumber: number; total: number };
 }
 
-const statusColor: Record<string, string> = {
-  pending: '#f59e0b',
-  approved: '#10b981',
-  rejected: '#e74c3c',
-  refunded: '#3b82f6',
+const statusTone: Record<string, string> = {
+  pending: 'tone-warning',
+  approved: 'tone-success',
+  rejected: 'tone-danger',
+  refunded: 'tone-info',
 };
 
 const filters: { value: string; label: string }[] = [
@@ -112,9 +112,10 @@ export default function Payout() {
             </tr>
           </thead>
           <tbody>
+            {filteredPayouts.length === 0 && (<tr><td colSpan={9} className="table-empty">No hay pagos para mostrar.</td></tr>)}
             {filteredPayouts.map((p) => (
               <tr key={p.id}>
-                <td className="id-pago">#{p.id.slice(0, 6).toUpperCase()}</td>
+                <td className="id-pago">#{p.id.slice(-6).toUpperCase()}</td>
                 <td>
                   <p className="cliente-pago-nombre">{p.user.fullName}</p>
                   <p className="cliente-pago-email">{p.user.email}</p>
@@ -125,7 +126,7 @@ export default function Payout() {
                 <td className="monto-pago">${Number(p.amount).toLocaleString()}</td>
                 <td>{p.paidAt ? p.paidAt.slice(0, 10) : '—'}</td>
                 <td>
-                  <span className="badge-pago" style={{ backgroundColor: statusColor[p.status] ?? '#999' }}>
+                  <span className={`badge-pago ${statusTone[p.status] ?? 'tone-neutral'}`}>
                     {paymentStatusLabel[p.status] ?? p.status}
                   </span>
                 </td>

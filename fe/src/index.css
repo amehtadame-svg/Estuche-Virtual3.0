@@ -1,45 +1,73 @@
 :root {
+  /* ── Paleta de marca ─────────────────────────────────────────────── */
   --grape-50: #faf5ff;
   --grape-100: #f3e8ff;
   --grape-200: #ead6ff;
   --grape-300: #d8b4fe;
-  --accent: #aa3bff;
+  /* Relleno de botones/acentos: contraste AA (4.9:1) con texto blanco. */
+  --accent: #b026ea;
+  --accent-hover: #9a1bd0;
   --accent-dark: #7c1fc5;
-  --accent-light: #c97bff;
-  --ink: #08060d;
-  --text: #6b6375;
-  --muted: #a8a2b3;
-  --bg: #fff;
-  --bg-subtle: #faf9fc;
-  --border: #e8e3ed;
-  --text-h: #08060d;
-  --accent-bg: rgba(170, 59, 255, 0.08);
-  --accent-border: rgba(170, 59, 255, 0.26);
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
+  --accent-light: #d58bff;
+  /* Acento para TEXTO sobre fondo de página (enlaces, etiquetas, cifras). */
+  --accent-text: #8a16bd;
+  --on-accent: #ffffff;
+  --accent-bg: rgba(176, 38, 234, 0.09);
+  --accent-border: rgba(176, 38, 234, 0.28);
+
+  /* ── Superficies y texto (modo claro) ────────────────────────────── */
+  --bg: #ffffff;
+  --bg-subtle: #f7f4fb;
+  --surface: #ffffff;
+  --surface-2: #f6f2fb;
+  --surface-inverse: #16111c;
+  --ink: #160c22;
+  --text-h: #160c22;
+  --text: #4a4356;
+  --muted: #6b6375;
+  --text-muted: #6b6375;
+  --border: #e6e0ee;
+  --border-strong: #d6cde2;
+
+  /* ── Estados ─────────────────────────────────────────────────────── */
+  --success: #15803d;
+  --success-bg: #dcfce7;
+  --warning: #b45309;
+  --warning-bg: #fef3c7;
+  --danger: #c81e1e;
+  --danger-bg: #fee2e2;
+  --info: #1d4ed8;
+  --info-bg: #dbeafe;
+  /* Fondo sólido para botones destructivos (texto blanco ≥ 4.5:1 en ambos temas). */
+  --danger-solid: #c81e1e;
+  --danger-solid-hover: #a51515;
+
   --night: #121212;
   --night-soft: #1e1e1e;
   --night-border: #38333f;
-  --gradient-accent: linear-gradient(
-    135deg,
-    #7c1fc5 0%,
-    #aa3bff 48%,
-    #d8b4fe 100%
-  );
+  --gradient-accent: linear-gradient(135deg, #7c1fc5 0%, #b026ea 100%);
   --gradient-hero: linear-gradient(135deg, #faf5ff 0%, #fff 52%, #f3e8ff 100%);
+
+  /* ── Forma y profundidad ─────────────────────────────────────────── */
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
   --shadow-xs: 0 2px 5px rgba(30, 16, 44, 0.05);
   --shadow-sm: 0 8px 24px rgba(52, 27, 78, 0.08);
   --shadow-md: 0 18px 42px rgba(64, 26, 94, 0.13);
-  --shadow-accent: 0 14px 28px rgba(170, 59, 255, 0.25);
-  --sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --shadow-lg: 0 24px 60px rgba(64, 26, 94, 0.18);
+  --shadow-accent: 0 12px 26px rgba(176, 38, 234, 0.25);
+
+  --sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --heading: "Sora", var(--sans);
   --serif: "Fraunces", Georgia, serif;
+  --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
   color: var(--text);
   background: var(--bg);
   font-family: var(--sans);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
+  color-scheme: light;
 }
 * {
   box-sizing: border-box;
@@ -49,6 +77,8 @@ html {
 }
 body {
   margin: 0;
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
   min-width: 320px;
   background: var(--bg);
   color: var(--text);
@@ -74,7 +104,7 @@ body::before {
   opacity: 0.52;
   background-image: radial-gradient(
     circle at 1px 1px,
-    rgba(170, 59, 255, 0.13) 1px,
+    rgba(176, 38, 234, 0.13) 1px,
     transparent 0
   );
   background-size: 34px 34px;
@@ -84,13 +114,27 @@ html.dark-mode,
 body.dark-mode {
   --bg: #0c0a10;
   --bg-subtle: #16111c;
-  --text: #d4d0db;
-  --muted: #9b93a8;
+  --surface: #16111c;
+  --surface-2: #1d1726;
+  --surface-inverse: #f6f2fb;
   --ink: #faf9fc;
-  --border: #2a2433;
   --text-h: #faf9fc;
-  --accent-bg: rgba(201, 123, 255, 0.12);
-  --accent-border: rgba(201, 123, 255, 0.28);
+  --text: #d4d0db;
+  --muted: #a39bb0;
+  --text-muted: #a39bb0;
+  --border: #2a2433;
+  --border-strong: #3a3245;
+  --accent-text: #e08cff;
+  --accent-bg: rgba(192, 38, 245, 0.16);
+  --accent-border: rgba(216, 139, 255, 0.32);
+  --success: #4ade80;
+  --success-bg: rgba(34, 197, 94, 0.16);
+  --warning: #fbbf24;
+  --warning-bg: rgba(245, 158, 11, 0.16);
+  --danger: #f87171;
+  --danger-bg: rgba(239, 68, 68, 0.16);
+  --info: #60a5fa;
+  --info-bg: rgba(59, 130, 246, 0.16);
   --gradient-hero: linear-gradient(
     135deg,
     #0e0b14 0%,
@@ -100,6 +144,8 @@ body.dark-mode {
   --shadow-xs: 0 2px 5px rgba(0, 0, 0, 0.35);
   --shadow-sm: 0 8px 24px rgba(0, 0, 0, 0.35);
   --shadow-md: 0 18px 42px rgba(0, 0, 0, 0.42);
+  --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.5);
+  color-scheme: dark;
 }
 body.dark-mode::before {
   opacity: 0.3;
@@ -149,7 +195,7 @@ a:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline: 3px solid rgba(170, 59, 255, 0.35);
+  outline: 3px solid var(--accent-border);
   outline-offset: 3px;
 }
 input,
@@ -168,7 +214,7 @@ input:focus,
 select:focus,
 textarea:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 4px rgba(170, 59, 255, 0.12);
+  box-shadow: 0 0 0 4px rgba(176, 38, 234, 0.12);
   outline: 0;
 }
 input::placeholder,
@@ -189,7 +235,7 @@ textarea::placeholder {
 .login-card,
 .register-card {
   border: 1px solid var(--border) !important;
-  background: color-mix(in srgb, var(--bg) 94%, var(--grape-50)) !important;
+  background: var(--surface) !important;
   box-shadow: var(--shadow-xs);
   border-radius: 20px !important;
   transition:
@@ -206,21 +252,7 @@ textarea::placeholder {
 .stats-card:hover {
   transform: translateY(-5px);
   box-shadow: var(--shadow-md);
-  border-color: rgba(170, 59, 255, 0.42) !important;
-}
-body.dark-mode .card,
-body.dark-mode .reason-card,
-body.dark-mode .producto-card,
-body.dark-mode .product-card,
-body.dark-mode .admin-card,
-body.dark-mode .dashboard-card,
-body.dark-mode .stats-card,
-body.dark-mode .modal-content,
-body.dark-mode .modal-contenido,
-body.dark-mode .form-card,
-body.dark-mode .login-card,
-body.dark-mode .register-card {
-  background: color-mix(in srgb, var(--bg-subtle) 92%, #2b1740) !important;
+  border-color: rgba(176, 38, 234, 0.42) !important;
 }
 /* Consistent premium controls while allowing page CSS to retain its layout. */
 button:not(.theme-toggle-btn):not(.header-menu-toggle):not(.cart-btn):not(.header-icon-btn),
@@ -250,7 +282,7 @@ button:not(.theme-toggle-btn):not(.header-menu-toggle):not(.cart-btn):not(.heade
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(170, 59, 255, 0.4);
+  background: rgba(176, 38, 234, 0.4);
   border: 2px solid transparent;
   background-clip: padding-box;
   border-radius: 999px;
@@ -262,4 +294,210 @@ button:not(.theme-toggle-btn):not(.header-menu-toggle):not(.cart-btn):not(.heade
   body::before {
     background-size: 28px 28px;
   }
+}
+
+/* ── Utilidades compartidas por los paneles ──────────────────────────── */
+/* Fila de "tabla vacía": evita encabezados huérfanos sin explicación. */
+.table-empty {
+  padding: 36px 16px !important;
+  color: var(--muted) !important;
+  font-size: 14px;
+  text-align: center !important;
+}
+
+/* Contenedor estándar para páginas internas. */
+.page-shell {
+  width: min(1280px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 32px 0 56px;
+}
+
+@media (max-width: 700px) {
+  .page-shell {
+    width: calc(100% - 28px);
+    padding-top: 22px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.route-status {
+  display: grid;
+  min-height: 50vh;
+  place-items: center;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+/* ── Estado vacío reutilizable (carrito, acceso denegado, listas) ── */
+.empty-state {
+  display: grid;
+  min-height: 60vh;
+  place-content: center;
+  justify-items: center;
+  gap: 10px;
+  padding: 48px 20px;
+  text-align: center;
+}
+
+.empty-state-icon {
+  display: grid;
+  width: 76px;
+  height: 76px;
+  margin-bottom: 8px;
+  place-items: center;
+  border-radius: 24px;
+  background: var(--accent-bg);
+  color: var(--accent-text);
+}
+
+.empty-state-icon--danger {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+.empty-state h1,
+.empty-state h2 {
+  margin: 0;
+  color: var(--text-h);
+  font-family: var(--heading);
+  font-size: clamp(22px, 3vw, 28px);
+  letter-spacing: -0.02em;
+}
+
+.empty-state p {
+  max-width: 420px;
+  margin: 0 0 14px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.empty-state-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+/* ── Botones utilitarios ─────────────────────────────── */
+.ui-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 20px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, color 0.2s, transform 0.18s;
+}
+
+.ui-btn--primary {
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: var(--shadow-accent);
+}
+
+.ui-btn--primary:hover {
+  background: var(--accent-hover);
+  color: var(--on-accent);
+  transform: translateY(-1px);
+}
+
+.ui-btn--ghost {
+  border-color: var(--border-strong);
+  background: var(--surface);
+  color: var(--text-h);
+}
+
+.ui-btn--ghost:hover {
+  border-color: var(--accent-border);
+  background: var(--accent-bg);
+  color: var(--accent-text);
+}
+
+/* Estado deshabilitado unificado para cualquier botón de la app. */
+button:disabled,
+button[aria-disabled="true"],
+.ui-btn[aria-disabled="true"] {
+  cursor: not-allowed !important;
+  opacity: 0.5 !important;
+  transform: none !important;
+  box-shadow: none !important;
+  filter: saturate(0.6);
+}
+
+/* ── Insignia de rol (usuarios admin / superadmin) ───── */
+.rol-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  background: var(--surface-2);
+  color: var(--muted);
+}
+
+.rol-badge.client     { background: var(--accent-bg);  color: var(--accent-text); }
+.rol-badge.employee   { background: var(--info-bg);    color: var(--info); }
+.rol-badge.delivery   { background: var(--warning-bg); color: var(--warning); }
+.rol-badge.admin      { background: var(--success-bg); color: var(--success); }
+.rol-badge.superadmin { background: var(--danger-bg);  color: var(--danger); }
+
+/* Tonos de estado reutilizables (texto + fondo suave, legibles en ambos temas). */
+.tone-success { background: var(--success-bg); color: var(--success); }
+.tone-warning { background: var(--warning-bg); color: var(--warning); }
+.tone-danger  { background: var(--danger-bg);  color: var(--danger); }
+.tone-info    { background: var(--info-bg);    color: var(--info); }
+.tone-accent  { background: var(--accent-bg);  color: var(--accent-text); }
+.tone-neutral { background: var(--surface-2);  color: var(--muted); }
+
+/* Selects de estado coloreados: las opciones siempre legibles. */
+select[class*="tone-"] {
+  border: 1px solid currentColor;
+  font-weight: 700;
+}
+
+select[class*="tone-"] option {
+  background: var(--surface);
+  color: var(--text-h);
+}
+
+/* ── Buscadores de páginas internas ──────────────────── */
+.detalle-pedidos-filtros {
+  margin: 0 0 18px;
+}
+
+.detalle-pedidos-busqueda {
+  width: min(420px, 100%);
+  min-height: 42px;
+  padding: 0 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text-h);
+  font: inherit;
+  font-size: 14px;
+}
+
+.detalle-pedidos-busqueda::placeholder {
+  color: var(--muted);
+}
+
+.detalle-pedidos-busqueda:focus {
+  border-color: var(--accent);
+  outline: 3px solid var(--accent-bg);
 }

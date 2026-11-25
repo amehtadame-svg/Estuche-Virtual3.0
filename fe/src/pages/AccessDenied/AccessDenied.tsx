@@ -1,18 +1,24 @@
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { ShieldOff } from 'lucide-react';
 
 export default function AccessDenied() {
   const navigate = useNavigate();
 
   return (
-    <div style={{ textAlign: 'center', padding: '80px 20px' }}>
-      <div style={{ fontSize: '64px' }}>🚫</div>
-      <h1 style={{ margin: '16px 0 8px' }}>Acceso denegado</h1>
-      <p style={{ margin: '0 0 24px', color: 'var(--text)', opacity: 0.8 }}>
-        No tienes permisos para ver esta página.
-      </p>
-      <button onClick={() => navigate('/')} className="btn-primario" style={{ cursor: 'pointer' }}>
-        Volver al inicio
-      </button>
-    </div>
+    <main className="empty-state">
+      <span className="empty-state-icon empty-state-icon--danger" aria-hidden="true">
+        <ShieldOff size={34} />
+      </span>
+      <h1>Acceso denegado</h1>
+      <p>Tu cuenta no tiene permisos para ver esta página. Si crees que es un error, contacta a un administrador.</p>
+      <div className="empty-state-actions">
+        <button type="button" className="ui-btn ui-btn--ghost" onClick={() => navigate(-1)}>
+          Volver atrás
+        </button>
+        <Link to="/" className="ui-btn ui-btn--primary">
+          Ir al inicio
+        </Link>
+      </div>
+    </main>
   );
 }

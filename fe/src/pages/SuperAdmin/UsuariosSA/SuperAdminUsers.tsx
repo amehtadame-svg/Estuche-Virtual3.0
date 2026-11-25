@@ -3,6 +3,7 @@ import Modal from '../../../components/ui/Modal';
 import { API, authHeaders } from '../../../api/api';
 import { runApiAction } from '../../../lib/apiAction';
 import { notify } from '../../../lib/notifications';
+import { roleLabel } from '../../../lib/statusLabels';
 import './SuperAdminUsers.css';
 
 interface User {
@@ -15,14 +16,6 @@ interface User {
 }
 
 const roles = ['superadmin', 'admin', 'employee', 'delivery', 'client'];
-
-const roleColor: Record<string, string> = {
-  superadmin: '#7c3aed',
-  admin: '#2563eb',
-  employee: '#0891b2',
-  delivery: '#d97706',
-  client: '#6b7280',
-};
 
 const emptyForm = { fullName: '', email: '', password: '', phone: '', role: 'client' };
 
@@ -202,7 +195,7 @@ export default function SuperAdminUsers() {
               className={`btn-filtro-rol ${roleFilter === r ? 'btn-filtro-rol-activo' : ''}`}
               onClick={() => setRoleFilter(r)}
             >
-              {r.charAt(0).toUpperCase() + r.slice(1)}
+              {r === 'todos' ? 'Todos' : roleLabel[r] ?? r}
             </button>
           ))}
         </div>
@@ -222,14 +215,15 @@ export default function SuperAdminUsers() {
             </tr>
           </thead>
           <tbody>
+            {filteredUsers.length === 0 && (<tr><td colSpan={7} className="table-empty">No se encontraron usuarios con ese filtro.</td></tr>)}
             {filteredUsers.map((u) => (
               <tr key={u.id} className={u.isActive ? undefined : 'fila-inactiva'}>
-                <td className="id-usuariossa">#{u.id.slice(0, 6).toUpperCase()}</td>
+                <td className="id-usuariossa" title={u.id}>#{u.id.slice(-6).toUpperCase()}</td>
                 <td className="nombre-usuariossa">{u.fullName}</td>
                 <td className="email-usuariossa">{u.email}</td>
                 <td>
-                  <span className="badge-rol" style={{ backgroundColor: roleColor[u.role] ?? '#6b7280' }}>
-                    {u.role}
+                  <span className={`rol-badge ${u.role}`}>
+                    {roleLabel[u.role] ?? u.role}
                   </span>
                 </td>
                 <td>
@@ -245,7 +239,7 @@ export default function SuperAdminUsers() {
                   >
                     {roles.map((r) => (
                       <option key={r} value={r}>
-                        {r}
+                        {roleLabel[r] ?? r}
                       </option>
                     ))}
                   </select>
@@ -318,11 +312,11 @@ export default function SuperAdminUsers() {
           <select name="role" value={form.role} onChange={handleChange}>
             {roles.map((r) => (
               <option key={r} value={r}>
-                {r}
+                {roleLabel[r] ?? r}
               </option>
             ))}
           </select>
-          {createError && <p className="error-crear-usuariossa">⚠️ {createError}</p>}
+          {createError && <p className="error-crear-usuariossa">{createError}</p>}
         </Modal>
       )}
 
@@ -361,7 +355,7 @@ export default function SuperAdminUsers() {
           <select name="role" value={form.role} onChange={handleChange}>
             {roles.map((r) => (
               <option key={r} value={r}>
-                {r}
+                {roleLabel[r] ?? r}
               </option>
             ))}
           </select>

@@ -1,5 +1,7 @@
 .productos-page {
-  padding: 0 30px 50px;
+  width: min(1320px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 32px 0 56px;
 }
 
 .productos-topbar {
@@ -33,7 +35,7 @@
 .btn-nuevo-producto {
   flex-shrink: 0;
   background: var(--gradient-accent);
-  color: #fff;
+  color: var(--on-accent);
   border: none;
   padding: 10px 20px;
   border-radius: var(--radius-md);
@@ -123,8 +125,8 @@
 
 
 .btn-eliminar-producto:hover {
-  border-color: #e74c3c;
-  color: #e74c3c;
+  border-color: var(--danger);
+  color: var(--danger);
   background: rgba(231,76,60,.06);
 }
 
@@ -166,7 +168,7 @@
 
 .btn-guardar-producto {
   background: var(--gradient-accent);
-  color: #fff;
+  color: var(--on-accent);
   border: none;
 }
 
@@ -182,8 +184,8 @@
 
 
 .btn-cancelar-producto:hover {
-  border-color: #e74c3c;
-  color: #e74c3c;
+  border-color: var(--danger);
+  color: var(--danger);
   background: rgba(231,76,60,.06);
 }
 
@@ -271,7 +273,7 @@
 
 @media (max-width: 600px) {
   .productos-page {
-    padding: 0 16px 40px;
+    width: calc(100% - 28px); padding: 20px 0 40px;
   }
 
   .productos-topbar {
@@ -320,10 +322,10 @@
 .productos-filtro-cat {
   padding: 10px 14px;
   border-radius: 8px;
-  border: 1px solid #e5e4e7;
+  border: 1px solid var(--border-strong);
   font-size: 14px;
-  color: #08060d;
-  background: #ffffff;
+  color: var(--text-h);
+  background: var(--surface);
   outline: none;
   transition: border-color 0.2s;
 }
@@ -342,7 +344,7 @@
 
 .productos-busqueda:focus,
 .productos-filtro-cat:focus {
-  border-color: #aa3bff;
+  border-color: var(--accent);
 }
 
 .stock-badge {
@@ -373,12 +375,12 @@
 
 .stock-ok {
   background: rgba(39, 174, 96, 0.1);
-  color: #27ae60;
+  color: var(--success);
 }
 
 .stock-bajo {
   background: rgba(231, 76, 60, 0.1);
-  color: #e74c3c;
+  color: var(--danger);
 }
 
 .desc-producto {
@@ -401,8 +403,8 @@
 }
 .input-producto textarea,
 textarea.input-producto {
-  background: #ffffff;
-  color: #08060d;
+  background: var(--surface);
+  color: var(--text-h);
   resize: vertical;
   font-family: inherit;
   min-height: 80px;
@@ -410,7 +412,7 @@ textarea.input-producto {
 
 /* ── HU-001: Ficha técnica completa y validaciones ─── */
 .campo-obligatorio {
-  color: #e74c3c;
+  color: var(--danger);
   font-weight: 700;
 }
 
@@ -423,14 +425,14 @@ textarea.input-producto {
 }
 
 .input-invalido {
-  border-color: #e74c3c !important;
+  border-color: var(--danger) !important;
   background: rgba(231, 76, 60, 0.05) !important;
 }
 
 .alerta-error-producto {
   background: rgba(231, 76, 60, 0.12);
-  border: 1px solid #e74c3c;
-  color: #c0392b;
+  border: 1px solid var(--danger);
+  color: var(--danger);
   padding: 10px 14px;
   border-radius: var(--radius-sm);
   font-size: 13px;
@@ -467,7 +469,7 @@ textarea.input-producto {
   font-weight: 600;
   padding: 2px 8px;
   border-radius: 6px;
-  background: var(--bg-subtle, rgba(170, 59, 255, 0.08));
+  background: var(--bg-subtle, rgba(176, 38, 234, 0.08));
   color: var(--text-h);
 }
 
@@ -485,12 +487,12 @@ textarea.input-producto {
   font-size: 12px;
   font-weight: 600;
   background: rgba(59, 130, 246, 0.12);
-  color: #2563eb;
+  color: var(--info);
 }
 
 .stock-agotado {
   background: rgba(192, 57, 43, 0.16);
-  color: #c0392b;
+  color: var(--danger);
 }
 
 /* Anchos equilibrados: damos más espacio al nombre del producto y a acciones. */

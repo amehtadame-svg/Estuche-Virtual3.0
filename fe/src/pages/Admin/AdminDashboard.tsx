@@ -1,131 +1,143 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import {
+  AlertTriangle,
+  ArrowRight,
+  Boxes,
+  ClipboardList,
+  PackagePlus,
+  Receipt,
+  ShoppingCart,
+  Truck,
+  type LucideIcon,
+} from 'lucide-react';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useAuth } from '../../hooks/useAuth';
 import { API, authHeaders } from '../../api/api';
 import { orderStatusLabel } from '../../lib/statusLabels';
-import { notify } from '../../lib/notifications';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import './AdminDashboard.css';
 
-interface DashboardStats {
-  totalProducts: number;
-  ordersToday: number;
-  totalReceipts: number;
-  totalProviders: number;
-  salesToday: number;
-  lowStockProducts: number;
-}
-
-interface MonthlySalePoint {
-  month: string;
-  sales: number;
-  orders?: number;
-}
-
-interface RecentOrderRow {
+interface ProductLite {
   id: string;
-  number: string;
-  customer: string;
-  date: string;
-  total: number;
-  status: string;
+  name: string;
+  sku?: string | null;
+  stock: number;
+  stockMin: number;
 }
 
-interface ActivityItem {
+interface OrderLite {
   id: string;
-  icon: string;
-  text: string;
-  date: string;
+  total: number | string | null;
+  status: string | null;
+  orderDate: string | null;
+  customer: { fullName: string } | null;
 }
 
-const MONTH_NAMES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-
-const statusColor: Record<string, string> = {
-  pending: '#3b82f6',
-  paid: '#0891b2',
-  preparing: '#8b5cf6',
-  shipped: '#f59e0b',
-  in_transit: '#f59e0b',
-  delivered: '#10b981',
-  canceled: '#e74c3c',
-  returned: '#6b7280',
+const statusTone: Record<string, string> = {
+  pending: 'tone-info',
+  paid: 'tone-accent',
+  preparing: 'tone-warning',
+  shipped: 'tone-warning',
+  delivered: 'tone-success',
+  canceled: 'tone-danger',
+  returned: 'tone-neutral',
 };
 
-const toDateKey = (value: string | Date | null | undefined): string => {
-  if (!value) return '';
-  const d = value instanceof Date ? value : new Date(value);
-  if (Number.isNaN(d.getTime())) return '';
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-};
+const MONTHS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
-const formatRelativeTime = (isoDate: string): string => {
-  const d = new Date(isoDate);
-  if (Number.isNaN(d.getTime())) return 'Reciente';
-  const diffMs = Date.now() - d.getTime();
-  const diffMin = Math.floor(diffMs / 60000);
-  if (diffMin < 1) return 'Hace unos segundos';
-  if (diffMin < 60) return `Hace ${diffMin} min`;
-  const diffHours = Math.floor(diffMin / 60);
-  if (diffHours < 24) return `Hace ${diffHours} ${diffHours === 1 ? 'hora' : 'horas'}`;
-  const diffDays = Math.floor(diffHours / 24);
-  if (diffDays === 1) return 'Ayer';
-  if (diffDays < 7) return `Hace ${diffDays} días`;
-  return toDateKey(d);
-};
+const money = (value: number) =>
+  `$${Math.round(value).toLocaleString('es-CO')}`;
 
-const buildEmptyMonths = (): MonthlySalePoint[] => {
-  const now = new Date();
-  const list: MonthlySalePoint[] = [];
-  for (let i = 5; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    list.push({ month: MONTH_NAMES[d.getMonth()], sales: 0, orders: 0 });
+async function getList<T>(url: string): Promise<T[] | null> {
+  try {
+    const response = await fetch(url, { headers: authHeaders() });
+    if (!response.ok) return null;
+    const data = await response.json();
+    return Array.isArray(data) ? data : null;
+  } catch {
+    return null;
   }
-  return list;
-};
+}
+
+const quickLinks: { label: string; to: string; icon: LucideIcon }[] = [
+  { label: 'Registrar ingreso de mercancía', to: '/admin/ingresos', icon: PackagePlus },
+  { label: 'Gestionar pedidos', to: '/admin/pedidos', icon: ClipboardList },
+  { label: 'Recibos', to: '/admin/recibos', icon: Receipt },
+  { label: 'Envíos', to: '/admin/envios', icon: Truck },
+];
 
 const AdminDashboard = () => {
   const { user } = useAuth();
-  const [statsData, setStatsData] = useState<DashboardStats>({
-    totalProducts: 0,
-    ordersToday: 0,
-    totalReceipts: 0,
-    totalProviders: 0,
-    salesToday: 0,
-    lowStockProducts: 0,
-  });
-  const [monthlySales, setMonthlySales] = useState<MonthlySalePoint[]>(buildEmptyMonths);
-  const [recentOrders, setRecentOrders] = useState<RecentOrderRow[]>([]);
-  const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [products, setProducts] = useState<ProductLite[] | null>(null);
+  const [orders, setOrders] = useState<OrderLite[] | null>(null);
+  const [receipts, setReceipts] = useState<unknown[] | null>(null);
+  const [providers, setProviders] = useState<unknown[] | null>(null);
 
   useEffect(() => {
-    const loadDashboard = async () => {
-      setLoading(true);
-      try {
-        const dashRes = await fetch(`${API.reports}/admin-dashboard`, { headers: authHeaders() });
-        const data = await dashRes.json().catch(() => null);
-        if (!dashRes.ok || !data) {
-          notify.error(data?.message ?? 'No se pudo cargar el resumen administrativo.');
-          return;
-        }
-        setStatsData(data.stats);
-        setMonthlySales(Array.isArray(data.monthlySales) ? data.monthlySales : buildEmptyMonths());
-        setRecentOrders(Array.isArray(data.recentOrders) ? data.recentOrders : []);
-        setRecentActivity(Array.isArray(data.recentActivity) ? data.recentActivity : []);
-      } catch {
-        notify.error('Error de conexión al cargar el resumen administrativo.');
-      } finally {
-        setLoading(false);
-      }
+    let alive = true;
+    Promise.all([
+      getList<ProductLite>(API.products),
+      getList<OrderLite>(API.orders),
+      getList<unknown>(API.receipts),
+      getList<unknown>(API.providers),
+    ]).then(([p, o, r, pr]) => {
+      if (!alive) return;
+      setProducts(p);
+      setOrders(o);
+      setReceipts(r);
+      setProviders(pr);
+      setLoading(false);
+    });
+    return () => {
+      alive = false;
     };
-
-    loadDashboard();
   }, []);
 
-  const stats = [
-    { label: 'Productos activos', value: String(statsData.totalProducts), icon: '📦', color: 'stat-purple' },
-    { label: 'Pedidos hoy', value: String(statsData.ordersToday), icon: '🛒', color: 'stat-blue' },
-    { label: 'Recibos emitidos', value: String(statsData.totalReceipts), icon: '🧾', color: 'stat-green' },
-    { label: 'Proveedores', value: String(statsData.totalProviders), icon: '🏭', color: 'stat-orange' },
+  const today = new Date().toDateString();
+  const ordersToday =
+    orders?.filter((o) => o.orderDate && new Date(o.orderDate).toDateString() === today).length ?? 0;
+
+  const lowStock = useMemo(
+    () =>
+      (products ?? [])
+        .filter((p) => p.stock <= p.stockMin)
+        .sort((a, b) => a.stock - b.stock)
+        .slice(0, 6),
+    [products],
+  );
+
+  const recentOrders = useMemo(
+    () =>
+      [...(orders ?? [])]
+        .sort((a, b) => new Date(b.orderDate ?? 0).getTime() - new Date(a.orderDate ?? 0).getTime())
+        .slice(0, 5),
+    [orders],
+  );
+
+  // Ventas reales de los últimos 6 meses (excluye pedidos cancelados).
+  const monthlySales = useMemo(() => {
+    const now = new Date();
+    const buckets = Array.from({ length: 6 }, (_, i) => {
+      const d = new Date(now.getFullYear(), now.getMonth() - 5 + i, 1);
+      return { key: `${d.getFullYear()}-${d.getMonth()}`, month: MONTHS[d.getMonth()], sales: 0 };
+    });
+    (orders ?? []).forEach((o) => {
+      if (!o.orderDate || o.status === 'canceled') return;
+      const d = new Date(o.orderDate);
+      const bucket = buckets.find((b) => b.key === `${d.getFullYear()}-${d.getMonth()}`);
+      if (bucket) bucket.sales += Number(o.total ?? 0);
+    });
+    return buckets;
+  }, [orders]);
+
+  const hasSales = monthlySales.some((m) => m.sales > 0);
+
+  const stats: { label: string; value: string; icon: LucideIcon; color: string; to: string }[] = [
+    { label: 'Productos activos', value: products ? String(products.length) : '—', icon: Boxes, color: 'stat-purple', to: '/admin/productos' },
+    { label: 'Pedidos hoy', value: orders ? String(ordersToday) : '—', icon: ShoppingCart, color: 'stat-blue', to: '/admin/pedidos' },
+    { label: 'Recibos', value: receipts ? String(receipts.length) : '—', icon: Receipt, color: 'stat-green', to: '/admin/recibos' },
+    { label: 'Proveedores', value: providers ? String(providers.length) : '—', icon: Truck, color: 'stat-orange', to: '/admin/proveedores' },
   ];
 
   return (
@@ -134,120 +146,142 @@ const AdminDashboard = () => {
         <div>
           <h1 className="admin-title">Panel de administración</h1>
           <p className="admin-subtitle">
-            Bienvenido de nuevo, <strong>{user?.name}</strong>
-          </p>
-          <p className="subtitulo-usuarios">
-            Ventas de hoy: <strong>${statsData.salesToday.toLocaleString('es-CO')} COP</strong>
-            {statsData.lowStockProducts > 0 && (
-              <>
-                {' '}· Productos con bajo stock: <strong>{statsData.lowStockProducts}</strong>
-              </>
-            )}
+            Hola, <strong>{user?.name}</strong>. Este es el estado de la tienda hoy.
           </p>
         </div>
       </div>
 
-      {loading ? (
-        <p style={{ color: 'var(--text)', padding: '20px 0' }}>Cargando resumen en tiempo real...</p>
-      ) : (
-        <>
-          <div className="stats-grid">
-            {stats.map((s) => (
-              <div key={s.label} className={`stat-card ${s.color}`}>
-                <span className="stat-icon">{s.icon}</span>
-                <div>
-                  <p className="stat-value">{s.value}</p>
-                  <p className="stat-label">{s.label}</p>
-                </div>
-              </div>
-            ))}
+      <div className="stats-grid">
+        {stats.map((s) => (
+          <Link key={s.label} to={s.to} className={`stat-card ${s.color}`}>
+            <span className="stat-icon" aria-hidden="true">
+              <s.icon size={20} />
+            </span>
+            <div>
+              <p className="stat-value">{loading ? '…' : s.value}</p>
+              <p className="stat-label">{s.label}</p>
+            </div>
+          </Link>
+        ))}
+      </div>
+
+      <div className="admin-body">
+        <div className="admin-left">
+          <div className="chart-section">
+            <h2 className="section-heading">Ventas últimos 6 meses</h2>
+            {hasSales ? (
+              <ResponsiveContainer width="100%" height={220}>
+                <AreaChart data={monthlySales}>
+                  <defs>
+                    <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#b026ea" stopOpacity={0.28} />
+                      <stop offset="95%" stopColor="#b026ea" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                  <XAxis dataKey="month" tick={{ fontSize: 12, fill: 'var(--muted)' }} stroke="var(--border)" />
+                  <YAxis
+                    tick={{ fontSize: 12, fill: 'var(--muted)' }}
+                    stroke="var(--border)"
+                    tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
+                  />
+                  <Tooltip
+                    formatter={(v) => [money(Number(v)), 'Ventas']}
+                    contentStyle={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, color: 'var(--text-h)' }}
+                  />
+                  <Area type="monotone" dataKey="sales" stroke="#b026ea" strokeWidth={2} fill="url(#colorSales)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="admin-empty">
+                {loading ? 'Cargando ventas…' : 'Aún no hay ventas registradas en los últimos 6 meses.'}
+              </p>
+            )}
           </div>
 
-          <div className="admin-body">
-            <div className="admin-left">
-              <div className="chart-section">
-                <h2 className="section-heading">Ventas últimos 6 meses</h2>
-                <ResponsiveContainer width="100%" height={220}>
-                  <AreaChart data={monthlySales}>
-                    <defs>
-                      <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#aa3bff" stopOpacity={0.25} />
-                        <stop offset="95%" stopColor="#aa3bff" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                    <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                    <YAxis
-                      tick={{ fontSize: 12 }}
-                      tickFormatter={(v) => (v >= 1000 ? `$${(v / 1000).toFixed(0)}k` : `$${v}`)}
-                    />
-                    <Tooltip formatter={(v) => [`$${Number(v).toLocaleString('es-CO')}`, 'Ventas']} />
-                    <Area
-                      type="monotone"
-                      dataKey="sales"
-                      stroke="#aa3bff"
-                      strokeWidth={2}
-                      fill="url(#colorSales)"
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-
-              <div className="ultimos-pedidos-section">
-                <h2 className="section-heading">Últimos pedidos</h2>
-                {recentOrders.length === 0 ? (
-                  <p className="admin-empty-msg">Aún no se han registrado pedidos en la plataforma.</p>
-                ) : (
-                  <table className="tabla-resumen">
-                    <thead>
-                      <tr>
-                        <th>N° Pedido</th>
-                        <th>Cliente</th>
-                        <th>Fecha</th>
-                        <th>Total</th>
-                        <th>Estado</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {recentOrders.map((p) => (
-                        <tr key={p.id}>
-                          <td className="num-pedido">{p.number}</td>
-                          <td>{p.customer}</td>
-                          <td>{p.date}</td>
-                          <td>${Number(p.total).toLocaleString('es-CO')}</td>
-                          <td>
-                            <span
-                              className="estado-badge"
-                              style={{ backgroundColor: statusColor[p.status] ?? '#6b7280' }}
-                            >
-                              {orderStatusLabel[p.status] ?? p.status}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                )}
-              </div>
+          <div className="ultimos-pedidos-section">
+            <div className="section-heading-row">
+              <h2 className="section-heading">Últimos pedidos</h2>
+              <Link to="/admin/pedidos" className="section-link">
+                Ver todos <ArrowRight size={14} />
+              </Link>
             </div>
+            <table className="tabla-resumen">
+              <thead>
+                <tr>
+                  <th>N° Pedido</th>
+                  <th>Cliente</th>
+                  <th>Fecha</th>
+                  <th>Total</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentOrders.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="table-empty">
+                      {loading ? 'Cargando pedidos…' : 'Todavía no hay pedidos registrados.'}
+                    </td>
+                  </tr>
+                ) : (
+                  recentOrders.map((p) => (
+                    <tr key={p.id}>
+                      <td className="num-pedido" title={p.id}>#{p.id.slice(-6).toUpperCase()}</td>
+                      <td>{p.customer?.fullName ?? '—'}</td>
+                      <td>{p.orderDate ? new Date(p.orderDate).toLocaleDateString('es-CO') : '—'}</td>
+                      <td>{money(Number(p.total ?? 0))}</td>
+                      <td>
+                        <span className={`estado-badge ${statusTone[p.status ?? ''] ?? 'tone-neutral'}`}>
+                          {orderStatusLabel[p.status ?? ''] ?? p.status ?? '—'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
 
-            <div className="activity-section">
-              <h2 className="section-heading">Actividad reciente</h2>
-              {recentActivity.length === 0 ? (
-                <p className="admin-empty-msg">Sin movimientos recientes registrados.</p>
-              ) : (
-                <div className="activity-list">
-                  {recentActivity.map((a) => (
-                    <div key={a.id} className="activity-item">
-                      <span className="activity-icon">{a.icon}</span>
-                      <div className="activity-info">
-                        <p className="activity-text">{a.text}</p>
-                        <p className="activity-time">{formatRelativeTime(a.date)}</p>
-                      </div>
+        <div className="admin-right">
+          <div className="activity-section">
+            <h2 className="section-heading">Existencias bajas</h2>
+            {lowStock.length === 0 ? (
+              <p className="admin-empty">
+                {loading ? 'Revisando inventario…' : 'Todo el inventario está por encima del mínimo.'}
+              </p>
+            ) : (
+              <div className="activity-list">
+                {lowStock.map((p) => (
+                  <div key={p.id} className="activity-item">
+                    <span className="activity-icon tone-warning" aria-hidden="true">
+                      <AlertTriangle size={16} />
+                    </span>
+                    <div className="activity-info">
+                      <p className="activity-text">{p.name}</p>
+                      <p className="activity-time">
+                        {p.stock} uds. · mínimo {p.stockMin}
+                        {p.sku ? ` · ${p.sku}` : ''}
+                      </p>
                     </div>
-                  ))}
-                </div>
-              )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="activity-section">
+            <h2 className="section-heading">Accesos rápidos</h2>
+            <div className="quick-links">
+              {quickLinks.map((q) => (
+                <Link key={q.to} to={q.to} className="quick-link">
+                  <span className="quick-link-icon" aria-hidden="true">
+                    <q.icon size={17} />
+                  </span>
+                  <span>{q.label}</span>
+                  <ArrowRight size={15} aria-hidden="true" />
+                </Link>
+              ))}
             </div>
           </div>
         </>

@@ -4,7 +4,9 @@
 
 /* Página */
 .usuarios-page {
-  padding: 0 30px 50px;
+  width: min(1320px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 32px 0 56px;
 }
 
 .usuarios-topbar {
@@ -34,7 +36,7 @@
 .usr-btn-nuevo {
   flex-shrink: 0;
   background: var(--gradient-accent);
-  color: #fff;
+  color: var(--on-accent);
   border: none;
   padding: 10px 20px;
   border-radius: var(--radius-md);
@@ -94,24 +96,6 @@
 }
 
 /* Badge de rol */
-.rol-badge {
-  display: inline-block;
-  padding: 3px 10px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.rol-badge.cliente {
-  background: #ede9fe;
-  color: #7c3aed;
-}
-
-.rol-badge.administrador {
-  background: #fef3c7;
-  color: #d97706;
-}
-
 /* Acciones de la tabla */
 .usr-acciones {
   display: flex;
@@ -135,9 +119,9 @@
 }
 
 .usr-btn-eliminar {
-  background: #fff0f0;
-  color: #e74c3c;
-  border: 1px solid #e74c3c;
+  background: var(--danger-bg);
+  color: var(--danger);
+  border: 1px solid var(--danger);
 }
 
 .usr-btn-editar:hover,
@@ -249,7 +233,7 @@
 }
 
 .usr-error {
-  color: #e74c3c;
+  color: var(--danger);
   font-size: 13px;
   margin: 0 0 8px;
 }
@@ -280,14 +264,14 @@
 
 .usr-btn-guardar {
   background: var(--gradient-accent);
-  color: #fff;
+  color: var(--on-accent);
   border: none;
   font-weight: 600;
 }
 
 .usr-btn-eliminar-confirm {
-  background: #e74c3c;
-  color: #fff;
+  background: var(--danger-solid);
+  color: var(--on-accent);
   border: none;
   font-weight: 600;
 }
@@ -307,7 +291,7 @@
 /* Responsive */
 @media (max-width: 600px) {
   .usuarios-page {
-    padding: 0 16px 40px;
+    width: calc(100% - 28px); padding: 20px 0 40px;
   }
 
   .usuarios-topbar {
@@ -353,10 +337,10 @@
 
 .usr-estado.activo {
   background: rgba(39, 174, 96, 0.15);
-  color: #27ae60;
+  color: var(--success);
 }
 
 .usr-estado.inactivo {
   background: rgba(107, 114, 128, 0.18);
-  color: #6b7280;
+  color: var(--muted);
 }

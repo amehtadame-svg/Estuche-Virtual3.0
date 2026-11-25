@@ -177,6 +177,7 @@ export default function Provider() {
             </thead>
 
             <tbody>
+              {providers.length === 0 && (<tr><td colSpan={6} className="table-empty">Todavía no hay proveedores registrados.</td></tr>)}
               {providers.map((provider) => (
                 <tr key={provider.id}>
                   <td className="empresa-proveedor">{provider.name}</td>

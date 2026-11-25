@@ -984,7 +984,7 @@ export default function EmployeeWorkspace() {
                   <tr key={job.id}>
                     <td>
                       <code>
-                        {job.id.slice(0, 8)}
+                        {job.id.slice(-6).toUpperCase()}
                       </code>
 
                       <small>
@@ -1248,7 +1248,7 @@ export default function EmployeeWorkspace() {
       {selectedId && (
         <Modal
           titulo={
-            `Pedido ${selectedId.slice(0, 8)}`
+            `Pedido ${selectedId.slice(-6).toUpperCase()}`
           }
           onClose={() => {
             if (!busy) {
@@ -1725,7 +1725,7 @@ export default function EmployeeWorkspace() {
                       >
                         Confirmar entrega final
                         del envío{' '}
-                        {shipment.id.slice(0, 8)}
+                        {shipment.id.slice(-6).toUpperCase()}
                       </button>
                     )
                   )}

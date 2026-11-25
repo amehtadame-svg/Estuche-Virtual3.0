@@ -1,6 +1,8 @@
 /* ── Página ──────────────────────────────────────────── */
 .facturas-page {
-  padding: 0 30px 50px;
+  width: min(1320px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 32px 0 56px;
 }
 
 .facturas-topbar {
@@ -34,7 +36,7 @@
 .btn-nuevo-factura {
   flex-shrink: 0;
   background: var(--gradient-accent);
-  color: #fff;
+  color: var(--on-accent);
   border: none;
   padding: 10px 20px;
   border-radius: var(--radius-md);
@@ -99,14 +101,11 @@
 
 /* ── Select estado ───────────────────────────────────── */
 .estado-select-factura {
-  color: #fff;
-  border: none;
   padding: 5px 10px;
   border-radius: var(--radius-sm);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  outline: none;
 }
 
 /* ── Acciones tabla ──────────────────────────────────── */
@@ -138,8 +137,8 @@
 
 
 .btn-eliminar-factura:hover {
-  border-color: #e74c3c;
-  color: #e74c3c;
+  border-color: var(--danger);
+  color: var(--danger);
   background: rgba(231,76,60,.06);
 }
 
@@ -181,7 +180,7 @@
 
 .btn-guardar-factura {
   background: var(--gradient-accent);
-  color: #fff;
+  color: var(--on-accent);
   border: none;
 }
 
@@ -197,8 +196,8 @@
 
 
 .btn-cancelar-factura:hover {
-  border-color: #e74c3c;
-  color: #e74c3c;
+  border-color: var(--danger);
+  color: var(--danger);
   background: rgba(231,76,60,.06);
 }
 
@@ -286,7 +285,7 @@
 
 @media (max-width: 600px) {
   .facturas-page {
-    padding: 0 16px 40px;
+    width: calc(100% - 28px); padding: 20px 0 40px;
   }
 
   .facturas-topbar {

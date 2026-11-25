@@ -1,6 +1,8 @@
 import { useNavigate } from 'react-router-dom';
+import { ShoppingCart, Trash2 } from 'lucide-react';
 import { useCart } from '../../hooks/useCart';
 import { useAuth } from '../../hooks/useAuth';
+import CategoryIcon from '../../components/ui/CategoryIcon';
 import './Shopping.css';
 
 export default function Shopping() {
@@ -10,14 +12,16 @@ export default function Shopping() {
 
   if (items.length === 0) {
     return (
-      <div className="carrito-vacio">
-        <div className="carrito-vacio-icono">🛒</div>
-        <h2>Tu carrito está vacío</h2>
-        <p>Agrega productos desde el catálogo para empezar.</p>
-        <button className="carrito-btn-catalogo" onClick={() => navigate('/catalogo')}>
+      <main className="empty-state">
+        <span className="empty-state-icon" aria-hidden="true">
+          <ShoppingCart size={34} />
+        </span>
+        <h1>Tu carrito está vacío</h1>
+        <p>Agrega productos desde el catálogo para empezar tu compra.</p>
+        <button type="button" className="ui-btn ui-btn--primary" onClick={() => navigate('/catalogo')}>
           Ver catálogo
         </button>
-      </div>
+      </main>
     );
   }
 
@@ -26,7 +30,7 @@ export default function Shopping() {
       <div className="carrito-header">
         <h1 className="carrito-titulo">Tu carrito</h1>
         <button className="carrito-btn-vaciar" onClick={clear}>
-          🗑 Vaciar carrito
+          <Trash2 size={15} aria-hidden="true" /> Vaciar carrito
         </button>
       </div>
 
@@ -34,7 +38,7 @@ export default function Shopping() {
         <div className="carrito-items">
           {items.map((item) => (
             <div key={item.id} className="carrito-item">
-              <div className="carrito-item-icono">{item.icon}</div>
+              <div className="carrito-item-icono"><CategoryIcon category={item.category} /></div>
 
               <div className="carrito-item-info">
                 <p className="carrito-item-nombre">{item.name}</p>

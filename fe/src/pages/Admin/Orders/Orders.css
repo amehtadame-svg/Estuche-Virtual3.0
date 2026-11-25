@@ -1,6 +1,8 @@
 /* ── Página ──────────────────────────────────────────── */
 .pedidos-page {
-  padding: 0 30px 50px;
+  width: min(1320px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 32px 0 56px;
 }
 
 .pedidos-topbar {
@@ -92,14 +94,11 @@
 
 /* ── Select estado ───────────────────────────────────── */
 .estado-select-pedido {
-  color: #fff;
-  border: none;
   padding: 5px 10px;
   border-radius: var(--radius-sm);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  outline: none;
 }
 
 /* ── Acciones tabla ──────────────────────────────────── */
@@ -132,8 +131,8 @@
 
 
 .btn-eliminar-pedido:hover {
-  border-color: #e74c3c;
-  color: #e74c3c;
+  border-color: var(--danger);
+  color: var(--danger);
   background: rgba(231,76,60,.06);
 }
 
@@ -175,7 +174,7 @@
 
 .btn-guardar-pedido {
   background: var(--gradient-accent);
-  color: #fff;
+  color: var(--on-accent);
   border: none;
 }
 .btn-guardar-pedido:hover {
@@ -191,8 +190,8 @@
 
 
 .btn-cancelar-pedido:hover {
-  border-color: #e74c3c;
-  color: #e74c3c;
+  border-color: var(--danger);
+  color: var(--danger);
   background: rgba(231,76,60,.06);
 }
 
@@ -280,7 +279,7 @@
 
 @media (max-width: 600px) {
   .pedidos-page {
-    padding: 0 16px 40px;
+    width: calc(100% - 28px); padding: 20px 0 40px;
   }
 
   .pedidos-topbar {

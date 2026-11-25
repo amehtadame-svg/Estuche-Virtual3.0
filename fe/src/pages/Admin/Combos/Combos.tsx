@@ -405,7 +405,7 @@ export default function Combos() {
           <div>
             <h2 className="titulo-productos">Combos escolares</h2>
             <p className="subtitulo-usuarios">
-              Agrupa productos del catálogo en un paquete con descuento calculado automáticamente (HU-012)
+              Agrupa productos del catálogo en un paquete con precio especial
             </p>
           </div>
           <button className="btn-nuevo-producto" onClick={openModal}>

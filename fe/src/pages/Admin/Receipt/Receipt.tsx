@@ -4,12 +4,12 @@ import { API, authHeaders } from '../../../api/api';
 import { runApiAction } from '../../../lib/apiAction';
 import './Receipt.css';
 
-const statusColor: Record<string, string> = {
-  pending: '#f39c12',
-  paid: '#27ae60',
-  partial: '#3498db',
-  overdue: '#e67e22',
-  voided: '#e74c3c',
+const statusTone: Record<string, string> = {
+  pending: 'tone-warning',
+  paid: 'tone-success',
+  partial: 'tone-info',
+  overdue: 'tone-danger',
+  voided: 'tone-neutral',
 };
 
 const emptyForm = {
@@ -172,13 +172,15 @@ export default function Receipt() {
     <>
       <div className="facturas-page">
         <div className="facturas-topbar">
-          <h2 className="titulo-facturas">
-            Gestión de recibos
-          </h2>
+          <div>
+            <h2 className="titulo-facturas">
+              Gestión de recibos
+            </h2>
 
-          <p className="subtitulo-usuarios">
-            Administra los recibos registrados
-          </p>
+            <p className="subtitulo-usuarios">
+              Administra los recibos registrados
+            </p>
+          </div>
 
           <button
             className="btn-nuevo-factura"
@@ -218,6 +220,13 @@ export default function Receipt() {
             </thead>
 
             <tbody>
+              {receipts.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="table-empty">
+                    Todavía no hay recibos registrados.
+                  </td>
+                </tr>
+              )}
               {receipts.map((receipt) => (
                 <tr key={receipt.id}>
                   <td className="numero-factura">
@@ -227,7 +236,7 @@ export default function Receipt() {
 
                   <td>
                     {receipt.order
-                      ? `PED-${receipt.order.id.slice(0, 6).toUpperCase()}`
+                      ? `PED-${receipt.order.id.slice(-6).toUpperCase()}`
                       : '—'}
                   </td>
 
@@ -256,61 +265,36 @@ export default function Receipt() {
                           e.target.value
                         )
                       }
-                      className="estado-select-factura"
-                      style={{
-                        backgroundColor:
-                          statusColor[
+                      className={`estado-select-factura ${statusTone[
                             receipt.paymentStatus ?? ''
-                          ] || '#999',
-                        color: '#fff',
-                      }}
+                          ] ?? 'tone-neutral'}`}
                     >
                       <option
                         value="pending"
-                        style={{
-                          backgroundColor: '#fff',
-                          color: '#1E2761',
-                        }}
                       >
                         Pendiente
                       </option>
 
                       <option
                         value="paid"
-                        style={{
-                          backgroundColor: '#fff',
-                          color: '#1E2761',
-                        }}
                       >
                         Pagada
                       </option>
 
                       <option
                         value="partial"
-                        style={{
-                          backgroundColor: '#fff',
-                          color: '#1E2761',
-                        }}
                       >
                         Parcial
                       </option>
 
                       <option
                         value="overdue"
-                        style={{
-                          backgroundColor: '#fff',
-                          color: '#1E2761',
-                        }}
                       >
                         Vencida
                       </option>
 
                       <option
                         value="voided"
-                        style={{
-                          backgroundColor: '#fff',
-                          color: '#1E2761',
-                        }}
                       >
                         Anulada
                       </option>

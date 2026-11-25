@@ -65,7 +65,7 @@
 
 .pago-linea:last-child { border-bottom: none; }
 
-.pago-linea-descuento { color: #10b981; font-weight: 600; }
+.pago-linea-descuento { color: var(--success); font-weight: 600; }
 
 /* ── Formulario de dirección / teléfono ─────────────── */
 .pago-form-grupo {
@@ -147,7 +147,7 @@
 
 .pago-modal-input:focus { border-color: var(--accent); }
 
-.pago-modal-input.con-error { border-color: #e74c3c; }
+.pago-modal-input.con-error { border-color: var(--danger); }
 
 .pago-modal-input-prefijo {
   display: flex;
@@ -157,7 +157,7 @@
   overflow: hidden;
 }
 
-.pago-modal-input-prefijo.con-error { border-color: #e74c3c; }
+.pago-modal-input-prefijo.con-error { border-color: var(--danger); }
 
 .pago-modal-prefijo {
   padding: 10px 10px;
@@ -181,7 +181,7 @@
 .pago-modal-error {
   font-size: 12px;
   background: transparent;
-  color: #e74c3c;
+  color: var(--danger);
   margin: 4px 0 0;
 }
 
@@ -249,7 +249,7 @@
   background: var(--accent);
 }
 
-.pago-metodo-icono { font-size: 20px; }
+.pago-metodo-icono { display: inline-flex; color: var(--accent-text); }
 
 .pago-metodo-label {
   font-size: 14px;
@@ -301,7 +301,7 @@
 
 .pago-error-desc {
   font-size: 12px;
-  color: #e74c3c;
+  color: var(--danger);
   margin: 0 0 8px;
 }
 
@@ -322,7 +322,7 @@
   width: 100%;
   padding: 14px;
   background: var(--gradient-accent);
-  color: #fff;
+  color: var(--on-accent);
   border: none;
   border-radius: var(--radius-md);
   font-size: 15px;
@@ -357,13 +357,13 @@
 
 /* ── Error ───────────────────────────────────────────── */
 .pago-error {
-  color: #e74c3c;
+  color: var(--danger);
   font-size: 13px;
   margin: 8px 0;
   padding: 10px;
   background: transparent;
   border-radius: var(--radius-sm);
-  border: 1px solid #e74c3c;
+  border: 1px solid var(--danger);
 }
 
 /* ── Vacio ───────────────────────────────────────────── */
@@ -381,7 +381,7 @@
   margin: 0 auto;
 }
 
-.pago-exito-icono { font-size: 64px; margin-bottom: 24px; }
+.pago-exito-icono { display: inline-flex; margin-bottom: 20px; color: var(--success); }
 
 .pago-exito h2 {
   font-size: 28px;

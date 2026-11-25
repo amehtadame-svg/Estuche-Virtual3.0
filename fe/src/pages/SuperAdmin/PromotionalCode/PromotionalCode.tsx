@@ -176,6 +176,7 @@ export default function PromotionalCode() {
             </thead>
 
             <tbody>
+              {codes.length === 0 && (<tr><td colSpan={8} className="table-empty">Todavía no hay códigos de descuento.</td></tr>)}
               {codes.map((discount) => (
                 <tr key={discount.id}>
                   <td className="codigo-descuento">{discount.code}</td>

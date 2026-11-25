@@ -1,28 +1,51 @@
-/* HU-003 · Salida manual de productos — estilos propios (el shell viene de InventoryInbound.css y ToastProvider.css) */
+/* Salida manual de productos — estilos propios (el shell viene de InventoryInbound.css) */
 
 .outbound-arrow {
   font-weight: 700;
-  color: #e74c3c;
+  color: var(--danger);
   font-size: 14px;
 }
 
 .outbound-new-stock {
-  color: #e74c3c !important;
+  color: var(--danger) !important;
 }
 
 .outbound-shortage {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-size: 12px;
   font-weight: 600;
-  color: #e74c3c;
-  background: rgba(231, 76, 60, 0.12);
-  border: 1px solid #e74c3c;
+  color: var(--danger);
+  background: rgba(200, 30, 30, 0.12);
+  border: 1px solid var(--danger);
   border-radius: 8px;
   padding: 6px 10px;
 }
 
 .inbound-stock-pill.empty {
-  background: rgba(231, 76, 60, 0.12);
-  color: #e74c3c;
+  background: rgba(200, 30, 30, 0.12);
+  color: var(--danger);
+}
+
+.outbound-submit-btn {
+  width: 100%;
+  padding: 12px 18px;
+  border: none;
+  border-radius: var(--radius-md, 8px);
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  color: var(--on-accent);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(200, 30, 30, 0.25);
+  transition: opacity 0.2s;
+}
+
+.outbound-submit-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
 }
 
 .outbound-hint {
@@ -36,20 +59,40 @@
   border-radius: 999px;
   font-size: 12px;
   font-weight: 700;
-  background: rgba(231, 76, 60, 0.15);
-  color: #e74c3c;
+  background: rgba(200, 30, 30, 0.15);
+  color: var(--danger);
 }
 
 .outbound-confirm-dialog {
   width: min(500px, 100%);
 }
 
-.outbound-confirm-summary {
-  margin: 16px 0 0;
-  padding: 14px 16px;
+.outbound-modal {
+  width: 100%;
+  max-width: 480px;
+  background: var(--bg);
+  border: 1px solid var(--border);
   border-radius: 14px;
-  border: 1px solid var(--accent-border, rgba(170, 59, 255, 0.26));
-  background: var(--bg, #fff);
+  padding: 24px;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.28);
+}
+
+.outbound-modal-title {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-h);
+}
+
+.outbound-modal-text {
+  margin: 0 0 16px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+.outbound-modal-list {
+  margin: 0 0 20px;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -61,7 +104,7 @@
   align-items: center;
   gap: 16px;
   padding-bottom: 8px;
-  border-bottom: 1px solid var(--border, #e8e3ed);
+  border-bottom: 1px dashed var(--border);
 }
 
 .outbound-confirm-summary > div:last-child {
@@ -72,7 +115,9 @@
 .outbound-confirm-summary dt {
   font-size: 12px;
   font-weight: 600;
-  color: var(--text, #6b6375);
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
   flex-shrink: 0;
 }
 
@@ -81,7 +126,7 @@
   font-size: 13px;
   font-weight: 500;
   text-align: right;
-  color: var(--ink, #08060d);
+  color: var(--text-h);
   word-break: break-word;
 }
 
@@ -91,9 +136,15 @@
   gap: 6px;
 }
 
-.outbound-confirm-arrow {
-  color: var(--accent, #aa3bff);
-  font-weight: 700;
+.outbound-btn-cancel {
+  padding: 11px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-h);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
 }
 
 .outbound-confirm-stock-final {
@@ -101,11 +152,19 @@
   font-weight: 700;
 }
 
-.outbound-confirm-submit {
-  border: 1px solid var(--accent, #aa3bff);
-  background: var(--gradient-accent, #aa3bff);
-  color: #fff;
-  box-shadow: var(--shadow-accent);
+.outbound-btn-confirm {
+  padding: 11px 16px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  color: var(--on-accent);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.outbound-btn-confirm:hover:not(:disabled) {
+  filter: brightness(1.06);
 }
 
 .outbound-confirm-submit:hover:not(:disabled) {

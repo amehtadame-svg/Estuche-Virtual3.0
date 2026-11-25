@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { AlertTriangle, Package } from 'lucide-react';
 import { API, authHeaders } from '../../../api/api';
 import { notify } from '../../../lib/notifications';
 import './InventoryInbound.css';
@@ -188,7 +189,7 @@ export default function InventoryInbound() {
     <div className="inbound-page">
       <div className="inbound-header">
         <div>
-          <h1 className="inbound-title">Recepción e Ingreso de Mercancía (HU-002)</h1>
+          <h1 className="inbound-title">Ingreso de mercancía</h1>
           <p className="inbound-subtitle">
             Registra lotes recibidos de proveedores para incrementar el stock en tiempo real y auditar entradas
           </p>
@@ -197,7 +198,7 @@ export default function InventoryInbound() {
 
       {error && (
         <div className="inbound-alert-error" role="alert">
-          ⚠️ {error}
+          <AlertTriangle size={16} aria-hidden="true" /> {error}
         </div>
       )}
 
@@ -208,7 +209,7 @@ export default function InventoryInbound() {
           <input
             type="text"
             className="inbound-input"
-            placeholder="🔍 Escribe nombre, código SKU (ej. EV-001) o código de barras..."
+            placeholder="Escribe nombre, código SKU (ej. EV-001) o código de barras..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -247,7 +248,7 @@ export default function InventoryInbound() {
                 {primaryImage ? (
                   <img src={primaryImage} alt={selectedProduct.name} />
                 ) : (
-                  <span className="inbound-no-img">📦</span>
+                  <span className="inbound-no-img"><Package size={22} aria-hidden="true" /></span>
                 )}
               </div>
               <div className="inbound-summary-info">
@@ -268,7 +269,7 @@ export default function InventoryInbound() {
                   </div>
                   {isQuantityValid && (
                     <>
-                      <span className="inbound-arrow">+{parsedQty} ➔</span>
+                      <span className="inbound-arrow">+{parsedQty} →</span>
                       <div className="inbound-new-stock">
                         <small>Nuevo stock tras ingreso</small>
                         <b>{selectedProduct.stock + parsedQty} uds.</b>
@@ -359,7 +360,7 @@ export default function InventoryInbound() {
       {/* Bitácora de auditoría de recepciones recientes (CA-002.4) */}
       <div className="inbound-card inbound-history-card">
         <h2 className="inbound-card-title">
-          Bitácora de Ingresos de Mercancía Recientes (`inventory_movements`)
+          Ingresos recientes
         </h2>
         {movements.length === 0 ? (
           <p className="inbound-muted">Aún no se han registrado entradas de mercancía.</p>

@@ -1,5 +1,7 @@
 .reportes-page {
-  padding: 0 30px 50px;
+  width: min(1320px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 32px 0 56px;
 }
 
 .reportes-topbar {
@@ -123,9 +125,9 @@
 
 .fecha-reporte        { font-weight: 600; color: var(--text-h); }
 .vendido-reporte      { font-weight: 600; color: var(--accent); }
-.entregados-reporte   { color: #10b981; font-weight: 500; }
-.cancelados-reporte   { color: #e74c3c; font-weight: 500; }
-.reembolsado-reporte  { color: #3b82f6; font-weight: 500; }
+.entregados-reporte   { color: var(--success); font-weight: 500; }
+.cancelados-reporte   { color: var(--danger); font-weight: 500; }
+.reembolsado-reporte  { color: var(--info); font-weight: 500; }
 
 @media (max-width: 1024px) {
   .reportes-stats {
@@ -134,7 +136,7 @@
 }
 
 @media (max-width: 600px) {
-  .reportes-page  { padding: 0 16px 40px; }
+  .reportes-page  { width: calc(100% - 28px); padding: 20px 0 40px; }
   .reportes-stats { grid-template-columns: repeat(2, 1fr); }
 
   .tabla-reportes thead { display: none; }
