@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Modal from '../../../components/ui/Modal';
 import { API, authHeaders } from '../../../api/api';
+import { runApiAction } from '../../../lib/apiAction';
 import './Receipt.css';
 
 const statusColor: Record<string, string> = {
@@ -11,7 +12,12 @@ const statusColor: Record<string, string> = {
   voided: '#e74c3c',
 };
 
-const emptyForm = { customerId: '', date: '', total: '', paymentStatus: 'pending' };
+const emptyForm = {
+  customerId: '',
+  date: '',
+  total: '',
+  paymentStatus: 'pending',
+};
 
 interface Receipt {
   id: string;
@@ -47,7 +53,6 @@ export default function Receipt() {
 
   useEffect(() => {
     loadReceipts();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const showMessage = (text: string) => {
@@ -55,8 +60,13 @@ export default function Receipt() {
     setTimeout(() => setMessage(''), 2500);
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value,
+    });
   };
 
   const openNewModal = () => {
@@ -83,51 +93,75 @@ export default function Receipt() {
       paymentStatus: form.paymentStatus,
     };
 
-    if (editingId !== null) {
-      await fetch(`${API.receipts}/${editingId}`, {
-        method: 'PUT',
+    const response = await runApiAction({
+      url: editingId
+        ? `${API.receipts}/${editingId}`
+        : API.receipts,
+      init: {
+        method: editingId ? 'PUT' : 'POST',
         headers: authHeaders(),
         body: JSON.stringify(body),
-      });
-      showMessage('Recibo actualizado.');
-    } else {
-      await fetch(API.receipts, {
-        method: 'POST',
-        headers: authHeaders(),
-        body: JSON.stringify(body),
-      });
-      showMessage('Recibo agregado.');
-    }
+      },
+      successMessage: editingId
+        ? 'Recibo actualizado.'
+        : 'Recibo agregado.',
+      errorMessage: 'No se pudo guardar el recibo.',
+    });
+
+    if (!response) return;
 
     loadReceipts();
     closeModal();
   };
 
-  const handleEdit = (f: Receipt) => {
+  const handleEdit = (receipt: Receipt) => {
     setForm({
-      customerId: String(f.customerId ?? ''),
-      date: f.date ? f.date.split('T')[0] : '',
-      total: String(f.total ?? ''),
-      paymentStatus: f.paymentStatus ?? 'pending',
+      customerId: String(receipt.customerId ?? ''),
+      date: receipt.date
+        ? receipt.date.split('T')[0]
+        : '',
+      total: String(receipt.total ?? ''),
+      paymentStatus: receipt.paymentStatus ?? 'pending',
     });
-    setEditingId(f.id);
+
+    setEditingId(receipt.id);
     setModalOpen(true);
   };
 
   const handleDelete = async (id: string) => {
-    await fetch(`${API.receipts}/${id}`, { method: 'DELETE', headers: authHeaders() });
-    setReceipts(receipts.filter((f) => f.id !== id));
+    await fetch(`${API.receipts}/${id}`, {
+      method: 'DELETE',
+      headers: authHeaders(),
+    });
+
+    setReceipts(
+      receipts.filter((receipt) => receipt.id !== id)
+    );
+
     showMessage('Recibo eliminado.');
   };
 
-  const changeStatus = async (id: string, newStatus: string) => {
+  const changeStatus = async (
+    id: string,
+    newStatus: string
+  ) => {
     const res = await fetch(`${API.receipts}/${id}`, {
       method: 'PUT',
       headers: authHeaders(),
-      body: JSON.stringify({ paymentStatus: newStatus }),
+      body: JSON.stringify({
+        paymentStatus: newStatus,
+      }),
     });
+
     if (res.ok) {
-      setReceipts(receipts.map((f) => (f.id === id ? { ...f, paymentStatus: newStatus } : f)));
+      setReceipts(
+        receipts.map((receipt) =>
+          receipt.id === id
+            ? { ...receipt, paymentStatus: newStatus }
+            : receipt
+        )
+      );
+
       showMessage('Estado actualizado.');
     } else {
       showMessage('Error al actualizar el estado.');
@@ -138,17 +172,37 @@ export default function Receipt() {
     <>
       <div className="facturas-page">
         <div className="facturas-topbar">
-          <h2 className="titulo-facturas">Gestión de Recibos</h2>
-          <p className="subtitulo-usuarios">Administra los Recibos registrados</p>
-          <button className="btn-nuevo-factura" onClick={openNewModal}>
+          <h2 className="titulo-facturas">
+            Gestión de recibos
+          </h2>
+
+          <p className="subtitulo-usuarios">
+            Administra los recibos registrados
+          </p>
+
+          <button
+            className="btn-nuevo-factura"
+            onClick={openNewModal}
+          >
             + Nuevo recibo
           </button>
         </div>
 
-        {message && <div className="mensaje-facturas">{message}</div>}
+        {message && (
+          <div className="mensaje-facturas">
+            {message}
+          </div>
+        )}
 
         {loading ? (
-          <p style={{ color: 'var(--text)', padding: '20px 0' }}>Cargando recibos...</p>
+          <p
+            style={{
+              color: 'var(--text)',
+              padding: '20px 0',
+            }}
+          >
+            Cargando recibos...
+          </p>
         ) : (
           <table className="tabla-facturas">
             <thead>
@@ -162,31 +216,125 @@ export default function Receipt() {
                 <th>Acciones</th>
               </tr>
             </thead>
+
             <tbody>
-              {receipts.map((fac) => (
-                <tr key={fac.id}>
-                  <td className="numero-factura">REC-{String(fac.receiptNumber).padStart(3, '0')}</td>
-                  <td>{fac.order ? `PED-${fac.order.id.slice(0, 6).toUpperCase()}` : '—'}</td>
-                  <td>{fac.date ? fac.date.split('T')[0] : '—'}</td>
-                  <td className="total-factura">${Number(fac.total).toLocaleString()}</td>
-                  <td>{fac.employee?.fullName ?? '—'}</td>
+              {receipts.map((receipt) => (
+                <tr key={receipt.id}>
+                  <td className="numero-factura">
+                    REC-
+                    {String(receipt.receiptNumber).padStart(3, '0')}
+                  </td>
+
+                  <td>
+                    {receipt.order
+                      ? `PED-${receipt.order.id.slice(0, 6).toUpperCase()}`
+                      : '—'}
+                  </td>
+
+                  <td>
+                    {receipt.date
+                      ? receipt.date.split('T')[0]
+                      : '—'}
+                  </td>
+
+                  <td className="total-factura">
+                    ${Number(receipt.total).toLocaleString()}
+                  </td>
+
+                  <td>
+                    {receipt.employee?.fullName ?? '—'}
+                  </td>
+
                   <td>
                     <select
-                      value={fac.paymentStatus ?? 'pending'}
-                      onChange={(e) => changeStatus(fac.id, e.target.value)}
+                      disabled
+                      title="El estado financiero se actualizará desde el flujo de pagos."
+                      value={receipt.paymentStatus ?? 'pending'}
+                      onChange={(e) =>
+                        changeStatus(
+                          receipt.id,
+                          e.target.value
+                        )
+                      }
                       className="estado-select-factura"
-                      style={{ backgroundColor: statusColor[fac.paymentStatus ?? ''] || '#999', color: '#fff' }}
+                      style={{
+                        backgroundColor:
+                          statusColor[
+                            receipt.paymentStatus ?? ''
+                          ] || '#999',
+                        color: '#fff',
+                      }}
                     >
-                      <option value="pending" style={{ backgroundColor: '#fff', color: '#1E2761' }}>Pendiente</option>
-                      <option value="paid" style={{ backgroundColor: '#fff', color: '#1E2761' }}>Pagada</option>
-                      <option value="partial" style={{ backgroundColor: '#fff', color: '#1E2761' }}>Parcial</option>
-                      <option value="overdue" style={{ backgroundColor: '#fff', color: '#1E2761' }}>Vencida</option>
-                      <option value="voided" style={{ backgroundColor: '#fff', color: '#1E2761' }}>Anulada</option>
+                      <option
+                        value="pending"
+                        style={{
+                          backgroundColor: '#fff',
+                          color: '#1E2761',
+                        }}
+                      >
+                        Pendiente
+                      </option>
+
+                      <option
+                        value="paid"
+                        style={{
+                          backgroundColor: '#fff',
+                          color: '#1E2761',
+                        }}
+                      >
+                        Pagada
+                      </option>
+
+                      <option
+                        value="partial"
+                        style={{
+                          backgroundColor: '#fff',
+                          color: '#1E2761',
+                        }}
+                      >
+                        Parcial
+                      </option>
+
+                      <option
+                        value="overdue"
+                        style={{
+                          backgroundColor: '#fff',
+                          color: '#1E2761',
+                        }}
+                      >
+                        Vencida
+                      </option>
+
+                      <option
+                        value="voided"
+                        style={{
+                          backgroundColor: '#fff',
+                          color: '#1E2761',
+                        }}
+                      >
+                        Anulada
+                      </option>
                     </select>
                   </td>
+
                   <td>
-                    <button className="btn-editar-factura" onClick={() => handleEdit(fac)}>Editar</button>
-                    <button className="btn-eliminar-factura" onClick={() => handleDelete(fac.id)}>Eliminar</button>
+                    <button
+                      className="btn-editar-factura"
+                      onClick={() => handleEdit(receipt)}
+                    >
+                      Editar
+                    </button>
+
+                    <button
+                      disabled
+                      title="La eliminación está deshabilitada para conservar el historial."
+                      className="btn-eliminar-factura"
+                      onClick={() =>
+                        handleDelete(receipt.id)
+                      }
+                    >
+                      Eliminar
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -197,33 +345,95 @@ export default function Receipt() {
 
       {modalOpen && (
         <Modal
-          titulo={editingId !== null ? 'Editar recibo' : 'Nuevo recibo'}
+          titulo={
+            editingId !== null
+              ? 'Editar recibo'
+              : 'Nuevo recibo'
+          }
           onClose={closeModal}
           footer={
             <>
-              <button className="btn-cancelar-factura" onClick={closeModal}>Cancelar</button>
-              <button className="btn-guardar-factura" onClick={handleSave}>
-                {editingId !== null ? 'Guardar cambios' : 'Agregar recibo'}
+              <button
+                className="btn-cancelar-factura"
+                onClick={closeModal}
+              >
+                Cancelar
+              </button>
+
+              <button
+                className="btn-guardar-factura"
+                onClick={handleSave}
+              >
+                {editingId !== null
+                  ? 'Guardar cambios'
+                  : 'Agregar recibo'}
               </button>
             </>
           }
         >
-          <label className="label-factura">ID Cliente</label>
-          <input className="input-factura" name="customerId" value={form.customerId} onChange={handleChange} placeholder="UUID del cliente" />
+          <label className="label-factura">
+            ID Cliente
+          </label>
 
-          <label className="label-factura">Fecha</label>
-          <input className="input-factura" type="date" name="date" value={form.date} onChange={handleChange} />
+          <input
+            className="input-factura"
+            name="customerId"
+            value={form.customerId}
+            onChange={handleChange}
+            placeholder="UUID del cliente"
+          />
 
-          <label className="label-factura">Total</label>
-          <input className="input-factura" type="number" name="total" value={form.total} onChange={handleChange} placeholder="85000" />
+          <label className="label-factura">
+            Fecha
+          </label>
 
-          <label className="label-factura">Estado</label>
-          <select className="input-factura" name="paymentStatus" value={form.paymentStatus} onChange={handleChange}>
-            <option value="pending">Pendiente</option>
-            <option value="paid">Pagada</option>
-            <option value="partial">Parcial</option>
-            <option value="overdue">Vencida</option>
-            <option value="voided">Anulada</option>
+          <input
+            className="input-factura"
+            type="date"
+            name="date"
+            value={form.date}
+            onChange={handleChange}
+          />
+
+          <label className="label-factura">
+            Total
+          </label>
+
+          <input
+            className="input-factura"
+            type="number"
+            name="total"
+            value={form.total}
+            onChange={handleChange}
+            placeholder="85000"
+          />
+
+          <label className="label-factura">
+            Estado
+          </label>
+
+          <select
+            disabled
+            className="input-factura"
+            name="paymentStatus"
+            value={form.paymentStatus}
+            onChange={handleChange}
+          >
+            <option value="pending">
+              Pendiente
+            </option>
+            <option value="paid">
+              Pagada
+            </option>
+            <option value="partial">
+              Parcial
+            </option>
+            <option value="overdue">
+              Vencida
+            </option>
+            <option value="voided">
+              Anulada
+            </option>
           </select>
         </Modal>
       )}

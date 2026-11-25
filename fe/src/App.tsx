@@ -1,13 +1,14 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
+import EmployeeWorkspace from './pages/Employee/EmployeeWorkspace';
+import CustomerPickups from './pages/Employee/CustomerPickups';
 import AccessDenied from './pages/AccessDenied/AccessDenied';
 import ProtectedRoute from './components/ui/ProtectedRoute';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
 import ToastProvider from './components/ui/ToastProvider';
 
-// Páginas públicas
 import Pago from './pages/Checkout/Checkout';
 import Home from './pages/Home/Home';
 import Login from './pages/Login/Login';
@@ -21,25 +22,22 @@ import ForgotPassword from './pages/ResetPassword/ForgotPassword';
 import ResetPassword from './pages/ResetPassword/ResetPassword';
 import Profile from './pages/Profile/Profile';
 
-// Cliente
 import ClienteDashboard from './pages/ClientDashboard/ClientDashboard';
 import ClientPqr from './pages/PQR/ClientPqr';
 
-// Admin
-import AdminDashboard    from './pages/Admin/AdminDashboard';
-import ProductosAD       from './pages/Admin/Products/Products';
-import CombosAD          from './pages/Admin/Combos/Combos';
-import InventoryInbound  from './pages/Admin/Inventory/InventoryInbound';
+import AdminDashboard from './pages/Admin/AdminDashboard';
+import ProductosAD from './pages/Admin/Products/Products';
+import CombosAD from './pages/Admin/Combos/Combos';
+import InventoryInbound from './pages/Admin/Inventory/InventoryInbound';
 import InventoryOutbound from './pages/Admin/Inventory/InventoryOutbound';
-import Pedidos           from './pages/Admin/Orders/Orders';
-import Recibos           from './pages/Admin/Receipt/Receipt';
-import Envios            from './pages/Admin/Despatch/Despatch';
-import Proveedores       from './pages/Admin/Provider/Provider';
-import Usuarios          from './pages/Admin/Users/AdminUsers';
-import DetallePedidos    from './pages/Admin/OrderDetails/OrderDetails';
-import AdminPqr          from './pages/PQR/AdminPqr';
+import Pedidos from './pages/Admin/Orders/Orders';
+import Recibos from './pages/Admin/Receipt/Receipt';
+import Envios from './pages/Admin/Despatch/Despatch';
+import Proveedores from './pages/Admin/Provider/Provider';
+import Usuarios from './pages/Admin/Users/AdminUsers';
+import DetallePedidos from './pages/Admin/OrderDetails/OrderDetails';
+import AdminPqr from './pages/PQR/AdminPqr';
 
-// SuperAdmin
 import SuperAdminDashboard from './pages/SuperAdmin/SuperAdminDashboard';
 import Descuentos from './pages/SuperAdmin/PromotionalCode/PromotionalCode';
 import Pagos from './pages/SuperAdmin/Payout/Payout';
@@ -54,8 +52,8 @@ function App() {
         <CartProvider>
           <BrowserRouter>
             <Header />
+
             <Routes>
-              {/* Páginas públicas */}
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
@@ -65,54 +63,154 @@ function App() {
               <Route path="/Contacto" element={<Contacto />} />
               <Route path="/Nosotros" element={<Nosotros />} />
               <Route path="/no-acceso" element={<AccessDenied />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route
+                path="/forgot-password"
+                element={<ForgotPassword />}
+              />
+              <Route
+                path="/reset-password"
+                element={<ResetPassword />}
+              />
 
-              {/* Cliente */}
               <Route
                 element={
-                  <ProtectedRoute allowedRoles={['client', 'employee']} />
+                  <ProtectedRoute allowedRoles={['client']} />
                 }
               >
-                <Route path="/cliente" element={<ClienteDashboard />} />
+                <Route
+                  path="/cliente"
+                  element={<ClienteDashboard />}
+                />
               </Route>
 
-              <Route element={<ProtectedRoute allowedRoles={['client']} />}>
-                <Route path="/cliente/pqr" element={<ClientPqr />} />
+              <Route
+                element={
+                  <ProtectedRoute allowedRoles={['client']} />
+                }
+              >
+                <Route
+                  path="/cliente/retiros"
+                  element={<CustomerPickups />}
+                />
+                <Route
+                  path="/cliente/pqr"
+                  element={<ClientPqr />}
+                />
               </Route>
 
-              {/* Pago y perfil */}
+              <Route
+                element={
+                  <ProtectedRoute
+                    allowedRoles={[
+                      'employee',
+                      'admin',
+                      'superadmin',
+                    ]}
+                  />
+                }
+              >
+                <Route
+                  path="/empleado/*"
+                  element={<EmployeeWorkspace />}
+                />
+              </Route>
+
               <Route element={<ProtectedRoute />}>
                 <Route path="/Pago" element={<Pago />} />
                 <Route path="/perfil" element={<Profile />} />
               </Route>
 
-              {/* Admin y SuperAdmin */}
-              <Route element={<ProtectedRoute allowedRoles={['admin', 'superadmin']} />}>
-                <Route path="/admin"                 element={<AdminDashboard />} />
-                <Route path="/admin/productos"       element={<ProductosAD />} />
-                <Route path="/admin/salidas"         element={<InventoryOutbound />} />
-                <Route path="/admin/combos"          element={<CombosAD />} />
-                <Route path="/admin/ingresos"        element={<InventoryInbound />} />
-                <Route path="/admin/pedidos"         element={<Pedidos />} />
-                <Route path="/admin/recibos"         element={<Recibos />} />
-                <Route path="/admin/envios"          element={<Envios />} />
-                <Route path="/admin/proveedores"     element={<Proveedores />} />
-                <Route path="/admin/usuarios"        element={<Usuarios />} />
-                <Route path="/admin/detallepedidos"  element={<DetallePedidos />} />
-                <Route path="/admin/pqr"             element={<AdminPqr />} />
+              <Route
+                element={
+                  <ProtectedRoute
+                    allowedRoles={['admin', 'superadmin']}
+                  />
+                }
+              >
+                <Route
+                  path="/admin"
+                  element={<AdminDashboard />}
+                />
+                <Route
+                  path="/admin/productos"
+                  element={<ProductosAD />}
+                />
+                <Route
+                  path="/admin/salidas"
+                  element={<InventoryOutbound />}
+                />
+                <Route
+                  path="/admin/combos"
+                  element={<CombosAD />}
+                />
+                <Route
+                  path="/admin/ingresos"
+                  element={<InventoryInbound />}
+                />
+                <Route
+                  path="/admin/pedidos"
+                  element={<Pedidos />}
+                />
+                <Route
+                  path="/admin/recibos"
+                  element={<Recibos />}
+                />
+                <Route
+                  path="/admin/envios"
+                  element={<Envios />}
+                />
+                <Route
+                  path="/admin/proveedores"
+                  element={<Proveedores />}
+                />
+                <Route
+                  path="/admin/usuarios"
+                  element={<Usuarios />}
+                />
+                <Route
+                  path="/admin/detallepedidos"
+                  element={<DetallePedidos />}
+                />
+                <Route
+                  path="/admin/pqr"
+                  element={<AdminPqr />}
+                />
               </Route>
 
-              {/* Solo SuperAdmin */}
-              <Route element={<ProtectedRoute allowedRoles={['superadmin']} />}>
-                <Route path="/superadmin"              element={<SuperAdminDashboard />} />
-                <Route path="/superadmin/usuarios"     element={<UsuariosSA />} />
-                <Route path="/superadmin/descuentos"   element={<Descuentos />} />
-                <Route path="/superadmin/pagos"        element={<Pagos />} />
-                <Route path="/superadmin/devoluciones" element={<Devoluciones />} />
-                <Route path="/superadmin/reportes"     element={<Reportes />} />
+              <Route
+                element={
+                  <ProtectedRoute
+                    allowedRoles={['superadmin']}
+                  />
+                }
+              >
+                <Route
+                  path="/superadmin"
+                  element={<SuperAdminDashboard />}
+                />
+                <Route
+                  path="/superadmin/usuarios"
+                  element={<UsuariosSA />}
+                />
+                <Route
+                  path="/superadmin/descuentos"
+                  element={<Descuentos />}
+                />
+                <Route
+                  path="/superadmin/pagos"
+                  element={<Pagos />}
+                />
+                <Route
+                  path="/superadmin/devoluciones"
+                  element={<Devoluciones />}
+                />
+                <Route
+                  path="/superadmin/reportes"
+                  element={<Reportes />}
+                />
               </Route>
             </Routes>
+
             <Footer />
           </BrowserRouter>
         </CartProvider>

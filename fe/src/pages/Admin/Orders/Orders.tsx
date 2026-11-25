@@ -8,7 +8,7 @@ import './Orders.css';
 
 const statusColor: Record<string, string> = {
   pending: '#3498db',
-  in_transit: '#f39c12',
+  shipped: '#f39c12',
   delivered: '#27ae60',
   canceled: '#e74c3c',
 };
@@ -50,7 +50,7 @@ export default function Orders() {
   const [discountApplied, setDiscountApplied] = useState<string | null>(null);
 
   const loadOrders = () => {
-    fetch(API.orders)
+    fetch(API.orders, { headers: authHeaders() })
       .then((r) => r.json())
       .then((data) => {
         setOrders(data);
@@ -64,23 +64,33 @@ export default function Orders() {
 
   const loadCustomers = async () => {
     try {
-      const response = await fetch(API.users, { headers: authHeaders() });
+      const response = await fetch(API.users, {
+        headers: authHeaders(),
+      });
+
       const data = await response.json().catch(() => null);
-      if (!response.ok) throw new Error(data?.message || 'No se pudieron cargar los clientes.');
+
+      if (!response.ok) {
+        throw new Error(
+          data?.message || 'No se pudieron cargar los clientes.'
+        );
+      }
+
       setCustomers(
         Array.isArray(data)
           ? data.filter((user: Customer) => user.role === 'client')
-          : [],
+          : []
       );
     } catch {
-      notify.error('No se pudieron cargar los clientes para el pedido.');
+      notify.error(
+        'No se pudieron cargar los clientes para el pedido.'
+      );
     }
   };
 
   useEffect(() => {
     loadOrders();
     loadCustomers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const showMessage = (text: string) => {
@@ -88,8 +98,13 @@ export default function Orders() {
     setTimeout(() => setMessage(''), 2500);
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value,
+    });
   };
 
   const closeModal = () => {
@@ -110,29 +125,43 @@ export default function Orders() {
       customerId: form.customerId,
       total: Number(form.total),
       status: form.status,
-      promotionalCodeId: form.promotionalCodeId || null,
+      ...(form.promotionalCodeId
+        ? { promotionalCodeId: form.promotionalCodeId }
+        : {}),
     };
 
     const editing = editingId !== null;
+
     const response = await runApiAction({
-      url: editing ? `${API.orders}/${editingId}` : API.orders,
-      init: { method: editing ? 'PUT' : 'POST', headers: authHeaders(), body: JSON.stringify(body) },
-      successMessage: editing ? 'Pedido actualizado exitosamente.' : 'Pedido creado exitosamente.',
+      url: editing
+        ? `${API.orders}/${editingId}`
+        : API.orders,
+      init: {
+        method: editing ? 'PUT' : 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify(body),
+      },
+      successMessage: editing
+        ? 'Pedido actualizado exitosamente.'
+        : 'Pedido creado exitosamente.',
       errorMessage: 'No se pudo guardar el pedido.',
     });
+
     if (!response) return;
+
     await loadOrders();
     closeModal();
   };
 
-  const handleEdit = (p: Order) => {
+  const handleEdit = (order: Order) => {
     setForm({
-      customerId: String(p.customerId ?? ''),
-      total: String(p.total ?? ''),
-      status: p.status ?? 'pending',
+      customerId: String(order.customerId ?? ''),
+      total: String(order.total ?? ''),
+      status: order.status ?? 'pending',
       promotionalCodeId: '',
     });
-    setEditingId(p.id);
+
+    setEditingId(order.id);
     setDiscountCode('');
     setDiscountApplied(null);
     setModalOpen(true);
@@ -140,23 +169,46 @@ export default function Orders() {
 
   const handleDelete = async (id: string) => {
     const deleted = await runDeleteAction({
-      url: `${API.orders}/${id}`, headers: authHeaders(),
-      confirmMessage: '¿Eliminar este pedido? El historial se conservará.',
+      url: `${API.orders}/${id}`,
+      headers: authHeaders(),
+      confirmMessage:
+        '¿Eliminar este pedido? El historial se conservará.',
       successMessage: 'Pedido eliminado exitosamente.',
     });
+
     if (!deleted) return;
-    setOrders((current) => current.filter((order) => order.id !== id));
+
+    setOrders((current) =>
+      current.filter((order) => order.id !== id)
+    );
   };
 
-  const changeStatus = async (id: string, newStatus: string) => {
+  const changeStatus = async (
+    id: string,
+    newStatus: string
+  ) => {
     const response = await runApiAction({
       url: `${API.orders}/${id}`,
-      init: { method: 'PUT', headers: authHeaders(), body: JSON.stringify({ status: newStatus }) },
-      successMessage: 'Estado del pedido actualizado exitosamente.',
-      errorMessage: 'No se pudo actualizar el estado del pedido.',
+      init: {
+        method: 'PUT',
+        headers: authHeaders(),
+        body: JSON.stringify({ status: newStatus }),
+      },
+      successMessage:
+        'Estado del pedido actualizado exitosamente.',
+      errorMessage:
+        'No se pudo actualizar el estado del pedido.',
     });
+
     if (!response) return;
-    setOrders((current) => current.map((order) => order.id === id ? { ...order, status: newStatus } : order));
+
+    setOrders((current) =>
+      current.map((order) =>
+        order.id === id
+          ? { ...order, status: newStatus }
+          : order
+      )
+    );
   };
 
   const handleApplyDiscount = async (id: string) => {
@@ -168,18 +220,38 @@ export default function Orders() {
 
     const response = await runApiAction({
       url: `${API.orders}/${id}/apply-code`,
-      init: { method: 'POST', headers: authHeaders(), body: JSON.stringify({ code: discountCode.trim() }) },
-      successMessage: 'Descuento aplicado exitosamente al pedido.',
+      init: {
+        method: 'PATCH',
+        headers: authHeaders(),
+        body: JSON.stringify({
+          code: discountCode.trim(),
+        }),
+      },
+      successMessage:
+        'Descuento aplicado exitosamente al pedido.',
       errorMessage: 'No se pudo aplicar el descuento.',
     });
+
     if (!response) return;
+
     const data = await response.json().catch(() => null);
+
     if (!data) {
-      notify.error('El servidor no devolvió los datos actualizados del pedido.');
+      notify.error(
+        'El servidor no devolvió los datos actualizados del pedido.'
+      );
       return;
     }
-    setForm((prev) => ({ ...prev, total: String(data.total) }));
-    setDiscountApplied(`Descuento aplicado. Nuevo total: $${Number(data.total).toLocaleString()}`);
+
+    setForm((prev) => ({
+      ...prev,
+      total: String(data.total),
+    }));
+
+    setDiscountApplied(
+      `Descuento aplicado. Nuevo total: $${Number(data.total).toLocaleString()}`
+    );
+
     setDiscountCode('');
     await loadOrders();
   };
@@ -189,15 +261,30 @@ export default function Orders() {
       <div className="pedidos-page">
         <div className="pedidos-topbar">
           <div className="pedidos-heading">
-            <h2 className="titulo-pedidos">Gestión de pedidos</h2>
-            <p className="subtitulo-pedidos">Administra los pedidos registrados</p>
+            <h2 className="titulo-pedidos">
+              Gestión de pedidos
+            </h2>
+            <p className="subtitulo-pedidos">
+              Administra los pedidos registrados
+            </p>
           </div>
         </div>
 
-        {message && <div className="mensaje-pedidos">{message}</div>}
+        {message && (
+          <div className="mensaje-pedidos">
+            {message}
+          </div>
+        )}
 
         {loading ? (
-          <p style={{ color: 'var(--text)', padding: '20px 0' }}>Cargando pedidos...</p>
+          <p
+            style={{
+              color: 'var(--text)',
+              padding: '20px 0',
+            }}
+          >
+            Cargando pedidos...
+          </p>
         ) : (
           <table className="tabla-pedidos">
             <thead>
@@ -211,30 +298,104 @@ export default function Orders() {
                 <th>Acciones</th>
               </tr>
             </thead>
+
             <tbody>
-              {orders.map((ped) => (
-                <tr key={ped.id}>
-                  <td className="numero-pedido">PED-{ped.id.slice(0, 6).toUpperCase()}</td>
-                  <td className="cliente-pedido">{ped.customer?.fullName ?? `Cliente #${ped.customerId?.slice(0, 6) ?? '-'}`}</td>
-                  <td>{ped.promotionalCode ? `${ped.promotionalCode.code} (${ped.promotionalCode.value})` : '—'}</td>
-                  <td className="total-pedido">${Number(ped.total).toLocaleString()}</td>
-                  <td>{ped.orderDate ? ped.orderDate.split('T')[0] : '—'}</td>
+              {orders.map((order) => (
+                <tr key={order.id}>
+                  <td className="numero-pedido">
+                    PED-{order.id.slice(0, 6).toUpperCase()}
+                  </td>
+
+                  <td className="cliente-pedido">
+                    {order.customer?.fullName ??
+                      `Cliente #${order.customerId?.slice(0, 6) ?? '-'}`}
+                  </td>
+
+                  <td>
+                    {order.promotionalCode
+                      ? `${order.promotionalCode.code} (${order.promotionalCode.value})`
+                      : '—'}
+                  </td>
+
+                  <td className="total-pedido">
+                    ${Number(order.total).toLocaleString()}
+                  </td>
+
+                  <td>
+                    {order.orderDate
+                      ? order.orderDate.split('T')[0]
+                      : '—'}
+                  </td>
+
                   <td>
                     <select
-                      value={ped.status ?? 'pending'}
-                      onChange={(e) => changeStatus(ped.id, e.target.value)}
+                      value={order.status ?? 'pending'}
+                      onChange={(e) =>
+                        changeStatus(order.id, e.target.value)
+                      }
                       className="estado-select-pedido"
-                      style={{ backgroundColor: statusColor[ped.status ?? ''] || '#999', color: '#fff' }}
+                      style={{
+                        backgroundColor:
+                          statusColor[order.status ?? ''] || '#999',
+                        color: '#fff',
+                      }}
                     >
-                      <option value="pending" style={{ backgroundColor: '#fff', color: '#1E2761' }}>Pendiente</option>
-                      <option value="in_transit" style={{ backgroundColor: '#fff', color: '#1E2761' }}>En camino</option>
-                      <option value="delivered" style={{ backgroundColor: '#fff', color: '#1E2761' }}>Entregado</option>
-                      <option value="canceled" style={{ backgroundColor: '#fff', color: '#1E2761' }}>Cancelado</option>
+                      <option
+                        value="pending"
+                        style={{
+                          backgroundColor: '#fff',
+                          color: '#1E2761',
+                        }}
+                      >
+                        Pendiente
+                      </option>
+
+                      <option
+                        value="shipped"
+                        style={{
+                          backgroundColor: '#fff',
+                          color: '#1E2761',
+                        }}
+                      >
+                        En camino
+                      </option>
+
+                      <option
+                        value="delivered"
+                        style={{
+                          backgroundColor: '#fff',
+                          color: '#1E2761',
+                        }}
+                      >
+                        Entregado
+                      </option>
+
+                      <option
+                        value="canceled"
+                        style={{
+                          backgroundColor: '#fff',
+                          color: '#1E2761',
+                        }}
+                      >
+                        Cancelado
+                      </option>
                     </select>
                   </td>
+
                   <td>
-                    <button className="btn-editar-pedido" onClick={() => handleEdit(ped)}>Editar</button>
-                    <button className="btn-eliminar-pedido" onClick={() => handleDelete(ped.id)}>Eliminar</button>
+                    <button
+                      className="btn-editar-pedido"
+                      onClick={() => handleEdit(order)}
+                    >
+                      Editar
+                    </button>
+
+                    <button
+                      className="btn-eliminar-pedido"
+                      onClick={() => handleDelete(order.id)}
+                    >
+                      Eliminar
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -245,18 +406,36 @@ export default function Orders() {
 
       {modalOpen && (
         <Modal
-          titulo={editingId !== null ? 'Editar pedido' : 'Nuevo pedido'}
+          titulo={
+            editingId !== null
+              ? 'Editar pedido'
+              : 'Nuevo pedido'
+          }
           onClose={closeModal}
           footer={
             <>
-              <button className="btn-cancelar-pedido" onClick={closeModal}>Cancelar</button>
-              <button className="btn-guardar-pedido" onClick={handleSave}>
-                {editingId !== null ? 'Guardar cambios' : 'Agregar pedido'}
+              <button
+                className="btn-cancelar-pedido"
+                onClick={closeModal}
+              >
+                Cancelar
+              </button>
+
+              <button
+                className="btn-guardar-pedido"
+                onClick={handleSave}
+              >
+                {editingId !== null
+                  ? 'Guardar cambios'
+                  : 'Agregar pedido'}
               </button>
             </>
           }
         >
-          <label className="label-pedido">Cliente</label>
+          <label className="label-pedido">
+            Cliente
+          </label>
+
           <select
             className="input-pedido"
             name="customerId"
@@ -264,20 +443,31 @@ export default function Orders() {
             onChange={handleChange}
             required
           >
-            <option value="">Selecciona un cliente</option>
+            <option value="">
+              Selecciona un cliente
+            </option>
+
             {customers.map((customer) => (
-              <option key={customer.id} value={customer.id}>
+              <option
+                key={customer.id}
+                value={customer.id}
+              >
                 {customer.fullName} — {customer.email}
               </option>
             ))}
           </select>
+
           {customers.length === 0 && (
             <p className="mensaje-pedidos">
-              No hay clientes registrados. Crea primero un usuario con rol cliente.
+              No hay clientes registrados. Crea primero
+              un usuario con rol cliente.
             </p>
           )}
 
-          <label className="label-pedido">Total</label>
+          <label className="label-pedido">
+            Total
+          </label>
+
           <input
             className="input-pedido"
             type="number"
@@ -287,35 +477,74 @@ export default function Orders() {
             placeholder="85000"
           />
 
-          <label className="label-pedido">Estado</label>
-          <select className="input-pedido" name="status" value={form.status} onChange={handleChange}>
-            <option value="pending">Pendiente</option>
-            <option value="in_transit">En camino</option>
-            <option value="delivered">Entregado</option>
-            <option value="canceled">Cancelado</option>
+          <label className="label-pedido">
+            Estado
+          </label>
+
+          <select
+            className="input-pedido"
+            name="status"
+            value={form.status}
+            onChange={handleChange}
+          >
+            <option value="pending">
+              Pendiente
+            </option>
+            <option value="shipped">
+              En camino
+            </option>
+            <option value="delivered">
+              Entregado
+            </option>
+            <option value="canceled">
+              Cancelado
+            </option>
           </select>
 
           {editingId !== null && (
             <div style={{ marginTop: 16 }}>
-              <label className="label-pedido">Código de descuento</label>
-              <div style={{ display: 'flex', gap: 8 }}>
+              <label className="label-pedido">
+                Código de descuento
+              </label>
+
+              <div
+                style={{
+                  display: 'flex',
+                  gap: 8,
+                }}
+              >
                 <input
                   className="input-pedido"
                   placeholder="Ej: REGRESO10"
                   value={discountCode}
-                  onChange={(e) => setDiscountCode(e.target.value)}
+                  onChange={(e) =>
+                    setDiscountCode(e.target.value)
+                  }
                   style={{ marginBottom: 0 }}
                 />
+
                 <button
                   className="btn-guardar-pedido"
-                  onClick={() => handleApplyDiscount(editingId)}
+                  onClick={() =>
+                    handleApplyDiscount(editingId)
+                  }
                   style={{ whiteSpace: 'nowrap' }}
                 >
                   Aplicar
                 </button>
               </div>
+
               {discountApplied && (
-                <p style={{ color: '#27ae60', fontWeight: 600, fontSize: 13, marginTop: 8 }}>{discountApplied}</p>
+                <p
+                  style={{
+                    color: '#27ae60',
+                    fontWeight: 600,
+                    fontSize: 13,
+                    marginTop: 8,
+                  }}
+                >
+                  {discountApplied}
+                </p>
               )}
             </div>
           )}

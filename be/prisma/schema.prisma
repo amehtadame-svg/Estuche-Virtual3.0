@@ -16,6 +16,19 @@ enum Role {
   superadmin
 }
 
+enum FulfillmentMethod {
+  delivery
+  pickup
+}
+
+enum WorkStatus {
+  picking
+  packed
+  blocked
+  dispatched
+  completed
+}
+
 enum OrderStatus {
   pending
   paid
@@ -101,6 +114,9 @@ model User {
   createdAt          DateTime  @default(now()) @map("created_at")
   updatedAt          DateTime  @default(now()) @map("updated_at")
 
+  ordersCreated      Order[]             @relation("OrderCreator")
+  assignedWork       OrderWork[]         @relation("WorkAssignee")
+  operationalEvents  OrderEvent[]
   shopping           Shopping[]
   returns            OrderReturn[]
   deliveryAddresses  DeliveryAddress[]
@@ -110,13 +126,13 @@ model User {
   priceHistory       PriceHistory[]
   wishlist           Wishlist[]
   inventoryMovements InventoryMovement[]
-  notifications     Notification[]
-  payouts           Payout[]
-  ordersAsCustomer  Order[] @relation("OrderCustomer")
-  ordersAsDriver    Order[] @relation("OrderDriver")
-  reviews           Review[]
-  securityEvents    SecurityEvent[]
-  combosCreated     Combo[]
+  notifications      Notification[]
+  payouts            Payout[]
+  ordersAsCustomer   Order[]             @relation("OrderCustomer")
+  ordersAsDriver     Order[]             @relation("OrderDriver")
+  reviews            Review[]
+  securityEvents     SecurityEvent[]
+  combosCreated      Combo[]
   pqrRequests        PqrRequest[]        @relation("PqrCustomer")
   pqrResponses       PqrRequest[]        @relation("PqrResponder")
 
@@ -137,6 +153,17 @@ model Order {
   updatedAt         DateTime?   @default(now()) @map("updated_at")
   deletedAt         DateTime?   @map("deleted_at")
 
+  createdById       String?           @map("created_by_id") @db.Uuid
+  requestKey        String?           @unique @map("request_key") @db.Uuid
+  requestHash       String?           @map("request_hash") @db.VarChar(64)
+  fulfillmentMethod FulfillmentMethod @default(delivery) @map("fulfillment_method")
+  deliverySnapshot  String?           @map("delivery_snapshot") @db.VarChar(500)
+  expiresAt         DateTime?         @map("expires_at")
+  stockReleasedAt   DateTime?         @map("stock_released_at")
+  creator           User?             @relation("OrderCreator", fields: [createdById], references: [id], onDelete: NoAction)
+  work              OrderWork?
+  events            OrderEvent[]
+
   details         OrderDetail[]
   returns         OrderReturn[]
   shipments       Despatch[]
@@ -146,6 +173,8 @@ model Order {
   deliveryAddress DeliveryAddress? @relation(fields: [deliveryAddressId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   driver          User?            @relation("OrderDriver", fields: [driverId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([createdById, orderDate])
+  @@index([expiresAt, status])
   @@index([customerId], map: "idx_orders_customer")
   @@index([driverId], map: "idx_orders_driver")
   @@index([deletedAt], map: "idx_orders_deleted_at")
@@ -209,12 +238,13 @@ model Provider {
 }
 
 model OrderDetail {
-  id        String   @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
-  orderId   String   @map("order_id") @db.Uuid
-  productId String   @map("product_id") @db.Uuid
-  quantity  Int
-  unitPrice Decimal  @map("unit_price") @db.Decimal(14, 2)
-  subtotal  Decimal? @db.Decimal(14, 2)
+  id             String   @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  orderId        String   @map("order_id") @db.Uuid
+  productId      String   @map("product_id") @db.Uuid
+  pickedQuantity Int      @default(0) @map("picked_quantity")
+  quantity       Int
+  unitPrice      Decimal  @map("unit_price") @db.Decimal(14, 2)
+  subtotal       Decimal? @db.Decimal(14, 2)
 
   order   Order   @relation(fields: [orderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   product Product @relation(fields: [productId], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -230,7 +260,7 @@ model Despatch {
   deliveredAt DateTime?      @map("delivered_at")
   status      DespatchStatus @default(in_transit)
   driverId    String?        @map("driver_id") @db.Uuid
-  address     String?        @db.VarChar(255)
+  address     String?        @db.VarChar(500)
 
   order  Order @relation(fields: [orderId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   driver User? @relation(fields: [driverId], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -240,13 +270,15 @@ model Despatch {
 }
 
 model InventoryMovement {
-  id        String       @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
-  productId String       @map("product_id") @db.Uuid
-  type      MovementType
-  quantity  Int
-  reason    String?      @db.VarChar(500)
-  userId    String?      @map("user_id") @db.Uuid
-  date      DateTime?    @default(now())
+  requestKey  String?      @unique @map("request_key") @db.Uuid
+  requestHash String?      @map("request_hash") @db.VarChar(64)
+  id          String       @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  productId   String       @map("product_id") @db.Uuid
+  type        MovementType
+  quantity    Int
+  reason      String?      @db.VarChar(500)
+  userId      String?      @map("user_id") @db.Uuid
+  date        DateTime?    @default(now())
 
   product Product @relation(fields: [productId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   user    User?   @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -534,13 +566,13 @@ model Combo {
   description String?   @db.VarChar(500)
   price       Decimal   @db.Decimal(14, 2)
   isActive    Boolean   @default(true) @map("is_active")
-  createdBy   String?   @db.Uuid @map("created_by")
+  createdBy   String?   @map("created_by") @db.Uuid
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at")
   deletedAt   DateTime? @map("deleted_at")
 
   items   ComboItem[]
-  creator User? @relation(fields: [createdBy], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  creator User?       @relation(fields: [createdBy], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([deletedAt], map: "idx_combos_deleted_at")
   @@map("combos")
@@ -548,8 +580,8 @@ model Combo {
 
 model ComboItem {
   id        String @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
-  comboId   String @db.Uuid @map("combo_id")
-  productId String @db.Uuid @map("product_id")
+  comboId   String @map("combo_id") @db.Uuid
+  productId String @map("product_id") @db.Uuid
   quantity  Int
 
   combo   Combo   @relation(fields: [comboId], references: [id], onDelete: Cascade, onUpdate: NoAction)
@@ -559,4 +591,36 @@ model ComboItem {
   @@index([comboId], map: "idx_combo_items_combo")
   @@index([productId], map: "idx_combo_items_product")
   @@map("combo_items")
+}
+
+model OrderWork {
+  id             String     @id @default(uuid()) @db.Uuid
+  orderId        String     @unique @map("order_id") @db.Uuid
+  assigneeId     String     @map("assignee_id") @db.Uuid
+  status         WorkStatus @default(picking)
+  claimedAt      DateTime   @default(now()) @map("claimed_at")
+  packedAt       DateTime?  @map("packed_at")
+  completedAt    DateTime?  @map("completed_at")
+  pickupCodeHash String?    @map("pickup_code_hash") @db.VarChar(64)
+  incident       String?    @db.VarChar(500)
+  order          Order      @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  assignee       User       @relation("WorkAssignee", fields: [assigneeId], references: [id], onDelete: Restrict)
+
+  @@index([assigneeId, status])
+  @@map("order_work")
+}
+
+model OrderEvent {
+  id        String   @id @default(uuid()) @db.Uuid
+  orderId   String   @map("order_id") @db.Uuid
+  actorId   String?  @map("actor_id") @db.Uuid
+  action    String   @db.VarChar(60)
+  note      String?  @db.VarChar(500)
+  createdAt DateTime @default(now()) @map("created_at")
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  actor     User?    @relation(fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@index([orderId, createdAt])
+  @@index([actorId, createdAt])
+  @@map("order_events")
 }

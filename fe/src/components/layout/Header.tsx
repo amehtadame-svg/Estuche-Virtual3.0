@@ -1,5 +1,9 @@
-import { useEffect, useState } from "react";
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { useEffect, useState } from 'react';
+import {
+  Link,
+  NavLink,
+  useNavigate,
+} from 'react-router-dom';
 import {
   Menu,
   Moon,
@@ -12,101 +16,153 @@ import {
   Truck,
   UserRound,
   X,
-} from "lucide-react";
-import { useAuth } from "../../hooks/useAuth";
-import { useCart } from "../../hooks/useCart";
-import "./Header.css";
+} from 'lucide-react';
+import { useAuth } from '../../hooks/useAuth';
+import { useCart } from '../../hooks/useCart';
+import './Header.css';
 
 const announcements = [
-  { icon: Truck, text: "Envío gratis en pedidos superiores a $120.000" },
-  { icon: Sparkles, text: "Nueva colección 2026 ya disponible" },
-  { icon: RotateCcw, text: "Devoluciones fáciles hasta 30 días" },
-  { icon: ShieldCheck, text: "Compra protegida · Pago 100% seguro" },
+  {
+    icon: Truck,
+    text: 'Envío gratis en pedidos superiores a $120.000',
+  },
+  {
+    icon: Sparkles,
+    text: 'Nueva colección 2026 ya disponible',
+  },
+  {
+    icon: RotateCcw,
+    text: 'Devoluciones fáciles hasta 30 días',
+  },
+  {
+    icon: ShieldCheck,
+    text: 'Compra protegida · Pago 100% seguro',
+  },
 ];
 
 export default function Header() {
   const { user } = useAuth();
   const { totalItems } = useCart();
   const navigate = useNavigate();
+
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
 
   const applyTheme = (isDark: boolean) => {
-    document.body.classList.toggle("dark-mode", isDark);
-    document.documentElement.classList.toggle("dark-mode", isDark);
-    document.documentElement.style.colorScheme = isDark ? "dark" : "light";
-    localStorage.setItem("theme", isDark ? "dark" : "light");
+    document.body.classList.toggle(
+      'dark-mode',
+      isDark
+    );
+
+    document.documentElement.classList.toggle(
+      'dark-mode',
+      isDark
+    );
+
+    document.documentElement.style.colorScheme =
+      isDark ? 'dark' : 'light';
+
+    localStorage.setItem(
+      'theme',
+      isDark ? 'dark' : 'light'
+    );
+
     setIsDarkMode(isDark);
   };
 
   useEffect(() => {
-    const stored = localStorage.getItem("theme");
-    applyTheme(stored ? stored === "dark" : true);
+    const stored = localStorage.getItem('theme');
+
+    applyTheme(
+      stored ? stored === 'dark' : true
+    );
   }, []);
 
-  const toggleTheme = () => applyTheme(!isDarkMode);
+  const toggleTheme = () =>
+    applyTheme(!isDarkMode);
 
-  const closeMenu = () => setMenuOpen(false);
+  const closeMenu = () =>
+    setMenuOpen(false);
 
   const links =
-    user?.role === "superadmin"
+    user?.role === 'superadmin'
       ? [
-          ["/", "Inicio"],
-          ["/superadmin", "Resumen"],
-          ["/admin/productos", "Productos"],
-          ["/admin/combos", "Combos"],
-          ["/admin/ingresos", "Ingresos"],
-          ["/admin/salidas", "Salidas"], 
-          ["/admin/proveedores", "Proveedores"],
-          ["/admin/pedidos", "Pedidos"],
-          ["/superadmin/usuarios", "Usuarios"],
-          ["/superadmin/descuentos", "Descuentos"],
-          ["/superadmin/pagos", "Pagos"],
-          ["/superadmin/devoluciones", "Devoluciones"],
-          ["/admin/pqr", "PQR"],
-          ["/superadmin/reportes", "Reportes"],
+          ['/', 'Inicio'],
+          ['/superadmin', 'Resumen'],
+          ['/empleado/supervision', 'Equipo'],
+          ['/admin/productos', 'Productos'],
+          ['/admin/combos', 'Combos'],
+          ['/admin/ingresos', 'Ingresos'],
+          ['/admin/salidas', 'Salidas'],
+          ['/admin/proveedores', 'Proveedores'],
+          ['/admin/pedidos', 'Pedidos'],
+          ['/superadmin/usuarios', 'Usuarios'],
+          ['/superadmin/descuentos', 'Descuentos'],
+          ['/superadmin/pagos', 'Pagos'],
+          ['/superadmin/devoluciones', 'Devoluciones'],
+          ['/admin/pqr', 'PQR'],
+          ['/superadmin/reportes', 'Reportes'],
         ]
-      : user?.role === "admin"
+      : user?.role === 'admin'
         ? [
-            ["/", "Inicio"],
-            ["/admin", "Resumen"],
-            ["/admin/productos", "Productos"],
-            ["/admin/combos", "Combos"],
-            ["/admin/ingresos", "Ingresos"],
-            ["/admin/salidas", "Salidas"], 
-            ["/admin/pedidos", "Pedidos"],
-            ["/admin/pqr", "PQR"],
-            ["/admin/recibos", "Recibos"],
-            ["/admin/envios", "Envíos"],
-            ["/admin/proveedores", "Proveedores"],
-            ["/admin/usuarios", "Usuarios"],
-            ["/admin/detallepedidos", "Detalle pedidos"],
+            ['/', 'Inicio'],
+            ['/admin', 'Resumen'],
+            ['/empleado/supervision', 'Equipo'],
+            ['/admin/productos', 'Productos'],
+            ['/admin/combos', 'Combos'],
+            ['/admin/ingresos', 'Ingresos'],
+            ['/admin/salidas', 'Salidas'],
+            ['/admin/pedidos', 'Pedidos'],
+            ['/admin/pqr', 'PQR'],
+            ['/admin/recibos', 'Recibos'],
+            ['/admin/envios', 'Envíos'],
+            ['/admin/proveedores', 'Proveedores'],
+            ['/admin/usuarios', 'Usuarios'],
+            ['/admin/detallepedidos', 'Detalle pedidos'],
           ]
-          
-        : [
-            ["/", "Inicio"],
-            ["/catalogo", "Catálogo"],
-            ["/Nosotros", "Nosotros"],
-            ["/Contacto", "Contacto"],
-            ...(user?.role === "client"
-              ? [["/cliente/pqr", "PQR y soporte"]]
-              : []),
-          ];
+        : user?.role === 'employee'
+          ? [
+              ['/empleado', 'Mi panel'],
+              ['/empleado/nuevo', 'Crear pedido'],
+              ['/empleado/cola', 'Cola pagada'],
+              ['/empleado/pedidos', 'Mis pedidos'],
+              ['/empleado/inventario', 'Inventario'],
+            ]
+          : [
+              ['/', 'Inicio'],
+              ['/catalogo', 'Catálogo'],
+              ['/Nosotros', 'Nosotros'],
+              ['/Contacto', 'Contacto'],
+              ...(
+                user?.role === 'client'
+                  ? [
+                      ['/cliente/pqr', 'PQR y soporte'],
+                      ['/cliente/retiros', 'Mis retiros'],
+                    ]
+                  : []
+              ),
+            ];
 
   return (
     <>
-      <div className="announcement-bar" aria-label="Promociones">
+      <div
+        className="announcement-bar"
+        aria-label="Promociones"
+      >
         <div className="announcement-track">
-          {[...announcements, ...announcements, ...announcements].map(
-            (item, index) => {
-              const Icon = item.icon;
-              return (
-                <span key={`${item.text}-${index}`}>
-                  <Icon size={13} /> {item.text}
-                </span>
-              );
-            },
-          )}
+          {[
+            ...announcements,
+            ...announcements,
+            ...announcements,
+          ].map((item, index) => {
+            const Icon = item.icon;
+
+            return (
+              <span key={`${item.text}-${index}`}>
+                <Icon size={13} /> {item.text}
+              </span>
+            );
+          })}
         </div>
       </div>
 
@@ -131,27 +187,40 @@ export default function Header() {
           </Link>
 
           <nav
-            className={`header-nav ${menuOpen ? "open" : ""}`}
+            className={`header-nav ${
+              menuOpen ? 'open' : ''
+            }`}
             aria-label="Navegación principal"
           >
             {links.map(([to, label]) => (
               <NavLink
                 key={to}
                 to={to}
-                end={to === "/" || to === "/admin" || to === "/superadmin"}
+                end={
+                  to === '/' ||
+                  to === '/admin' ||
+                  to === '/superadmin' ||
+                  to === '/empleado'
+                }
                 onClick={closeMenu}
-                className={({ isActive }) => (isActive ? "active" : "")}
+                className={({ isActive }) =>
+                  isActive ? 'active' : ''
+                }
               >
                 {label}
               </NavLink>
             ))}
           </nav>
 
-          <div className={`header-actions ${menuOpen ? "open" : ""}`}>
+          <div
+            className={`header-actions ${
+              menuOpen ? 'open' : ''
+            }`}
+          >
             <button
               className="header-icon-btn"
               onClick={() => {
-                navigate("/catalogo");
+                navigate('/catalogo');
                 closeMenu();
               }}
               aria-label="Buscar productos"
@@ -163,24 +232,33 @@ export default function Header() {
               className="header-icon-btn theme-toggle"
               onClick={toggleTheme}
               aria-label={
-                isDarkMode ? "Activar modo claro" : "Activar modo oscuro"
+                isDarkMode
+                  ? 'Activar modo claro'
+                  : 'Activar modo oscuro'
               }
             >
-              {isDarkMode ? <Moon size={18} /> : <Sun size={18} />}
+              {isDarkMode ? (
+                <Moon size={18} />
+              ) : (
+                <Sun size={18} />
+              )}
             </button>
 
             <button
               className="header-icon-btn cart-btn"
               onClick={() => {
-                navigate("/carrito");
+                navigate('/carrito');
                 closeMenu();
               }}
               aria-label="Ver carrito"
             >
               <ShoppingBag size={18} />
+
               {totalItems > 0 && (
                 <span className="cart-badge">
-                  {totalItems > 99 ? "99+" : totalItems}
+                  {totalItems > 99
+                    ? '99+'
+                    : totalItems}
                 </span>
               )}
             </button>
@@ -189,14 +267,23 @@ export default function Header() {
               <button
                 className="header-profile-btn"
                 onClick={() => {
-                  navigate("/perfil");
+                  navigate('/perfil');
                   closeMenu();
                 }}
                 title="Ver mi perfil"
-                aria-label={`Hola, ${user.name.trim().split(/\s+/)[0]}. Abrir perfil`}
+                aria-label={`Hola, ${
+                  user.name.trim().split(/\s+/)[0]
+                }. Abrir perfil`}
               >
-                <UserRound size={13} aria-hidden="true" />
-                <span>Hola, {user.name.trim().split(/\s+/)[0]}</span>
+                <UserRound
+                  size={13}
+                  aria-hidden="true"
+                />
+                <span>
+                  Hola, {
+                    user.name.trim().split(/\s+/)[0]
+                  }
+                </span>
               </button>
             ) : (
               <Link
@@ -211,11 +298,17 @@ export default function Header() {
 
           <button
             className="header-menu-toggle"
-            onClick={() => setMenuOpen(!menuOpen)}
+            onClick={() =>
+              setMenuOpen(!menuOpen)
+            }
             aria-label="Abrir menú"
             aria-expanded={menuOpen}
           >
-            {menuOpen ? <X size={20} /> : <Menu size={20} />}
+            {menuOpen ? (
+              <X size={20} />
+            ) : (
+              <Menu size={20} />
+            )}
           </button>
         </div>
       </header>

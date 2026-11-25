@@ -1,18 +1,49 @@
-import { Navigate, Outlet } from 'react-router-dom';
+import {
+  Navigate,
+  Outlet,
+} from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import type { Role } from '../../context/AuthContext';
 
 interface ProtectedRouteProps {
-  allowedRoles?: Array<Role>;
+  allowedRoles?: Role[];
 }
 
-const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps) => {
-  const { user } = useAuth();
+const ProtectedRoute = ({
+  allowedRoles,
+}: ProtectedRouteProps) => {
+  const {
+    user,
+    loading,
+  } = useAuth();
 
-  if (!user) return <Navigate to="/" replace />;
+  if (loading) {
+    return (
+      <p role="status">
+        Verificando sesión…
+      </p>
+    );
+  }
 
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
-    return <Navigate to="/no-acceso" replace />;
+  if (!user) {
+    return (
+      <Navigate
+        to="/"
+        replace
+      />
+    );
+  }
+
+  if (
+    allowedRoles &&
+    !allowedRoles.includes(user.role)
+  ) {
+    return (
+      <Navigate
+        to="/no-acceso"
+        replace
+      />
+    );
   }
 
   return <Outlet />;
