@@ -2,7 +2,9 @@
 
 /* DEVOLUCIONES */
 .devoluciones-page {
-  padding: 0 30px 50px;
+  width: min(1320px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 32px 0 56px;
 }
 
 .devoluciones-topbar {
@@ -58,13 +60,13 @@
 
 .btn-filtro-dev-activo {
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   border-color: var(--accent);
 }
 
 .btn-filtro-dev-activo:hover {
   opacity: 0.88;
-  color: #fff;
+  color: var(--text-h);
 }
 
 /* Tabla */
@@ -142,7 +144,6 @@
   border-radius: 20px;
   font-size: 12px;
   font-weight: 500;
-  color: #fff;
   white-space: nowrap;
 }
 
@@ -155,23 +156,23 @@
 }
 
 .badge-producto-bueno {
-  background: #d1fae5;
-  color: #065f46;
+  background: var(--success-bg);
+  color: var(--success);
 }
 
 .badge-producto-dañado {
-  background: #fee2e2;
-  color: #991b1b;
+  background: var(--danger-bg);
+  color: var(--danger);
 }
 
 .badge-producto-modificado {
-  background: #fef3c7;
-  color: #92400e;
+  background: var(--warning-bg);
+  color: var(--warning);
 }
 
 .badge-producto-incompleto {
-  background: #e0e7ff;
-  color: #3730a3;
+  background: var(--info-bg);
+  color: var(--info);
 }
 
 /* Botón resolver */
@@ -328,7 +329,7 @@
 
 .btn-guardar-dev {
   background: var(--gradient-accent);
-  color: #fff;
+  color: var(--on-accent);
   border: none;
 }
 
@@ -389,7 +390,7 @@
 /* En móvil */
 @media (max-width: 600px) {
   .devoluciones-page {
-    padding: 0 16px 40px;
+    width: calc(100% - 28px); padding: 20px 0 40px;
   }
 
   .tabla-devoluciones thead {

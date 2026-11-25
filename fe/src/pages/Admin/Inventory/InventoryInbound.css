@@ -1,5 +1,7 @@
 .inbound-page {
-  padding: 0 30px 50px;
+  width: min(1320px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 32px 0 56px;
 }
 
 .inbound-header {
@@ -23,10 +25,28 @@
   margin: 0;
 }
 
+.inbound-alert-error,
+.inbound-alert-success {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.inbound-alert-success {
+  background: var(--success-bg);
+  border: 1px solid var(--success);
+  color: var(--success);
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 20px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
 .inbound-alert-error {
-  background: rgba(231, 76, 60, 0.12);
-  border: 1px solid #e74c3c;
-  color: #c0392b;
+  background: var(--danger-bg);
+  border: 1px solid var(--danger);
+  color: var(--danger);
   padding: 12px 16px;
   border-radius: var(--radius-sm);
   margin-bottom: 20px;
@@ -71,7 +91,7 @@
 }
 
 .inbound-req {
-  color: #e74c3c;
+  color: var(--danger);
   font-weight: 700;
 }
 
@@ -93,7 +113,7 @@
 }
 
 .inbound-input.invalid {
-  border-color: #e74c3c;
+  border-color: var(--danger);
   background: rgba(231, 76, 60, 0.05);
 }
 
@@ -144,7 +164,7 @@
   font-weight: 600;
   padding: 4px 10px;
   border-radius: 999px;
-  background: rgba(170, 59, 255, 0.12);
+  background: var(--accent-bg);
   color: var(--accent);
   white-space: nowrap;
 }
@@ -163,7 +183,7 @@
   width: 68px;
   height: 68px;
   border-radius: 8px;
-  background: #fff;
+  background: var(--surface);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -214,12 +234,12 @@
 
 .inbound-arrow {
   font-weight: 700;
-  color: #27ae60;
+  color: var(--success);
   font-size: 14px;
 }
 
 .inbound-new-stock b {
-  color: #27ae60;
+  color: var(--success);
 }
 
 .inbound-submit-btn {
@@ -228,7 +248,7 @@
   border: none;
   border-radius: var(--radius-md, 8px);
   background: var(--gradient-accent);
-  color: #fff;
+  color: var(--on-accent);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -269,7 +289,7 @@
   font-size: 12px;
   padding: 2px 6px;
   border-radius: 4px;
-  background: rgba(170, 59, 255, 0.1);
+  background: var(--accent-bg);
   color: var(--text-h);
 }
 
@@ -280,7 +300,7 @@
   font-size: 12px;
   font-weight: 700;
   background: rgba(39, 174, 96, 0.15);
-  color: #27ae60;
+  color: var(--success);
 }
 
 .inbound-muted {

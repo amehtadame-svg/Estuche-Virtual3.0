@@ -6,11 +6,11 @@ import { runApiAction } from '../../../lib/apiAction';
 import { notify } from '../../../lib/notifications';
 import './Orders.css';
 
-const statusColor: Record<string, string> = {
-  pending: '#3498db',
-  shipped: '#f39c12',
-  delivered: '#27ae60',
-  canceled: '#e74c3c',
+const statusTone: Record<string, string> = {
+  pending: 'tone-info',
+  shipped: 'tone-warning',
+  delivered: 'tone-success',
+  canceled: 'tone-danger',
 };
 
 const emptyForm = {
@@ -300,15 +300,16 @@ export default function Orders() {
             </thead>
 
             <tbody>
+              {orders.length === 0 && (<tr><td colSpan={7} className="table-empty">Todavía no hay pedidos registrados.</td></tr>)}
               {orders.map((order) => (
                 <tr key={order.id}>
                   <td className="numero-pedido">
-                    PED-{order.id.slice(0, 6).toUpperCase()}
+                    PED-{order.id.slice(-6).toUpperCase()}
                   </td>
 
                   <td className="cliente-pedido">
                     {order.customer?.fullName ??
-                      `Cliente #${order.customerId?.slice(0, 6) ?? '-'}`}
+                      `Cliente #${order.customerId?.slice(-6).toUpperCase() ?? '-'}`}
                   </td>
 
                   <td>
@@ -333,49 +334,28 @@ export default function Orders() {
                       onChange={(e) =>
                         changeStatus(order.id, e.target.value)
                       }
-                      className="estado-select-pedido"
-                      style={{
-                        backgroundColor:
-                          statusColor[order.status ?? ''] || '#999',
-                        color: '#fff',
-                      }}
+                      className={`estado-select-pedido ${statusTone[order.status ?? ''] ?? 'tone-neutral'}`}
                     >
                       <option
                         value="pending"
-                        style={{
-                          backgroundColor: '#fff',
-                          color: '#1E2761',
-                        }}
                       >
                         Pendiente
                       </option>
 
                       <option
                         value="shipped"
-                        style={{
-                          backgroundColor: '#fff',
-                          color: '#1E2761',
-                        }}
                       >
                         En camino
                       </option>
 
                       <option
                         value="delivered"
-                        style={{
-                          backgroundColor: '#fff',
-                          color: '#1E2761',
-                        }}
                       >
                         Entregado
                       </option>
 
                       <option
                         value="canceled"
-                        style={{
-                          backgroundColor: '#fff',
-                          color: '#1E2761',
-                        }}
                       >
                         Cancelado
                       </option>

@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
+import { AlertCircle, Clock, MailCheck, MapPin, Phone } from 'lucide-react';
 import './Contact.css';
 
 export default function Contact() {
@@ -11,7 +12,8 @@ export default function Contact() {
     setError('');
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = (event?: FormEvent) => {
+    event?.preventDefault();
     if (!form.name || !form.email || !form.message) {
       setError('Por favor completa los campos obligatorios.');
       return;
@@ -24,15 +26,15 @@ export default function Contact() {
   };
 
   const contactInfo = [
-    { icon: '📍', title: 'Dirección', data: 'Calle 45 #12-30, Bogotá, Colombia' },
-    { icon: '📞', title: 'Teléfono', data: '+57 300 123 4' },
-    { icon: '⏰', title: 'Horario', data: 'Lun – Vie: 8 am – 6 pm' },
+    { icon: MapPin, title: 'Dirección', data: 'Calle 45 #12-30, Bogotá, Colombia' },
+    { icon: Phone, title: 'Teléfono', data: '+57 300 123 4567' },
+    { icon: Clock, title: 'Horario', data: 'Lun – Vie: 8:00 a. m. – 6:00 p. m.' },
   ];
 
   if (sent) {
     return (
-      <div className="contacto-exito">
-        <div className="contacto-exito-icono">📬</div>
+      <div className="contacto-exito page-shell">
+        <div className="contacto-exito-icono" aria-hidden="true"><MailCheck size={30} /></div>
         <h1>¡Mensaje enviado!</h1>
         <p>
           Gracias, <strong>{form.name}</strong>. Te responderemos pronto a <strong>{form.email}</strong>.
@@ -51,7 +53,7 @@ export default function Contact() {
   }
 
   return (
-    <div className="contacto-container">
+    <div className="contacto-container page-shell">
       <h1 className="contacto-titulo">Contáctanos</h1>
       <p className="contacto-subtitulo">¿Tienes alguna pregunta o sugerencia? Estamos para ayudarte.</p>
 
@@ -59,14 +61,15 @@ export default function Contact() {
         <div className="contacto-form-card">
           <h2 className="contacto-form-titulo">Envíanos un mensaje</h2>
 
-          <div className="contacto-campos">
+          <form className="contacto-campos" onSubmit={handleSubmit} noValidate>
             {[
               { label: 'Nombre completo *', name: 'name', type: 'text', placeholder: 'Tu nombre' },
               { label: 'Correo electrónico *', name: 'email', type: 'email', placeholder: 'tu@correo.com' },
             ].map((field) => (
               <div key={field.name} className="contacto-campo">
-                <label className="contacto-label">{field.label}</label>
+                <label className="contacto-label" htmlFor={`contacto-${field.name}`}>{field.label}</label>
                 <input
+                  id={`contacto-${field.name}`}
                   className="contacto-input"
                   type={field.type}
                   name={field.name}
@@ -78,8 +81,8 @@ export default function Contact() {
             ))}
 
             <div className="contacto-campo">
-              <label className="contacto-label">Asunto</label>
-              <select className="contacto-input" name="subject" value={form.subject} onChange={handleChange}>
+              <label className="contacto-label" htmlFor="contacto-subject">Asunto</label>
+              <select id="contacto-subject" className="contacto-input" name="subject" value={form.subject} onChange={handleChange}>
                 <option value="">Selecciona un asunto</option>
                 <option value="pedido">Consulta sobre pedido</option>
                 <option value="producto">Información de producto</option>
@@ -90,8 +93,9 @@ export default function Contact() {
             </div>
 
             <div className="contacto-campo">
-              <label className="contacto-label">Mensaje *</label>
+              <label className="contacto-label" htmlFor="contacto-message">Mensaje *</label>
               <textarea
+                id="contacto-message"
                 className="contacto-textarea"
                 name="message"
                 value={form.message}
@@ -101,12 +105,16 @@ export default function Contact() {
               />
             </div>
 
-            {error && <p className="contacto-error">⚠️ {error}</p>}
+            {error && (
+              <p className="contacto-error" role="alert">
+                <AlertCircle size={16} aria-hidden="true" /> {error}
+              </p>
+            )}
 
-            <button className="contacto-btn-primary" onClick={handleSubmit}>
+            <button type="submit" className="contacto-btn-primary">
               Enviar mensaje
             </button>
-          </div>
+          </form>
         </div>
 
         <div className="contacto-info">
@@ -115,9 +123,9 @@ export default function Contact() {
             <p>Nuestro equipo de atención al cliente está listo para resolver todas tus dudas sobre pedidos, productos, envíos y más.</p>
           </div>
 
-          {contactInfo.map((info) => (
+          {contactInfo.map(({ icon: Icon, ...info }) => (
             <div key={info.title} className="contacto-info-item">
-              <span className="contacto-info-icono">{info.icon}</span>
+              <span className="contacto-info-icono" aria-hidden="true"><Icon size={20} /></span>
               <div>
                 <p className="contacto-info-titulo">{info.title}</p>
                 <p className="contacto-info-dato">{info.data}</p>

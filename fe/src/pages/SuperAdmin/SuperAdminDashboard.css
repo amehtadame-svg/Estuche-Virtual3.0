@@ -1,5 +1,7 @@
 .sa-dashboard {
-  padding: 0 30px 50px;
+  width: min(1320px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 32px 0 56px;
 }
 
 /* ── Topbar ──────────────────────────────────────────── */
@@ -29,9 +31,9 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  color: #15803d;
+  background: var(--success-bg);
+  border: 1px solid var(--success);
+  color: var(--success);
   padding: 8px 16px;
   border-radius: 99px;
   font-size: 13px;
@@ -66,36 +68,20 @@
   margin-bottom: 32px;
 }
 
-.stat-card {
-  display: flex;
-  align-items: center;
+.sa-dashboard .stat-card,
+.reportes-page .stat-card {
   gap: 14px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-left: 4px solid transparent;
-  border-radius: var(--radius-lg);
   padding: 18px 20px;
 }
 
-.stat-purple { border-left-color: #7c3aed; }
-.stat-blue   { border-left-color: #2563eb; }
-.stat-green  { border-left-color: #10b981; }
-.stat-orange { border-left-color: #f59e0b; }
-.stat-red    { border-left-color: #e74c3c; }
-
-.stat-icon  { font-size: 28px; flex-shrink: 0; }
-
-.stat-value {
+.sa-dashboard .stat-value,
+.reportes-page .stat-value {
   font-size: 20px;
-  font-weight: 700;
-  color: var(--text-h);
-  margin: 0 0 2px;
 }
 
-.stat-label {
+.sa-dashboard .stat-label,
+.reportes-page .stat-label {
   font-size: 12px;
-  color: var(--text);
-  margin: 0;
 }
 
 /* ── Body ────────────────────────────────────────────── */
@@ -214,12 +200,18 @@
 .sa-acceso-item:hover {
   background: var(--accent-bg);
   border-color: var(--accent-border);
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .sa-acceso-icon {
-  font-size: 18px;
+  display: grid;
+  width: 32px;
+  height: 32px;
   flex-shrink: 0;
+  place-items: center;
+  border-radius: 9px;
+  background: var(--accent-bg);
+  color: var(--accent-text);
 }
 
 .sa-acceso-label {
@@ -229,7 +221,7 @@
 
 .sa-acceso-arrow {
   font-size: 16px;
-  color: var(--text);
+  color: var(--muted);
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -244,7 +236,7 @@
 
 @media (max-width: 900px) {
   .sa-dashboard {
-    padding: 0 16px 40px;
+    width: calc(100% - 28px); padding: 20px 0 40px;
   }
 
   .sa-body {
@@ -259,4 +251,9 @@
     flex-direction: column;
     align-items: flex-start;
   }
+}
+.sa-body > *,
+.sa-left > *,
+.sa-right > * {
+  min-width: 0;
 }

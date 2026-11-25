@@ -2,14 +2,14 @@
   width: min(1200px, calc(100% - 48px));
   margin: 0 auto;
   padding: 28px 0 72px;
-  color: #d4d0db;
+  color: var(--text);
 }
 
 .pd-empty {
   display: grid;
   min-height: 50vh;
   place-items: center;
-  color: #cfc8db;
+  color: var(--text);
 }
 
 .pd-crumb {
@@ -17,12 +17,12 @@
   flex-wrap: wrap;
   gap: 8px;
   margin: 0 0 28px;
-  color: #9b93a8;
+  color: var(--muted);
   font-size: 13px;
 }
 
 .pd-crumb b {
-  color: #fff;
+  color: var(--text-h);
   font-weight: 600;
 }
 
@@ -36,7 +36,7 @@
   position: relative;
   overflow: hidden;
   border-radius: 28px;
-  background: #16111c;
+  background: var(--surface);
 }
 
 .pd-main img {
@@ -52,8 +52,8 @@
   left: 16px;
   padding: 6px 10px;
   border-radius: 999px;
-  background: #c026f5;
-  color: #fff;
+  background: var(--accent);
+  color: var(--on-accent);
   font-size: 11px;
   font-weight: 800;
 }
@@ -71,12 +71,12 @@
   overflow: hidden;
   border: 2px solid transparent;
   border-radius: 14px !important;
-  background: #16111c;
+  background: var(--surface);
   transform: none !important;
 }
 
 .pd-thumbs .on {
-  border-color: #c026f5;
+  border-color: var(--accent);
 }
 
 .pd-thumbs img {
@@ -87,7 +87,7 @@
 
 .pd-cat {
   margin: 0 0 8px;
-  color: #c4b5fd;
+  color: var(--accent-text);
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.12em;
@@ -96,7 +96,7 @@
 
 .pd-info h1 {
   margin: 0;
-  color: #fff;
+  color: var(--text-h);
   font-size: clamp(1.8rem, 4vw, 2.6rem);
   letter-spacing: -0.04em;
 }
@@ -106,12 +106,12 @@
   align-items: center;
   gap: 6px;
   margin: 10px 0 18px;
-  color: #9b93a8;
+  color: var(--muted);
   font-size: 13px;
 }
 
 .pd-rating b {
-  color: #fff;
+  color: var(--text-h);
 }
 
 .pd-price {
@@ -123,20 +123,20 @@
 }
 
 .pd-price strong {
-  color: #fff;
+  color: var(--text-h);
   font-size: 34px;
   font-weight: 800;
 }
 
 .pd-price del {
-  color: #8b8498;
+  color: var(--muted);
 }
 
 .pd-price em {
   padding: 4px 8px;
   border-radius: 999px;
-  background: #3b0764;
-  color: #f5d0fe;
+  background: var(--accent-bg);
+  color: var(--accent-text);
   font-size: 12px;
   font-style: normal;
   font-weight: 800;
@@ -144,7 +144,7 @@
 
 .pd-desc {
   margin: 0 0 14px;
-  color: #cfc8db;
+  color: var(--text);
   line-height: 1.7;
 }
 
@@ -155,11 +155,11 @@
 }
 
 .pd-stock.ok {
-  color: #4ade80;
+  color: var(--success);
 }
 
 .pd-stock.no {
-  color: #f87171;
+  color: var(--danger);
 }
 
 .pd-actions {
@@ -173,7 +173,7 @@
   display: flex;
   align-items: center;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border);
   border-radius: 999px;
 }
 
@@ -184,13 +184,13 @@
   place-items: center;
   border: 0;
   background: transparent;
-  color: #fff;
+  color: var(--text-h);
   transform: none !important;
 }
 
 .pd-qty span {
   width: 28px;
-  color: #fff;
+  color: var(--text-h);
   font-weight: 800;
   text-align: center;
 }
@@ -210,19 +210,27 @@
 
 .pd-add {
   border: 0;
-  background: #c026f5;
-  color: #fff;
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.pd-add:hover {
+  background: var(--accent-hover);
+}
+
+.pd-buy:hover {
+  border-color: var(--accent);
 }
 
 .pd-buy {
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  background: #16111c;
-  color: #fff;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text-h);
 }
 
 .pd-incart {
   margin: 10px 0 0;
-  color: #4ade80;
+  color: var(--success);
   font-size: 13px;
 }
 
@@ -238,36 +246,36 @@
   gap: 10px;
   align-items: center;
   padding: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border);
   border-radius: 16px;
-  background: #16111c;
+  background: var(--surface);
 }
 
 .pd-perks svg {
-  color: #c026f5;
+  color: var(--accent-text);
 }
 
 .pd-perks b {
   display: block;
-  color: #fff;
+  color: var(--text-h);
   font-size: 13px;
 }
 
 .pd-perks span {
-  color: #9b93a8;
+  color: var(--muted);
   font-size: 12px;
 }
 
 .pd-fold {
   margin-top: 16px;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border);
   border-radius: 16px;
-  background: #121018;
+  background: var(--surface);
 }
 
 .pd-fold > div + div {
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid var(--border);
 }
 
 .pd-fold button {
@@ -277,7 +285,7 @@
   padding: 14px 16px;
   border: 0;
   background: transparent;
-  color: #fff;
+  color: var(--text-h);
   font-weight: 800;
   transform: none !important;
 }
@@ -285,7 +293,7 @@
 .pd-fold p {
   margin: 0;
   padding: 0 16px 16px;
-  color: #cfc8db;
+  color: var(--text);
   line-height: 1.7;
 }
 
@@ -295,14 +303,14 @@
 
 .pd-related h2 {
   margin-bottom: 22px;
-  color: #fff;
+  color: var(--text-h);
   font-size: clamp(1.8rem, 4vw, 2.6rem);
   letter-spacing: -0.04em;
 }
 
 .pd-related h2 em {
-  color: #c026f5;
-  font-family: Georgia, "Times New Roman", serif;
+  color: var(--accent-text);
+  font-family: var(--serif);
   font-style: italic;
   font-weight: 500;
 }
@@ -316,7 +324,7 @@
 .pd-related a {
   display: grid;
   gap: 8px;
-  color: #fff;
+  color: var(--text-h);
 }
 
 .pd-related-media {
@@ -325,7 +333,7 @@
   overflow: hidden;
   height: 180px;
   border-radius: 18px;
-  background: #16111c;
+  background: var(--surface);
 }
 
 .pd-related img {
@@ -340,15 +348,15 @@
   left: 10px;
   padding: 4px 8px;
   border-radius: 999px;
-  background: #c026f5;
-  color: #fff;
+  background: var(--accent);
+  color: var(--on-accent);
   font-size: 10px;
   font-style: normal;
   font-weight: 800;
 }
 
 .pd-related small {
-  color: #c4b5fd;
+  color: var(--accent-text);
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -359,7 +367,7 @@
   display: grid;
   height: 520px;
   place-items: center;
-  color: #9b93a8;
+  color: var(--muted);
 }
 
 @media (max-width: 900px) {
@@ -373,28 +381,6 @@
   }
 }
 
-body:not(.dark-mode) .pd-page,
-body:not(.dark-mode) .pd-info h1,
-body:not(.dark-mode) .pd-price strong,
-body:not(.dark-mode) .pd-related h2,
-body:not(.dark-mode) .pd-related a,
-body:not(.dark-mode) .pd-perks b,
-body:not(.dark-mode) .pd-fold button,
-body:not(.dark-mode) .pd-crumb b {
-  color: #160c22;
-}
-
-body:not(.dark-mode) .pd-main,
-body:not(.dark-mode) .pd-perks article,
-body:not(.dark-mode) .pd-fold,
-body:not(.dark-mode) .pd-buy {
-  background: #fff;
-}
-
-body:not(.dark-mode) .pd-desc,
-body:not(.dark-mode) .pd-fold p {
-  color: #3f3a4a;
-}
 @media (min-width: 601px) {
   /* Mantiene una altura pareja para las filas. */
   .productos-page .tabla-productos tbody tr {

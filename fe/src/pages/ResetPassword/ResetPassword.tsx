@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { CheckCircle2, KeyRound, MailCheck } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import PasswordInput from "../../components/ui/PasswordInput";
 import { validarPassword } from "../../utils/validarPassword";
@@ -57,7 +58,7 @@ export default function ResetPassword() {
     return (
       <main className="auth-shell">
         <section className="auth-card">
-          <div className="auth-success-icon">✓</div>
+          <div className="auth-mark auth-mark--success" aria-hidden="true"><CheckCircle2 size={22} /></div>
           <h1 className="auth-title">
             ¡Todo <em>listo!</em>
           </h1>
@@ -72,7 +73,7 @@ export default function ResetPassword() {
   return (
     <main className="auth-shell">
       <section className="auth-card" aria-labelledby="reset-title">
-        <div className="auth-mark">{isToken ? "✦" : "✓"}</div>
+        <div className="auth-mark" aria-hidden="true">{isToken ? <MailCheck size={22} /> : <KeyRound size={22} />}</div>
         <h1 id="reset-title" className="auth-title">
           {isToken ? (
             <>
@@ -90,7 +91,7 @@ export default function ResetPassword() {
             : "Crea una contraseña segura para proteger tu cuenta."}
         </p>
         {state?.message && isToken && (
-          <p className="auth-alert">🔒 {state.message}</p>
+          <p className="auth-alert success">{state.message}</p>
         )}
         <form
           className="auth-form"
@@ -161,7 +162,7 @@ export default function ResetPassword() {
               </div>
             </>
           )}
-          {error && <p className="auth-alert">⚠️ {error}</p>}
+          {error && <p className="auth-alert" role="alert">{error}</p>}
           <button type="submit" className="auth-submit" disabled={verifying}>
             {verifying
               ? "Verificando..."

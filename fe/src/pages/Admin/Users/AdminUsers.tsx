@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import './AdminUsers.css';
 import { API, authHeaders } from '../../../api/api';
+import { roleLabel } from '../../../lib/statusLabels';
 
 interface User {
   id: string;
@@ -124,13 +125,14 @@ export default function AdminUsers() {
                 </tr>
               </thead>
               <tbody>
+                {users.length === 0 && (<tr><td colSpan={6} className="table-empty">No se encontraron usuarios.</td></tr>)}
                 {users.map((u) => (
                   <tr key={u.id}>
-                    <td>{u.id.slice(0, 8)}</td>
+                    <td title={u.id}>#{u.id.slice(-6).toUpperCase()}</td>
                     <td>{u.fullName}</td>
                     <td>{u.email}</td>
                     <td>
-                      <span className={`rol-badge ${u.role}`}>{u.role}</span>
+                      <span className={`rol-badge ${u.role}`}>{roleLabel[u.role] ?? u.role}</span>
                     </td>
                     <td>
                       <span className={`usr-estado ${u.isActive ? 'activo' : 'inactivo'}`}>
@@ -192,11 +194,11 @@ export default function AdminUsers() {
 
               <label>Rol</label>
               <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
-                <option value="client">client</option>
-                <option value="employee">employee</option>
+                <option value="client">Cliente</option>
+                <option value="employee">Empleado</option>
               </select>
 
-              {error && <p className="usr-error">⚠️ {error}</p>}
+              {error && <p className="usr-error">{error}</p>}
             </div>
 
             <div className="usr-modal-footer">

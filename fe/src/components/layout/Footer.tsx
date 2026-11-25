@@ -1,17 +1,36 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
-import { Mail, Phone, Send, MapPin, Clock } from "lucide-react";
+import { Mail, Phone, Send, MapPin, Clock, Truck } from "lucide-react";
+import { useAuth } from "../../hooks/useAuth";
 import "./Footer.css";
 
 export default function Footer() {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
+  const { user } = useAuth();
+  const isStaff =
+    user?.role === "admin" ||
+    user?.role === "superadmin" ||
+    user?.role === "employee";
 
   const onSubmit = (event: FormEvent) => {
     event.preventDefault();
     if (!email.trim()) return;
     setSent(true);
   };
+
+  // En los paneles internos el pie de marketing (boletín, redes, medios de
+  // pago) distrae: se muestra una versión compacta.
+  if (isStaff) {
+    return (
+      <footer className="footer footer--compact">
+        <div className="footer-bottom">
+          <span>© 2026 Estuche Virtual · Panel interno</span>
+          <span>¿Necesitas ayuda? hola@estuchevirtual.co</span>
+        </div>
+      </footer>
+    );
+  }
 
   return (
     <footer className="footer">
@@ -28,7 +47,7 @@ export default function Footer() {
             necesitas, en un solo lugar.
           </p>
           <div className="footer-promise" style={{ marginBottom: "22px" }}>
-            <span>✦</span> Envíos a toda Colombia
+            <Truck size={15} aria-hidden="true" /> Envíos a toda Colombia
           </div>
           <div className="footer-socials">
             <a href="https://instagram.com" target="_blank" rel="noreferrer">
@@ -88,7 +107,7 @@ export default function Footer() {
               <Send size={14} />
             </button>
           </form>
-          {sent && <small>Cupón BIENVENIDA10 listo.</small>}
+          {sent && <small>Cupón BIENVENIDA20 listo.</small>}
           <ul style={{ marginTop: "24px" }}>
             <li>
               <MapPin size={14} /> Bogotá, Colombia

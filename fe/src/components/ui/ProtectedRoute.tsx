@@ -19,7 +19,7 @@ const ProtectedRoute = ({
 
   if (loading) {
     return (
-      <p role="status">
+      <p role="status" className="route-status">
         Verificando sesión…
       </p>
     );
@@ -28,7 +28,7 @@ const ProtectedRoute = ({
   if (!user) {
     return (
       <Navigate
-        to="/"
+        to="/login"
         replace
       />
     );

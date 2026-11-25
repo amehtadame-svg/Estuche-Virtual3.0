@@ -96,8 +96,11 @@ const Login = () => {
       navigate('/cliente');
     } else if (role === 'superadmin') {
       navigate('/superadmin');
-    } else {
+    } else if (role === 'admin') {
       navigate('/admin');
+    } else {
+      // Domiciliario (y cualquier rol sin panel propio): perfil personal.
+      navigate('/perfil');
     }
   };
 

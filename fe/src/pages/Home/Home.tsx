@@ -70,10 +70,15 @@ const TESTIMONIALS = [
   },
 ];
 
+const prefersReducedMotion = () =>
+  typeof window !== "undefined" &&
+  window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+
 function useCountUp(target: number, active: boolean, duration = 1600) {
-  const [value, setValue] = useState(0);
+  // Con movimiento reducido se muestra la cifra final sin animación.
+  const [value, setValue] = useState(() => (prefersReducedMotion() ? target : 0));
   useEffect(() => {
-    if (!active) return;
+    if (!active || prefersReducedMotion()) return;
     let frame = 0;
     const started = performance.now();
     const tick = (now: number) => {
@@ -431,7 +436,7 @@ export default function Home() {
                         )
                       }
                     >
-                      <Heart size={15} fill={isLoved ? "#c026f5" : "none"} />
+                      <Heart size={15} fill={isLoved ? "var(--accent)" : "none"} />
                     </button>
                     <button
                       type="button"
@@ -609,9 +614,9 @@ export default function Home() {
         <span className="newsletter-icon">
           <Send size={18} />
         </span>
-        <h2>10% dcto. en tu primera compra</h2>
+        <h2>$20.000 de descuento en tu primera compra</h2>
         <p>
-          Únete al club y recibe el cupón <b>BIENVENIDA10</b> junto a novedades
+          Únete al club y recibe el cupón <b>BIENVENIDA20</b> junto a novedades
           y lanzamientos.
         </p>
         <form
@@ -629,7 +634,7 @@ export default function Home() {
                 JSON.stringify([...list, value]),
               );
             }
-            localStorage.setItem("coupon-bienvenida", "BIENVENIDA10");
+            localStorage.setItem("coupon-bienvenida", "BIENVENIDA20");
             setJoined(true);
           }}
         >
@@ -644,7 +649,7 @@ export default function Home() {
         </form>
         {joined && (
           <p className="newsletter-ok">
-            Cupón activado: <b>BIENVENIDA10</b> · 10% en tu primera compra.
+            Cupón activado: <b>BIENVENIDA20</b> · $20.000 de descuento en compras desde $50.000.
           </p>
         )}
       </section>

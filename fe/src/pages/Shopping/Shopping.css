@@ -17,9 +17,9 @@
 }
 .carrito-btn-vaciar {
   padding: 10px 14px;
-  border: 1px solid #f5c2ca;
+  border: 1px solid var(--danger);
   border-radius: 12px;
-  background: #fff7f8;
+  background: var(--danger-bg);
   color: #c33752;
   font-size: 12px;
   font-weight: 800;
@@ -57,8 +57,8 @@
   height: 56px;
   place-items: center;
   border-radius: 14px;
-  background: var(--grape-100);
-  font-size: 30px;
+  background: var(--accent-bg);
+  color: var(--accent-text);
 }
 .carrito-item-nombre {
   margin: 0 0 3px;
@@ -128,7 +128,7 @@
   position: sticky;
   top: 100px;
   padding: 23px;
-  border: 1px solid rgba(170, 59, 255, 0.25);
+  border: 1px solid rgba(176, 38, 234, 0.25);
   border-radius: 20px;
   background: linear-gradient(
     145deg,
@@ -174,7 +174,7 @@
   border: 0;
   background: var(--gradient-accent);
   box-shadow: var(--shadow-accent);
-  color: #fff;
+  color: var(--on-accent);
 }
 .resumen-btn-seguir {
   margin-top: 9px;
@@ -205,14 +205,11 @@
   padding: 14px 20px;
   background: var(--gradient-accent);
   box-shadow: var(--shadow-accent);
-  color: #fff;
+  color: var(--on-accent);
   font-weight: 800;
 }
 body.dark-mode .carrito-item {
   background: color-mix(in srgb, var(--bg-subtle) 92%, #29193d);
-}
-body.dark-mode .carrito-item-icono {
-  background: #2c1b3d;
 }
 body.dark-mode .carrito-btn-vaciar {
   background: rgba(127, 29, 29, 0.25);
