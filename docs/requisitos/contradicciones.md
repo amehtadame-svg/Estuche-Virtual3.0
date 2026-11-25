@@ -10,7 +10,7 @@ Registro inicial basado en el README, las restricciones y los manifiestos revisa
 
 | ID | Diferencia observada | Acción propuesta | Estado |
 |---|---|---|---|
-| DOC-001 | README describe frontend, backend y database; el repositorio utiliza fe, be y be/prisma. | Corregir el árbol del README. | Pendiente de corrección documental |
+| DOC-001 | El README describía frontend, backend y database; la estructura utiliza fe, be y be/prisma. | Árbol corregido en [README general](../../README.md). Commit: `60a7bb8`. | Corregido documentalmente; directorios comprobados y diff revisado |
 | DOC-002 | RT-001 menciona PostgreSQL/Supabase y RH-003 menciona MySQL/Workbench. | Contrastar Prisma y conciliar la restricción. | Decisión pendiente |
 | DOC-003 | RT-002 exige versiones exactas; los manifiestos contienen rangos con ^ y ~. | Registrar tarea técnica sin cambiar dependencias aquí. | Pendiente de resolución técnica |
 | DOC-004 | Se exige lint y Prettier; backend no declara lint y Prettier no figura en los manifiestos revisados. | Revisar configuración y herramientas adicionales. | Verificación pendiente |
