@@ -1,30 +1,68 @@
+import {
+  atomic,
+  assertUnmanaged,
+} from '../employee/employee.domain';
 import { prisma } from '../../lib/prisma';
-import { badRequest, forbidden, notFound } from '../../lib/errors';
+import {
+  badRequest,
+  forbidden,
+  notFound,
+} from '../../lib/errors';
 
 interface Requester {
   id: string;
   role: string;
 }
 
-const ADMIN_ROLES = ['admin', 'superadmin'];
+const ADMIN_ROLES = [
+  'admin',
+  'superadmin',
+];
 
-const isAdmin = (requester: Requester | undefined) =>
-  !!requester && ADMIN_ROLES.includes(requester.role);
+const isAdmin = (
+  requester: Requester | undefined
+) =>
+  !!requester &&
+  ADMIN_ROLES.includes(requester.role);
 
-const assertOrderAccess = (requester: Requester) => {
+const assertOrderAccess = (
+  requester: Requester
+) => {
   if (
     !requester ||
-    !['client', 'admin', 'superadmin'].includes(requester.role)
+    !['client', 'admin', 'superadmin'].includes(
+      requester.role
+    )
   ) {
-    throw forbidden('No tienes permiso para operar pedidos.');
+    throw forbidden(
+      'No tienes permiso para operar pedidos.'
+    );
   }
 };
 
 const LIST_INCLUDE = {
-  customer: { select: { fullName: true } },
-  driver: { select: { fullName: true } },
-  deliveryAddress: { select: { address: true, city: true } },
-  promotionalCode: { select: { code: true, value: true } },
+  customer: {
+    select: {
+      fullName: true,
+    },
+  },
+  driver: {
+    select: {
+      fullName: true,
+    },
+  },
+  deliveryAddress: {
+    select: {
+      address: true,
+      city: true,
+    },
+  },
+  promotionalCode: {
+    select: {
+      code: true,
+      value: true,
+    },
+  },
 } as const;
 
 export const orderService = {
@@ -34,30 +72,60 @@ export const orderService = {
     return prisma.order.findMany({
       where: {
         deletedAt: null,
-        ...(!isAdmin(requester) ? { customerId: requester.id } : {}),
+        ...(
+          !isAdmin(requester)
+            ? {
+                customerId: requester.id,
+              }
+            : {}
+        ),
       },
       include: LIST_INCLUDE,
-      orderBy: { orderDate: 'desc' },
+      orderBy: {
+        orderDate: 'desc',
+      },
     });
   },
 
-  async getById(id: string, requester: Requester) {
+  async getById(
+    id: string,
+    requester: Requester
+  ) {
     assertOrderAccess(requester);
 
     const order = await prisma.order.findUnique({
-      where: { id, deletedAt: null },
+      where: {
+        id,
+        deletedAt: null,
+      },
       include: {
-        customer: { select: { fullName: true } },
-        deliveryAddress: { select: { address: true, city: true } },
+        customer: {
+          select: {
+            fullName: true,
+          },
+        },
+        deliveryAddress: {
+          select: {
+            address: true,
+            city: true,
+          },
+        },
       },
     });
 
     if (!order) {
-      throw notFound('Pedido no encontrado.');
+      throw notFound(
+        'Pedido no encontrado.'
+      );
     }
 
-    if (!isAdmin(requester) && order.customerId !== requester.id) {
-      throw forbidden('No puedes consultar este pedido.');
+    if (
+      !isAdmin(requester) &&
+      order.customerId !== requester.id
+    ) {
+      throw forbidden(
+        'No puedes consultar este pedido.'
+      );
     }
 
     return order;
@@ -68,31 +136,71 @@ export const orderService = {
       deliveryAddressId?: string;
       promotionalCodeId?: string;
       status?: string;
-      details?: { productId: string; quantity: number }[];
+      details?: {
+        productId: string;
+        quantity: number;
+      }[];
     },
     requester: Requester
   ) {
     assertOrderAccess(requester);
 
-    if (data.status && data.status !== 'pending') {
-      throw badRequest('Los pedidos nuevos deben quedar pendientes.');
+    if (
+      data.status &&
+      data.status !== 'pending'
+    ) {
+      throw badRequest(
+        'Los pedidos nuevos deben quedar pendientes.'
+      );
     }
 
-    const { deliveryAddressId, promotionalCodeId, details } = data;
+    const {
+      deliveryAddressId,
+      promotionalCodeId,
+      details,
+    } = data;
+
     const customerId = requester.id;
 
     return prisma.$transaction(async (tx) => {
+      let deliverySnapshot: string | null =
+        null;
+
       if (deliveryAddressId) {
-        const address = await tx.deliveryAddress.findFirst({
-          where: {
-            id: deliveryAddressId,
-            userId: requester.id,
-          },
-        });
+        const address =
+          await tx.deliveryAddress.findFirst({
+            where: {
+              id: deliveryAddressId,
+              userId: requester.id,
+            },
+          });
 
         if (!address) {
-          throw forbidden('La dirección no pertenece a tu cuenta.');
+          throw forbidden(
+            'La dirección no pertenece a tu cuenta.'
+          );
         }
+
+        deliverySnapshot = [
+          address.address,
+          address.city,
+          address.state,
+        ]
+          .filter(Boolean)
+          .join(', ');
+      } else {
+        const customer =
+          await tx.user.findUnique({
+            where: {
+              id: customerId,
+            },
+            select: {
+              address: true,
+            },
+          });
+
+        deliverySnapshot =
+          customer?.address ?? null;
       }
 
       const items: {
@@ -104,24 +212,38 @@ export const orderService = {
 
       let total = 0;
 
-      if (Array.isArray(details) && details.length > 0) {
+      if (
+        Array.isArray(details) &&
+        details.length > 0
+      ) {
         for (const item of details) {
-          const product = await tx.product.findUnique({
-            where: { id: item.productId },
-          });
+          const product =
+            await tx.product.findUnique({
+              where: {
+                id: item.productId,
+              },
+            });
 
           if (!product) {
-            throw badRequest(`Producto ${item.productId} no encontrado.`);
+            throw badRequest(
+              `Producto ${item.productId} no encontrado.`
+            );
           }
 
-          if (product.stock < item.quantity) {
+          if (
+            product.stock < item.quantity
+          ) {
             throw badRequest(
               `Stock insuficiente para "${product.name}". Disponible: ${product.stock}, solicitado: ${item.quantity}.`
             );
           }
 
-          const unitPrice = Number(product.price);
-          const subtotal = unitPrice * item.quantity;
+          const unitPrice = Number(
+            product.price
+          );
+
+          const subtotal =
+            unitPrice * item.quantity;
 
           items.push({
             productId: item.productId,
@@ -134,54 +256,96 @@ export const orderService = {
         }
       }
 
-      let finalCodeId = promotionalCodeId ?? null;
+      let finalCodeId =
+        promotionalCodeId ?? null;
 
       if (promotionalCodeId) {
-        const code = await tx.promotionalCode.findUnique({
-          where: { id: promotionalCodeId },
-        });
+        const code =
+          await tx.promotionalCode.findUnique({
+            where: {
+              id: promotionalCodeId,
+            },
+          });
 
         if (!code || !code.active) {
-          throw badRequest('El código promocional no está activo.');
+          throw badRequest(
+            'El código promocional no está activo.'
+          );
         }
 
         if (code.type === 'percentage') {
-          total = total * (1 - Number(code.value) / 100);
+          total =
+            total *
+            (1 - Number(code.value) / 100);
         } else if (code.type === 'fixed') {
-          total = Math.max(0, total - Number(code.value));
+          total = Math.max(
+            0,
+            total - Number(code.value)
+          );
         }
 
         await tx.promotionalCode.update({
-          where: { id: promotionalCodeId },
-          data: { currentUses: { increment: 1 } },
+          where: {
+            id: promotionalCodeId,
+          },
+          data: {
+            currentUses: {
+              increment: 1,
+            },
+          },
         });
 
         finalCodeId = promotionalCodeId;
       }
 
-      total = Math.round(total * 100) / 100;
+      total =
+        Math.round(total * 100) / 100;
 
-      const newOrder = await tx.order.create({
-        data: {
-          customerId,
-          deliveryAddressId: deliveryAddressId ?? null,
-          promotionalCodeId: finalCodeId,
-          total,
-          status: 'pending',
-        },
-      });
+      const newOrder =
+        await tx.order.create({
+          data: {
+            customerId,
+            createdById: requester.id,
+            deliverySnapshot,
+            expiresAt: new Date(
+              Date.now() +
+                Math.min(
+                  10080,
+                  Math.max(
+                    5,
+                    Number(
+                      process.env
+                        .EMPLOYEE_RESERVATION_MINUTES
+                    ) || 60
+                  )
+                ) *
+                  60000
+            ),
+            deliveryAddressId:
+              deliveryAddressId ?? null,
+            promotionalCodeId:
+              finalCodeId,
+            total,
+            status: 'pending',
+          },
+        });
 
       if (items.length > 0) {
         for (const item of items) {
-          const updated = await tx.product.updateMany({
-            where: {
-              id: item.productId,
-              stock: { gte: item.quantity },
-            },
-            data: {
-              stock: { decrement: item.quantity },
-            },
-          });
+          const updated =
+            await tx.product.updateMany({
+              where: {
+                id: item.productId,
+                stock: {
+                  gte: item.quantity,
+                },
+              },
+              data: {
+                stock: {
+                  decrement: item.quantity,
+                },
+              },
+            });
 
           if (updated.count === 0) {
             throw badRequest(
@@ -194,7 +358,8 @@ export const orderService = {
               productId: item.productId,
               type: 'out',
               quantity: item.quantity,
-              reason: `Venta - pedido ${newOrder.id}`,
+              reason:
+                `Venta - pedido ${newOrder.id}`,
               userId: customerId,
             },
           });
@@ -215,8 +380,14 @@ export const orderService = {
     });
   },
 
-  update(id: string, data: any) {
-    const { status, ...rest } = data;
+  update(
+    id: string,
+    data: any
+  ) {
+    const {
+      status,
+      ...rest
+    } = data;
 
     if (status === 'paid') {
       throw badRequest(
@@ -224,22 +395,38 @@ export const orderService = {
       );
     }
 
-    return prisma.order.update({
-      where: { id, deletedAt: null },
-      data: {
-        ...rest,
-        status: status as any,
-      },
+    return atomic(async (tx) => {
+      await assertUnmanaged(tx, id);
+
+      return tx.order.update({
+        where: {
+          id,
+          deletedAt: null,
+        },
+        data: {
+          ...rest,
+          status: status as any,
+        },
+      });
     });
   },
 
   async remove(id: string) {
-    await prisma.order.update({
-      where: { id, deletedAt: null },
-      data: { deletedAt: new Date() },
-    });
+    return atomic(async (tx) => {
+      await assertUnmanaged(tx, id);
 
-    return null;
+      await tx.order.update({
+        where: {
+          id,
+          deletedAt: null,
+        },
+        data: {
+          deletedAt: new Date(),
+        },
+      });
+
+      return null;
+    });
   },
 
   async applyPromotionalCode(
@@ -249,55 +436,87 @@ export const orderService = {
   ) {
     assertOrderAccess(requester);
 
-    const order = await prisma.order.findUnique({
-      where: { id, deletedAt: null },
-    });
+    return atomic(async (tx) => {
+      await assertUnmanaged(tx, id);
 
-    if (!order) {
-      throw notFound('Pedido no encontrado.');
-    }
+      const order = await tx.order.findUnique({
+        where: {
+          id,
+          deletedAt: null,
+        },
+      });
 
-    const isOwner = order.customerId === requester.id;
+      if (!order) {
+        throw notFound(
+          'Pedido no encontrado.'
+        );
+      }
 
-    if (!isOwner && !isAdmin(requester)) {
-      throw forbidden('No puedes modificar este pedido.');
-    }
+      const isOwner =
+        order.customerId === requester.id;
 
-    if (order.status !== 'pending') {
-      throw badRequest(
-        'Solo se pueden aplicar descuentos a pedidos pendientes.'
-      );
-    }
+      if (
+        !isOwner &&
+        !isAdmin(requester)
+      ) {
+        throw forbidden(
+          'No puedes modificar este pedido.'
+        );
+      }
 
-    const promo = await prisma.promotionalCode.findFirst({
-      where: { code: String(code).trim() },
-    });
+      if (order.status !== 'pending') {
+        throw badRequest(
+          'Solo se pueden aplicar descuentos a pedidos pendientes.'
+        );
+      }
 
-    if (!promo) {
-      throw notFound('Código promocional no encontrado.');
-    }
+      const promo =
+        await tx.promotionalCode.findFirst({
+          where: {
+            code: String(code).trim(),
+          },
+        });
 
-    await prisma.promotionalCode.update({
-      where: { id: promo.id },
-      data: { currentUses: { increment: 1 } },
-    });
+      if (!promo) {
+        throw notFound(
+          'Código promocional no encontrado.'
+        );
+      }
 
-    await prisma.order.update({
-      where: { id },
-      data: { promotionalCodeId: promo.id },
-    });
-
-    return prisma.order.findUnique({
-      where: { id },
-      include: {
-        promotionalCode: {
-          select: {
-            code: true,
-            value: true,
-            type: true,
+      await tx.promotionalCode.update({
+        where: {
+          id: promo.id,
+        },
+        data: {
+          currentUses: {
+            increment: 1,
           },
         },
-      },
+      });
+
+      await tx.order.update({
+        where: {
+          id,
+        },
+        data: {
+          promotionalCodeId: promo.id,
+        },
+      });
+
+      return tx.order.findUnique({
+        where: {
+          id,
+        },
+        include: {
+          promotionalCode: {
+            select: {
+              code: true,
+              value: true,
+              type: true,
+            },
+          },
+        },
+      });
     });
   },
 };
