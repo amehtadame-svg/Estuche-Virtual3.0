@@ -38,10 +38,12 @@ Desarrollar una plataforma web integral que optimice la compra y venta de útile
 
 ## Tecnologías
 
-- Frontend: React.js
-- Backend: Node.js / Express
-- Base de datos: Postgress
-- Control de versiones: Git & GitHub  
+- Frontend: React, TypeScript y Vite.
+- Backend: Node.js, Express y TypeScript.
+- Acceso a datos y migraciones: Prisma.
+- Base de datos: PostgreSQL; configuración de conexión con Supabase.
+- Gestión de paquetes: pnpm.
+- Control de versiones: Git y GitHub.
 
 ## Roles
 
@@ -72,18 +74,21 @@ Desarrollar una plataforma web integral que optimice la compra y venta de útile
 
 ## Estructura del Proyecto
 
-<p align="center">
+```text
+Estuche-Virtual3.0/
+|-- be/
+|   |-- src/       # API, servicios y pruebas por módulo
+|   |-- prisma/    # Esquema y migraciones
+|   `-- tests/     # Pruebas de integración
+|-- fe/
+|   `-- src/       # Interfaz React y enrutamiento
+|-- docs/          # Requisitos, documentación y evidencias
+|-- .github/       # Configuración de GitHub y workflows
+|-- docker-compose.yml
+`-- README.md
+```
 
-<pre>
-estuche-virtual/
-├── frontend/        # Interfaz de usuario (HTML, CSS, JS)
-├── backend/         # Lógica del servidor y APIs
-├── database/        # Scripts y configuración de la base de datos
-├── docs/            # Documentación del proyecto
-└── README.md        # Información general del proyecto
-</pre>
-
-</p>
+Consulta el [índice documental](docs/README.md).
 
 ---
 
