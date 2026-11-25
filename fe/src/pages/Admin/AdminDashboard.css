@@ -343,3 +343,8 @@
   font-weight: 500;
   color: #fff;
 }
+.admin-empty-msg {
+  color: var(--text);
+  font-size: 13px;
+  margin: 8px 0 0;
+}

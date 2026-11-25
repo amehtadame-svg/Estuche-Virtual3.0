@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, type FormEvent } from 'react';
 import { API, authHeaders } from '../../../api/api';
-// Reutiliza el shell visual del módulo de inventario (tarjetas, tabla, inputs)
+import { notify } from '../../../lib/notifications';
 import './InventoryInbound.css';
 import './InventoryOutbound.css';
 
@@ -52,20 +52,16 @@ export default function InventoryOutbound() {
   const [reasons, setReasons] = useState<string[]>(FALLBACK_REASONS);
   const [loading, setLoading] = useState(true);
 
-  // CA-003.1 · búsqueda y selección de producto
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProductId, setSelectedProductId] = useState('');
 
-  // CA-003.1 · datos del retiro
   const [quantity, setQuantity] = useState('');
   const [reasonType, setReasonType] = useState('');
   const [reasonDetail, setReasonDetail] = useState('');
 
-  // CA-003.4 · modal de confirmación previa
   const [showConfirm, setShowConfirm] = useState(false);
 
   const [error, setError] = useState('');
-  const [successMsg, setSuccessMsg] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   const loadData = async () => {
@@ -90,7 +86,9 @@ export default function InventoryOutbound() {
         if (Array.isArray(data) && data.length > 0) setReasons(data);
       }
     } catch {
-      setError('No se pudo cargar la información del inventario.');
+      const msg = 'No se pudo cargar la información del inventario.';
+      setError(msg);
+      notify.error(msg);
     } finally {
       setLoading(false);
     }
@@ -99,6 +97,17 @@ export default function InventoryOutbound() {
   useEffect(() => {
     loadData();
   }, []);
+
+  useEffect(() => {
+    if (!showConfirm) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && !submitting) {
+        setShowConfirm(false);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [showConfirm, submitting]);
 
   const filteredProducts = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -118,8 +127,6 @@ export default function InventoryOutbound() {
 
   const parsedQty = Number(quantity);
   const isQuantityValid = quantity.trim() !== '' && Number.isInteger(parsedQty) && parsedQty > 0;
-
-  // CA-003.3 · aviso preventivo cuando la cantidad excede el stock
   const exceedsStock = Boolean(selectedProduct) && isQuantityValid && parsedQty > selectedProduct!.stock;
   const isReasonValid = reasonType !== '' && reasonDetail.trim().length >= 3;
   const canSubmit = Boolean(selectedProduct) && isQuantityValid && !exceedsStock && isReasonValid;
@@ -127,7 +134,6 @@ export default function InventoryOutbound() {
   const handleSelectProduct = (prod: ProductItem) => {
     setSelectedProductId(prod.id);
     setError('');
-    setSuccessMsg('');
     setShowConfirm(false);
   };
 
@@ -136,27 +142,34 @@ export default function InventoryOutbound() {
     setShowConfirm(false);
   };
 
-  // CA-003.4 · el submit abre el modal, no llama al backend todavía
+  const closeConfirm = () => {
+    if (submitting) return;
+    setShowConfirm(false);
+  };
+
   const handlePreSubmit = (e: FormEvent) => {
     e.preventDefault();
-    setSuccessMsg('');
 
     if (!selectedProduct) {
-      setError('Selecciona primero un producto del catálogo para registrar la salida.');
+      const msg = 'Selecciona primero un producto del catálogo para registrar la salida.';
+      setError(msg);
+      notify.error(msg);
       return;
     }
     if (!isQuantityValid) {
       setError(QUANTITY_ERROR_MSG);
+      notify.error(QUANTITY_ERROR_MSG);
       return;
     }
     if (exceedsStock) {
-      setError(
-        `No se puede procesar la salida: La cantidad solicitada excede el stock actual disponible en el almacén (Disponible: ${selectedProduct.stock} unidades)`
-      );
+      const msg = `No se puede procesar la salida: La cantidad solicitada excede el stock actual disponible en el almacén (Disponible: ${selectedProduct.stock} unidades)`;
+      setError(msg);
+      notify.error(msg);
       return;
     }
     if (!isReasonValid) {
       setError(REASON_ERROR_MSG);
+      notify.error(REASON_ERROR_MSG);
       return;
     }
 
@@ -184,22 +197,27 @@ export default function InventoryOutbound() {
 
       if (!res.ok) {
         const errData = await res.json().catch(() => null);
-        setError(errData?.message || 'No se pudo registrar la salida de mercancía.');
+        const msg = errData?.message || 'No se pudo registrar la salida de mercancía.';
+        setError(msg);
+        notify.error(msg);
         setShowConfirm(false);
         return;
       }
 
       const data = await res.json();
       setShowConfirm(false);
-      setSuccessMsg(
-        `Salida confirmada: "${selectedProduct.name}" pasó de ${data.previousStock} a ${data.newStock} unidades (−${parsedQty}).`
+      notify.success(
+        `Salida confirmada: "${selectedProduct.name}" pasó de ${data.previousStock} a ${data.newStock} unidades (−${parsedQty}).`,
+        'Salida exitosa',
       );
       setQuantity('');
       setReasonType('');
       setReasonDetail('');
       await loadData();
     } catch {
-      setError('Error de conexión al registrar la salida de mercancía.');
+      const msg = 'Error de conexión al registrar la salida de mercancía.';
+      setError(msg);
+      notify.error(msg);
       setShowConfirm(false);
     } finally {
       setSubmitting(false);
@@ -221,12 +239,6 @@ export default function InventoryOutbound() {
         </div>
       </div>
 
-      {successMsg && (
-        <div className="inbound-alert-success" role="status">
-          ✅ {successMsg}
-        </div>
-      )}
-
       {error && (
         <div className="inbound-alert-error" role="alert">
           ⚠️ {error}
@@ -234,7 +246,6 @@ export default function InventoryOutbound() {
       )}
 
       <div className="inbound-grid">
-        {/* CA-003.1 · selección del producto a retirar */}
         <div className="inbound-card">
           <h2 className="inbound-card-title">1. Buscar y seleccionar producto</h2>
           <input
@@ -315,7 +326,6 @@ export default function InventoryOutbound() {
           )}
         </div>
 
-        {/* CA-003.1 · datos del retiro */}
         <form className="inbound-card" onSubmit={handlePreSubmit}>
           <h2 className="inbound-card-title">2. Datos de la salida</h2>
 
@@ -365,7 +375,7 @@ export default function InventoryOutbound() {
             }}
           />
 
-          <button type="submit" className="outbound-submit-btn" disabled={!canSubmit || submitting}>
+          <button type="submit" className="inbound-submit-btn" disabled={!canSubmit || submitting}>
             {submitting ? 'Procesando salida...' : 'Procesar Salida'}
           </button>
 
@@ -377,7 +387,6 @@ export default function InventoryOutbound() {
         </form>
       </div>
 
-      {/* Bitácora de salidas manuales */}
       <div className="inbound-card inbound-history-card">
         <h2 className="inbound-card-title">Bitácora de Salidas Manuales (`inventory_movements`)</h2>
         {movements.length === 0 ? (
@@ -416,65 +425,97 @@ export default function InventoryOutbound() {
         )}
       </div>
 
-      {/* CA-003.4 · modal de confirmación previa */}
       {showConfirm && selectedProduct && (
-        <div className="outbound-modal-backdrop" role="dialog" aria-modal="true">
-          <div className="outbound-modal">
-            <h3 className="outbound-modal-title">Confirmar salida de mercancía</h3>
-            <p className="outbound-modal-text">
-              Esta acción descontará existencias de forma permanente. Revisa el resumen antes de continuar.
-            </p>
-
-            <dl className="outbound-modal-list">
-              <div>
-                <dt>Producto</dt>
-                <dd>{selectedProduct.name}</dd>
-              </div>
-              <div>
-                <dt>SKU</dt>
-                <dd>{selectedProduct.sku || '—'}</dd>
-              </div>
-              <div>
-                <dt>Cantidad a retirar</dt>
-                <dd>
-                  <strong>{parsedQty} uds.</strong>
-                </dd>
-              </div>
-              <div>
-                <dt>Motivo</dt>
-                <dd>{reasonType}</dd>
-              </div>
-              <div>
-                <dt>Justificación</dt>
-                <dd>{reasonDetail.trim()}</dd>
-              </div>
-              <div>
-                <dt>Stock resultante</dt>
-                <dd>
-                  {selectedProduct.stock} ➔ <strong>{selectedProduct.stock - parsedQty} uds.</strong>
-                </dd>
-              </div>
-            </dl>
-
-            <div className="outbound-modal-actions">
+        <div className="confirm-delete-overlay" onClick={closeConfirm}>
+          <section
+            className="confirm-delete-dialog outbound-confirm-dialog"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="outbound-confirm-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <header className="confirm-delete-header">
+              <span className="confirm-delete-icon" aria-hidden="true">
+                !
+              </span>
+              <h2 id="outbound-confirm-title">Confirmar salida de mercancía</h2>
               <button
                 type="button"
-                className="outbound-btn-cancel"
-                onClick={() => setShowConfirm(false)}
+                className="confirm-delete-close"
+                aria-label="Cerrar confirmación"
+                onClick={closeConfirm}
+                disabled={submitting}
+              >
+                ×
+              </button>
+            </header>
+
+            <div className="confirm-delete-body">
+              <p className="confirm-delete-message">
+                ¿Confirmar el retiro de {parsedQty} {parsedQty === 1 ? 'unidad' : 'unidades'} de “
+                {selectedProduct.name}”?
+              </p>
+              <p className="confirm-delete-note">
+                Esta acción descontará existencias de forma permanente. Revisa el resumen antes de continuar.
+              </p>
+
+              <dl className="outbound-confirm-summary">
+                <div>
+                  <dt>Producto</dt>
+                  <dd>{selectedProduct.name}</dd>
+                </div>
+                <div>
+                  <dt>SKU</dt>
+                  <dd>
+                    <span className="inbound-sku">{selectedProduct.sku || '—'}</span>
+                  </dd>
+                </div>
+                <div>
+                  <dt>Cantidad a retirar</dt>
+                  <dd>
+                    <span className="outbound-qty-badge">−{parsedQty} uds.</span>
+                  </dd>
+                </div>
+                <div>
+                  <dt>Motivo</dt>
+                  <dd>{reasonType}</dd>
+                </div>
+                <div>
+                  <dt>Justificación</dt>
+                  <dd>{reasonDetail.trim()}</dd>
+                </div>
+                <div className="outbound-confirm-stock-row">
+                  <dt>Stock resultante</dt>
+                  <dd>
+                    <span>{selectedProduct.stock} uds.</span>
+                    <span className="outbound-confirm-arrow">➔</span>
+                    <strong className="outbound-confirm-stock-final">
+                      {selectedProduct.stock - parsedQty} uds.
+                    </strong>
+                  </dd>
+                </div>
+              </dl>
+            </div>
+
+            <footer className="confirm-delete-footer">
+              <button
+                type="button"
+                className="confirm-delete-cancel"
+                onClick={closeConfirm}
                 disabled={submitting}
               >
                 Cancelar
               </button>
               <button
                 type="button"
-                className="outbound-btn-confirm"
+                className="outbound-confirm-submit"
                 onClick={handleConfirm}
                 disabled={submitting}
               >
                 {submitting ? 'Procesando...' : 'Confirmar salida'}
               </button>
-            </div>
-          </div>
+            </footer>
+          </section>
         </div>
       )}
     </div>
