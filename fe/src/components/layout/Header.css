@@ -128,6 +128,15 @@ body.dark-mode .logo-for-light {
   min-width: 0;
 }
 
+.header-nav--staff {
+  gap: 6px 5px;
+}
+
+.header-nav--staff a {
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
 .header-nav a {
   display: inline-flex;
   align-items: center;
@@ -201,6 +210,10 @@ body.dark-mode .header-nav a.active {
 
 .theme-toggle:hover svg {
   transform: rotate(20deg);
+}
+
+.cart-btn:hover {
+  background: rgba(192, 38, 245, 0.22);
 }
 
 .cart-badge {

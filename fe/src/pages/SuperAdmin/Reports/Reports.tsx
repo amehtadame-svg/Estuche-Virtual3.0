@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { CreditCard, ShoppingCart, Tag, Undo2, UserPlus, Wallet, type LucideIcon } from 'lucide-react';
 import { API, authHeaders } from '../../../api/api';
 import { notify } from '../../../lib/notifications';
@@ -92,6 +92,21 @@ export default function Reports() {
     loadReports();
   }, []);
 
+  const handleFilterSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    if (fromDate && toDate && fromDate > toDate) {
+      notify.error(INVALID_RANGE_MSG);
+      return;
+    }
+    loadReports(fromDate, toDate);
+  };
+
+  const handleClearFilter = () => {
+    setFromDate('');
+    setToDate('');
+    loadReports();
+  };
+
   const last6 = [...reports].slice(0, 6).reverse();
   const stats: { label: string; value: string; icon: LucideIcon; color: string }[] = summary
     ? [
@@ -155,7 +170,9 @@ export default function Reports() {
                 <p className="stat-label">{s.label}</p>
               </div>
             </div>
-          )}
+          ))}
+        </div>
+      )}
 
       <div className="reportes-graficas">
         {/* Ventas vs Pagos */}
@@ -216,64 +233,47 @@ export default function Reports() {
         </div>
       </div>
 
-            <div className="chart-section">
-              <h2 className="section-heading">Reembolsos</h2>
-              <ResponsiveContainer width="100%" height={180}>
-                <BarChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={(v) => String(v).slice(5, 10)} />
-                  <YAxis
-                    tick={{ fontSize: 11 }}
-                    tickFormatter={(v) => (v >= 1000 ? `$${(v / 1000).toFixed(0)}k` : `$${v}`)}
-                  />
-                  <Tooltip formatter={(v) => [`$${Number(v).toLocaleString('es-CO')}`, 'Reembolsos']} />
-                  <Bar dataKey="totalRefunded" name="Reembolsado" fill="#e74c3c" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+      <div className="reportes-tabla-section">
+        <h2 className="section-heading">Detalle diario</h2>
+        {loading ? (
+          <p style={{ color: 'var(--text)', margin: 0 }}>Calculando reportes…</p>
+        ) : reports.length === 0 ? (
+          <p style={{ color: 'var(--text)', margin: 0 }}>No hay registros diarios para mostrar.</p>
+        ) : (
+          <div className="table-wrapper">
+            <table className="tabla-reportes">
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Pedidos</th>
+                  <th>Entregados</th>
+                  <th>Cancelados</th>
+                  <th>Vendido</th>
+                  <th>Pagado</th>
+                  <th>Reembolsado</th>
+                  <th>Productos vendidos</th>
+                  <th>Clientes nuevos</th>
+                </tr>
+              </thead>
+              <tbody>
+                {reports.map((r) => (
+                  <tr key={r.id}>
+                    <td className="fecha-reporte">{r.date.slice(0, 10)}</td>
+                    <td>{r.totalOrders}</td>
+                    <td className="entregados-reporte">{r.deliveredOrders}</td>
+                    <td className="cancelados-reporte">{r.canceledOrders}</td>
+                    <td className="vendido-reporte">${Number(r.totalSold).toLocaleString('es-CO')}</td>
+                    <td>${Number(r.totalPaid).toLocaleString('es-CO')}</td>
+                    <td className="reembolsado-reporte">${Number(r.totalRefunded).toLocaleString('es-CO')}</td>
+                    <td>{r.productsSold}</td>
+                    <td>{r.newCustomers}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-
-          <div className="reportes-tabla-section">
-            <h2 className="section-heading">Detalle diario</h2>
-            {reports.length === 0 ? (
-              <p style={{ color: 'var(--text)', margin: 0 }}>No hay registros diarios para mostrar.</p>
-            ) : (
-              <div className="table-wrapper">
-                <table className="tabla-reportes">
-                  <thead>
-                    <tr>
-                      <th>Fecha</th>
-                      <th>Pedidos</th>
-                      <th>Entregados</th>
-                      <th>Cancelados</th>
-                      <th>Vendido</th>
-                      <th>Pagado</th>
-                      <th>Reembolsado</th>
-                      <th>Productos vendidos</th>
-                      <th>Clientes nuevos</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {reports.map((r) => (
-                      <tr key={r.id}>
-                        <td className="fecha-reporte">{r.date.slice(0, 10)}</td>
-                        <td>{r.totalOrders}</td>
-                        <td className="entregados-reporte">{r.deliveredOrders}</td>
-                        <td className="cancelados-reporte">{r.canceledOrders}</td>
-                        <td className="vendido-reporte">${Number(r.totalSold).toLocaleString('es-CO')}</td>
-                        <td>${Number(r.totalPaid).toLocaleString('es-CO')}</td>
-                        <td className="reembolsado-reporte">${Number(r.totalRefunded).toLocaleString('es-CO')}</td>
-                        <td>{r.productsSold}</td>
-                        <td>{r.newCustomers}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        </>
-      )}
+        )}
+      </div>
     </div>
   );
 }

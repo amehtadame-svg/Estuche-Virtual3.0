@@ -45,14 +45,6 @@ interface RoleCount {
   total: number;
 }
 
-const roleLabel: Record<string, string> = {
-  superadmin: 'Superadmin',
-  admin: 'Administrador',
-  employee: 'Empleado',
-  delivery: 'Repartidor',
-  client: 'Cliente',
-};
-
 export default function SuperAdminDashboard() {
   const { user } = useAuth();
   const [summary, setSummary] = useState<Summary | null>(null);
@@ -206,21 +198,26 @@ export default function SuperAdminDashboard() {
             <div className="sa-right">
               <div className="sa-chart-section">
                 <h2 className="sa-section-heading">Usuarios por rol</h2>
-                <div className="sa-roles-list">
-                  {rolesCount.map(({ role, total }) => (
-                    <div key={role} className="sa-rol-item">
-                      <div className="sa-rol-info">
-                        <span className="sa-rol-dot" style={{ backgroundColor: roleColor[role] ?? '#6b7280' }} />
-                        <span className="sa-rol-nombre">{roleLabel[role] ?? role}</span>
-                      </div>
-                      <div className="sa-rol-bar-wrap">
-                        <div
-                          className="sa-rol-bar"
-                          style={{
-                            width: `${Math.min((total / Math.max(...rolesCount.map((r) => r.total))) * 100, 100)}%`,
-                            backgroundColor: roleColor[role] ?? '#6b7280',
-                          }}
-                        />
+                {rolesCount.length === 0 ? (
+                  <p className="sa-no-data">Sin usuarios registrados</p>
+                ) : (
+                  <div className="sa-roles-list">
+                    {rolesCount.map(({ role, total }) => (
+                      <div key={role} className="sa-rol-item">
+                        <div className="sa-rol-info">
+                          <span className="sa-rol-dot" style={{ backgroundColor: roleColor[role] ?? '#6b7280' }} />
+                          <span className="sa-rol-nombre">{roleLabel[role] ?? role}</span>
+                        </div>
+                        <div className="sa-rol-bar-wrap">
+                          <div
+                            className="sa-rol-bar"
+                            style={{
+                              width: `${Math.min((total / maxRoleTotal) * 100, 100)}%`,
+                              backgroundColor: roleColor[role] ?? '#6b7280',
+                            }}
+                          />
+                        </div>
+                        <span className="sa-rol-total">{total}</span>
                       </div>
                     ))}
                   </div>
