@@ -52,17 +52,27 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       if (!res.ok) return;
       const data = await res.json();
       setItems(
-        data.map((item: any) => {
-          const category = item.product?.category?.name ?? '';
-          return {
-            id: item.productId,
-            name: item.product?.name ?? '',
-            price: Number(item.product?.price ?? 0),
-            category,
-            icon: iconsByCategory[category] ?? '📦',
-            quantity: item.quantity,
-          };
-        })
+        data.map(
+          (item: {
+            productId: string;
+            quantity: number;
+            product?: {
+              name?: string;
+              price?: number | string;
+              category?: { name?: string };
+            };
+          }) => {
+            const category = item.product?.category?.name ?? '';
+            return {
+              id: item.productId,
+              name: item.product?.name ?? '',
+              price: Number(item.product?.price ?? 0),
+              category,
+              icon: iconsByCategory[category] ?? '📦',
+              quantity: item.quantity,
+            };
+          },
+        ),
       );
     } catch {
       // Si falla la BD, el carrito queda vacío
