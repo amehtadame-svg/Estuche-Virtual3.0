@@ -96,6 +96,10 @@ Punto de entrada a la documentación del proyecto.
 - [Guía de Migración — Estuche Virtual 3.0 (UUID v7 + seguridad)](migracion-uuid-v7-historico.md)
 - [Restricciones del Proyecto — Estuche Virtual](restricciones.md)
 
+## Seguimiento documental
+
+- [Contradicciones y propuestas de corrección](requisitos/contradicciones.md)
+
 ## Entregables por incorporar o consolidar
 
 | Entregable | Situación en este índice |
