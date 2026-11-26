@@ -70,3 +70,19 @@ test('El destino del comprobante existe y está protegido para los roles que pue
   const app = fs.readFileSync(path.join(FE_ROOT, 'src/App.tsx'), 'utf8');
   assert.match(app, /<ProtectedRoute allowedRoles=\{\['client', 'admin', 'superadmin'\]\} \/>[\s\S]*?path="\/pedidos\/:id" element=\{<OrderStatus \/>\}/);
 });
+
+test('El error del pago distingue un producto inválido de una referencia inválida', async () => {
+  const { createServer } = await import('vite');
+  const server = await createServer({ server: { middlewareMode: true }, appType: 'custom' });
+  try {
+    const { paymentErrorMessage } = await server.ssrLoadModule('/src/pages/Checkout/paymentFormat.ts');
+    assert.match(paymentErrorMessage({ errors: [{ path: ['items', 1, 'productId'], message: 'Invalid UUID' }] }), /producto 2 del carrito/);
+    assert.match(paymentErrorMessage({ errors: [{ path: ['requestKey'], message: 'Invalid UUID' }] }), /referencia del intento/);
+    assert.equal(paymentErrorMessage({ message: 'Stock insuficiente.' }), 'Stock insuficiente.');
+    assert.equal(paymentErrorMessage({ errors: [{ path: ['phone'], message: 'Introduce un celular colombiano.' }] }), 'Introduce un celular colombiano.');
+    assert.equal(paymentErrorMessage(null), 'No se pudo registrar el pago.');
+    assert.equal(paymentErrorMessage({ errors: ['respuesta inesperada'] }), 'No se pudo registrar el pago.');
+  } finally {
+    await server.close();
+  }
+});
