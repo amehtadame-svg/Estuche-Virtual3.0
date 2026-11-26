@@ -1,6 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Modal from '../../../components/ui/Modal';
 import { API, authHeaders } from '../../../api/api';
+import { runDeleteAction } from '../../../lib/deleteAction';
+import { notify } from '../../../lib/notifications';
+import { useAuth } from '../../../hooks/useAuth';
 import '../Products/Products.css';
 import './Combos.css';
 
@@ -15,7 +18,13 @@ interface ProductOption {
 interface ComboItem {
   id: string;
   quantity: number;
-  product: { id: string; name: string; sku?: string | null; stock: number };
+  product: {
+    id: string;
+    name: string;
+    sku?: string | null;
+    price: number | string;
+    stock: number;
+  };
 }
 
 interface Combo {
@@ -24,6 +33,9 @@ interface Combo {
   name: string;
   description: string | null;
   price: number | string;
+  regularPrice?: number;
+  discountAmount?: number;
+  discountPercent?: number;
   isActive: boolean;
   availableStock: number;
   items: ComboItem[];
@@ -34,55 +46,98 @@ interface ItemRow {
   quantity: string;
 }
 
+type PricingSource = 'percent' | 'amount' | 'price';
+
 const emptyRow = (): ItemRow => ({ productId: '', quantity: '1' });
 
-// Mensajes de la HU-012 (CA-012.2 y CA-012.3)
+const PRESET_DISCOUNTS = [5, 10, 15, 20, 25];
+
 const MIN_ITEMS_ALERT =
   'Un combo o paquete promocional debe estar integrado por al menos dos productos del catálogo';
 const PRICE_ALERT = 'El precio total del combo debe ser un monto numérico positivo mayor a cero';
+const DISCOUNT_ALERT =
+  'El descuento establecido no puede ser negativo ni igualar o superar el valor total de los productos';
+
+const formatPercent = (pct: number): string => {
+  if (!Number.isFinite(pct) || pct <= 0) return '0';
+  const rounded = Number(pct.toFixed(1));
+  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+};
+
+const computeRegularFromRows = (targetRows: ItemRow[], catalog: ProductOption[]): number =>
+  targetRows.reduce((sum, row) => {
+    const product = catalog.find((p) => p.id === row.productId);
+    const qty = Number(row.quantity);
+    if (!product || !Number.isFinite(qty) || qty < 1) return sum;
+    return sum + Number(product.price) * qty;
+  }, 0);
+
+const computeComboMetrics = (combo: Combo) => {
+  const regularPrice =
+    combo.regularPrice !== undefined
+      ? Number(combo.regularPrice)
+      : combo.items.reduce((sum, item) => sum + Number(item.product.price ?? 0) * item.quantity, 0);
+  const comboPrice = Number(combo.price);
+  const discountAmount =
+    combo.discountAmount !== undefined
+      ? Number(combo.discountAmount)
+      : Math.max(0, regularPrice - comboPrice);
+  const discountPercent =
+    combo.discountPercent !== undefined
+      ? Number(combo.discountPercent)
+      : regularPrice > 0 && discountAmount > 0
+        ? Number(((discountAmount / regularPrice) * 100).toFixed(1))
+        : 0;
+
+  return { regularPrice, comboPrice, discountAmount, discountPercent };
+};
 
 export default function Combos() {
+  const { user } = useAuth();
+  const esSuperadmin = user?.role === 'superadmin';
   const [combos, setCombos] = useState<Combo[]>([]);
   const [products, setProducts] = useState<ProductOption[]>([]);
   const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const savingRef = useRef(false);
   const [formError, setFormError] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isActive, setIsActive] = useState(true);
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [price, setPrice] = useState('');
   const [rows, setRows] = useState<ItemRow[]>([emptyRow(), emptyRow()]);
 
-  const showMessage = (text: string) => {
-    setMessage(text);
-    setTimeout(() => setMessage(''), 3500);
+  const [discountPercent, setDiscountPercent] = useState('10');
+  const [discountAmount, setDiscountAmount] = useState('');
+  const [price, setPrice] = useState('');
+  const [pricingSource, setPricingSource] = useState<PricingSource>('percent');
+
+  const loadCombos = async () => {
+    try {
+      const response = await fetch(API.combos, { headers: authHeaders() });
+      const data = await response.json().catch(() => null);
+      if (!response.ok || !Array.isArray(data)) {
+        notify.error(data?.message ?? 'No se pudieron cargar los combos.');
+        return;
+      }
+      setCombos(data);
+    } catch {
+      notify.error('Error al cargar los combos.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const loadCombos = () => {
-    fetch(API.combos, { headers: authHeaders() })
-      .then((r) => r.json())
-      .then((data) => {
-        if (Array.isArray(data)) setCombos(data);
-        else showMessage(data?.message ?? 'No se pudieron cargar los combos.');
-        setLoading(false);
-      })
-      .catch(() => {
-        showMessage('Error al cargar combos.');
-        setLoading(false);
-      });
-  };
-
-  const loadProducts = () => {
-    fetch(API.products)
-      .then((r) => r.json())
-      .then((data) => {
-        if (Array.isArray(data)) setProducts(data);
-      })
-      .catch(() => {});
+  const loadProducts = async () => {
+    try {
+      const response = await fetch(API.products);
+      const data = await response.json().catch(() => null);
+      if (Array.isArray(data)) setProducts(data);
+    } catch {
+      notify.error('No se pudieron cargar los productos del catálogo.');
+    }
   };
 
   useEffect(() => {
@@ -90,11 +145,62 @@ export default function Combos() {
     loadProducts();
   }, []);
 
+  const regularPrice = computeRegularFromRows(rows, products);
+
+  const recalculateFromRows = (
+    nextRows: ItemRow[],
+    catalog: ProductOption[],
+    source: PricingSource = pricingSource,
+    pctStr: string = discountPercent,
+    amtStr: string = discountAmount,
+    priceStr: string = price
+  ) => {
+    const nextRegular = computeRegularFromRows(nextRows, catalog);
+
+    if (nextRegular <= 0) {
+      if (source !== 'amount') setDiscountAmount('');
+      if (source !== 'price') setPrice('');
+      return;
+    }
+
+    if (source === 'percent') {
+      const pct = pctStr.trim() === '' ? 0 : Number(pctStr);
+      if (Number.isFinite(pct) && pct >= 0 && pct < 100) {
+        const amt = Math.round(nextRegular * (pct / 100));
+        setDiscountAmount(pctStr.trim() === '' ? '' : String(amt));
+        setPrice(String(Math.max(0, nextRegular - amt)));
+      }
+    } else if (source === 'amount') {
+      const amt = amtStr.trim() === '' ? 0 : Number(amtStr);
+      if (Number.isFinite(amt) && amt >= 0) {
+        const finalP = Math.max(0, Math.round(nextRegular - amt));
+        setPrice(String(finalP));
+        if (amtStr.trim() !== '') {
+          setDiscountPercent(formatPercent((amt / nextRegular) * 100));
+        }
+      }
+    } else {
+      if (priceStr.trim() !== '') {
+        const p = Number(priceStr);
+        if (Number.isFinite(p) && p >= 0) {
+          const amt = Math.max(0, Math.round(nextRegular - p));
+          setDiscountAmount(String(amt));
+          setDiscountPercent(amt > 0 ? formatPercent((amt / nextRegular) * 100) : '0');
+        }
+      } else {
+        setPrice(String(nextRegular));
+      }
+    }
+  };
+
   const resetForm = () => {
     setName('');
     setDescription('');
-    setPrice('');
     setRows([emptyRow(), emptyRow()]);
+    setDiscountPercent('10');
+    setDiscountAmount('');
+    setPrice('');
+    setPricingSource('percent');
     setFormError('');
     setEditingId(null);
     setIsActive(true);
@@ -112,32 +218,116 @@ export default function Combos() {
 
   const updateRow = (index: number, patch: Partial<ItemRow>) => {
     setFormError('');
-    setRows((prev) => prev.map((row, i) => (i === index ? { ...row, ...patch } : row)));
+    const nextRows = rows.map((row, i) => (i === index ? { ...row, ...patch } : row));
+    setRows(nextRows);
+    recalculateFromRows(nextRows, products);
   };
 
-  const addRow = () => setRows((prev) => [...prev, emptyRow()]);
-  const removeRow = (index: number) => setRows((prev) => prev.filter((_, i) => i !== index));
+  const addRow = () => {
+    setRows([...rows, emptyRow()]);
+  };
 
-  // Suma de lo que costarían los productos comprados por separado
-  const regularPrice = rows.reduce((sum, row) => {
-    const product = products.find((p) => p.id === row.productId);
-    const qty = Number(row.quantity);
-    if (!product || !Number.isFinite(qty) || qty < 1) return sum;
-    return sum + Number(product.price) * qty;
-  }, 0);
+  const removeRow = (index: number) => {
+    const nextRows = rows.filter((_, i) => i !== index);
+    setRows(nextRows);
+    recalculateFromRows(nextRows, products);
+  };
+
+  const handleDiscountPercentChange = (val: string) => {
+    setFormError('');
+    setDiscountPercent(val);
+    setPricingSource('percent');
+
+    if (val.trim() === '') {
+      setDiscountAmount('');
+      setPrice(regularPrice > 0 ? String(regularPrice) : '');
+      return;
+    }
+
+    const pct = Number(val);
+    if (!Number.isFinite(pct) || pct < 0) return;
+
+    if (regularPrice > 0) {
+      const amt = Math.round(regularPrice * (pct / 100));
+      setDiscountAmount(String(amt));
+      setPrice(String(Math.max(0, regularPrice - amt)));
+    }
+  };
+
+  const handleDiscountAmountChange = (val: string) => {
+    setFormError('');
+    setDiscountAmount(val);
+    setPricingSource('amount');
+
+    if (val.trim() === '') {
+      setDiscountPercent('');
+      setPrice(regularPrice > 0 ? String(regularPrice) : '');
+      return;
+    }
+
+    const amt = Number(val);
+    if (!Number.isFinite(amt) || amt < 0) return;
+
+    if (regularPrice > 0) {
+      const finalP = Math.max(0, Math.round(regularPrice - amt));
+      setPrice(String(finalP));
+      setDiscountPercent(formatPercent((amt / regularPrice) * 100));
+    }
+  };
+
+  const handlePriceChange = (val: string) => {
+    setFormError('');
+    setPrice(val);
+    setPricingSource('price');
+
+    if (val.trim() === '') {
+      setDiscountAmount('');
+      setDiscountPercent('');
+      return;
+    }
+
+    const p = Number(val);
+    if (!Number.isFinite(p) || p < 0) return;
+
+    if (regularPrice > 0) {
+      const amt = Math.max(0, Math.round(regularPrice - p));
+      setDiscountAmount(String(amt));
+      setDiscountPercent(amt > 0 ? formatPercent((amt / regularPrice) * 100) : '0');
+    }
+  };
+
+  const applyPresetDiscount = (pct: number) => {
+    handleDiscountPercentChange(String(pct));
+  };
+
+  const reportValidationError = (msg: string) => {
+    setFormError(msg);
+    notify.error(msg);
+  };
 
   const handleSave = async () => {
+    if (savingRef.current) return;
     const items = rows
       .filter((row) => row.productId)
       .map((row) => ({ productId: row.productId, quantity: Number(row.quantity) }));
     const priceNum = Number(price);
+    const pctNum = discountPercent.trim() === '' ? 0 : Number(discountPercent);
+    const amtNum = discountAmount.trim() === '' ? 0 : Number(discountAmount);
 
-    if (!name.trim()) return setFormError('El nombre del combo es obligatorio.');
-    if (new Set(items.map((i) => i.productId)).size < 2) return setFormError(MIN_ITEMS_ALERT);
-    if (items.some((i) => !Number.isInteger(i.quantity) || i.quantity < 1))
-      return setFormError('La cantidad de cada producto debe ser un número entero mayor o igual a 1.');
-    if (!Number.isFinite(priceNum) || priceNum <= 0) return setFormError(PRICE_ALERT);
+    if (!name.trim()) return reportValidationError('El nombre del combo es obligatorio.');
+    if (new Set(items.map((i) => i.productId)).size < 2) return reportValidationError(MIN_ITEMS_ALERT);
+    if (items.some((i) => !Number.isInteger(i.quantity) || i.quantity < 1)) {
+      return reportValidationError('La cantidad de cada producto debe ser un número entero mayor o igual a 1.');
+    }
+    if (!Number.isFinite(pctNum) || pctNum < 0 || pctNum >= 100) {
+      return reportValidationError(DISCOUNT_ALERT);
+    }
+    if (!Number.isFinite(amtNum) || amtNum < 0 || (regularPrice > 0 && amtNum >= regularPrice)) {
+      return reportValidationError(DISCOUNT_ALERT);
+    }
+    if (!Number.isFinite(priceNum) || priceNum <= 0) return reportValidationError(PRICE_ALERT);
 
+    savingRef.current = true;
     setSaving(true);
     try {
       const res = await fetch(editingId ? `${API.combos}/${editingId}` : API.combos, {
@@ -147,6 +337,8 @@ export default function Combos() {
           name: name.trim(),
           description: description.trim() || null,
           price: priceNum,
+          discountPercent: pctNum,
+          discountAmount: amtNum,
           items,
           ...(editingId ? { isActive } : {}),
         }),
@@ -154,28 +346,50 @@ export default function Combos() {
 
       if (!res.ok) {
         const errData = await res.json().catch(() => null);
-        setFormError(errData?.errors?.[0]?.message ?? errData?.message ?? 'No se pudo guardar el combo.');
+        const msg = errData?.errors?.[0]?.message ?? errData?.message ?? 'No se pudo guardar el combo.';
+        setFormError(msg);
+        notify.error(msg);
         return;
       }
 
-      const saved = await res.json();
+      const saved = await res.json().catch(() => null);
+      const savedName = typeof saved?.name === 'string' ? saved.name : name.trim();
       const wasEditing = editingId !== null;
-      loadCombos();
       closeModal();
-      showMessage(
-        wasEditing ? 'Combo actualizado exitosamente.' : `Combo creado con el código ${saved.sku}.`
-      );
+      if (esSuperadmin) {
+        notify.success(
+          wasEditing
+            ? `El combo "${savedName}" se actualizó correctamente.`
+            : `El combo "${savedName}" se agregó correctamente.`,
+          wasEditing ? 'Cambios guardados' : 'Combo agregado',
+        );
+      } else {
+        notify.success(
+          wasEditing
+            ? `Combo "${savedName}" actualizado exitosamente.`
+            : `Combo "${savedName}" registrado exitosamente${saved?.sku ? ` con el código ${saved.sku}` : ''}.`,
+          wasEditing ? 'Cambios guardados' : 'Registro exitoso',
+        );
+      }
+      await loadCombos();
     } catch {
-      setFormError('Error de conexión al guardar el combo.');
+      const msg = 'No se pudo confirmar el guardado. Revisa la lista de combos antes de volver a intentarlo.';
+      setFormError(msg);
+      notify.error(msg);
     } finally {
+      savingRef.current = false;
       setSaving(false);
     }
   };
 
   const handleEdit = (combo: Combo) => {
+    const metrics = computeComboMetrics(combo);
     setName(combo.name);
     setDescription(combo.description ?? '');
-    setPrice(String(Number(combo.price)));
+    setPrice(String(metrics.comboPrice));
+    setDiscountAmount(metrics.discountAmount > 0 ? String(Math.round(metrics.discountAmount)) : '0');
+    setDiscountPercent(formatPercent(metrics.discountPercent));
+    setPricingSource('percent');
     setIsActive(combo.isActive);
     setRows(combo.items.map((i) => ({ productId: i.product.id, quantity: String(i.quantity) })));
     setFormError('');
@@ -184,27 +398,26 @@ export default function Combos() {
   };
 
   const handleDelete = async (combo: Combo) => {
-    if (!window.confirm(`¿Eliminar el combo "${combo.name}"? Dejará de estar disponible.`)) return;
-    try {
-      const res = await fetch(`${API.combos}/${combo.id}`, {
-        method: 'DELETE',
-        headers: authHeaders(),
-      });
-      if (!res.ok) {
-        const errData = await res.json().catch(() => null);
-        showMessage(errData?.message ?? 'No se pudo eliminar el combo.');
-        return;
-      }
-      setCombos((prev) => prev.filter((c) => c.id !== combo.id));
-      showMessage('Combo eliminado.');
-    } catch {
-      showMessage('Error de conexión al eliminar el combo.');
-    }
+    const deleted = await runDeleteAction({
+      url: `${API.combos}/${combo.id}`,
+      headers: authHeaders(),
+      confirmMessage: `¿Deseas eliminar el combo "${combo.name}"? Dejará de estar disponible en el catálogo.`,
+      successMessage: 'Combo eliminado exitosamente.',
+    });
+    if (!deleted) return;
+    setCombos((prev) => prev.filter((c) => c.id !== combo.id));
   };
+
+  const effectiveDiscountAmount =
+    regularPrice > 0 && Number(price) > 0 ? Math.max(0, regularPrice - Number(price)) : 0;
+  const effectiveDiscountPercent =
+    regularPrice > 0 && effectiveDiscountAmount > 0
+      ? formatPercent((effectiveDiscountAmount / regularPrice) * 100)
+      : '0';
 
   return (
     <>
-      <div className="productos-page">
+      <div className="productos-page combos-page">
         <div className="productos-topbar">
           <div>
             <h2 className="titulo-productos">Combos escolares</h2>
@@ -217,51 +430,78 @@ export default function Combos() {
           </button>
         </div>
 
-        {message && <div className="mensaje-productos">{message}</div>}
-
         {loading ? (
           <p style={{ color: 'var(--text)', padding: '20px 0' }}>Cargando combos...</p>
         ) : (
-          <table className="tabla-productos">
+          <table className="tabla-productos tabla-combos">
             <thead>
               <tr>
                 <th>SKU</th>
                 <th>Combo</th>
-                <th>Precio</th>
+                <th>Valor normal</th>
+                <th>Descuento</th>
+                <th>Precio combo</th>
                 <th>Disponibles</th>
                 <th>Estado</th>
                 <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
-              {combos.map((combo) => (
-                <tr key={combo.id}>
-                  <td>
-                    <span className="sku-badge">{combo.sku}</span>
-                  </td>
-                  <td className="nombre-producto">
-                    {combo.name}
-                    <small className="desc-producto">
-                      {combo.items.map((i) => `${i.quantity} × ${i.product.name}`).join(' · ')}
-                    </small>
-                  </td>
-                  <td className="precio-producto">${Number(combo.price).toLocaleString()}</td>
-                  <td>
-                    <span className={`stock-badge ${combo.availableStock > 0 ? 'stock-ok' : 'stock-agotado'}`}>
-                      {combo.availableStock} {combo.availableStock === 1 ? 'combo' : 'combos'}
-                    </span>
-                  </td>
-                  <td>{combo.isActive ? 'Activo' : 'Inactivo'}</td>
-                  <td>
-                    <button className="btn-editar-producto" onClick={() => handleEdit(combo)}>
-                      Editar
-                    </button>
-                    <button className="btn-eliminar-producto" onClick={() => handleDelete(combo)}>
-                      Eliminar
-                    </button>
-                  </td>
-                </tr>
-              ))}
+              {combos.map((combo) => {
+                const { regularPrice: basePrice, comboPrice, discountAmount: savedAmt, discountPercent: savedPct } =
+                  computeComboMetrics(combo);
+
+                return (
+                  <tr key={combo.id}>
+                    <td>
+                      <span className="sku-badge">{combo.sku}</span>
+                    </td>
+                    <td className="nombre-producto">
+                      {combo.name}
+                      <small className="desc-producto">
+                        {combo.items.map((i) => `${i.quantity} × ${i.product.name}`).join(' · ')}
+                      </small>
+                    </td>
+                    <td>
+                      {basePrice > comboPrice ? (
+                        <span className="combo-precio-regular">${basePrice.toLocaleString('es-CO')}</span>
+                      ) : (
+                        <span>${basePrice.toLocaleString('es-CO')}</span>
+                      )}
+                    </td>
+                    <td>
+                      {savedAmt > 0 ? (
+                        <span className="combo-descuento-badge">
+                          −${Math.round(savedAmt).toLocaleString('es-CO')} ({formatPercent(savedPct)}%)
+                        </span>
+                      ) : (
+                        <span className="combo-sin-descuento">Sin dcto.</span>
+                      )}
+                    </td>
+                    <td className="precio-producto">${comboPrice.toLocaleString('es-CO')}</td>
+                    <td>
+                      <span
+                        className={`stock-badge ${combo.availableStock > 0 ? 'stock-ok' : 'stock-agotado'}`}
+                      >
+                        {combo.availableStock} {combo.availableStock === 1 ? 'combo' : 'combos'}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`combo-estado-pill ${combo.isActive ? 'activo' : 'inactivo'}`}>
+                        {combo.isActive ? 'Activo' : 'Inactivo'}
+                      </span>
+                    </td>
+                    <td>
+                      <button className="btn-editar-producto" onClick={() => handleEdit(combo)}>
+                        Editar
+                      </button>
+                      <button className="btn-eliminar-producto" onClick={() => handleDelete(combo)}>
+                        Eliminar
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}
@@ -274,10 +514,10 @@ export default function Combos() {
       {modalOpen && (
         <Modal
           titulo={editingId ? 'Editar combo escolar' : 'Crear combo escolar'}
-          onClose={closeModal}
+          onClose={() => { if (!savingRef.current) closeModal(); }}
           footer={
             <>
-              <button className="btn-cancelar-producto" onClick={closeModal}>
+              <button className="btn-cancelar-producto" onClick={closeModal} disabled={saving}>
                 Cancelar
               </button>
               <button className="btn-guardar-producto" onClick={handleSave} disabled={saving}>
@@ -327,7 +567,7 @@ export default function Combos() {
                 <option value="">Selecciona un producto</option>
                 {products.map((p) => (
                   <option key={p.id} value={p.id}>
-                    {p.name} — ${Number(p.price).toLocaleString()} (stock {p.stock})
+                    {p.name} — ${Number(p.price).toLocaleString('es-CO')} (stock {p.stock})
                   </option>
                 ))}
               </select>
@@ -354,32 +594,88 @@ export default function Combos() {
             + Agregar otro producto
           </button>
 
-          <label className="label-producto">
-            Precio total del combo <span className="campo-obligatorio">*</span>
-          </label>
-          <input
-            className="input-producto"
-            type="number"
-            min="1"
-            value={price}
-            onChange={(e) => {
-              setPrice(e.target.value);
-              setFormError('');
-            }}
-            placeholder="Ej. 45000"
-          />
-          {regularPrice > 0 && (
-            <p className="combo-ahorro">
-              Comprados por separado costarían <strong>${regularPrice.toLocaleString()}</strong>
-              {Number(price) > 0 && (
-                <>
-                  {' '}
-                  — {Number(price) < regularPrice ? 'el cliente ahorra ' : 'diferencia: '}
-                  <strong>${Math.abs(regularPrice - Number(price)).toLocaleString()}</strong>
-                </>
-              )}
-            </p>
-          )}
+          <div className="combo-descuento-header">
+            <span className="label-producto" style={{ margin: 0 }}>
+              Configuración de descuento automático
+            </span>
+            <div className="combo-presets">
+              {PRESET_DISCOUNTS.map((pct) => (
+                <button
+                  key={pct}
+                  type="button"
+                  className={`combo-preset-chip ${Number(discountPercent) === pct ? 'active' : ''}`}
+                  onClick={() => applyPresetDiscount(pct)}
+                >
+                  −{pct}%
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="fila-3-col combo-precios-grid">
+            <div>
+              <label className="label-producto" title="Porcentaje de descuento aplicado sobre el valor sumado">
+                Descuento (%)
+              </label>
+              <input
+                className="input-producto"
+                type="number"
+                min="0"
+                max="99.9"
+                step="0.5"
+                value={discountPercent}
+                onChange={(e) => handleDiscountPercentChange(e.target.value)}
+                placeholder="Ej. 10"
+              />
+            </div>
+
+            <div>
+              <label className="label-producto" title="Valor en pesos colombianos descontado automáticamente">
+                Valor dcto. ($)
+              </label>
+              <input
+                className="input-producto"
+                type="number"
+                min="0"
+                step="100"
+                value={discountAmount}
+                onChange={(e) => handleDiscountAmountChange(e.target.value)}
+                placeholder={regularPrice > 0 ? 'Ej. 5000' : '0'}
+              />
+            </div>
+
+            <div>
+              <label className="label-producto" title="Precio final calculado automáticamente para el combo">
+                Precio final ($) <span className="campo-obligatorio">*</span>
+              </label>
+              <input
+                className="input-producto"
+                type="number"
+                min="1"
+                value={price}
+                onChange={(e) => handlePriceChange(e.target.value)}
+                placeholder="Auto"
+              />
+            </div>
+          </div>
+
+          <div className="combo-resumen-descuento">
+            <div className="combo-resumen-linea">
+              <span>Valor normal por separado:</span>
+              <strong>${regularPrice.toLocaleString('es-CO')} COP</strong>
+            </div>
+            <div className="combo-resumen-linea combo-resumen-ahorro">
+              <span>Descuento aplicado:</span>
+              <strong>
+                −${Math.round(effectiveDiscountAmount).toLocaleString('es-CO')} COP ({effectiveDiscountPercent}%)
+              </strong>
+            </div>
+            <div className="combo-resumen-linea combo-resumen-total">
+              <span>Precio final del combo:</span>
+              <strong>${(Number(price) > 0 ? Number(price) : 0).toLocaleString('es-CO')} COP</strong>
+            </div>
+          </div>
+
           {editingId && (
             <label className="combo-activo">
               <input

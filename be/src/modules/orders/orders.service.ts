@@ -2,6 +2,7 @@ import {
   atomic,
   assertUnmanaged,
 } from '../employee/employee.domain';
+import { Prisma } from '@prisma/client';
 import { prisma } from '../../lib/prisma';
 import {
   badRequest,
@@ -396,8 +397,39 @@ export const orderService = {
     }
 
     return atomic(async (tx) => {
-      await assertUnmanaged(tx, id);
+      // Bloqueamos el pedido antes de comparar para no confirmar datos obsoletos.
+      await tx.$queryRaw`
+        SELECT id FROM orders WHERE id = ${id}::uuid FOR UPDATE
+      `;
+      const actual = await tx.order.findUnique({
+        where: { id, deletedAt: null },
+      });
+      if (!actual) throw notFound('Pedido no encontrado.');
 
+      const campos = [
+        'customerId', 'driverId', 'promotionalCodeId',
+        'deliveryAddressId', 'total', 'status',
+      ] as const;
+      const esCampoPermitido = (campo: string) =>
+        (campos as readonly string[]).includes(campo);
+      const sinCambios = Object.keys(data).every((campo) => {
+        if (!esCampoPermitido(campo)) return false;
+        const valor = data[campo];
+        if (valor === undefined) return true;
+        if (campo === 'total') {
+          return actual.total !== null &&
+            new Prisma.Decimal(valor).equals(actual.total);
+        }
+        return valor === actual[campo as Exclude<(typeof campos)[number], 'total'>];
+      });
+
+      if (sinCambios) {
+        // Confirmar una lectura idéntica no modifica historial, pagos ni stock.
+        return { ...actual, sinCambios: true };
+      }
+
+      // Se mantiene la protección de los pedidos operativos si hay cambios reales.
+      await assertUnmanaged(tx, id);
       return tx.order.update({
         where: {
           id,

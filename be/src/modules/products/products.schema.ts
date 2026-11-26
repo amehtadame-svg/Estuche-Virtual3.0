@@ -10,8 +10,10 @@ export const createProductSchema = z.object({
   description: z.string().max(500).optional().nullable(),
   cost: z.coerce.number().gt(0, numericRuleMessage).optional(),
   price: z.coerce.number().gt(0, numericRuleMessage),
-  categoryId: z.string().uuid().optional().nullable(),
-  supplierId: z.string().uuid().optional().nullable(),
+  // Compatibilidad con identificadores UUID ya existentes en PostgreSQL,
+  // incluidos los que no cumplen los bits de versión/variante de RFC 9562.
+  categoryId: z.guid().optional().nullable(),
+  supplierId: z.guid().optional().nullable(),
   stock: z.coerce.number().int().min(0, numericRuleMessage).optional(),
   stockMin: z.coerce.number().int().min(0).optional(),
   imageUrl: z.string().url().max(500).optional().or(z.literal('')),

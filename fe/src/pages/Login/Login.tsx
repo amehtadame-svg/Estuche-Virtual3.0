@@ -149,6 +149,7 @@ const Login = () => {
 
         <form
           className="auth-form"
+          autoComplete="off"
           onSubmit={handleSubmit}
         >
           <div className="auth-field">
@@ -162,6 +163,7 @@ const Login = () => {
               <input
                 id="login-email"
                 type="email"
+                autoComplete="off"
                 placeholder="tu@correo.com"
                 value={email}
                 onChange={(event) =>
@@ -182,7 +184,14 @@ const Login = () => {
 
               <PasswordInput
                 id="login-password"
-                placeholder="••••••"
+                autoComplete="off"
+                placeholder="Escribe tu contraseña"
+                style={{
+                  background: 'var(--surface)',
+                  border: '1px solid var(--border)',
+                  borderRadius: '14px',
+                  color: 'var(--text-h)',
+                }}
                 value={password}
                 onChange={(event) =>
                   setPassword(event.target.value)

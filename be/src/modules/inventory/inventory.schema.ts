@@ -7,13 +7,14 @@ const outboundQuantityErrorMessage =
   'La cantidad a retirar debe ser un número entero mayor a cero';
 
 export const createInboundSchema = z.object({
-  productId: z.string().uuid('Selecciona un producto válido'),
+  // Acepta identificadores existentes con formato UUID válido en PostgreSQL.
+  productId: z.guid('Selecciona un producto válido'),
   quantity: z.coerce
     .number({ message: quantityErrorMessage })
     .int(quantityErrorMessage)
     .gt(0, quantityErrorMessage),
   unitCost: z.coerce.number().gt(0).optional(),
-  supplierId: z.string().uuid().optional().nullable(),
+  supplierId: z.guid('Selecciona un proveedor válido').optional().nullable(),
   invoiceNumber: z.string().trim().max(100).optional().nullable(),
   reason: z.string().trim().max(500).optional().nullable(),
 });
@@ -29,7 +30,8 @@ export const OUTBOUND_REASONS = [
 
 // HU-003 · CA-003.1: motivo de retiro OBLIGATORIO (mínimo 3 caracteres)
 export const createOutboundSchema = z.object({
-  productId: z.string().uuid('Selecciona un producto válido'),
+  // Admite identificadores existentes con formato UUID aceptado por PostgreSQL.
+  productId: z.guid('Selecciona un producto válido'),
   quantity: z.coerce
     .number({ message: outboundQuantityErrorMessage })
     .int(outboundQuantityErrorMessage)

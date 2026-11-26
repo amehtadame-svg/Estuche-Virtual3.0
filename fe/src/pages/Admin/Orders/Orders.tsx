@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Modal from '../../../components/ui/Modal';
 import { API, authHeaders } from '../../../api/api';
 import { runDeleteAction } from '../../../lib/deleteAction';
 import { runApiAction } from '../../../lib/apiAction';
 import { notify } from '../../../lib/notifications';
+import { useAuth } from '../../../hooks/useAuth';
+import '../../../components/ui/ToastProvider.css';
 import './Orders.css';
 
 const statusTone: Record<string, string> = {
@@ -39,12 +41,16 @@ interface Order {
 }
 
 export default function Orders() {
+  const { user } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [message, setMessage] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveErrorNotice, setSaveErrorNotice] = useState<string | null>(null);
+  const savingRef = useRef(false);
   const [loading, setLoading] = useState(true);
   const [discountCode, setDiscountCode] = useState('');
   const [discountApplied, setDiscountApplied] = useState<string | null>(null);
@@ -93,6 +99,12 @@ export default function Orders() {
     loadCustomers();
   }, []);
 
+  useEffect(() => {
+    if (!saveErrorNotice) return;
+    const timer = window.setTimeout(() => setSaveErrorNotice(null), 4200);
+    return () => window.clearTimeout(timer);
+  }, [saveErrorNotice]);
+
   const showMessage = (text: string) => {
     setMessage(text);
     setTimeout(() => setMessage(''), 2500);
@@ -115,9 +127,17 @@ export default function Orders() {
     setDiscountApplied(null);
   };
 
+  const showSaveError = (text: string) => {
+    if (user?.role === 'superadmin') {
+      setSaveErrorNotice(text);
+    } else {
+      notify.error(text, 'No se guardaron los cambios');
+    }
+  };
+
   const handleSave = async () => {
     if (!form.customerId || !form.total) {
-      showMessage('Por favor completa todos los campos.');
+      showSaveError('Completa el cliente y el total antes de guardar.');
       return;
     }
 
@@ -132,25 +152,41 @@ export default function Orders() {
 
     const editing = editingId !== null;
 
-    const response = await runApiAction({
-      url: editing
-        ? `${API.orders}/${editingId}`
-        : API.orders,
-      init: {
-        method: editing ? 'PUT' : 'POST',
-        headers: authHeaders(),
-        body: JSON.stringify(body),
-      },
-      successMessage: editing
-        ? 'Pedido actualizado exitosamente.'
-        : 'Pedido creado exitosamente.',
-      errorMessage: 'No se pudo guardar el pedido.',
-    });
+    if (savingRef.current) return;
+    savingRef.current = true;
+    setSaving(true);
 
-    if (!response) return;
+    try {
+      const response = await fetch(
+        editing ? `${API.orders}/${editingId}` : API.orders,
+        {
+          method: editing ? 'PUT' : 'POST',
+          headers: authHeaders(),
+          body: JSON.stringify(body),
+        }
+      );
+      const result = await response.json().catch(() => null);
+      if (!response.ok) {
+        showSaveError(result?.message || 'No se pudo guardar el pedido.');
+        return;
+      }
 
-    await loadOrders();
-    closeModal();
+      closeModal();
+      if (editing && result?.sinCambios === true) {
+        notify.success('El pedido está actualizado. No se realizaron cambios.', 'Pedido verificado');
+      } else {
+        notify.success(
+          editing ? 'El pedido se actualizó exitosamente.' : 'El pedido se creó exitosamente.',
+          editing ? 'Cambios guardados' : 'Registro exitoso'
+        );
+      }
+      loadOrders();
+    } catch {
+      showSaveError('No se pudo confirmar la operación. Verifica el pedido antes de intentarlo de nuevo.');
+    } finally {
+      savingRef.current = false;
+      setSaving(false);
+    }
   };
 
   const handleEdit = (order: Order) => {
@@ -404,10 +440,13 @@ export default function Orders() {
               <button
                 className="btn-guardar-pedido"
                 onClick={handleSave}
+                disabled={saving}
               >
-                {editingId !== null
-                  ? 'Guardar cambios'
-                  : 'Agregar pedido'}
+                {saving
+                  ? 'Guardando...'
+                  : editingId !== null
+                    ? 'Guardar cambios'
+                    : 'Agregar pedido'}
               </button>
             </>
           }
@@ -529,6 +568,32 @@ export default function Orders() {
             </div>
           )}
         </Modal>
+      )}
+
+      {saveErrorNotice && (
+        <div className="success-notice-overlay notificaciones-superadmin">
+          <section
+            className="confirm-delete-dialog success-notice-dialog"
+            role="alert"
+            aria-live="assertive"
+          >
+            <header className="confirm-delete-header">
+              <span className="success-notice-icon" aria-hidden="true">!</span>
+              <h2>No se guardaron los cambios</h2>
+              <button
+                type="button"
+                className="confirm-delete-close"
+                aria-label="Cerrar notificación"
+                onClick={() => setSaveErrorNotice(null)}
+              >
+                ×
+              </button>
+            </header>
+            <div className="confirm-delete-body success-notice-body">
+              <p className="success-notice-message">{saveErrorNotice}</p>
+            </div>
+          </section>
+        </div>
       )}
     </>
   );

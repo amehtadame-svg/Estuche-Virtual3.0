@@ -1,11 +1,36 @@
 import { prisma } from '../../lib/prisma';
-import { badRequest, notFound } from '../../lib/errors';
+import { badRequest, conflict, notFound } from '../../lib/errors';
 
 const NUMERIC_RULE_ALERT =
   'El precio de venta y el costo de adquisición deben ser valores numéricos estrictamente mayores a cero, y el stock inicial no puede contener cifras negativas';
 
 const DUPLICATE_RULE_ALERT =
   'No se puede completar el registro: Ya existe un producto almacenado con el mismo código SKU o nombre comercial dentro del sistema';
+
+// La base conserva los SKU y códigos de barras incluso en productos eliminados.
+// Traducimos la restricción única a un aviso comprensible sin liberar esos códigos.
+async function withProductUniqueness<T>(operation: () => Promise<T>): Promise<T> {
+  try {
+    return await operation();
+  } catch (error: unknown) {
+    if (typeof error === 'object' && error !== null && 'code' in error && error.code === 'P2002') {
+      const metadata = 'meta' in error && typeof error.meta === 'object' && error.meta !== null
+        ? error.meta as { target?: unknown }
+        : undefined;
+      const target = Array.isArray(metadata?.target)
+        ? metadata.target.join(' ').toLowerCase()
+        : String(metadata?.target ?? '').toLowerCase();
+      if (target.includes('sku')) {
+        throw conflict('Este código SKU ya está registrado, incluso si el producto fue eliminado. Usa otro código.');
+      }
+      if (target.includes('barcode') || target.includes('bar_code')) {
+        throw conflict('Este código de barras ya está registrado, incluso si el producto fue eliminado. Usa otro código.');
+      }
+      throw conflict('El SKU o código de barras ya está registrado, incluso en un producto eliminado. Revisa los datos.');
+    }
+    throw error;
+  }
+}
 
 export interface CreateProductInput {
   name: string;
@@ -72,7 +97,7 @@ export const productService = {
       }
     }
 
-    const product = await prisma.product.create({
+    const product = await withProductUniqueness(() => prisma.product.create({
       data: {
         name: cleanName,
         sku: cleanSku,
@@ -89,7 +114,7 @@ export const productService = {
         category: { select: { id: true, name: true } },
         supplier: { select: { id: true, name: true } },
       },
-    });
+    }));
 
     if (data.imageUrl && data.imageUrl.trim() !== '') {
       await prisma.productImage.create({
@@ -154,7 +179,7 @@ export const productService = {
         ? await prisma.product.findUnique({ where: { id, deletedAt: null } })
         : null;
 
-    const product = await prisma.product.update({
+    const product = await withProductUniqueness(() => prisma.product.update({
       where: { id, deletedAt: null },
       data: {
         ...(cleanName !== undefined ? { name: cleanName } : {}),
@@ -172,7 +197,7 @@ export const productService = {
         category: { select: { id: true, name: true } },
         supplier: { select: { id: true, name: true } },
       },
-    });
+    }));
 
     // Si cambió el precio, registrar en PriceHistory (prepara HU-016 y HU-029)
     if (

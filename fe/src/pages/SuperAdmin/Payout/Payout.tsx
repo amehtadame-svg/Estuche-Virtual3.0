@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { API, authHeaders } from '../../../api/api';
+import { runApiAction } from '../../../lib/apiAction';
 import { paymentStatusLabel } from '../../../lib/statusLabels';
 import './Payout.css';
 
@@ -35,14 +36,8 @@ const filters: { value: string; label: string }[] = [
 
 export default function Payout() {
   const [payouts, setPayouts] = useState<Payout[]>([]);
-  const [message, setMessage] = useState('');
   const [filter, setFilter] = useState('all');
   const headers = authHeaders();
-
-  const showMessage = (text: string) => {
-    setMessage(text);
-    setTimeout(() => setMessage(''), 2500);
-  };
 
   const load = async () => {
     const res = await fetch(API.payouts, { headers });
@@ -55,15 +50,14 @@ export default function Payout() {
   }, []);
 
   const handleStatus = async (id: string, status: string) => {
-    const res = await fetch(`${API.payouts}/${id}/status`, {
-      method: 'PATCH',
-      headers,
-      body: JSON.stringify({ status }),
+    const response = await runApiAction({
+      url: `${API.payouts}/${id}/status`,
+      init: { method: 'PATCH', headers, body: JSON.stringify({ status }) },
+      successMessage: 'El estado del pago se actualizó correctamente.',
+      successTitle: 'Cambios guardados',
+      errorMessage: 'No se pudo actualizar el estado del pago.',
     });
-    if (res.ok) {
-      showMessage('Estado actualizado.');
-      load();
-    }
+    if (response) await load();
   };
 
   const filteredPayouts = filter === 'all' ? payouts : payouts.filter((p) => p.status === filter);
@@ -87,7 +81,6 @@ export default function Payout() {
         </div>
       </div>
 
-      {message && <div className="mensaje-pagos">{message}</div>}
 
       <div className="pagos-resumen">
         <span className="pagos-resumen-texto">

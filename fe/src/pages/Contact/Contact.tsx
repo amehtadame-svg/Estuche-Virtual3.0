@@ -1,139 +1,325 @@
-import { useState, type FormEvent } from 'react';
-import { AlertCircle, Clock, MailCheck, MapPin, Phone } from 'lucide-react';
+import { useRef, useState, type FormEvent } from 'react';
+import { Link } from 'react-router-dom';
+import {
+  AlertCircle,
+  Clock,
+  MailCheck,
+  MapPin,
+  Phone,
+} from 'lucide-react';
+
+import { API, authHeaders } from '../../api/api';
+import { useAuth } from '../../hooks/useAuth';
+
 import './Contact.css';
 
 export default function Contact() {
-  const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
+  const { user, loading: authLoading } = useAuth();
+
+  const [subject, setSubject] = useState('');
+  const [message, setMessage] = useState('');
   const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
+  const [sending, setSending] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+  const sendingRef = useRef(false);
+
+  const handleSubmit = async (
+    event: FormEvent<HTMLFormElement>,
+  ) => {
+    event.preventDefault();
+
+    if (
+      sendingRef.current ||
+      !user ||
+      user.role !== 'client'
+    ) {
+      return;
+    }
+
+    const cleanSubject = subject.trim();
+    const cleanMessage = message.trim();
+
+    if (cleanSubject.length < 5) {
+      setError(
+        'El asunto debe tener al menos 5 caracteres.',
+      );
+      return;
+    }
+
+    if (cleanMessage.length < 20) {
+      setError(
+        'El mensaje debe tener al menos 20 caracteres.',
+      );
+      return;
+    }
+
+    sendingRef.current = true;
+    setSending(true);
     setError('');
-  };
 
-  const handleSubmit = (event?: FormEvent) => {
-    event?.preventDefault();
-    if (!form.name || !form.email || !form.message) {
-      setError('Por favor completa los campos obligatorios.');
-      return;
+    try {
+      const response = await fetch(API.pqr, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({
+          type: 'petition',
+          subject: cleanSubject,
+          description: cleanMessage,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response
+          .json()
+          .catch(() => null);
+
+        if (response.status === 401) {
+          setError(
+            'Tu sesión expiró. Inicia sesión nuevamente para enviar la solicitud.',
+          );
+        } else if (response.status === 403) {
+          setError(
+            'Solo las cuentas de cliente pueden enviar solicitudes.',
+          );
+        } else {
+          setError(
+            data?.message ||
+              'No se pudo registrar tu solicitud. Inténtalo de nuevo.',
+          );
+        }
+
+        return;
+      }
+
+      // Solo se muestra éxito después de que el servidor confirma.
+      setSent(true);
+    } catch {
+      setError(
+        'Se perdió la conexión y no pudimos confirmar el resultado. Revisa tus solicitudes antes de volver a enviar: podría haberse registrado.',
+      );
+    } finally {
+      sendingRef.current = false;
+      setSending(false);
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
-      setError('Ingresa un correo electrónico válido.');
-      return;
-    }
-    setSent(true);
   };
 
   const contactInfo = [
-    { icon: MapPin, title: 'Dirección', data: 'Calle 45 #12-30, Bogotá, Colombia' },
-    { icon: Phone, title: 'Teléfono', data: '+57 300 123 4567' },
-    { icon: Clock, title: 'Horario', data: 'Lun – Vie: 8:00 a. m. – 6:00 p. m.' },
+    {
+      icon: MapPin,
+      title: 'Dirección',
+      data: 'Calle 45 #12-30, Bogotá, Colombia',
+    },
+    {
+      icon: Phone,
+      title: 'Teléfono',
+      data: '+57 300 123 4567',
+    },
+    {
+      icon: Clock,
+      title: 'Horario',
+      data: 'Lun – Vie: 8:00 a. m. – 6:00 p. m.',
+    },
   ];
 
   if (sent) {
     return (
-      <div className="contacto-exito page-shell">
-        <div className="contacto-exito-icono" aria-hidden="true"><MailCheck size={30} /></div>
-        <h1>¡Mensaje enviado!</h1>
+      <main
+        className="contacto-exito page-shell"
+        role="status"
+      >
+        <div
+          className="contacto-exito-icono"
+          aria-hidden="true"
+        >
+          <MailCheck size={30} />
+        </div>
+
+        <h1>Solicitud registrada</h1>
+
         <p>
-          Gracias, <strong>{form.name}</strong>. Te responderemos pronto a <strong>{form.email}</strong>.
+          Tu mensaje quedó registrado como una petición
+          asociada a tu cuenta.
         </p>
+
+        <p>
+          <Link to="/cliente/pqr">
+            Consultar mis solicitudes
+          </Link>
+        </p>
+
         <button
+          type="button"
           className="contacto-btn-primary"
           onClick={() => {
             setSent(false);
-            setForm({ name: '', email: '', subject: '', message: '' });
+            setSubject('');
+            setMessage('');
           }}
         >
           Enviar otro mensaje
         </button>
-      </div>
+      </main>
     );
   }
 
   return (
-    <div className="contacto-container page-shell">
-      <h1 className="contacto-titulo">Contáctanos</h1>
-      <p className="contacto-subtitulo">¿Tienes alguna pregunta o sugerencia? Estamos para ayudarte.</p>
+    <main className="contacto-container page-shell">
+      <h1 className="contacto-titulo">
+        Contáctanos
+      </h1>
+
+      <p className="contacto-subtitulo">
+        Envíanos una petición desde tu cuenta de cliente.
+      </p>
 
       <div className="contacto-grid">
         <div className="contacto-form-card">
-          <h2 className="contacto-form-titulo">Envíanos un mensaje</h2>
+          <h2 className="contacto-form-titulo">
+            Envíanos un mensaje
+          </h2>
 
-          <form className="contacto-campos" onSubmit={handleSubmit} noValidate>
-            {[
-              { label: 'Nombre completo *', name: 'name', type: 'text', placeholder: 'Tu nombre' },
-              { label: 'Correo electrónico *', name: 'email', type: 'email', placeholder: 'tu@correo.com' },
-            ].map((field) => (
-              <div key={field.name} className="contacto-campo">
-                <label className="contacto-label" htmlFor={`contacto-${field.name}`}>{field.label}</label>
+          {authLoading ? (
+            <p role="status">
+              Verificando sesión…
+            </p>
+          ) : !user ? (
+            <p>
+              Para enviar una solicitud,{' '}
+              <Link to="/login">
+                inicia sesión
+              </Link>{' '}
+              o{' '}
+              <Link to="/register">
+                regístrate
+              </Link>.
+            </p>
+          ) : user.role !== 'client' ? (
+            <p>
+              Este formulario está disponible para cuentas
+              de cliente.
+            </p>
+          ) : (
+            <form
+              className="contacto-campos"
+              onSubmit={handleSubmit}
+              noValidate
+            >
+              <p>
+                La solicitud se asociará a la cuenta de{' '}
+                {user.name} ({user.email}).
+              </p>
+
+              <div className="contacto-campo">
+                <label
+                  className="contacto-label"
+                  htmlFor="contacto-subject"
+                >
+                  Asunto * (mínimo 5 caracteres)
+                </label>
+
                 <input
-                  id={`contacto-${field.name}`}
+                  id="contacto-subject"
                   className="contacto-input"
-                  type={field.type}
-                  name={field.name}
-                  value={form[field.name as keyof typeof form]}
-                  onChange={handleChange}
-                  placeholder={field.placeholder}
+                  value={subject}
+                  onChange={(event) => {
+                    setSubject(event.target.value);
+                    setError('');
+                  }}
+                  maxLength={160}
+                  required
                 />
               </div>
-            ))}
 
-            <div className="contacto-campo">
-              <label className="contacto-label" htmlFor="contacto-subject">Asunto</label>
-              <select id="contacto-subject" className="contacto-input" name="subject" value={form.subject} onChange={handleChange}>
-                <option value="">Selecciona un asunto</option>
-                <option value="pedido">Consulta sobre pedido</option>
-                <option value="producto">Información de producto</option>
-                <option value="envio">Envíos y entregas</option>
-                <option value="devolucion">Devoluciones</option>
-                <option value="otro">Otro</option>
-              </select>
-            </div>
+              <div className="contacto-campo">
+                <label
+                  className="contacto-label"
+                  htmlFor="contacto-message"
+                >
+                  Mensaje * (mínimo 20 caracteres)
+                </label>
 
-            <div className="contacto-campo">
-              <label className="contacto-label" htmlFor="contacto-message">Mensaje *</label>
-              <textarea
-                id="contacto-message"
-                className="contacto-textarea"
-                name="message"
-                value={form.message}
-                onChange={handleChange}
-                placeholder="Cuéntanos en qué podemos ayudarte..."
-                rows={5}
-              />
-            </div>
+                <textarea
+                  id="contacto-message"
+                  className="contacto-textarea"
+                  value={message}
+                  onChange={(event) => {
+                    setMessage(event.target.value);
+                    setError('');
+                  }}
+                  placeholder="Cuéntanos en qué podemos ayudarte..."
+                  maxLength={5000}
+                  required
+                  rows={5}
+                />
+              </div>
 
-            {error && (
-              <p className="contacto-error" role="alert">
-                <AlertCircle size={16} aria-hidden="true" /> {error}
-              </p>
-            )}
+              {error && (
+                <p
+                  className="contacto-error"
+                  role="alert"
+                >
+                  <AlertCircle
+                    size={16}
+                    aria-hidden="true"
+                  />
+                  {' '}
+                  {error}
+                </p>
+              )}
 
-            <button type="submit" className="contacto-btn-primary">
-              Enviar mensaje
-            </button>
-          </form>
+              <button
+                type="submit"
+                className="contacto-btn-primary"
+                disabled={sending}
+              >
+                {sending
+                  ? 'Enviando…'
+                  : 'Enviar mensaje'}
+              </button>
+
+              <Link to="/cliente/pqr">
+                Consultar mis solicitudes
+              </Link>
+            </form>
+          )}
         </div>
 
         <div className="contacto-info">
           <div className="contacto-info-banner">
             <h2>¿Cómo podemos ayudarte?</h2>
-            <p>Nuestro equipo de atención al cliente está listo para resolver todas tus dudas sobre pedidos, productos, envíos y más.</p>
+
+            <p>
+              Puedes consultar el estado de tu petición
+              en PQR y soporte.
+            </p>
           </div>
 
           {contactInfo.map(({ icon: Icon, ...info }) => (
-            <div key={info.title} className="contacto-info-item">
-              <span className="contacto-info-icono" aria-hidden="true"><Icon size={20} /></span>
+            <div
+              key={info.title}
+              className="contacto-info-item"
+            >
+              <span
+                className="contacto-info-icono"
+                aria-hidden="true"
+              >
+                <Icon size={20} />
+              </span>
+
               <div>
-                <p className="contacto-info-titulo">{info.title}</p>
-                <p className="contacto-info-dato">{info.data}</p>
+                <p className="contacto-info-titulo">
+                  {info.title}
+                </p>
+
+                <p className="contacto-info-dato">
+                  {info.data}
+                </p>
               </div>
             </div>
           ))}
         </div>
       </div>
-    </div>
+    </main>
   );
 }

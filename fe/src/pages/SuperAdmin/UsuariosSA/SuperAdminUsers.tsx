@@ -1,4 +1,4 @@
-import { useState, useEffect, type ChangeEvent } from 'react';
+import { useState, useEffect, useRef, type ChangeEvent } from 'react';
 import Modal from '../../../components/ui/Modal';
 import { API, authHeaders } from '../../../api/api';
 import { runApiAction } from '../../../lib/apiAction';
@@ -27,6 +27,9 @@ export default function SuperAdminUsers() {
   const [createError, setCreateError] = useState('');
   const [creating, setCreating] = useState(false);
   const [modalEdit, setModalEdit] = useState(false);
+  const [savingEdit, setSavingEdit] = useState(false);
+  const savingEditRef = useRef(false);
+  const [savedUserName, setSavedUserName] = useState<string | null>(null);
   const [modalDelete, setModalDelete] = useState<User | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -41,6 +44,12 @@ export default function SuperAdminUsers() {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (savedUserName === null) return;
+    const timeoutId = window.setTimeout(() => setSavedUserName(null), 4200);
+    return () => window.clearTimeout(timeoutId);
+  }, [savedUserName]);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -116,18 +125,37 @@ export default function SuperAdminUsers() {
   };
 
   const handleEdit = async () => {
-    if (!editingId) return;
-    const response = await runApiAction({
-      url: `${API.users}/${editingId}`,
-      init: { method: 'PUT', headers, body: JSON.stringify({ fullName: form.fullName, email: form.email, role: form.role }) },
-      successMessage: 'Usuario actualizado exitosamente.',
-      errorMessage: 'No se pudo actualizar el usuario.',
-    });
-    if (!response) return;
-    setModalEdit(false);
-    setEditingId(null);
-    setForm(emptyForm);
-    await load();
+    if (!editingId || savingEditRef.current) return;
+    savingEditRef.current = true;
+    setSavingEdit(true);
+    try {
+      const response = await fetch(`${API.users}/${editingId}`, {
+        method: 'PUT', headers,
+        body: JSON.stringify({ fullName: form.fullName, email: form.email, role: form.role }),
+      });
+      if (!response.ok) {
+        const data = await response.json().catch(() => null);
+        notify.error(data?.message || 'No se pudo actualizar el usuario.');
+        return;
+      }
+      // El servidor confirmó el guardado: mostramos el aviso incluso si falla la recarga de la lista.
+      setSavedUserName(form.fullName);
+      setModalEdit(false);
+      setEditingId(null);
+      setForm(emptyForm);
+      try {
+        const listResponse = await fetch(API.users, { headers });
+        if (!listResponse.ok) throw new Error();
+        setUsers(await listResponse.json());
+      } catch {
+        notify.error('Los cambios se guardaron, pero no se pudo actualizar la lista. Recarga la página.');
+      }
+    } catch {
+      notify.error('No se pudo confirmar el guardado. Revisa los datos antes de volver a intentarlo.');
+    } finally {
+      savingEditRef.current = false;
+      setSavingEdit(false);
+    }
   };
 
   // HU-018 · "Desactivar" ya no borra: solo inactiva la cuenta y conserva el historial.
@@ -138,6 +166,7 @@ export default function SuperAdminUsers() {
       successMessage: isActive
         ? 'Cuenta reactivada correctamente.'
         : 'Cuenta desactivada. Su historial se conserva.',
+      successTitle: isActive ? 'Cuenta reactivada' : 'Cuenta desactivada',
       errorMessage: 'No se pudo actualizar la cuenta.',
     });
     if (!response) return;
@@ -325,13 +354,16 @@ export default function SuperAdminUsers() {
         <Modal
           titulo="Editar usuario"
           onClose={() => {
+            if (savingEditRef.current) return;
             setModalEdit(false);
             setForm(emptyForm);
           }}
           footer={
             <>
               <button
+                type="button"
                 className="btn-cancelar-sa"
+                disabled={savingEdit}
                 onClick={() => {
                   setModalEdit(false);
                   setForm(emptyForm);
@@ -339,8 +371,8 @@ export default function SuperAdminUsers() {
               >
                 Cancelar
               </button>
-              <button className="btn-guardar-sa" onClick={handleEdit}>
-                Guardar cambios
+              <button type="button" className="btn-guardar-sa" onClick={handleEdit} disabled={savingEdit}>
+                {savingEdit ? 'Guardando…' : 'Guardar cambios'}
               </button>
             </>
           }
@@ -362,35 +394,60 @@ export default function SuperAdminUsers() {
         </Modal>
       )}
 
+      {/* Confirmación visual: solo se abre después de que el servidor acepta la edición. */}
+      {savedUserName !== null && (
+        <div className="sa-desactivar-modal sa-guardado-modal">
+          <Modal
+            titulo="Cambios guardados"
+            onClose={() => setSavedUserName(null)}
+          >
+            <div className="sa-desactivar-content" role="status" aria-live="polite">
+              <p className="sa-desactivar-question">
+                La información de <strong>{savedUserName}</strong> se actualizó correctamente.
+              </p>
+            </div>
+          </Modal>
+        </div>
+      )}
+
       {/* Modal Desactivar */}
       {modalDelete && (
-        <Modal
-          titulo="Desactivar cuenta"
-          onClose={() => setModalDelete(null)}
-          footer={
-            <>
-              <button className="btn-cancelar-sa" onClick={() => setModalDelete(null)}>
-                Cancelar
-              </button>
-              <button
-                className="btn-eliminar-confirm-sa"
-                onClick={() => handleToggleActive(modalDelete.id, false)}
-              >
-                Sí, desactivar
-              </button>
-            </>
-          }
-        >
-          <div className="eliminar-warning">
-            <p>
-              ¿Desactivar la cuenta de <strong>{modalDelete.fullName}</strong>?
-            </p>
-            <p className="eliminar-warning-sub">
-              El usuario no podrá iniciar sesión, pero <strong>no se borra nada</strong>: sus pedidos, recibos,
-              envíos y movimientos se conservan intactos. Puedes reactivarla cuando quieras.
-            </p>
-          </div>
-        </Modal>
+        <div className="sa-desactivar-modal">
+          <Modal
+            titulo="Desactivar cuenta"
+            onClose={() => setModalDelete(null)}
+            footer={
+              <>
+                <button type="button" className="btn-cancelar-sa" onClick={() => setModalDelete(null)}>
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  className="btn-eliminar-confirm-sa"
+                  onClick={() => handleToggleActive(modalDelete.id, false)}
+                >
+                  Sí, desactivar
+                </button>
+              </>
+            }
+          >
+            <div className="sa-desactivar-content">
+              <p className="sa-desactivar-question">
+                ¿Deseas desactivar la cuenta de <strong>{modalDelete.fullName}</strong>?
+              </p>
+              <p className="sa-desactivar-description">
+                La persona no podrá iniciar sesión mientras la cuenta esté inactiva.
+              </p>
+              <div className="sa-desactivar-history">
+                <span className="sa-desactivar-history-icon" aria-hidden="true">✓</span>
+                <div>
+                  <strong>El historial se conserva</strong>
+                  <p>Los pedidos, recibos, envíos y movimientos no se eliminan. La cuenta podrá reactivarse después.</p>
+                </div>
+              </div>
+            </div>
+          </Modal>
+        </div>
       )}
     </div>
   );

@@ -11,14 +11,14 @@ export const orderStatusEnum = [
 ] as const;
 
 export const createOrderSchema = z.object({
-  deliveryAddressId: z.string().uuid().optional(),
+  deliveryAddressId: z.guid().optional(),
   total: z.coerce.number().min(0),
-  promotionalCodeId: z.string().uuid().optional(),
+  promotionalCodeId: z.guid().optional(),
   status: z.enum(orderStatusEnum).optional(),
   details: z
     .array(
       z.object({
-        productId: z.string().uuid(),
+        productId: z.guid(),
         quantity: z.coerce.number().int().min(1),
         unitPrice: z.coerce.number().min(0),
       })
@@ -27,10 +27,10 @@ export const createOrderSchema = z.object({
 });
 
 export const updateOrderSchema = z.object({
-  customerId: z.string().uuid().optional(),
-  driverId: z.string().uuid().nullable().optional(),
-  promotionalCodeId: z.string().uuid().nullable().optional(),
-  deliveryAddressId: z.string().uuid().nullable().optional(),
+  customerId: z.guid().optional(),
+  driverId: z.guid().nullable().optional(),
+  promotionalCodeId: z.guid().nullable().optional(),
+  deliveryAddressId: z.guid().nullable().optional(),
   total: z.coerce.number().min(0).optional(),
   status: z.enum(orderStatusEnum).optional(),
 });

@@ -138,6 +138,7 @@ export default function PromotionalCode() {
       successMessage: nextActive
         ? `Descuento "${discount.code}" activado exitosamente.`
         : `Descuento "${discount.code}" desactivado exitosamente.`,
+      successTitle: nextActive ? 'Descuento activado' : 'Descuento desactivado',
       errorMessage: 'No se pudo actualizar el estado del descuento.',
     });
 

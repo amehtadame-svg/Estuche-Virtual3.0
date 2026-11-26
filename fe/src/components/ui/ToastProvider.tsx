@@ -5,11 +5,17 @@ import {
   type ConfirmationRequest,
   type ToastMessage,
 } from '../../lib/notifications';
+import { useAuth } from '../../hooks/useAuth';
 import './ToastProvider.css';
 
 export default function ToastProvider({ children }: { children: ReactNode }) {
+  const { user } = useAuth();
+  const estiloSuperadmin = user?.role === 'superadmin' ? ' notificaciones-superadmin' : '';
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [successNotice, setSuccessNotice] = useState<ToastMessage | null>(null);
+  const successTitle = estiloSuperadmin && successNotice?.title === 'Operación exitosa' && /eliminad[oa]|eliminó/i.test(successNotice.message)
+    ? 'Eliminación confirmada'
+    : successNotice?.title;
   const [confirmations, setConfirmations] = useState<ConfirmationRequest[]>([]);
   const activeConfirmation = confirmations[0] ?? null;
   const confirmationQuestionEnd = activeConfirmation?.message.indexOf('?') ?? -1;
@@ -22,7 +28,7 @@ export default function ToastProvider({ children }: { children: ReactNode }) {
     ? activeConfirmation.message.slice(confirmationQuestionEnd + 1).trim()
     : '';
   const inboundSuccessParts = successNotice?.message.match(
-    /^(Ingreso confirmado:)\s*"([^"]+)"\s*(.+)$/,
+    /^((?:Ingreso confirmado|Salida confirmada):)\s*"([^"]+)"\s*(.+)$/,
   );
 
   useEffect(() => {
@@ -91,11 +97,18 @@ export default function ToastProvider({ children }: { children: ReactNode }) {
       </div>
 
       {successNotice && !activeConfirmation && (
-        <div className="success-notice-overlay">
+        <div className={`success-notice-overlay${estiloSuperadmin}`}>
           <section className="confirm-delete-dialog success-notice-dialog" role="status" aria-live="polite">
             <header className="confirm-delete-header">
-              <span className="success-notice-icon" aria-hidden="true">✓</span>
-              <h2>{successNotice.title}</h2>
+              <span className="success-notice-icon" aria-hidden="true">
+                {estiloSuperadmin ? (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="9" />
+                    <path d="m8 12 3 3 5-6" />
+                  </svg>
+                ) : '✓'}
+              </span>
+              <h2>{successTitle}</h2>
               <button
                 type="button"
                 className="confirm-delete-close"
@@ -125,7 +138,7 @@ export default function ToastProvider({ children }: { children: ReactNode }) {
       )}
 
       {activeConfirmation && (
-        <div className="confirm-delete-overlay" onClick={() => finishConfirmation(false)}>
+        <div className={`confirm-delete-overlay${estiloSuperadmin}`} onClick={() => finishConfirmation(false)}>
           <section
             className="confirm-delete-dialog"
             role="alertdialog"
