@@ -5,7 +5,7 @@
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(28.8 3967.35)">
 <title>G</title>
 <polygon fill="#f7f9fc" stroke="none" points="-28.8,28.8 -28.8,-3967.35 2825.01,-3967.35 2825.01,28.8 -28.8,28.8"/>
-<text xml:space="preserve" text-anchor="middle" x="1398.11" y="-3914.75" font-family="Arial" font-size="22.00">Modelo relacional | 28 tablas / 46 FK</text>
+<text xml:space="preserve" text-anchor="middle" x="1398.11" y="-3914.75" font-family="Arial" font-size="22.00">Modelo relacional parcial | PK y FK seleccionadas</text>
 <!-- users -->
 <g id="node1" class="node">
 <title>users</title>

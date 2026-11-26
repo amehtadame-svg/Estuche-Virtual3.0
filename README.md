@@ -102,6 +102,17 @@ Estuche-Virtual3.0/
 
 Consulta el [índice documental](docs/README.md).
 
+### Evidencias y límites de la entrega
+
+- [Matriz de criterios](docs/matriz-evidencias.md): transcripción de 14 puntos; la foto original no está disponible para cotejo.
+- [Modelos y revisión pendiente](docs/MODELOS_Y_VALIDACION.md) y [API de operaciones principales](docs/API.md).
+- [Guía de instalación y despliegue](docs/INSTALACION_Y_DESPLIEGUE.md): Compose es de desarrollo y ejecuta migraciones sobre la base configurada. Verificar destino y respaldo antes de arrancar.
+- [Plan de pruebas](docs/PLAN_PRUEBAS.md), [resultados reales de `6af297a`](docs/evidencias/pruebas/README.md) y [hallazgos locales](docs/REGISTRO_DEFECTOS.md). Backend 144/144, frontend 42/42 e integración aislada 40/40; lint con 5 advertencias. No equivalen a aceptación del equipo.
+- [Scrum: propuestas y evidencia pendiente](docs/scrum/README.md); [guion de 15 minutos](docs/GUION_PRESENTACION.md).
+
+El checkout es una **simulación académica** sin cobro bancario; el pago en tienda es un registro separado. Los diagramas de datos son parciales. Franck, Paula y Cristian aún deben validar sus respectivas áreas; no se ha acreditado un despliegue ni recorrido completo de interfaz.
+
+
 ---
 
 ## Inicio rápido
@@ -109,16 +120,15 @@ Consulta el [índice documental](docs/README.md).
 ```bash
 git clone https://github.com/amehtadame-svg/Estuche-Virtual3.0.git
 cd Estuche-Virtual3.0
-cp .env-example .env        # rellena SUPABASE_DATABASE_URL y JWT_SECRET
-docker compose up --build   # backend :4000 · frontend :5173
-curl http://localhost:4000/api/health
+cp .env-example .env        # rellena SUPABASE_DATABASE_URL y JWT_SECRET de forma privada
+# Antes de iniciar: verifica destino de BD, autorización y respaldo.
+# docker compose up --build # aplica migraciones sobre la BD configurada
 ```
 
-Guía completa (instalación nativa, variables de entorno, pruebas, despliegue a
-producción y flujo de Git): **[docs/INSTALACION_Y_DESPLIEGUE.md](./docs/INSTALACION_Y_DESPLIEGUE.md)**
+Guía técnica de desarrollo, variables, pruebas y precauciones de despliegue (validación pendiente): **[docs/INSTALACION_Y_DESPLIEGUE.md](./docs/INSTALACION_Y_DESPLIEGUE.md)**
 
 - Pasarela académica (PSE, tarjeta y Nequi, sin cobros reales): **[docs/PAGOS_DEMOSTRACION.md](./docs/PAGOS_DEMOSTRACION.md)**
-- Informe de pruebas (102 pruebas, fecha/entorno/commit): **[docs/INFORME_PRUEBAS.md](./docs/INFORME_PRUEBAS.md)**
+- Informe histórico de pruebas (102 pruebas, otro commit): **[docs/INFORME_PRUEBAS.md](./docs/INFORME_PRUEBAS.md)**
 - Auditoría de seguridad y rotación de credenciales: **[docs/SEGURIDAD_ENTORNO.md](./docs/SEGURIDAD_ENTORNO.md)**
 - Reglas del equipo (RT/RH): **[docs/restricciones.md](./docs/restricciones.md)**
 
@@ -133,11 +143,11 @@ En desarrollo
 ## Contribuciones
 
 1. Crea una rama desde `dev` (`git checkout -b fix/mi-cambio dev`).
-2. Usa la **convención de commits** (`fix(be): descripción…`) — ver guía §10.
+2. Propón una convención de commits clara (`fix(be): descripción…`); la política debe acordarse con el equipo.
 3. Ejecuta `pnpm lint` (fe) y `pnpm test` (be) antes de abrir el PR.
 4. Abre un pull request: la CI debe quedar **verde** y recibir revisión.
 
-Nunca se hace push directo a `main` ni force-push (RH-002).
+Estas son prácticas propuestas; consultar [contradicciones de política de ramas](docs/requisitos/contradicciones.md). No está verificada la protección de `main`.
 
 ---
 

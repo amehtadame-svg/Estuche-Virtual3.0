@@ -5,7 +5,7 @@
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(28.8 1834.17)">
 <title>G</title>
 <polygon fill="#f7f9fc" stroke="none" points="-28.8,28.8 -28.8,-1834.17 1905,-1834.17 1905,28.8 -28.8,28.8"/>
-<text xml:space="preserve" text-anchor="middle" x="938.1" y="-1781.57" font-family="Arial" font-size="22.00">MER inferido del SQL | 28 entidades / 46 relaciones</text>
+<text xml:space="preserve" text-anchor="middle" x="938.1" y="-1781.57" font-family="Arial" font-size="22.00">MER parcial | entidades y relaciones seleccionadas</text>
 <!-- users -->
 <g id="node1" class="node">
 <title>users</title>

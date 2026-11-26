@@ -102,22 +102,17 @@ Punto de entrada a la documentación del proyecto.
 
 - [Contradicciones y propuestas de corrección](requisitos/contradicciones.md)
 
-## Entregables por incorporar o consolidar
+## Entregables y seguimiento
 
-| Entregable | Situación en este índice |
-|---|---|
-| [Matriz de los 14 criterios del profesor](matriz-evidencias.md) | Borrador creado; evidencias en revisión |
-| MER y modelo relacional con PK y FK | Pendientes de incorporar y revisar |
-| Casos de uso y modelo de dominio | Pendientes de incorporar y revisar |
-| Secuencias de compra e inventario | Pendientes de incorporar y revisar |
-| Arquitectura lógica y despliegue | Pendientes de incorporar y revisar |
-| Informes y evidencias Scrum | Pendientes de recopilar y organizar |
-| Plan e informe de pruebas | Pendientes de incorporar y actualizar |
-| Registro de defectos y enlaces a tickets | Pendiente de incorporar |
-| README consolidado y guion de presentación | Pendientes de consolidar |
-
-Esta tabla registra trabajo documental pendiente; no certifica
-ausencia de implementación ni sustituye la matriz de cumplimiento.
+| Entregable | Evidencia | Estado |
+|---|---|---|
+| Criterios del profesor | [Matriz de 14 criterios transcritos](matriz-evidencias.md) | Parcial; fotografía original no disponible. |
+| Modelos de datos, UML y arquitectura | [Modelos, secuencias y despliegue](MODELOS_Y_VALIDACION.md) | Diagramas disponibles, datos parciales y revisión de Franck, Paula y Cristian pendiente. |
+| Scrum | [Índice y plantillas](scrum/README.md) | Propuestas; tablero, estimaciones y actas reales no recibidos. |
+| Pruebas y defectos | [Plan](PLAN_PRUEBAS.md), [resultados del commit probado](evidencias/pruebas/README.md), [hallazgos locales](REGISTRO_DEFECTOS.md) | Ejecuciones locales reales; aceptación UI y tickets externos pendientes. |
+| Instalación y API | [Guía técnica](INSTALACION_Y_DESPLIEGUE.md), [API parcial](API.md) | Revisión técnica y despliegue real pendientes. |
+| Exposición | [Guion de 15 minutos](GUION_PRESENTACION.md) | Propuesto, falta validación y ensayo. |
+| Estado y restricciones | [Auditoría funcional](AUDITORIA_REQUISITOS_FUNCIONALES.md), [contradicciones](requisitos/contradicciones.md) | Identificación estática; decisiones del equipo pendientes. |
 
 ## Alcance de los diagramas
 

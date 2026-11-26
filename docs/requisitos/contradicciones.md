@@ -2,7 +2,7 @@
 
 ## Alcance
 
-Base técnica de la rama: main@7e50dc9.
+Registro inicial basado en `main@7e50dc9`; seguimiento documental revisado sobre `6af297a`. Las decisiones y validaciones indicadas continúan pendientes.
 
 Registro inicial basado en el README, las restricciones y los manifiestos revisados. No modifica restricciones originales ni acredita funcionamiento integral.
 
@@ -16,9 +16,13 @@ Registro inicial basado en el README, las restricciones y los manifiestos revisa
 | DOC-004 | Se exige lint y Prettier; backend no declara lint y Prettier no figura en los manifiestos revisados. | Revisar configuración y herramientas adicionales. | Verificación pendiente |
 | DOC-005 | Backend fija pnpm@10.12.4; frontend no declara packageManager. | Proponer una versión reproducible para desarrollo y CI. | Propuesta técnica |
 | DOC-006 | RH-002 enumera solo main y dev; se utilizan ramas de trabajo adicionales. | Conciliar la política con ramas por tarea y PR. | Requiere acuerdo |
-| DOC-007 | README general sin guía suficiente de instalación, ejecución, pruebas y API. | Incorporar instrucciones comprobadas y enlaces. | Pendiente de elaboración |
+| DOC-007 | README general sin guía suficiente de instalación, ejecución, pruebas y API. | Se incorporaron enlaces a [guía](../INSTALACION_Y_DESPLIEGUE.md), [API](../API.md) y [resultados](../evidencias/pruebas/README.md). | Actualización documental; validación y arranque pendientes |
 | DOC-008 | README incluye un enlace de invitación a Trello. | Revisar permisos y evitar publicar tokens de invitación. | Revisión de acceso pendiente |
 | DOC-009 | El README omitía roles operativos. | Corregidos el objetivo y la sección Roles en [README general](../../README.md), según el enum Role y el middleware. | Corregido documentalmente; permisos completos y recorridos no certificados |
+
+| DOC-010 | Diagrama anterior de compra mostraba dos llamadas separadas de pedido y recibo; checkout actual usa simulación transaccional. | [Secuencia actualizada](mer/secuencia-compra.svg) contrastada con código. | Ajuste documental; revisión Franck y Paula pendiente |
+| DOC-011 | Guía anterior describía CORS, proxy y Compose como adecuados para producción sin validar su configuración efectiva. | [Guía revisada](../INSTALACION_Y_DESPLIEGUE.md) advierte variables fijadas, proxy y migración automática. | Corrección documental; Cristian debe comprobar despliegue |
+| DOC-012 | Los modelos de datos muestran solo una selección, sin incluir todas las migraciones. | [Límites y validaciones](../MODELOS_Y_VALIDACION.md), esquema Prisma como referencia. | Revisar y completar con Franck; no se afirma que la BD fue modificada |
 
 ## Fuentes
 
