@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { API, authHeaders } from '../../api/api';
+import { paymentErrorMessage } from './paymentFormat';
 
 export type PaymentMethod = 'tarjeta' | 'pse' | 'nequi';
 export type Outcome = 'approved' | 'rejected' | 'pending';
@@ -97,7 +98,7 @@ export function useDemoPayment(userId: string | undefined) {
           sessionStorage.removeItem(storageKey);
           setRetrying(false);
         }
-        throw new Error(data.errors?.[0]?.message || data.message || 'No se pudo registrar el pago.');
+        throw new Error(paymentErrorMessage(data));
       }
       setResult(data);
       return data as PaymentResult;

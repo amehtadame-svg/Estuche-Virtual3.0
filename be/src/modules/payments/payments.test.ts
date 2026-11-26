@@ -227,3 +227,51 @@ test('Rutas HTTP: exigen sesión, validan entradas y permiten al cliente complet
     await new Promise<void>((resolve) => server.close(() => resolve()));
   }
 });
+
+test('HTTP: un producto con UUID histórico puede agregarse al carrito, editarse y pagarse sin migrar su ID', async () => {
+  const legacyId = '10000000-0000-0000-0000-000000000001';
+  const server = createServer(app);
+  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}/api`;
+  const headers = { Authorization: `Bearer ${jwt.sign(buyer, process.env.JWT_SECRET!)}`, 'Content-Type': 'application/json' };
+  let cartItem: any = null;
+  const lookedUp: string[] = [];
+  db.shopping.findUnique = async () => cartItem;
+  db.shopping.create = async ({ data }: any) => { cartItem = { id: 'cart-1', ...data }; return cartItem; };
+  db.shopping.update = async ({ where, data }: any) => {
+    assert.equal(where.userId_productId.productId, legacyId);
+    cartItem = { ...cartItem, ...data };
+    return cartItem;
+  };
+  db.product.findUnique = async ({ where }: any) => {
+    lookedUp.push(where.id);
+    return { id: legacyId, price: new Prisma.Decimal('12500.25'), stock: state.stock };
+  };
+  try {
+    const add = await fetch(`${base}/shopping`, { method: 'POST', headers, body: JSON.stringify({ productId: legacyId, quantity: 1 }) });
+    assert.equal(add.status, 201);
+    assert.equal((await add.json()).productId, legacyId);
+    const edit = await fetch(`${base}/shopping/${legacyId}`, { method: 'PUT', headers, body: JSON.stringify({ quantity: 2 }) });
+    assert.equal(edit.status, 200);
+    assert.equal((await edit.json()).quantity, 2);
+    const body = input({ items: [{ productId: legacyId, quantity: 2 }], outcome: 'approved' });
+    const pay = await fetch(`${base}/payments/demo/checkout`, { method: 'POST', headers, body: JSON.stringify(body) });
+    assert.equal(pay.status, 200);
+    assert.equal((await pay.json()).status, 'approved');
+    assert.deepEqual(lookedUp, [legacyId]);
+    assert.equal(state.order.details[0].productId, legacyId);
+    assert.equal(state.stock, 3);
+    const retry = await fetch(`${base}/payments/demo/checkout`, { method: 'POST', headers, body: JSON.stringify(body) });
+    assert.equal(retry.status, 200);
+    assert.equal(state.stock, 3);
+    const invalid = await fetch(`${base}/payments/demo/checkout`, {
+      method: 'POST', headers, body: JSON.stringify(input({ items: [{ productId: 'no-es-un-id', quantity: 1 }] })),
+    });
+    assert.equal(invalid.status, 400);
+    assert.deepEqual((await invalid.json()).errors[0].path, ['items', 0, 'productId']);
+    assert.equal(state.stock, 3);
+  } finally {
+    server.closeAllConnections();
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+  }
+});

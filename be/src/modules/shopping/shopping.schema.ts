@@ -1,7 +1,8 @@
 import { z } from 'zod';
+import { databaseUuidSchema } from '../../lib/schemas';
 
 export const addItemSchema = z.object({
-  productId: z.string().uuid(),
+  productId: databaseUuidSchema,
   quantity: z.coerce.number().int().min(1).optional(),
 });
 

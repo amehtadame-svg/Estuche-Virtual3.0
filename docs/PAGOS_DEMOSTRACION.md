@@ -149,6 +149,33 @@ tiene una base de pruebas configurada y restringe la descarga del motor nativo
 de Prisma. Para compilar y ejecutar los dobles se generó localmente el cliente
 sin motor. Esto no cambia el código ni los comandos normales de instalación.
 
+## Error «UUID inválido» al pagar
+
+Los identificadores históricos de algunos productos tienen el formato PostgreSQL
+`8-4-4-4-12` hexadecimal, pero no los bits de versión/variante exigidos por un
+UUID RFC. La validación `uuid()` los rechazaba antes de consultar el producto.
+El carrito y el checkout ahora usan `databaseUuidSchema` (`z.guid`), que acepta
+esos IDs almacenados sin aceptar texto arbitrario, y normaliza las mayúsculas.
+Los parámetros de recurso compartidos utilizan la misma validación. No se
+regeneran IDs ni se modifican relaciones o productos.
+
+La referencia nueva del intento de pago (`requestKey`) sigue exigiendo un UUID
+RFC. La interfaz distingue los errores de referencia de los del producto y
+señala la posición del producto inválido dentro del carrito. La existencia,
+stock, permisos, precios e idempotencia siguen verificándose en el servidor.
+
+Esta corrección no necesita migraciones ni cambios de variables de entorno.
+Después de actualizar el código, reinicia los servicios y recarga la página.
+Si un producto se añadió antes del arreglo y no se guardó por el mismo error,
+puede ser necesario volver a agregarlo desde el catálogo. No borres pedidos ni
+regeneres identificadores para resolverlo.
+
+Se añadieron pruebas de regresión de UUID históricos, v4 y v7, rechazo de
+formatos malformados, detección de duplicados con distinta capitalización y
+un recorrido HTTP de carrito a pago con un ID histórico (Prisma simulado).
+La comprobación en la base conectada fue solo de lectura: no se realizaron
+compras ni cambios de stock sobre ella.
+
 ## Evolución a una pasarela oficial
 
 Para validar una integración bancaria real en sandbox será necesario elegir un
