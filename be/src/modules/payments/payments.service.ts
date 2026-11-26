@@ -77,6 +77,13 @@ async function settle(
         productId: item.productId, type: 'in', quantity: item.quantity,
         userId: actor.id, reason: `Rechazo de pago DEMO - pedido ${order.id}`,
       } });
+      // Restaurar la compra rechazada permite reintentar con una referencia nueva.
+      // El bloqueo de pedido y el estado definitivo evitan restauraciones dobles.
+      await tx.shopping.upsert({
+        where: { userId_productId: { userId: actor.id, productId: item.productId } },
+        create: { userId: actor.id, productId: item.productId, quantity: item.quantity },
+        update: { quantity: { increment: item.quantity } },
+      });
     }
   }
   await tx.order.update({

@@ -35,7 +35,7 @@ beforeEach(() => {
   process.env.JWT_SECRET = 'test-payments-secret-not-for-real-deployment';
   failReceipt = false;
   stockRace = false;
-  state = { stock: 5, order: null, receipt: null, payment: null, movements: [], events: [], cartCleared: false, promo: null };
+  state = { stock: 5, order: null, receipt: null, payment: null, movements: [], events: [], cartCleared: false, cartRestored: 0, promo: null };
   db.$transaction = async (fn: any) => {
     const snapshot = { ...state, movements: [...state.movements], events: [...state.events] };
     try { return await fn(db); } catch (error) { state = snapshot; throw error; }
@@ -72,6 +72,7 @@ beforeEach(() => {
   db.inventoryMovement.create = async ({ data }: any) => { state.movements.push(data); return data; };
   db.orderEvent.create = async ({ data }: any) => { state.events.push(data); return data; };
   db.shopping.deleteMany = async () => { state.cartCleared = true; return { count: 1 }; };
+  db.shopping.upsert = async ({ create }: any) => { state.cartRestored += create.quantity; return create; };
   db.promotionalCode.findUnique = async () => state.promo;
   db.promotionalCode.update = async ({ data }: any) => { state.promo = { ...state.promo, ...data }; return state.promo; };
 });
@@ -134,6 +135,7 @@ test('Rechazo: cancela pedido y libera inventario una sola vez', async () => {
   await paymentsService.resolve(key, 'rejected', buyer);
   assert.equal(state.stock, 5);
   assert.equal(state.movements.length, 2);
+  assert.equal(state.cartRestored, 2);
   await assert.rejects(paymentsService.resolve(key, 'approved', buyer), status(409));
 });
 
@@ -274,4 +276,43 @@ test('HTTP: un producto con UUID histórico puede agregarse al carrito, editarse
     server.closeAllConnections();
     await new Promise<void>((resolve) => server.close(() => resolve()));
   }
+});
+
+test('Rechazar un pendiente restaura carrito y stock una sola vez; consultar no cambia el resultado', async () => {
+  await paymentsService.checkout(input(), buyer);
+  assert.equal(state.cartRestored, 0);
+  const result = await paymentsService.resolve(key, 'rejected', buyer);
+  assert.equal(result.status, 'rejected');
+  assert.equal(state.stock, 5);
+  assert.equal(state.cartRestored, 2);
+  await paymentsService.get(key, buyer);
+  await paymentsService.resolve(key, 'rejected', buyer);
+  assert.equal(state.cartRestored, 2);
+  assert.equal(state.stock, 5);
+});
+
+test('Después de un rechazo puede comprarse con otra referencia sin reutilizar el resultado anterior', async () => {
+  const old = await paymentsService.checkout(input({ outcome: 'rejected' }), buyer);
+  assert.equal(old.status, 'rejected');
+  assert.equal(state.stock, 5);
+  const next = await paymentsService.checkout(input({ requestKey: '44444444-4444-4444-8444-444444444444', outcome: 'approved' }), buyer);
+  assert.notEqual(next.reference, old.reference);
+  assert.equal(next.status, 'approved');
+  assert.equal(state.stock, 3);
+  assert.equal(state.cartRestored, 2);
+});
+
+test('Un fallo restaurando carrito revierte el rechazo completo y permite confirmarlo después', async () => {
+  await paymentsService.checkout(input(), buyer);
+  const restore = db.shopping.upsert;
+  db.shopping.upsert = async () => { throw new Error('Fallo restaurando carrito'); };
+  await assert.rejects(paymentsService.resolve(key, 'rejected', buyer), /Fallo restaurando carrito/);
+  assert.equal(state.stock, 3);
+  assert.equal(state.payment.status, 'pending');
+  assert.equal(state.order.status, 'pending');
+  assert.equal(state.receipt.paymentStatus, 'pending');
+  db.shopping.upsert = restore;
+  await paymentsService.resolve(key, 'rejected', buyer);
+  assert.equal(state.stock, 5);
+  assert.equal(state.cartRestored, 2);
 });
