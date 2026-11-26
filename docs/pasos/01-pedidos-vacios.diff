@@ -1,0 +1,129 @@
+# Paso 1 — Rechazar pedidos vacíos (base: main)
+# Aplicar desde la raíz del repo:  git apply docs/pasos/01-pedidos-vacios.diff
+
+--- a/be/src/modules/orders/orders.schema.ts
++++ b/be/src/modules/orders/orders.schema.ts
+@@ -24,7 +24,8 @@
+         unitPrice: z.coerce.number().min(0),
+       })
+     )
+-    .optional(),
++    .min(1, 'Un pedido debe incluir al menos un producto.')
++    .max(100),
+ });
+ 
+ export const updateOrderSchema = z.object({
+--- a/be/src/modules/orders/orders.service.ts
++++ b/be/src/modules/orders/orders.service.ts
+@@ -183,6 +183,12 @@
+       details,
+     } = data;
+ 
++    // A-01: nunca se crea un pedido sin líneas. Se valida aquí, antes de abrir
++    // la transacción, para que un pedido vacío no deje NINGÚN registro.
++    if (!Array.isArray(details) || details.length === 0) {
++      throw badRequest('Un pedido debe incluir al menos un producto.');
++    }
++
+     const customerId = requester.id;
+ 
+     return prisma.$transaction(async (tx) => {
+--- a/be/src/modules/orders/orders.test.ts
++++ b/be/src/modules/orders/orders.test.ts
+@@ -262,27 +262,40 @@
+ );
+ 
+ test(
+-  'C-02: pedido sin detalles queda en cero (ningún precio del cliente)',
++  'A-01: un pedido sin líneas se rechaza y no deja registros',
+   async () => {
+     const { tx, calls } = fakeTx();
+     stubTransaction(tx);
+ 
+-    const order =
+-      await orderService.create(
+-        {
+-          total: 999999,
+-        } as any,
+-        requester
++    // Un pedido vacío no puede existir: ni con total inventado por el cliente.
++    for (const payload of [{}, { total: 999999 }, { details: [] }]) {
++      await assert.rejects(
++        orderService.create(
++          payload as any,
++          requester
++        ),
++        (err: HttpError) =>
++          err.status === 400 &&
++          /al menos un producto/.test(err.message)
+       );
++    }
+ 
+     assert.strictEqual(
+-      order.total,
+-      0
++      calls.createMany,
++      null,
++      'no debe crear detalles'
+     );
+ 
+     assert.strictEqual(
+-      calls.createMany,
+-      null
++      calls.orderCreate,
++      null,
++      'no debe crear el pedido'
++    );
++
++    assert.strictEqual(
++      calls.movements.length,
++      0,
++      'no debe registrar movimientos de inventario'
+     );
+   }
+ );
+@@ -420,24 +433,37 @@
+ );
+ 
+ test(
+-  'C-03: un pedido sin detalles no descuenta stock ni registra movimientos',
++  'A-01: el pedido vacío se corta antes de tocar el stock',
+   async () => {
+     const { tx, calls } = fakeTx();
+     stubTransaction(tx);
+ 
+-    await orderService.create(
+-      {},
+-      requester
++    await assert.rejects(
++      orderService.create(
++        {} as any,
++        requester
++      ),
++      (err: HttpError) =>
++        err.status === 400 &&
++        /al menos un producto/.test(err.message)
+     );
+ 
+     assert.strictEqual(
+       calls.updateMany.length,
+-      0
++      0,
++      'no debe descontar stock'
+     );
+ 
+     assert.strictEqual(
+       calls.movements.length,
+-      0
++      0,
++      'no debe registrar movimientos'
++    );
++
++    assert.strictEqual(
++      calls.orderCreate,
++      null,
++      'no debe crear el pedido'
+     );
+   }
+ );
+\ No newline at end of file
