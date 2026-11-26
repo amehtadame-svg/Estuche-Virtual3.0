@@ -5,6 +5,9 @@ import { rateLimit } from 'express-rate-limit';
 import { prisma } from './lib/prisma';
 
 import paymentRoutes from './modules/payments/payments.routes';
+import clientRoutes from './modules/client/client.routes';
+import supervisionRoutes from './modules/supervision/supervision.routes';
+import deliveryRoutes from './modules/delivery/delivery.routes';
 import employeeRoutes from './modules/employee/employee.routes';
 import authRoutes from './modules/auth/auth.routes';
 import userRoutes from './modules/users/users.routes';
@@ -112,6 +115,9 @@ app.use(
 app.use(express.json());
 
 app.use('/api/employee', employeeRoutes);
+app.use('/api/client', clientRoutes);
+app.use('/api/supervision', supervisionRoutes);
+app.use('/api/delivery', deliveryRoutes);
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/orders', orderRoutes);

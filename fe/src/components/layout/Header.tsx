@@ -42,6 +42,7 @@ export default function Header() {
       ? [
           ["/", "Inicio"],
           ["/superadmin", "Resumen"],
+          ["/empleado", "Operaciones"],
           ["/admin/productos", "Productos"],
           ["/admin/combos", "Combos"],
           ["/admin/ingresos", "Ingresos"],
@@ -59,6 +60,7 @@ export default function Header() {
         ? [
             ["/", "Inicio"],
             ["/admin", "Resumen"],
+            ["/empleado", "Operaciones"],
             ["/admin/productos", "Productos"],
             ["/admin/combos", "Combos"],
             ["/admin/ingresos", "Ingresos"],
@@ -73,6 +75,8 @@ export default function Header() {
           ]
         : [
             ["/", "Inicio"],
+            ...(user?.role === "employee" ? [["/empleado", "Mi trabajo"]] as [string, string][] : []),
+            ...(user?.role === "delivery" ? [["/repartidor", "Mis entregas"]] as [string, string][] : []),
             ["/catalogo", "Catálogo"],
             ["/Nosotros", "Nosotros"],
             ["/Contacto", "Contacto"],

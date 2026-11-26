@@ -16,6 +16,7 @@ import {
 } from '../../api/api';
 import {
   employeeApi as api,
+  supervisionApi,
   money,
   date,
   labels,
@@ -256,6 +257,7 @@ export default function EmployeeWorkspace() {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card'>('cash');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
@@ -332,7 +334,7 @@ export default function EmployeeWorkspace() {
                 ? 'supervision'
                 : 'mine';
 
-          const result = await api<{
+          const result = await (tab === 'supervision' ? supervisionApi : api)<{
             items: Job[];
             total: number;
           }>(
@@ -348,7 +350,7 @@ export default function EmployeeWorkspace() {
 
         if (tab === 'actividad') {
           setActivity(
-            await api<Activity[]>(
+            await (supervisor ? supervisionApi : api)<Activity[]>(
               `/activity?page=${page}`,
               undefined,
               'GET',
@@ -359,7 +361,7 @@ export default function EmployeeWorkspace() {
 
         if (tab === 'inventario') {
           setMovements(
-            await api<Movement[]>(
+            await (supervisor ? supervisionApi : api)<Movement[]>(
               `/movements?page=${page}`,
               undefined,
               'GET',
@@ -381,7 +383,7 @@ export default function EmployeeWorkspace() {
     void load();
 
     return () => controller.abort();
-  }, [tab, page, revision]);
+  }, [tab, page, revision, supervisor]);
 
   useEffect(() => {
     if (!selectedId) {
@@ -428,7 +430,7 @@ export default function EmployeeWorkspace() {
 
         if (supervisor) {
           setPeople(
-            await api<Person[]>(
+            await supervisionApi<Person[]>(
               '/employees',
               undefined,
               'GET',
@@ -487,7 +489,7 @@ export default function EmployeeWorkspace() {
     if (selectedId) {
       void perform(
         () =>
-          api(
+          (['resolve', 'reassign', 'cancel', 'simulate-payment'].includes(suffix) ? supervisionApi : api)(
             `/orders/${selectedId}/${suffix}`,
             body,
             method
@@ -1641,6 +1643,25 @@ export default function EmployeeWorkspace() {
                       </button>
                     </>
                   )}
+
+                {detail.status === 'pending' && (supervisor || detail.createdById === user?.id) && (
+                  <div className="emp-panel">
+                    <strong>Registrar pago recibido en tienda</strong>
+                    <p>Confirma solo después de recibir el total. Esta acción no procesa tarjetas ni cobra dinero.</p>
+                    <label>Medio de pago
+                      <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value as 'cash' | 'card')}>
+                        <option value="cash">Efectivo</option><option value="card">Tarjeta</option>
+                      </select>
+                    </label>
+                    <button onClick={() => {
+                      if (!window.confirm(`¿Confirmas que recibiste ${money(detail.total)} en ${paymentMethod === 'cash' ? 'efectivo' : 'tarjeta'}?`)) return;
+                      const keyName = `store-payment-${detail.id}-${paymentMethod}`;
+                      let requestKey = sessionStorage.getItem(keyName);
+                      if (!requestKey) { requestKey = crypto.randomUUID(); sessionStorage.setItem(keyName, requestKey); }
+                      action('store-payment', { requestKey, method: paymentMethod });
+                    }}>Registrar pago recibido</button>
+                  </div>
+                )}
 
                 {summary?.paymentSimulation &&
                   detail.status === 'pending' && (

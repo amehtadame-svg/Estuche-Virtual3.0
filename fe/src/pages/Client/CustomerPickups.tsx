@@ -5,13 +5,13 @@ import {
   useState,
 } from 'react';
 import {
-  employeeApi as api,
+  clientApi as api,
   money,
   date,
   labels,
-} from './employeeApi';
-import type { Job } from './employeeApi';
-import './Employee.css';
+} from '../Employee/employeeApi';
+import type { Job } from '../Employee/employeeApi';
+import '../Employee/Employee.css';
 
 export default function CustomerPickups() {
   const [orders, setOrders] = useState<Job[]>([]);

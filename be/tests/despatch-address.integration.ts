@@ -88,7 +88,7 @@ test('Direcciones de despacho: validación HTTP y persistencia real', async (t) 
       const orderId = created.body.id;
       const path = `/employee/orders/${orderId}`;
 
-      const paid = await request('supervisor', `${path}/simulate-payment`, {
+      const paid = await request('supervisor', `${path.replace('/employee/', '/supervision/')}/simulate-payment`, {
         requestKey: randomUUID(), result: 'approved',
       });
       assert.equal(paid.status, 200, JSON.stringify(paid.body));
@@ -142,6 +142,7 @@ test('Direcciones de despacho: validación HTTP y persistencia real', async (t) 
       const receipts = await db.receipt.findMany({ where: { orderId: { in: orderIds } }, select: { id: true } });
       const receiptIds = receipts.map((receipt: { id: string }) => receipt.id);
       await db.payout.deleteMany({ where: { receiptId: { in: receiptIds } } });
+      await db.receiptItem.deleteMany({ where: { receiptId: { in: receiptIds } } });
       await db.receipt.deleteMany({ where: { id: { in: receiptIds } } });
       await db.despatch.deleteMany({ where: { orderId: { in: orderIds } } });
       await db.orderEvent.deleteMany({ where: { orderId: { in: orderIds } } });

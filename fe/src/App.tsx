@@ -2,7 +2,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import EmployeeWorkspace from './pages/Employee/EmployeeWorkspace';
-import CustomerPickups from './pages/Employee/CustomerPickups';
+import DeliveryWorkspace from './pages/Delivery/DeliveryWorkspace';
+import CustomerPickups from './pages/Client/CustomerPickups';
 import AccessDenied from './pages/AccessDenied/AccessDenied';
 import ProtectedRoute from './components/ui/ProtectedRoute';
 import Header from './components/layout/Header';
@@ -115,6 +116,8 @@ function App() {
                   element={<EmployeeWorkspace />}
                 />
               </Route>
+
+              <Route element={<ProtectedRoute allowedRoles={['delivery']} />}><Route path="/repartidor" element={<DeliveryWorkspace />} /></Route>
 
               <Route element={<ProtectedRoute allowedRoles={['client', 'admin', 'superadmin']} />}>
                 <Route path="/mis-pedidos" element={<MyOrders />} />

@@ -33,8 +33,8 @@ const app =
   require('../src/app').default;
 
 const {
-  employeeService,
-} = require('../src/modules/employee/employee.service');
+  supervisionService,
+} = require('../src/modules/supervision/supervision.service');
 
 test(
   'Empleado: integración HTTP y transacciones reales en PostgreSQL',
@@ -60,6 +60,7 @@ test(
         customer: 'client',
         other: 'client',
         driver: 'delivery',
+        otherDriver: 'delivery',
       })
     ) {
       const user =
@@ -220,7 +221,7 @@ test(
             (
               await request(
                 'first',
-                '/employee/employees'
+                '/supervision/employees'
               )
             ).status,
             403
@@ -478,7 +479,7 @@ test(
         'Simulación requiere SuperAdmin y bandera explícita',
         async () => {
           const path =
-            `/employee/orders/${pickupOrder.id}/simulate-payment`;
+            `/supervision/orders/${pickupOrder.id}/simulate-payment`;
 
           assert.equal(
             (
@@ -525,7 +526,7 @@ test(
           };
 
           const path =
-            `/employee/orders/${pickupOrder.id}/simulate-payment`;
+            `/supervision/orders/${pickupOrder.id}/simulate-payment`;
 
           assert.equal(
             (
@@ -712,7 +713,7 @@ test(
             (
               await request(
                 'customer',
-                path + '/pickup-code',
+                path.replace('/employee/', '/client/') + '/pickup-code',
                 {}
               )
             ).status,
@@ -756,7 +757,7 @@ test(
             (
               await request(
                 owner,
-                path + '/resolve',
+                path.replace('/employee/', '/supervision/') + '/resolve',
                 {
                   note:
                     'Intento no autorizado',
@@ -770,7 +771,7 @@ test(
             (
               await request(
                 'admin',
-                path + '/resolve',
+                path.replace('/employee/', '/supervision/') + '/resolve',
                 {
                   note:
                     'Se verificó y sustituyó el embalaje',
@@ -784,7 +785,7 @@ test(
             (
               await request(
                 'admin',
-                path + '/reassign',
+                path.replace('/employee/', '/supervision/') + '/reassign',
                 {
                   assigneeId:
                     users.third.id,
@@ -879,7 +880,7 @@ test(
             (
               await request(
                 'other',
-                path + '/pickup-code',
+                path.replace('/employee/', '/client/') + '/pickup-code',
                 {}
               )
             ).status,
@@ -890,7 +891,7 @@ test(
             (
               await request(
                 owner,
-                path + '/pickup-code',
+                path.replace('/employee/', '/client/') + '/pickup-code',
                 {}
               )
             ).status,
@@ -900,7 +901,7 @@ test(
           const result =
             await request(
               'customer',
-              path + '/pickup-code',
+              path.replace('/employee/', '/client/') + '/pickup-code',
               {}
             );
 
@@ -1023,7 +1024,7 @@ test(
             (
               await request(
                 'super',
-                `/employee/orders/${deliveryOrder.id}/simulate-payment`,
+                `/supervision/orders/${deliveryOrder.id}/simulate-payment`,
                 {
                   requestKey: randomUUID(),
                   result: 'rejected',
@@ -1056,7 +1057,7 @@ test(
             (
               await request(
                 'super',
-                path + '/simulate-payment',
+                path.replace('/employee/', '/supervision/') + '/simulate-payment',
                 {
                   requestKey: randomUUID(),
                   result: 'approved',
@@ -1181,14 +1182,13 @@ test(
             403
           );
 
-          const result = await request(
-            'admin',
-            `/despatches/${shipments[0].id}`,
-            {
-              status: 'delivered',
-            },
-            'PUT'
-          );
+          const assigned = await request('driver', '/delivery/despatches');
+          assert.equal(assigned.status, 200);
+          assert.ok(assigned.body.some((item: any) => item.id === shipments[0].id));
+          assert.equal((await request('first', '/delivery/despatches')).status, 403);
+          assert.equal((await request('otherDriver', `/delivery/despatches/${shipments[0].id}/confirm`, {})).status, 404);
+          const result = await request('driver', `/delivery/despatches/${shipments[0].id}/confirm`, {});
+          assert.equal((await request('driver', `/delivery/despatches/${shipments[0].id}/confirm`, {})).status, 200);
 
           assert.equal(
             result.status,
@@ -1234,7 +1234,7 @@ test(
           );
 
           const path =
-            `/employee/orders/${result.body.id}/cancel`;
+            `/supervision/orders/${result.body.id}/cancel`;
 
           assert.equal(
             (
@@ -1303,7 +1303,7 @@ test(
             (
               await request(
                 'super',
-                `/employee/orders/${result.body.id}/simulate-payment`,
+                `/supervision/orders/${result.body.id}/simulate-payment`,
                 {
                   requestKey: randomUUID(),
                   result: 'approved',
@@ -1322,14 +1322,14 @@ test(
               })
             ).stock;
 
-          await employeeService.cancel(
+          await supervisionService.cancel(
             result.body.id,
             'Reserva vencida en prueba',
             null,
             true
           );
 
-          await employeeService.cancel(
+          await supervisionService.cancel(
             result.body.id,
             'Reintento de expiración',
             null,
@@ -1530,7 +1530,7 @@ test(
             (
               await request(
                 'super',
-                `/employee/orders/${saved.id}/simulate-payment`,
+                `/supervision/orders/${saved.id}/simulate-payment`,
                 {
                   requestKey: randomUUID(),
                   result: 'approved',
@@ -1611,7 +1611,7 @@ test(
             (
               await request(
                 'first',
-                '/employee/orders?scope=supervision'
+                '/supervision/orders?scope=supervision'
               )
             ).status,
             403
@@ -1621,13 +1621,60 @@ test(
             (
               await request(
                 'admin',
-                '/employee/orders?scope=supervision'
+                '/supervision/orders?scope=supervision'
               )
             ).status,
             200
           );
         }
       );
+
+      await t.test('Pago en tienda: permisos, idempotencia y exclusión de duplicados', async () => {
+        const created = await request('first', '/employee/orders', payload());
+        assert.equal(created.status, 201, JSON.stringify(created.body));
+        const id = created.body.id;
+        const path = `/employee/orders/${id}/store-payment`;
+        const key = randomUUID();
+        assert.equal((await request('customer', path, { requestKey: key, method: 'cash' })).status, 403);
+        assert.equal((await request('third', path, { requestKey: key, method: 'cash' })).status, 403);
+        assert.equal((await request('first', path, { requestKey: key, method: 'cash', amount: 1 })).status, 400);
+        const [a, b] = await Promise.all([
+          request('first', path, { requestKey: key, method: 'cash' }),
+          request('first', path, { requestKey: key, method: 'cash' }),
+        ]);
+        assert.equal(a.status, 200, JSON.stringify(a.body));
+        assert.equal(b.status, 200, JSON.stringify(b.body));
+        assert.equal(a.body.id, b.body.id);
+        assert.equal((await request('first', path, { requestKey: key, method: 'card' })).status, 409);
+        assert.equal((await request('first', path, { requestKey: randomUUID(), method: 'cash' })).status, 409);
+        const order = await db.order.findUniqueOrThrow({ where: { id }, include: { receipt: { include: { payouts: true } } } });
+        assert.equal(order.status, 'paid');
+        assert.equal(order.receipt.paymentStatus, 'paid');
+        assert.equal(order.receipt.payouts.length, 1);
+        const items = await db.receiptItem.findMany({ where: { receiptId: order.receipt.id } });
+        assert.equal(items.length, 1);
+        assert.equal(items[0].quantity, 2);
+        assert.equal(items[0].subtotal.toString(), '25001');
+        assert.equal(order.receipt.payouts[0].gateway, 'tienda');
+        assert.equal(order.receipt.payouts[0].amount.toString(), order.total.toString());
+        const available = await request('first', '/employee/orders?scope=available');
+        assert.ok(available.body.items.some((item: any) => item.id === id));
+      });
+
+      await t.test('Dos referencias distintas no duplican el pago en tienda', async () => {
+        const created = await request('first', '/employee/orders', payload());
+        assert.equal(created.status, 201, JSON.stringify(created.body));
+        const path = `/employee/orders/${created.body.id}/store-payment`;
+        const outcomes = await Promise.all([
+          request('first', path, { requestKey: randomUUID(), method: 'cash' }),
+          request('admin', path, { requestKey: randomUUID(), method: 'card' }),
+        ]);
+        assert.deepEqual(outcomes.map(item => item.status).sort(), [200, 409]);
+        const receipt = await db.receipt.findUniqueOrThrow({ where: { orderId: created.body.id }, include: { payouts: true } });
+        assert.equal(receipt.payouts.length, 1);
+        assert.equal(receipt.paymentStatus, 'paid');
+      });
+
     } finally {
       server.closeAllConnections();
 
@@ -1672,6 +1719,8 @@ test(
           },
         },
       });
+
+      await db.receiptItem.deleteMany({ where: { receiptId: { in: receiptIds } } });
 
       await db.receipt.deleteMany({
         where: {

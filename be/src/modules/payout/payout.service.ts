@@ -15,7 +15,7 @@ import {
 } from '../employee/employee.domain';
 import { Prisma } from '@prisma/client';
 
-async function synchronize(
+export async function synchronize(
   tx: Prisma.TransactionClient,
   orderId: string,
   actorId: string
