@@ -24,7 +24,7 @@ test('Experiencia de cliente: referencias, pedidos, imágenes y carrito', async 
   const { default: Shopping } = await server.ssrLoadModule('/src/pages/Shopping/Shopping.tsx');
   const { default: Login } = await server.ssrLoadModule('/src/pages/Login/Login.tsx');
   const { shippingCost } = await server.ssrLoadModule('/src/lib/shipping.ts');
-  const { orderReference } = await server.ssrLoadModule('/src/lib/reference.ts');
+  const { orderReference, referenceText } = await server.ssrLoadModule('/src/lib/reference.ts');
   const root = createRoot(document.getElementById('root')!);
   const user = { id: 'buyer', name: 'Cliente de prueba', email: 'cliente@example.com', role: 'client' };
   function Location() { return h('output', { id: 'location' }, useLocation().pathname); }
@@ -36,6 +36,8 @@ test('Experiencia de cliente: referencias, pedidos, imágenes y carrito', async 
       assert.equal(shippingCost(119999), 10000);
       assert.equal(shippingCost(120000), 0);
       assert.equal(orderReference(id), 'PED-ABCD5678');
+      assert.equal(referenceText('Stock inicial de registro de producto (HU-001)'), 'Stock inicial de registro de producto');
+      assert.equal(referenceText('Anotación del usuario HU-001'), 'Anotación del usuario HU-001');
       assert.equal(fs.readFileSync(new URL('../../lib/shipping.ts', import.meta.url), 'utf8'), fs.readFileSync(new URL('../../../../be/src/lib/shipping.ts', import.meta.url), 'utf8'));
     });
     await t.test('Mis pedidos muestra compras propias, referencia legible y enlace al seguimiento', async () => {

@@ -398,6 +398,8 @@ test(
         'debe registrar movimiento inicial de entrada en inventario'
       );
 
+      assert.strictEqual(createdMovement.reason, 'Stock inicial de registro de producto');
+
       assert.strictEqual(
         createdMovement.type,
         'in'
