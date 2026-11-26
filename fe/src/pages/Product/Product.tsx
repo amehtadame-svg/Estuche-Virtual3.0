@@ -110,17 +110,16 @@ export default function Product() {
   const inCart = items.find((item) => item.id === product.id)?.quantity ?? 0;
   const image = productImage(product);
 
-  const handleAdd = (goCheckout = false) => {
-    for (let i = 0; i < quantity; i += 1) {
-      add({
+  const handleAdd = async (goCheckout = false) => {
+    const success = await add({
         id: product.id,
         name: product.name,
         price: Number(product.price),
         category: catName,
         icon: "📦",
         imageUrl: image,
-      });
-    }
+      }, quantity);
+    if (!success) return;
     setAdded(true);
     window.setTimeout(() => setAdded(false), 1600);
     if (goCheckout) navigate("/carrito");

@@ -116,6 +116,7 @@ export const orderService = {
         details: {
           select: {
             id: true,
+            productId: true,
             quantity: true,
             unitPrice: true,
             subtotal: true,
