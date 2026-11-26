@@ -2,6 +2,8 @@
 
 **Base:** rama `feature/verificacion-modulo-empleados`, integración con `main` en `72ec50b`; revisión de código realizada el 26-11-2026. Los 30 RF se encuentran en `docs/requisitos/RFs/`. Actualización documental posterior: RF-003, RF-006, RF-015 y RF-019 se ajustaron; las otras observaciones siguen pendientes de una nueva certificación. Las 40 historias HU relacionadas se mantienen en la documentación y no se evaluaron individualmente en esta matriz.
 
+**Seguimiento posterior de RF-025:** se agregó implementación de favoritos en esta rama; consultar [RF-025](requisitos/RFs/RF-025-lista-de-deseos.md). La fila 025 de abajo conserva la observación histórica y no representa el estado posterior. Pendiente aceptación del equipo.
+
 **Criterio:** «implementado en el flujo revisado» significa que hay código para la función principal, no certificación exhaustiva de todas las reglas; «parcial / diferente» indica que falta o cambia al menos una condición documentada; «no encontrado» significa que no se localizó una implementación funcional en las rutas y módulos revisados, no que se haya probado toda posibilidad. Una tabla de base de datos, una pantalla o una prueba aislada no garantizan una función completa. No se consultó ni modificó la base Supabase. La evidencia enlaza archivos de la versión auditada.
 
 | RF | Requisito | Estado y hallazgos | Evidencia principal |

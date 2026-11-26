@@ -8,7 +8,7 @@
 | 2 | Información de reseñas veraz | [D-02](../REGISTRO_DEFECTOS.md): no mostrar conteos calculados como verificados | Por asignar | Sin estimar / propuesto |
 | 3 | Integridad al eliminar categorías | [D-03](../REGISTRO_DEFECTOS.md): acordar regla y evitar desasociación no deseada | Por asignar | Sin estimar / propuesto |
 | 4 | Verificación de correo | [RF-029](../requisitos/RFs/RF-029-verificacion-de-correo-electronico.md): definir activación y recuperación | Por asignar | Sin estimar / propuesto |
-| 5 | Favoritos persistentes | [RF-025](../requisitos/RFs/RF-025-lista-de-deseos.md): privacidad y persistencia | Por asignar | Sin estimar / propuesto |
+| 5 | Validar favoritos persistentes | [RF-025](../requisitos/RFs/RF-025-lista-de-deseos.md): implementación posterior a la auditoría, revisar privacidad, persistencia y UX | Franck y Paula: revisión solicitada | Sin estimar / aceptación pendiente |
 | 6 | Reseñas reales | [RF-024](../requisitos/RFs/RF-024-sistema-de-resenas-y.md): propiedad, validación y consulta | Por asignar | Sin estimar / propuesto |
 | 7 | Notificaciones internas | [RF-026](../requisitos/RFs/RF-026-sistema-de-notificaciones.md): eventos, listado y lectura | Por asignar | Sin estimar / propuesto |
 | 8 | Direcciones múltiples | [RF-023](../requisitos/RFs/RF-023-gestion-de-direcciones-de.md): CRUD, principal y snapshot | Por asignar | Sin estimar / propuesto |

@@ -1,3 +1,4 @@
+import wishlistRoutes from './modules/wishlist/wishlist.routes';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -131,6 +132,7 @@ app.use('/api/despatches', despatchRoutes);
 app.use('/api/order-details', orderDetailRoutes);
 app.use('/api/receipts', receiptRoutes);
 app.use('/api/shopping', shoppingRoutes);
+app.use('/api/lista-deseos', wishlistRoutes);
 app.use('/api/combos', comboRoutes);
 
 app.use('/api/promotional-codes', promotionalCodeRoutes);

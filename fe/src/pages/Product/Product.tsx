@@ -1,3 +1,5 @@
+import FavoriteButton from '../../components/wishlist/FavoriteButton';
+import '../Wishlist/Wishlist.css';
 import { useCanShop } from '../../hooks/useCanShop';
 import { productImage } from "../../lib/productImage";
 import { useEffect, useState } from "react";
@@ -243,6 +245,8 @@ export default function Product() {
             </button>
           </div>}
           {canShop && inCart > 0 && <p className="pd-incart">{inCart} en tu carrito</p>}
+
+          <FavoriteButton productId={product.id} productName={product.name} className="pd-favorite" />
 
           <div className="pd-perks">
             <article>

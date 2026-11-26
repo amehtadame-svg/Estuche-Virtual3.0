@@ -686,7 +686,7 @@
   border-radius: 50%;
   background: rgba(20, 16, 28, 0.55);
   color: var(--on-accent);
-  opacity: 0;
+  opacity: 1;
   transform: none !important;
 }
 
@@ -1373,3 +1373,4 @@ body:not(.dark-mode) .newsletter-form {
 body:not(.dark-mode) .newsletter-form input {
   color: #160c22;
 }
+.product-heart:focus-visible { opacity: 1; outline: 3px solid var(--accent-text); outline-offset: 2px; }

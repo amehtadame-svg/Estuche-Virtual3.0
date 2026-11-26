@@ -1,3 +1,5 @@
+import Wishlist from './pages/Wishlist/Wishlist';
+import { WishlistProvider } from './context/WishlistContext';
 import CustomerReturns from './pages/Returns/CustomerReturns';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
@@ -55,6 +57,7 @@ function App() {
     <AuthProvider>
       <ToastProvider>
         <CartProvider>
+          <WishlistProvider>
           <BrowserRouter>
             <Header />
 
@@ -98,6 +101,7 @@ function App() {
                   element={<CustomerPickups />}
                 />
                 <Route path="/mis-devoluciones" element={<CustomerReturns />} />
+                <Route path="/mis-favoritos" element={<Wishlist />} />
                 <Route
                   path="/cliente/pqr"
                   element={<ClientPqr />}
@@ -227,6 +231,7 @@ function App() {
 
             <Footer />
           </BrowserRouter>
+          </WishlistProvider>
         </CartProvider>
       </ToastProvider>
     </AuthProvider>

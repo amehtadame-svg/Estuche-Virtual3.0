@@ -1,72 +1,22 @@
-<!--
-  ¿Qué? Requisito funcional que describe la gestión de la lista de deseos del cliente.
-  ¿Para qué? Definir cómo se guardan productos de interés sin agregarlos al carrito.
-  ¿Impacto? Favorece la recompra y el seguimiento de productos de interés del cliente.
--->
+# RF-025 — Lista de deseos
 
-# RF-025 — Lista de Deseos
+**Historia relacionada:** [HU-035](../HUs/HU-035-historial-de-compras-y.md). **Estado:** implementación propuesta con pruebas automatizadas; validación funcional de Franck y Paula pendiente, no se declara aceptada.
 
-**Historia de usuario relacionada**: HU-035
+## Alcance
 
-## Descripción
+El cliente autenticado puede guardar y quitar productos desde Inicio, catálogo y ficha; consulta su lista privada en `/mis-favoritos`, en Mi cuenta. La lista usa `Wishlist` y persiste en PostgreSQL. Los visitantes deben iniciar sesión; empleados, repartidores y roles administrativos no tienen acceso a la lista de clientes. No modifica el carrito al guardar o quitar. La opción de agregar desde favoritos conserva el producto en la lista (HU-035.4).
 
-El sistema debe permitir a los clientes agregar y remover productos de una lista de deseos personal, evitando duplicados.
+- Un producto no se repite para un usuario; la unicidad también se impone en base de datos.
+- Solo se consulta o modifica la lista del usuario del token; no se acepta un `userId` del navegador.
+- Productos eliminados lógicamente se muestran como no disponibles y se pueden quitar; agotados no se agregan al carrito. No se permite guardar un producto inexistente o eliminado.
+- La interfaz informa errores y permite recargar; las vistas usan el mismo estado durante la sesión. Para cambios en otras pestañas, actualizar la lista.
 
----
+## API
 
-## Flujo del proceso
+`GET /api/lista-deseos` lista filas con producto, precio, imágenes y estado; `POST /api/lista-deseos` recibe `{"productId":"<UUID>"}` y devuelve 201 con la fila creada; duplicado 409, producto no disponible 404 y parámetros inválidos 400. `DELETE /api/lista-deseos/{productId}` devuelve 204 y es idempotente, incluso si no existe en la lista propia. Requieren token y rol `client` (401 sin sesión, 403 para otros roles). `Cache-Control: no-store` en respuestas autenticadas. El identificador en DELETE es de **producto**, no de fila.
 
-| Paso | Descripción |
-|------|-------------|
-| 1 | El cliente visualiza la ficha de un producto. |
-| 2 | Presiona el ícono de "Guardar para después". |
-| 3 | El sistema valida que el producto no esté ya en la lista de deseos del usuario. |
-| 4 | El producto se agrega a `lista_deseos`. |
-| 5 | El cliente puede remover productos de su lista en cualquier momento. |
+## Base y verificación
 
----
+No se creó migración: la tabla y el índice único ya aparecen en la [migración inicial](../../../be/prisma/migrations/20260814053836_init/migration.sql) y en el [modelo Prisma](../../../be/prisma/schema.prisma). La disponibilidad del esquema de la base remota **no se comprobó**. Antes de desplegar, Cristian debe verificar el destino y las migraciones ya aplicadas; no ejecutar migraciones sin respaldo y autorización.
 
-## Reglas de Negocio
-
-| ID | Regla |
-|----|--------|
-| RN-001 | Un producto no puede repetirse en la lista de deseos del mismo usuario (`UNIQUE`). |
-| RN-002 | La lista de deseos es privada y solo visible para su propietario. |
-
----
-
-## Inputs / Outputs
-
-### Input
-
-```json
-{
-  "id_producto": 12
-}
-```
-
-### Output éxito (HTTP 201)
-
-```json
-{
-  "mensaje": "Producto agregado a la lista de deseos."
-}
-```
-
-### Output error (HTTP 409)
-
-```json
-{
-  "error": "El producto ya se encuentra en tu lista de deseos."
-}
-```
-
----
-
-## Endpoint
-
-| Método | Ruta | Auth requerida | Descripción |
-|---------|------|----------------|-------------|
-| GET | `/api/lista-deseos` | Sí | Lista los productos guardados por el usuario. |
-| POST | `/api/lista-deseos` | Sí | Agrega un producto a la lista de deseos. |
-| DELETE | `/api/lista-deseos/{id}` | Sí | Elimina un producto de la lista de deseos. |
+Pruebas: [`wishlist.integration.ts`](../../../be/tests/wishlist.integration.ts) usa PostgreSQL local `_test`; [`wishlist.test.ts`](../../../fe/src/modules/frontend/wishlist.test.ts) usa JSDOM y respuestas simuladas. Las pruebas no sustituyen la validación real de interfaz de Paula ni de backend de Franck.
