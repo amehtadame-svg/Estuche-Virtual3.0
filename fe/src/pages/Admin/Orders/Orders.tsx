@@ -54,6 +54,10 @@ export default function Orders() {
   const [loading, setLoading] = useState(true);
   const [discountCode, setDiscountCode] = useState('');
   const [discountApplied, setDiscountApplied] = useState<string | null>(null);
+  const editingOrder = editingId === null
+    ? undefined
+    : orders.find((order) => order.id === editingId);
+  const isPaidOrder = editingOrder?.status === 'paid';
 
   const loadOrders = () => {
     fetch(API.orders, { headers: authHeaders() })
@@ -141,9 +145,24 @@ export default function Orders() {
       return;
     }
 
+    const newTotal = Number(form.total);
+    if (!Number.isFinite(newTotal) || newTotal < 0) {
+      showSaveError('El total debe ser un número válido mayor o igual a cero.');
+      return;
+    }
+
+    if (isPaidOrder && editingOrder?.total != null && newTotal !== Number(editingOrder.total)) {
+      showSaveError(
+        newTotal > Number(editingOrder.total)
+          ? 'El pedido ya está pagado. Aumentar el total puede requerir un cobro adicional. No se hizo ningún cobro ni se cambió el pedido.'
+          : 'El pedido ya está pagado. Reducir el total puede requerir una devolución. No se hizo ningún reembolso ni se cambió el pedido.'
+      );
+      return;
+    }
+
     const body = {
       customerId: form.customerId,
-      total: Number(form.total),
+      total: newTotal,
       status: form.status,
       ...(form.promotionalCodeId
         ? { promotionalCodeId: form.promotionalCodeId }
@@ -378,6 +397,10 @@ export default function Orders() {
                         Pendiente
                       </option>
 
+                      <option value="paid" disabled>Pagado</option>
+                      <option value="preparing" disabled>En preparación</option>
+                      <option value="returned" disabled>Devuelto</option>
+
                       <option
                         value="shipped"
                       >
@@ -509,6 +532,9 @@ export default function Orders() {
             <option value="pending">
               Pendiente
             </option>
+            <option value="paid" disabled>Pagado</option>
+            <option value="preparing" disabled>En preparación</option>
+            <option value="returned" disabled>Devuelto</option>
             <option value="shipped">
               En camino
             </option>

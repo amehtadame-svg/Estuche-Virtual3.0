@@ -6,6 +6,7 @@ import { Prisma } from '@prisma/client';
 import { prisma } from '../../lib/prisma';
 import {
   badRequest,
+  conflict,
   forbidden,
   notFound,
 } from '../../lib/errors';
@@ -390,12 +391,6 @@ export const orderService = {
       ...rest
     } = data;
 
-    if (status === 'paid') {
-      throw badRequest(
-        'El estado pagado solo puede establecerse desde el flujo de pagos.'
-      );
-    }
-
     return atomic(async (tx) => {
       // Bloqueamos el pedido antes de comparar para no confirmar datos obsoletos.
       await tx.$queryRaw`
@@ -426,6 +421,17 @@ export const orderService = {
       if (sinCambios) {
         // Confirmar una lectura idéntica no modifica historial, pagos ni stock.
         return { ...actual, sinCambios: true };
+      }
+
+      if (actual.status === 'paid') {
+        throw conflict(
+          'Este pedido está pagado. Sus cambios requieren revisión en el flujo de pagos.'
+        );
+      }
+      if (status === 'paid') {
+        throw badRequest(
+          'El estado pagado solo puede establecerse desde el flujo de pagos.'
+        );
       }
 
       // Se mantiene la protección de los pedidos operativos si hay cambios reales.
