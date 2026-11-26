@@ -1,3 +1,4 @@
+import { referenceText } from '../../../lib/reference';
 import { useState, useEffect, useMemo } from 'react';
 import { AlertTriangle, Package } from 'lucide-react';
 import { API, authHeaders } from '../../../api/api';
@@ -389,7 +390,7 @@ export default function InventoryInbound() {
                   <td>
                     <span className="inbound-qty-badge">+{m.quantity} uds.</span>
                   </td>
-                  <td>{m.reason || 'Ingreso de mercancía'}</td>
+                  <td>{referenceText(m.reason) || 'Ingreso de mercancía'}</td>
                   <td>{m.user?.fullName || 'Administrador'}</td>
                 </tr>
               ))}

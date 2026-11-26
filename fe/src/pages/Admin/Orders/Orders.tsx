@@ -1,3 +1,4 @@
+import { shortReference } from '../../../lib/reference';
 import { useState, useEffect } from 'react';
 import Modal from '../../../components/ui/Modal';
 import { API, authHeaders } from '../../../api/api';
@@ -304,12 +305,12 @@ export default function Orders() {
               {orders.map((order) => (
                 <tr key={order.id}>
                   <td className="numero-pedido">
-                    PED-{order.id.slice(-6).toUpperCase()}
+                    PED-{shortReference(order.id)}
                   </td>
 
                   <td className="cliente-pedido">
                     {order.customer?.fullName ??
-                      `Cliente #${order.customerId?.slice(-6).toUpperCase() ?? '-'}`}
+                      `Cliente #${shortReference(order.customerId)}`}
                   </td>
 
                   <td>

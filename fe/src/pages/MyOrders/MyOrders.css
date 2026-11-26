@@ -1,0 +1,30 @@
+.my-orders { width: min(1100px, 100%); padding: 40px 24px 70px; margin: 0 auto; }
+.my-orders-heading, .my-order-card header, .my-order-card footer { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+.my-orders-heading h1 { margin: 6px 0 12px; font-size: clamp(30px, 4vw, 42px); }
+.my-orders-heading p { margin: 0; color: var(--muted); }
+.my-orders-heading .account-eyebrow { color: var(--accent-text); }
+.my-orders-tools { display: flex; gap: 12px; margin: 28px 0 18px; }
+.my-orders-tools label { display: flex; flex: 1; align-items: center; gap: 10px; padding: 0 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; color: var(--muted); }
+.my-orders-tools input { width: 100%; min-width: 0; padding: 14px 0; border: 0; background: transparent; color: var(--ink); font: inherit; }
+.my-orders-tools select { border: 1px solid var(--border); border-radius: 12px; padding: 12px; background: var(--surface); color: var(--ink); font: inherit; }
+.my-orders-count { font-size: 13px; color: var(--muted); }
+.my-orders-list { display: grid; gap: 18px; }
+.my-order-card { border: 1px solid var(--border); border-radius: 18px; background: var(--surface); padding: 24px; box-shadow: var(--shadow-xs); }
+.my-order-ref { display: flex; align-items: center; gap: 12px; }
+.my-order-icon { display: grid; place-items: center; background: var(--accent-bg); color: var(--accent-text); border-radius: 12px; width: 46px; height: 46px; }
+.my-order-ref h2 { font-size: 16px; margin: 0 0 5px; letter-spacing: 0; }
+.my-order-ref p { font-size: 12px; color: var(--muted); margin: 0; }
+.my-order-status { padding: 6px 12px; border-radius: 99px; background: var(--accent-bg); color: var(--accent-text); font-weight: 650; font-size: 12px; }
+.my-order-status--pending { background: var(--warning-bg); color: var(--warning); }
+.my-order-status--delivered, .my-order-status--paid { background: var(--success-bg); color: var(--success); }
+.my-order-status--canceled, .my-order-status--returned { background: var(--danger-bg); color: var(--danger); }
+.my-order-products { color: var(--muted); font-size: 14px; overflow-wrap: anywhere; margin: 22px 0; }
+.my-order-card footer { padding-top: 18px; border-top: 1px solid var(--border); flex-wrap: wrap; }
+.my-order-card footer strong { margin-left: auto; color: var(--ink); }
+.my-order-card footer small { font-weight: 500; color: var(--muted); font-size: 11px; }
+.my-order-delivery { display: inline-flex; gap: 8px; align-items: center; color: var(--muted); font-size: 12px; }
+.my-orders-message { text-align: center; padding: 48px 20px; margin: 24px 0; background: var(--surface); border: 1px solid var(--border); border-radius: 18px; }
+.my-orders-message > svg { color: var(--accent-text); }
+.my-orders-message h2 { font-size: 24px; }
+.my-orders-message .ui-btn { display: inline-flex; }
+@media (max-width: 600px) { .my-orders { padding: 24px 16px 48px; } .my-orders-heading, .my-orders-tools { align-items: stretch; flex-direction: column; } .my-order-card { padding: 18px; } .my-order-card header { align-items: flex-start; gap: 10px; flex-wrap: wrap; } .my-order-card footer .ui-btn { width: 100%; justify-content: center; } }

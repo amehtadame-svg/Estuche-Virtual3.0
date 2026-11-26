@@ -1,3 +1,4 @@
+import { shippingCost } from '../../lib/shipping';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../hooks/useCart';
@@ -76,7 +77,8 @@ export default function Checkout() {
     return total;
   };
 
-  const finalTotal = calculateTotal();
+  const shipping = shippingCost(total);
+  const finalTotal = Math.round((Math.max(0, calculateTotal()) + shipping) * 100) / 100;
 
   useEffect(() => {
     if (!user) return;
@@ -193,10 +195,10 @@ export default function Checkout() {
       );
 
       if (!res.ok) {
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
 
         setDiscountError(
-          data.message || 'Código inválido'
+          data.message || (res.status === 404 ? 'No se pudo validar el cupón. Verifica que el servidor esté actualizado.' : 'No se pudo validar el cupón')
         );
 
         setDiscount(null);
@@ -213,8 +215,9 @@ export default function Checkout() {
 
       setDiscountError('');
     } catch {
+      setDiscount(null);
       setDiscountError(
-        'Error al validar el código'
+        'No pudimos conectar para validar el cupón. Intenta nuevamente.'
       );
     } finally {
       setApplyingDiscount(false);
@@ -300,7 +303,7 @@ export default function Checkout() {
       </h1>
 
       <div className="pago-demo-aviso" role="note">
-        <strong>Modo académico · COP · Envío gratis</strong>
+        <strong>Modo académico · COP · Envío gratis desde $120.000</strong>
         <p>No se harán cobros reales. No introduzcas tarjetas, claves bancarias ni códigos de Nequi.</p>
       </div>
       {!payment.enabled && <p className="pago-error" role="alert">{payment.error || 'La simulación está deshabilitada. Activa NODE_ENV=development y ENABLE_PAYMENT_SIMULATION=true en el backend.'}</p>}
@@ -446,10 +449,11 @@ export default function Checkout() {
             <div className="pago-descuento-wrap">
               <input
                 className="pago-descuento-input"
+                aria-label="Código de descuento"
                 placeholder="Código de descuento"
                 value={discountCode}
                 onChange={(e) =>
-                  setDiscountCode(e.target.value)
+                  { setDiscountCode(e.target.value); setDiscount(null); setDiscountError(''); }
                 }
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
@@ -488,7 +492,8 @@ export default function Checkout() {
               </div>
             )}
 
-            <div className="pago-linea"><span>Envío</span><strong>Gratis</strong></div>
+            <div className="pago-linea"><span>Envío a domicilio</span><strong>{shipping === 0 ? 'Gratis' : formatCOP(shipping)}</strong></div>
+            <p className="pago-seguro">Envío $10.000 COP. Gratis desde $120.000 COP en productos antes de descuentos.</p>
             <div className="pago-total">
               <span>
                 Total

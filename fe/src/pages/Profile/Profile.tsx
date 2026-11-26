@@ -1,3 +1,4 @@
+import AccountNav from '../../components/layout/AccountNav';
 import {
   useEffect,
   useRef,
@@ -204,6 +205,7 @@ export default function Profile() {
   return (
     <main className="profile-page">
       <section className="profile-wrap">
+      <AccountNav />
         <header className="profile-heading">
           <div>
             <span className="profile-eyebrow">MI CUENTA</span>

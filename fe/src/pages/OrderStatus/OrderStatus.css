@@ -10,7 +10,7 @@
 .order-status-products li, .order-status-total { display: flex; justify-content: space-between; gap: 20px; padding: 14px 0; border-bottom: 1px solid var(--border); }
 .order-status-products li span { overflow-wrap: anywhere; min-width: 0; }
 .order-status-total { border: 0; margin-top: 12px; }
-.order-status-notice { padding: 16px; border: 1px solid var(--border); border-left: 4px solid var(--primary, #2563eb); border-radius: 8px; }
+.order-status-notice { padding: 16px; border: 1px solid var(--border); border-left: 4px solid var(--accent); border-radius: 8px; }
 .order-status-error { color: var(--danger, #b91c1c); padding: 16px; border: 1px solid currentColor; border-radius: 8px; }
 .order-status-caption { font-size: 13px; }
 .order-status-actions { display: flex; justify-content: flex-end; gap: 12px; flex-wrap: wrap; margin-top: 24px; }
@@ -21,3 +21,5 @@
   .order-status-facts dd { margin-bottom: 10px; }
   .order-status-actions > * { width: 100%; }
 }
+.order-status { width: 100%; max-width: 1088px; padding-top: 40px; }
+.order-status h1 { font-size: clamp(30px, 4vw, 42px); }

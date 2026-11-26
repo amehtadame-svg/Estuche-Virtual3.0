@@ -1,3 +1,5 @@
+import AccountNav from '../../components/layout/AccountNav';
+import { orderReference } from '../../lib/reference';
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { API, authHeaders } from '../../api/api';
@@ -9,6 +11,7 @@ interface Order {
   id: string;
   status: string;
   total: string | number;
+  shippingCost?: string | number;
   orderDate: string | null;
   expiresAt: string | null;
   fulfillmentMethod: 'delivery' | 'pickup';
@@ -86,6 +89,7 @@ export default function OrderStatus() {
 
   return (
     <main className="order-status page-shell">
+      <AccountNav />
       <h1>Estado del pedido</h1>
       <p>Consulta el estado registrado de tu compra y los productos del pedido.</p>
       {loading && <p role="status">Consultando pedido…</p>}
@@ -96,7 +100,8 @@ export default function OrderStatus() {
           <h2 id="order-current-status">{orderStatusLabel[order.status] || 'Estado no disponible'}</h2>
           <p>{expired ? 'La reserva de pago venció. El pedido no admite pagos y está pendiente de la liberación automática de stock.' : descriptions[order.status] || 'Consulta con soporte para más información.'}</p>
           <dl className="order-status-facts">
-            <dt>Pedido</dt><dd>{order.id}</dd>
+            <dt>Pedido</dt><dd>{orderReference(order.id)}</dd>
+            <dt>Envío</dt><dd>{Number(order.shippingCost ?? 0) === 0 ? 'Gratis' : formatCOP(order.shippingCost!)}</dd>
             <dt>Fecha del pedido</dt><dd>{order.orderDate ? new Date(order.orderDate).toLocaleString('es-CO') : 'No registrada'}</dd>
             <dt>Entrega</dt><dd>{order.fulfillmentMethod === 'pickup' ? 'Retiro en tienda' : 'Envío a domicilio'}</dd>
             {order.fulfillmentMethod !== 'pickup' && <><dt>Dirección de entrega</dt><dd>{address || 'No registrada'}</dd></>}
@@ -115,11 +120,11 @@ export default function OrderStatus() {
             </li>)}
           </ul>}
           <div className="order-status-total"><strong>Total del pedido</strong><strong>{formatCOP(order.total)} COP</strong></div>
-          <p className="order-status-caption">El total incluye los descuentos aplicados al crear el pedido.</p>
+          <p className="order-status-caption">El total incluye el envío y los descuentos aplicados al crear el pedido.</p>
         </section>
       </>}
       <div className="order-status-actions">
-        <Link className="ui-btn" to="/catalogo">Volver al catálogo</Link>
+        <Link className="ui-btn" to="/mis-pedidos">Volver a mis pedidos</Link>
         <button type="button" className="ui-btn ui-btn--primary" disabled={loading} onClick={() => setRefresh((value) => value + 1)}>
           {loading ? 'Consultando…' : 'Actualizar estado'}
         </button>

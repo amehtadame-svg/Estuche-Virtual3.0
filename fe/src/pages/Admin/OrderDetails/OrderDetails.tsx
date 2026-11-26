@@ -1,3 +1,5 @@
+import ReferenceSelect from '../../../components/ui/ReferenceSelect';
+import { shortReference } from '../../../lib/reference';
 import { useState, useEffect } from 'react';
 import Modal from '../../../components/ui/Modal';
 import './OrderDetails.css';
@@ -63,7 +65,7 @@ export default function OrderDetails() {
     setTimeout(() => setMessage(''), 2500);
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
@@ -191,8 +193,8 @@ export default function OrderDetails() {
                   const subtotal = d.subtotal ?? d.quantity * d.unitPrice;
                   return (
                     <tr key={d.id}>
-                      <td className="numero-detalle-pedido">PED-{d.orderId.slice(-6).toUpperCase()}</td>
-                      <td className="producto-detalle-pedido">{d.product?.name ?? `Producto #${d.productId.slice(-6).toUpperCase()}`}</td>
+                      <td className="numero-detalle-pedido">PED-{shortReference(d.orderId)}</td>
+                      <td className="producto-detalle-pedido">{d.product?.name ?? `Producto #${shortReference(d.productId)}`}</td>
                       <td>{d.quantity}</td>
                       <td>${Number(d.unitPrice).toLocaleString()}</td>
                       <td className="subtotal-detalle-pedido">${Number(subtotal).toLocaleString()}</td>
@@ -231,11 +233,11 @@ export default function OrderDetails() {
             </>
           }
         >
-          <label className="label-detalle-pedido">ID Pedido</label>
-          <input className="input-detalle-pedido" name="orderId" value={form.orderId} onChange={handleChange} placeholder="UUID de la orden" />
+          <label className="label-detalle-pedido">Pedido</label>
+          <ReferenceSelect endpoint={API.orders} kind="order" className="input-detalle-pedido" name="orderId" value={form.orderId} onChange={handleChange} />
 
-          <label className="label-detalle-pedido">ID Producto</label>
-          <input className="input-detalle-pedido" name="productId" value={form.productId} onChange={handleChange} placeholder="UUID del producto" />
+          <label className="label-detalle-pedido">Producto</label>
+          <ReferenceSelect endpoint={API.products} kind="product" className="input-detalle-pedido" name="productId" value={form.productId} onChange={handleChange} />
 
           <label className="label-detalle-pedido">Cantidad</label>
           <input className="input-detalle-pedido" type="number" name="quantity" value={form.quantity} onChange={handleChange} placeholder="Unidades" />

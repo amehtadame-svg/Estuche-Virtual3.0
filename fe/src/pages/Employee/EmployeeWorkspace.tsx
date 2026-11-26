@@ -1,3 +1,4 @@
+import { shortReference, referenceText } from '../../lib/reference';
 import {
   useCallback,
   useEffect,
@@ -199,10 +200,10 @@ function EventList({
             {item.actor?.fullName || 'Sistema'}
           </small>
 
-          <span>{item.note}</span>
+          <span>{referenceText(item.note)}</span>
 
           {item.orderId && (
-            <code>{item.orderId}</code>
+            <code>{shortReference(item.orderId)}</code>
           )}
         </li>
       ))}
@@ -534,7 +535,7 @@ export default function EmployeeWorkspace() {
 
       return {
         message:
-          `Pedido ${result.id} y recibo registrados. Pendiente de pago; aún no entra en la cola.`,
+          `Pedido ${shortReference(result.id)} y recibo registrados. Pendiente de pago; aún no entra en la cola.`,
       };
     });
 
@@ -984,7 +985,7 @@ export default function EmployeeWorkspace() {
                   <tr key={job.id}>
                     <td>
                       <code>
-                        {job.id.slice(-6).toUpperCase()}
+                        {shortReference(job.id)}
                       </code>
 
                       <small>
@@ -1215,7 +1216,7 @@ export default function EmployeeWorkspace() {
                       </td>
 
                       <td>
-                        {item.reason}
+                        {referenceText(item.reason)}
                       </td>
 
                       <td>
@@ -1248,7 +1249,7 @@ export default function EmployeeWorkspace() {
       {selectedId && (
         <Modal
           titulo={
-            `Pedido ${selectedId.slice(-6).toUpperCase()}`
+            `Pedido ${shortReference(selectedId)}`
           }
           onClose={() => {
             if (!busy) {
@@ -1725,7 +1726,7 @@ export default function EmployeeWorkspace() {
                       >
                         Confirmar entrega final
                         del envío{' '}
-                        {shipment.id.slice(-6).toUpperCase()}
+                        {shortReference(shipment.id)}
                       </button>
                     )
                   )}

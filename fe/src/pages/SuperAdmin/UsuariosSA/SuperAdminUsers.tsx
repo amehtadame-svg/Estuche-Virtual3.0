@@ -1,3 +1,4 @@
+import { shortReference } from '../../../lib/reference';
 import { useState, useEffect, type ChangeEvent } from 'react';
 import Modal from '../../../components/ui/Modal';
 import { API, authHeaders } from '../../../api/api';
@@ -218,7 +219,7 @@ export default function SuperAdminUsers() {
             {filteredUsers.length === 0 && (<tr><td colSpan={7} className="table-empty">No se encontraron usuarios con ese filtro.</td></tr>)}
             {filteredUsers.map((u) => (
               <tr key={u.id} className={u.isActive ? undefined : 'fila-inactiva'}>
-                <td className="id-usuariossa" title={u.id}>#{u.id.slice(-6).toUpperCase()}</td>
+                <td className="id-usuariossa" >#{shortReference(u.id)}</td>
                 <td className="nombre-usuariossa">{u.fullName}</td>
                 <td className="email-usuariossa">{u.email}</td>
                 <td>

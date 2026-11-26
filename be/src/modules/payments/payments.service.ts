@@ -1,3 +1,4 @@
+import { shippingCost } from '../../lib/shipping';
 import { Prisma } from '@prisma/client';
 import { badRequest, conflict, forbidden, notFound } from '../../lib/errors';
 import {
@@ -28,6 +29,7 @@ function response(payment: DemoPayment) {
     status: payment.status,
     method: payment.method,
     amount: payment.amount,
+    shippingCost: payment.receipt.order?.shippingCost ?? 0,
     currency: payment.currency,
     orderId: payment.receipt.orderId,
     orderStatus: payment.receipt.order?.status,
@@ -123,11 +125,14 @@ export const paymentsService = {
         total = total.plus(subtotal);
         details.push({ ...item, unitPrice: product.price, subtotal });
       }
+      const deliveryFee = shippingCost(total.toNumber());
       let promotionalCodeId: string | undefined;
       if (input.code) {
         // Bloqueo compartido con otros checkouts para no exceder maxUses.
-        await tx.$queryRaw`SELECT id FROM promotional_codes WHERE code = ${input.code} FOR UPDATE`;
-        const promo = await tx.promotionalCode.findUnique({ where: { code: input.code } });
+        const candidate = await tx.promotionalCode.findFirst({ where: { code: { equals: input.code.trim(), mode: 'insensitive' } } });
+        if (!candidate) throw badRequest('No encontramos ese cupón. Revisa el código e intenta de nuevo.');
+        await tx.$queryRaw`SELECT id FROM promotional_codes WHERE id = ${candidate.id}::uuid FOR UPDATE`;
+        const promo = await tx.promotionalCode.findUnique({ where: { id: candidate.id } });
         const today = new Date().toISOString().slice(0, 10);
         if (!promo || !promo.active || promo.startDate.toISOString().slice(0, 10) > today ||
           promo.endDate.toISOString().slice(0, 10) < today || total.lt(promo.minPurchase ?? 0) ||
@@ -142,10 +147,10 @@ export const paymentsService = {
           where: { id: promo.id }, data: { currentUses: (promo.currentUses ?? 0) + 1 },
         });
       }
-      total = total.toDecimalPlaces(2);
+      total = Prisma.Decimal.max(0, total).plus(deliveryFee).toDecimalPlaces(2);
       if (total.lte(0)) throw badRequest('La demostración requiere un total mayor que cero.');
       const order = await tx.order.create({ data: {
-        customerId: actor.id, createdById: actor.id, total, status: 'pending',
+        customerId: actor.id, createdById: actor.id, total, shippingCost: deliveryFee, status: 'pending',
         deliverySnapshot: input.address, promotionalCodeId,
         expiresAt: new Date(Date.now() + 30 * 60000),
         details: { create: details },
@@ -172,7 +177,7 @@ export const paymentsService = {
         method: input.method, amount: total, currency: 'COP', status: 'pending',
       }, include: paymentInclude });
       await tx.shopping.deleteMany({ where: { userId: actor.id, productId: { in: details.map((item) => item.productId) } } });
-      await event(tx, order.id, actor.id, 'demo_checkout', 'SIMULACIÓN ACADÉMICA. Envío gratis; reserva por 30 minutos.');
+      await event(tx, order.id, actor.id, 'demo_checkout', 'SIMULACIÓN ACADÉMICA. Reserva por 30 minutos; envío según subtotal.');
       if (input.outcome !== 'pending') await settle(tx, payment, input.outcome, actor);
       return response((await findPayment(tx, input.requestKey))!);
     });
