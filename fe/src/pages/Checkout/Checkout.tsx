@@ -1,779 +1,144 @@
-import { shippingCost } from '../../lib/shipping';
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ArrowLeft, Check, CreditCard, Landmark, MapPin, Package, ShieldCheck, ShoppingCart, Smartphone, Ticket, Truck, X } from 'lucide-react';
 import { useCart } from '../../hooks/useCart';
 import { useAuth } from '../../hooks/useAuth';
 import { API, authHeaders } from '../../api/api';
-import Modal from '../../components/ui/Modal';
-import { CreditCard, Landmark, ShoppingCart, Smartphone } from 'lucide-react';
-import './Checkout.css';
-
+import { shippingCost } from '../../lib/shipping';
+import { productImage } from '../../lib/productImage';
+import CategoryIcon from '../../components/ui/CategoryIcon';
 import { useDemoPayment, type PaymentMethod, type Outcome, type PaymentResult } from './useDemoPayment';
 import DemoPaymentResult from './DemoPaymentResult';
 import { formatCOP } from './paymentFormat';
+import './Checkout.css';
 
-interface Discount {
-  code: string;
-  type: string;
-  value: number;
+interface CouponQuote { code: string; subtotal: number; discountAmount: number; shippingCost: number; total: number }
+const methods: { id: PaymentMethod; title: string; detail: string; Icon: typeof CreditCard }[] = [
+  { id: 'tarjeta', title: 'Tarjeta', detail: 'Simulación con tarjeta. No se solicitan datos bancarios.', Icon: CreditCard },
+  { id: 'nequi', title: 'Nequi', detail: 'Prueba un pago móvil sin abrir la app ni usar claves.', Icon: Smartphone },
+  { id: 'pse', title: 'PSE', detail: 'Demostración del flujo bancario, sin redirigir a un banco.', Icon: Landmark },
+];
+function CheckoutImage({ name, category, imageUrl }: { name: string; category: string; imageUrl?: string | null }) {
+  const [failed, setFailed] = useState(false);
+  const image = productImage({ name, category: { name: category }, imageUrl });
+  return <span className="checkout-product-image">{image && !failed ? <img src={image} alt="" onError={() => setFailed(true)} /> : <CategoryIcon category={category} />}</span>;
 }
-
 export default function Checkout() {
   const { user } = useAuth();
-  const { items, total, reload, loading: cartLoading } = useCart();
+  const { items, total, reload, loading: cartLoading, syncing, error: cartError } = useCart();
   const navigate = useNavigate();
-
-  const [method, setMethod] =
-    useState<PaymentMethod>('tarjeta');
-
   const payment = useDemoPayment(user?.id);
-  const [outcome, setOutcome] = useState<Outcome>('approved');
-  const [error, setError] = useState('');
   const { processing } = payment;
-
+  const [method, setMethod] = useState<PaymentMethod>('tarjeta');
+  const [outcome, setOutcome] = useState<Outcome>('approved');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
-
-  const [addressModalOpen, setAddressModalOpen] =
-    useState(false);
-
-  const [addressForm, setAddressForm] = useState({
-    contactName: '',
-    phoneNumber: '',
-    street: '',
-    apt: '',
-    country: 'Colombia',
-    city: '',
-    district: '',
-    zipCode: '',
-  });
-
-  const [addressErrors, setAddressErrors] =
-    useState<Record<string, string>>({});
-
+  const [profileLoading, setProfileLoading] = useState(true);
+  const [profileError, setProfileError] = useState('');
+  const [error, setError] = useState('');
   const [discountCode, setDiscountCode] = useState('');
-
-  const [discount, setDiscount] =
-    useState<Discount | null>(null);
-
+  const [discount, setDiscount] = useState<CouponQuote | null>(null);
   const [discountError, setDiscountError] = useState('');
-
-  const [applyingDiscount, setApplyingDiscount] =
-    useState(false);
-
-  const headers = authHeaders();
-
-  const calculateTotal = () => {
-    if (!discount) return total;
-
-    if (discount.type === 'percentage') {
-      return total * (1 - discount.value / 100);
-    }
-
-    if (discount.type === 'fixed') {
-      return Math.max(0, total - discount.value);
-    }
-
-    return total;
-  };
-
-  const shipping = shippingCost(total);
-  const finalTotal = Math.round((Math.max(0, calculateTotal()) + shipping) * 100) / 100;
+  const [applyingDiscount, setApplyingDiscount] = useState(false);
+  const couponRequest = useRef(Symbol());
+  const cartSignature = JSON.stringify(items.map(item => [item.id, item.quantity, item.price]));
+  const deliveryReady = /^3\d{9}$/.test(phone.trim()) && address.trim().length >= 5;
+  const shipping = discount?.shippingCost ?? shippingCost(total);
+  const subtotal = discount?.subtotal ?? total;
+  const finalTotal = discount?.total ?? Math.round((total + shipping) * 100) / 100;
 
   useEffect(() => {
-    if (!user) return;
-
-    fetch(`${API.users}/${user.id}`, { headers: authHeaders() })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        if (data) {
-          setPhone(data.phone || '');
-          setAddress(data.address || '');
-        }
-      })
-      .catch(() => {});
-  }, [user]);
-
-  const openAddressModal = () => {
-    setAddressErrors({});
-    setAddressForm((prev) => ({ ...prev, contactName: prev.contactName || user?.name || '', phoneNumber: phone }));
-    setAddressModalOpen(true);
-  };
-
-  const closeAddressModal = () => {
-    setAddressModalOpen(false);
-  };
-
-  const updateAddressField = (
-    field: string,
-    value: string
-  ) => {
-    setAddressForm((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
-
-  const saveAddressModal = async () => {
-    const errors: Record<string, string> = {};
-
-    if (!addressForm.contactName.trim()) {
-      errors.contactName =
-        'Por favor, introduce un nombre de contacto.';
-    }
-
-    if (
-      !/^3\d{9}$/.test(addressForm.phoneNumber.trim())
-    ) {
-      errors.phoneNumber =
-        'Introduce un celular colombiano de 10 dígitos que empiece por 3.';
-    }
-
-    if (!addressForm.street.trim()) {
-      errors.street = 'Introduce una dirección.';
-    }
-
-    if (!addressForm.city.trim()) {
-      errors.city = 'Selecciona una ciudad.';
-    }
-
-    if (!addressForm.district.trim()) {
-      errors.district = 'Selecciona una localidad.';
-    }
-
-    if (
-      !addressForm.zipCode.trim() ||
-      addressForm.zipCode.trim().length < 5
-    ) {
-      errors.zipCode =
-        'Por favor, introduce 5-8 dígitos.';
-    }
-
-    if (Object.keys(errors).length > 0) {
-      setAddressErrors(errors);
-      return;
-    }
-
-    const composedAddress = [
-      addressForm.street,
-      addressForm.apt,
-      addressForm.district,
-      addressForm.city,
-      addressForm.country,
-      addressForm.zipCode,
-    ]
-      .filter(Boolean)
-      .join(', ');
-
-    if (composedAddress.length > 255) {
-      setAddressErrors({ street: 'La dirección completa no debe superar 255 caracteres.' });
-      return;
-    }
-    // Se guarda en el servidor junto al pedido, en la transacción de checkout.
-    setPhone(addressForm.phoneNumber.trim());
-    setAddress(composedAddress);
-    setAddressModalOpen(false);
-  };
-
-  const applyDiscount = async () => {
-    if (!discountCode.trim()) return;
-
-    setApplyingDiscount(true);
-    setDiscountError('');
-
+    const controller = new AbortController();
+    setProfileLoading(true); setProfileError('');
+    if (!user?.id) { setProfileLoading(false); return; }
+    fetch(`${API.users}/${user.id}`, { headers: authHeaders(), signal: controller.signal }).then(async response => {
+      if (!response.ok) throw new Error();
+      return response.json();
+    }).then(data => { if (!controller.signal.aborted) { setPhone(data.phone ?? ''); setAddress(data.address ?? ''); } })
+      .catch(() => { if (!controller.signal.aborted) setProfileError('No pudimos cargar los datos guardados. Puedes completarlos aquí para esta compra.'); })
+      .finally(() => { if (!controller.signal.aborted) setProfileLoading(false); });
+    return () => controller.abort();
+  }, [user?.id]);
+  useEffect(() => {
+    couponRequest.current = Symbol(); setDiscount(null); setDiscountError(''); setApplyingDiscount(false);
+    return () => { couponRequest.current = Symbol(); };
+  }, [cartSignature]);
+  function clearCoupon(value = '') {
+    couponRequest.current = Symbol(); setDiscountCode(value); setDiscount(null); setDiscountError(''); setApplyingDiscount(false);
+  }
+  async function applyDiscount() {
+    if (applyingDiscount || !discountCode.trim()) return;
+    const request = Symbol(); couponRequest.current = request;
+    setApplyingDiscount(true); setDiscountError(''); setDiscount(null);
     try {
-      const res = await fetch(
-        `${API.promotionalCodes}/validate`,
-        {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({
-            code: discountCode.trim(),
-            total,
-          }),
-        }
-      );
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-
-        setDiscountError(
-          data.message || (res.status === 404 ? 'No se pudo validar el cupón. Verifica que el servidor esté actualizado.' : 'No se pudo validar el cupón')
-        );
-
-        setDiscount(null);
-        return;
-      }
-
-      const data = await res.json();
-
-      setDiscount({
-        code: data.code,
-        type: data.type,
-        value: Number(data.value),
-      });
-
-      setDiscountError('');
-    } catch {
-      setDiscount(null);
-      setDiscountError(
-        'No pudimos conectar para validar el cupón. Intenta nuevamente.'
-      );
-    } finally {
-      setApplyingDiscount(false);
-    }
-  };
-
-  const confirmPayment = async () => {
-    if (!payment.retrying && (!phone.trim() || !address.trim())) {
-      setError('Completa tu teléfono y dirección de envío.');
-      return;
-    }
+      const response = await fetch(`${API.promotionalCodes}/validate`, { method: 'POST', headers: authHeaders(), body: JSON.stringify({ code: discountCode.trim(), items: items.map(item => ({ productId: item.id, quantity: item.quantity })) }) });
+      const data = await response.json().catch(() => ({}));
+      if (request !== couponRequest.current) return;
+      if (!response.ok) throw new Error(data.message || 'No se pudo validar el cupón. Intenta nuevamente.');
+      if (![data.subtotal, data.discountAmount, data.shippingCost, data.total].every(value => typeof value === 'number' && Number.isFinite(value))) throw new Error('El servidor no devolvió el cálculo del cupón. Actualiza el backend y vuelve a intentar.');
+      setDiscount(data);
+    } catch (reason) {
+      if (request === couponRequest.current) setDiscountError(reason instanceof Error && !(reason instanceof TypeError) ? reason.message : 'No pudimos conectar para validar el cupón. No se ha aplicado ningún descuento.');
+    } finally { if (request === couponRequest.current) setApplyingDiscount(false); }
+  }
+  async function confirmPayment() {
+    if (!payment.retrying && !deliveryReady) { setError('Introduce un celular colombiano de 10 dígitos que empiece por 3 y una dirección completa de al menos 5 caracteres.'); return; }
+    if (!payment.retrying && discountCode.trim() && !discount) { setError('Aplica tu cupón o borra el código antes de continuar. Así no perderás el descuento sin darte cuenta.'); return; }
     setError('');
-    const result = await payment.start({
-      method, outcome, phone, address,
-      ...(discount ? { code: discount.code } : {}),
-      items: items.map((item) => ({ productId: item.id, quantity: item.quantity })),
-    });
-    if (result && !(await reload())) {
-      setError('El pago se registró, pero no pudimos sincronizar el carrito. Vuelve a consultar o reintenta recuperar el carrito.');
-    }
-  };
-
-  const retryPayment = async () => {
+    const result = await payment.start({ method, outcome, phone: phone.trim(), address: address.trim(), ...(discount ? { code: discount.code } : {}), items: items.map(item => ({ productId: item.id, quantity: item.quantity })) });
+    if (result && !(await reload())) setError('El pago se registró, pero no pudimos sincronizar el carrito. Consulta su estado antes de hacer otra compra.');
+  }
+  async function retryPayment() {
     setError('');
-    if (!(await reload())) {
-      setError('No se pudo recuperar el carrito. Intenta nuevamente; no se creará ningún pago.');
-      return;
-    }
-    if (payment.reset()) {
-      setOutcome('approved');
-      setDiscount(null);
-      setDiscountCode('');
-      setDiscountError('');
-    }
-  };
-
-  const syncPayment = async (operation: Promise<PaymentResult | null>) => {
+    if (!(await reload())) { setError('No se pudo recuperar el carrito. Intenta nuevamente; no se creará ningún pago.'); return; }
+    if (payment.reset()) { setOutcome('approved'); clearCoupon(); }
+  }
+  async function syncPayment(operation: Promise<PaymentResult | null>) {
     setError('');
     if (await operation && !(await reload())) setError('El estado se consultó, pero no pudimos sincronizar el carrito. Intenta nuevamente.');
-  };
-
-  if (payment.loading) return <main className="empty-state" role="status">Consultando pagos de demostración…</main>;
-
-  if (payment.result) return <DemoPaymentResult
-    result={payment.result}
-    processing={processing}
-    error={payment.error || error}
-    notice={payment.notice}
-    lastCheckedAt={payment.lastCheckedAt}
-    action={payment.action}
-    cartSyncing={cartLoading}
-    onResolve={(value) => { void syncPayment(payment.resolve(value)); }}
-    onRefresh={() => { void syncPayment(payment.refresh()); }}
-    onRetry={() => { void retryPayment(); }}
-    onLeave={() => { if (payment.reset()) navigate('/catalogo'); }}
-  />;
-
-  if (cartLoading) return <main className="empty-state" role="status">Recuperando carrito…</main>;
-
-  if (items.length === 0 && !payment.retrying) {
-    return (
-      <main className="empty-state">
-        <span className="empty-state-icon" aria-hidden="true">
-          <ShoppingCart size={34} />
-        </span>
-        <h1>No hay nada para pagar</h1>
-        <p>Tu carrito está vacío. Agrega productos desde el catálogo para continuar.</p>
-        <button
-          type="button"
-          className="ui-btn ui-btn--primary"
-          onClick={() => navigate('/catalogo')}
-        >
-          Ir al catálogo
-        </button>
-      </main>
-    );
   }
-
-  return (
-    <div className="pago-container">
-      <h1 className="pago-titulo">
-        Pago de demostración
-      </h1>
-
-      <div className="pago-demo-aviso" role="note">
-        <strong>Modo académico · COP · Envío gratis desde $120.000</strong>
-        <p>No se harán cobros reales. No introduzcas tarjetas, claves bancarias ni códigos de Nequi.</p>
-      </div>
-      {!payment.enabled && <p className="pago-error" role="alert">{payment.error || 'La simulación está deshabilitada. Activa NODE_ENV=development y ENABLE_PAYMENT_SIMULATION=true en el backend.'}</p>}
-      {payment.retrying && <p className="pago-demo-aviso">Hay un intento guardado. Al reintentar se usarán sus datos originales para evitar pedidos duplicados.</p>}
-      <fieldset className="pago-demo-fieldset" disabled={processing || payment.retrying}>
+  if (payment.loading) return <main className="empty-state" role="status">Consultando pagos de demostración…</main>;
+  if (payment.result) return <DemoPaymentResult result={payment.result} processing={processing} error={payment.error || error} notice={payment.notice} lastCheckedAt={payment.lastCheckedAt} action={payment.action} cartSyncing={cartLoading}
+    onResolve={value => { void syncPayment(payment.resolve(value)); }} onRefresh={() => { void syncPayment(payment.refresh()); }} onRetry={() => { void retryPayment(); }} onLeave={() => { if (payment.reset()) navigate('/catalogo'); }} />;
+  if (cartLoading) return <main className="empty-state" role="status">Recuperando carrito…</main>;
+  if (cartError) return <main className="empty-state" role="alert"><h1>Revisa tu carrito</h1><p>{cartError}</p><button className="ui-btn" onClick={() => { void reload(); }}>Reintentar</button></main>;
+  if (!items.length && !payment.retrying) return <main className="empty-state"><ShoppingCart size={36} /><h1>No hay nada para pagar</h1><p>Tu carrito está vacío. Agrega productos desde el catálogo para continuar.</p><Link to="/catalogo" className="ui-btn ui-btn--primary">Ir al catálogo</Link></main>;
+  return <main className="pago-container checkout-page">
+    <Link className="checkout-back" to="/carrito"><ArrowLeft size={16} /> Volver al carrito</Link>
+    <header className="checkout-heading"><div><p className="account-eyebrow">UN ÚLTIMO PASO PARA CREAR ALGO GRANDE</p><h1 className="pago-titulo">Finaliza tu compra</h1><p>Revisa la entrega, elige cómo pagar y confirma el resumen.</p></div><span><ShieldCheck size={18} /> Información protegida</span></header>
+    <ol className="checkout-steps" aria-label="Progreso de compra"><li className={deliveryReady ? 'complete' : 'current'}>{deliveryReady ? <Check size={17} /> : <span>1</span>} Datos de entrega</li><li className="current"><span>2</span> Método de pago</li><li><span>3</span> Confirmación</li></ol>
+    <div className="pago-demo-aviso" role="note"><ShieldCheck size={21} /><div><strong>Pago de demostración · Sin cobros reales</strong><p>Esta pasarela es académica. Nunca introduzcas tarjetas, claves bancarias ni códigos de Nequi.</p></div></div>
+    {!payment.enabled && <p className="pago-error" role="alert">La simulación de pagos no está disponible en este entorno. Puedes revisar tu carrito o contactar con soporte.</p>}
+    {payment.retrying && <p className="pago-demo-aviso">Hay un intento guardado. Se reutilizarán sus datos originales para evitar pedidos duplicados.</p>}
+    <fieldset className="pago-demo-fieldset" disabled={processing || payment.retrying}>
       <legend className="pago-demo-sr-only">Datos de la compra de demostración</legend>
       <div className="pago-body">
         <div className="pago-izq">
-          <div className="pago-seccion">
-            <h2 className="pago-seccion-titulo">
-              Dirección de entrega
-            </h2>
-
-            {address && phone ? (
-              <div className="pago-dir-resumen">
-                <p className="pago-dir-resumen-texto">
-                  {address}
-                </p>
-
-                <p className="pago-dir-resumen-tel">
-                  Tel: {phone}
-                </p>
-
-                <button
-                  type="button"
-                  className="pago-link-btn"
-                  onClick={openAddressModal}
-                >
-                  Editar dirección
-                </button>
-              </div>
-            ) : (
-              <button
-                type="button"
-                className="pago-link-btn"
-                onClick={openAddressModal}
-              >
-                + Añadir nueva dirección
-              </button>
-            )}
-          </div>
-
-          <div className="pago-seccion">
-            <h2 className="pago-seccion-titulo">
-              Método de pago
-            </h2>
-
-            <div className="pago-metodos-lista">
-              {(
-                [
-                  'tarjeta',
-                  'nequi',
-                  'pse',
-                ] as PaymentMethod[]
-              ).map((paymentMethod) => (
-                <label
-                  key={paymentMethod}
-                  className={`pago-metodo-fila ${
-                    method === paymentMethod
-                      ? 'seleccionado'
-                      : ''
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="metodo"
-                    value={paymentMethod}
-                    checked={method === paymentMethod}
-                    onChange={() =>
-                      setMethod(paymentMethod)
-                    }
-                  />
-
-                  <span className="pago-metodo-radio" />
-
-                  <span className="pago-metodo-icono" aria-hidden="true">
-                    {paymentMethod === 'tarjeta' ? (
-                      <CreditCard size={20} />
-                    ) : paymentMethod === 'nequi' ? (
-                      <Smartphone size={20} />
-                    ) : (
-                      <Landmark size={20} />
-                    )}
-                  </span>
-
-                  <span className="pago-metodo-label">
-                    {paymentMethod === 'pse' ? 'PSE' : paymentMethod.charAt(0).toUpperCase() + paymentMethod.slice(1)}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          <div className="pago-seccion">
-            <label className="pago-form-label" htmlFor="demo-outcome">Resultado que quieres demostrar</label>
-            <select id="demo-outcome" className="pago-descuento-input" value={outcome} onChange={(e) => setOutcome(e.target.value as Outcome)}>
-              <option value="approved">Aprobado</option>
-              <option value="rejected">Rechazado</option>
-              <option value="pending">Pendiente</option>
-            </select>
-            <p className="pago-seguro">Los tres métodos son simulados. No necesitas una cuenta bancaria.</p>
-          </div>
-          <div className="pago-seccion">
-            <h2 className="pago-seccion-titulo">
-              Productos
-            </h2>
-
-            <div className="pago-resumen">
-              {items.map((item) => (
-                <div
-                  key={item.id}
-                  className="pago-linea"
-                >
-                  <span>
-                    {item.name} ×{item.quantity}
-                  </span>
-
-                  <span>
-                    {formatCOP(item.price * item.quantity)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
+          <section className="pago-seccion"><h2 className="pago-seccion-titulo"><MapPin size={20} /> Datos de entrega</h2><p className="checkout-help">Usaremos estos datos para tu pedido y los guardaremos en tu cuenta al confirmar.</p>
+            {profileError && <p className="checkout-help" role="status">{profileError}</p>}
+            <div className="checkout-delivery-fields" aria-busy={profileLoading}><label>Nombre de contacto<input value={user?.name ?? ''} readOnly autoComplete="name" /></label><label>Celular colombiano<input id="checkout-phone" type="tel" inputMode="tel" autoComplete="tel-national" maxLength={10} placeholder="3001234567" value={phone} disabled={profileLoading} onChange={event => { setPhone(event.target.value); setError(''); }} aria-describedby="checkout-phone-help" /></label><small id="checkout-phone-help">10 dígitos, comienza por 3. No incluyas +57.</small><label className="checkout-address">Dirección completa<textarea id="checkout-address" rows={3} autoComplete="street-address" maxLength={255} placeholder="Calle, número, apartamento, barrio y ciudad" value={address} disabled={profileLoading} onChange={event => { setAddress(event.target.value); setError(''); }} /></label></div>
+          </section>
+          <section className="pago-seccion"><h2 className="pago-seccion-titulo"><CreditCard size={20} /> ¿Cómo quieres pagar?</h2><div className="pago-metodos">{methods.map(({ id, title, detail, Icon }) => <label key={id} className={`pago-metodo-fila ${method === id ? 'seleccionado' : ''}`}><input type="radio" name="metodo" value={id} checked={method === id} onChange={() => setMethod(id)} /><Icon size={23} aria-hidden="true" /><span className="checkout-method-copy"><strong>{title}</strong><small>{detail}</small></span>{method === id && <Check size={18} className="checkout-method-check" />}</label>)}</div>
+            <details className="checkout-demo-options"><summary>Opciones de la demostración</summary><label htmlFor="demo-outcome">Resultado que quieres demostrar</label><select id="demo-outcome" value={outcome} onChange={event => setOutcome(event.target.value as Outcome)}><option value="approved">Aprobado</option><option value="rejected">Rechazado</option><option value="pending">Pendiente</option></select><p>No se contactará con ningún banco ni se moverá dinero.</p></details>
+          </section>
+          <section className="pago-seccion"><h2 className="pago-seccion-titulo"><Package size={20} /> Tu compra · {items.reduce((sum, item) => sum + item.quantity, 0)} unidades</h2><div className="checkout-products">{items.map(item => <article key={item.id}><CheckoutImage name={item.name} category={item.category} imageUrl={item.imageUrl} /><div><strong>{item.name}</strong><small>{item.quantity} × {formatCOP(item.price)}</small></div><b>{formatCOP(item.price * item.quantity)}</b></article>)}</div></section>
         </div>
-
-        <div className="pago-der">
-          <div className="pago-resumen-card">
-            <h2 className="pago-seccion-titulo">
-              Resumen
-            </h2>
-
-            <div className="pago-linea">
-              <span>
-                Subtotal
-              </span>
-
-              <span>
-                {formatCOP(total)}
-              </span>
-            </div>
-
-            <div className="pago-descuento-wrap">
-              <input
-                className="pago-descuento-input"
-                aria-label="Código de descuento"
-                placeholder="Código de descuento"
-                value={discountCode}
-                onChange={(e) =>
-                  { setDiscountCode(e.target.value); setDiscount(null); setDiscountError(''); }
-                }
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    void applyDiscount();
-                  }
-                }}
-              />
-
-              <button
-                className="pago-descuento-btn"
-                onClick={applyDiscount}
-                disabled={applyingDiscount}
-              >
-                {applyingDiscount ? '...' : 'Aplicar'}
-              </button>
-            </div>
-
-            {discountError && (
-              <p className="pago-error-desc">
-                {discountError}
-              </p>
-            )}
-
-            {discount && (
-              <div className="pago-linea pago-linea-descuento">
-                <span>
-                  Descuento ({discount.code})
-                </span>
-
-                <span>
-                  -
-                  {discount.type === 'percentage'
-                    ? `${discount.value}%`
-                    : formatCOP(discount.value)}
-                </span>
-              </div>
-            )}
-
-            <div className="pago-linea"><span>Envío a domicilio</span><strong>{shipping === 0 ? 'Gratis' : formatCOP(shipping)}</strong></div>
-            <p className="pago-seguro">Envío $10.000 COP. Gratis desde $120.000 COP en productos antes de descuentos.</p>
-            <div className="pago-total">
-              <span>
-                Total
-              </span>
-
-              <span>
-                {formatCOP(finalTotal)} COP
-              </span>
-            </div>
-
-            <p className="pago-seguro">El importe definitivo se calcula en el servidor con los precios y descuentos vigentes.</p>
+        <aside className="pago-der"><section className="pago-resumen-card"><h2 className="pago-seccion-titulo">Resumen de tu pedido</h2>
+          <div className="pago-linea"><span>Productos</span><strong>{formatCOP(subtotal)}</strong></div>
+          <div className="checkout-coupon"><label htmlFor="checkout-coupon"><Ticket size={17} /> ¿Tienes un cupón?</label><div className="pago-descuento-wrap"><input id="checkout-coupon" className="pago-descuento-input" placeholder="Escribe tu código" value={discountCode} onChange={event => clearCoupon(event.target.value)} onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); void applyDiscount(); } }} /><button type="button" className="pago-descuento-btn" onClick={() => { void applyDiscount(); }} disabled={applyingDiscount || !discountCode.trim() || Boolean(discount) || syncing}>{applyingDiscount ? 'Validando…' : 'Aplicar'}</button></div>
+            {discountError && <p className="pago-error-desc" role="alert">{discountError}</p>}
+            {discount && <div className="checkout-coupon-applied" role="status"><Check size={16} /><span>{discount.code} aplicado</span><button type="button" aria-label="Quitar cupón" onClick={() => clearCoupon()}><X size={16} /></button></div>}
           </div>
-        </div>
+          {discount && <div className="pago-linea pago-linea-descuento"><span>Descuento</span><strong>−{formatCOP(discount.discountAmount)}</strong></div>}
+          <div className="pago-linea"><span>Envío a domicilio</span><strong>{shipping === 0 ? 'Gratis' : formatCOP(shipping)}</strong></div>
+          <p className="checkout-shipping-note"><Truck size={17} /> $10.000 COP. Gratis desde $120.000 en productos, antes de descuentos.</p>
+          <div className="pago-total"><span>Total <small>COP</small></span><strong>{formatCOP(finalTotal)}</strong></div><p className="checkout-help">El servidor confirma precios, descuento y disponibilidad al crear el pedido.</p>
+          <div className="checkout-payment-choice"><ShieldCheck size={18} /><span>Simulación con <strong>{methods.find(item => item.id === method)?.title}</strong><small>No se hará ningún cobro real.</small></span></div>
+        </section></aside>
       </div>
-
-      </fieldset>
-      {(error || payment.error) && <p className="pago-error" role="alert">{error || payment.error}</p>}
-      <div className="pago-demo-acciones">
-        <button className="pago-btn-confirmar" onClick={() => { void confirmPayment(); }} disabled={processing || !payment.enabled}>
-          {processing ? 'Procesando simulación…' : payment.retrying ? 'Reintentar el mismo pago' : `Simular pago por ${formatCOP(finalTotal)} COP`}
-        </button>
-      </div>
-
-      {addressModalOpen && (
-        <Modal
-          titulo="Editar dirección"
-          onClose={closeAddressModal}
-          footer={
-            <>
-              <button
-                type="button"
-                className="pago-btn-secundario"
-                onClick={closeAddressModal}
-              >
-                Cancelar
-              </button>
-
-              <button
-                type="button"
-                className="pago-btn-confirmar"
-                onClick={saveAddressModal}
-              >
-                Guardar
-              </button>
-            </>
-          }
-        >
-          <h3 className="pago-modal-subtitulo">
-            Información personal
-          </h3>
-
-          <div className="pago-modal-fila">
-            <div className="pago-modal-campo">
-              <input
-                className={`pago-modal-input ${
-                  addressErrors.contactName
-                    ? 'con-error'
-                    : ''
-                }`}
-                placeholder="Nombre de contacto*"
-                value={addressForm.contactName}
-                onChange={(e) =>
-                  updateAddressField(
-                    'contactName',
-                    e.target.value
-                  )
-                }
-              />
-
-              {addressErrors.contactName && (
-                <p className="pago-modal-error">
-                  {addressErrors.contactName}
-                </p>
-              )}
-            </div>
-
-            <div className="pago-modal-campo">
-              <div
-                className={`pago-modal-input-prefijo ${
-                  addressErrors.phoneNumber
-                    ? 'con-error'
-                    : ''
-                }`}
-              >
-                <span className="pago-modal-prefijo">
-                  +57
-                </span>
-
-                <input
-                  className="pago-modal-input-sin-borde"
-                  placeholder="Número de teléfono*"
-                  value={addressForm.phoneNumber}
-                  onChange={(e) =>
-                    updateAddressField(
-                      'phoneNumber',
-                      e.target.value
-                    )
-                  }
-                />
-              </div>
-
-              {addressErrors.phoneNumber && (
-                <p className="pago-modal-error">
-                  {addressErrors.phoneNumber}
-                </p>
-              )}
-            </div>
-          </div>
-
-          <h3 className="pago-modal-subtitulo">
-            Dirección
-          </h3>
-
-          <div className="pago-modal-fila">
-            <div className="pago-modal-campo">
-              <input
-                className={`pago-modal-input ${
-                  addressErrors.street
-                    ? 'con-error'
-                    : ''
-                }`}
-                placeholder="Nombre de la calle, apartado postal, etc."
-                value={addressForm.street}
-                onChange={(e) =>
-                  updateAddressField(
-                    'street',
-                    e.target.value
-                  )
-                }
-              />
-
-              {addressErrors.street && (
-                <p className="pago-modal-error">
-                  {addressErrors.street}
-                </p>
-              )}
-            </div>
-
-            <div className="pago-modal-campo">
-              <input
-                className="pago-modal-input"
-                placeholder="Apto., suite, unidad, etc. (opcional)"
-                value={addressForm.apt}
-                onChange={(e) =>
-                  updateAddressField(
-                    'apt',
-                    e.target.value
-                  )
-                }
-              />
-
-              <p className="pago-modal-hint">
-                Por favor, indica tu apto., suite,
-                unidad, etc. (opcional)
-              </p>
-            </div>
-          </div>
-
-          <div className="pago-modal-fila pago-modal-fila-4">
-            <div className="pago-modal-campo">
-              <select
-                className="pago-modal-input"
-                value={addressForm.country}
-                onChange={(e) =>
-                  updateAddressField(
-                    'country',
-                    e.target.value
-                  )
-                }
-              >
-                <option value="Colombia">
-                  🇨🇴 Colombia
-                </option>
-              </select>
-            </div>
-
-            <div className="pago-modal-campo">
-              <select
-                className={`pago-modal-input ${
-                  addressErrors.city
-                    ? 'con-error'
-                    : ''
-                }`}
-                value={addressForm.city}
-                onChange={(e) =>
-                  updateAddressField(
-                    'city',
-                    e.target.value
-                  )
-                }
-              >
-                <option value="">
-                  Ciudad
-                </option>
-                <option value="Bogotá, D.C.">
-                  Bogotá, D.C.
-                </option>
-                <option value="Medellín">
-                  Medellín
-                </option>
-                <option value="Cali">
-                  Cali
-                </option>
-                <option value="Barranquilla">
-                  Barranquilla
-                </option>
-              </select>
-
-              {addressErrors.city && (
-                <p className="pago-modal-error">
-                  {addressErrors.city}
-                </p>
-              )}
-            </div>
-
-            <div className="pago-modal-campo">
-              <select
-                className={`pago-modal-input ${
-                  addressErrors.district
-                    ? 'con-error'
-                    : ''
-                }`}
-                value={addressForm.district}
-                onChange={(e) =>
-                  updateAddressField(
-                    'district',
-                    e.target.value
-                  )
-                }
-              >
-                <option value="">
-                  Localidad
-                </option>
-                <option value="Fontibón">
-                  Fontibón
-                </option>
-                <option value="Chapinero">
-                  Chapinero
-                </option>
-                <option value="Suba">
-                  Suba
-                </option>
-                <option value="Kennedy">
-                  Kennedy
-                </option>
-              </select>
-
-              {addressErrors.district && (
-                <p className="pago-modal-error">
-                  {addressErrors.district}
-                </p>
-              )}
-            </div>
-
-            <div className="pago-modal-campo">
-              <input
-                className={`pago-modal-input ${
-                  addressErrors.zipCode
-                    ? 'con-error'
-                    : ''
-                }`}
-                placeholder="Código postal"
-                value={addressForm.zipCode}
-                onChange={(e) =>
-                  updateAddressField(
-                    'zipCode',
-                    e.target.value
-                  )
-                }
-              />
-
-              {addressErrors.zipCode && (
-                <p className="pago-modal-error">
-                  {addressErrors.zipCode}
-                </p>
-              )}
-            </div>
-          </div>
-        </Modal>
-      )}
-    </div>
-  );
+    </fieldset>
+    {(error || payment.error) && <p className="pago-error" role="alert">{error || payment.error}</p>}
+    <div className="pago-demo-acciones checkout-confirm-bar"><div><small>Importe de la demostración</small><strong>{payment.retrying ? 'Intento guardado' : `${formatCOP(finalTotal)} COP`}</strong></div><button type="button" className="pago-btn-confirmar" onClick={() => { void confirmPayment(); }} disabled={processing || !payment.enabled || applyingDiscount || syncing || profileLoading}>{processing ? 'Procesando simulación…' : payment.retrying ? 'Reintentar el mismo pago' : `Simular pago por ${formatCOP(finalTotal)} COP`}</button></div>
+    <p className="checkout-footer-note">Al confirmar se registra un pedido de demostración. ¿Necesitas ayuda? <Link to="/cliente/pqr">Visita Ayuda y PQR</Link>.</p>
+  </main>;
 }

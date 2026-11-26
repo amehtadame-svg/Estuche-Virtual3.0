@@ -38,7 +38,7 @@ test('El último día del cupón sigue siendo válido durante todo el día UTC',
 });
 
 for (const [field, value, message] of [
-  ['active', false, /activo/], ['minPurchase', 60000, /mínima/],
+  ['active', false, /activo/], ['minPurchase', 60000, /requiere al menos/],
   ['currentUses', 10, /límite/], ['endDate', new Date('2000-01-01'), /expirado/],
   ['startDate', new Date('2098-01-01'), /disponible/],
 ] as const) {
@@ -60,4 +60,25 @@ test('POST /api/promotional-codes/validate responde a un cliente autenticado', a
     assert.equal(response.status, 200);
     assert.equal((await response.json() as any).code, 'ESTUCHE10');
   } finally { await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve())); }
+});
+
+test('La cotización usa precios de BD, devuelve ahorro y envío; validar no consume usos', async () => {
+  db.product.findMany = async () => [{ id: 'product', price: 30000, stock: 10 }];
+  const result = await promotionalCodeService.quote('ESTUCHE10', [{ productId: 'product', quantity: 2 }], { id: 'buyer', role: 'client' });
+  assert.deepEqual(result, { code: 'ESTUCHE10', type: 'percentage', value: 10, subtotal: 60000, discountAmount: 6000, shippingCost: 10000, total: 64000 });
+  assert.equal(promo.currentUses, 0);
+});
+test('Un descuento no afecta el umbral de envío gratis ni excede el subtotal', async () => {
+  db.product.findMany = async () => [{ id: 'product', price: 120000, stock: 10 }];
+  const result = await promotionalCodeService.quote('ESTUCHE10', [{ productId: 'product', quantity: 1 }], { id: 'buyer', role: 'client' });
+  assert.equal(result.shippingCost, 0);
+  assert.equal(result.total, 108000);
+  promo.type = 'fixed'; promo.value = 999999;
+  const fixed = await promotionalCodeService.quote('ESTUCHE10', [{ productId: 'product', quantity: 1 }], { id: 'buyer', role: 'client' });
+  assert.equal(fixed.total, 0);
+  assert.equal(fixed.discountAmount, 120000);
+});
+test('No cotiza productos eliminados ni cantidades sin stock', async () => {
+  db.product.findMany = async () => [];
+  await assert.rejects(promotionalCodeService.quote('ESTUCHE10', [{ productId: 'missing', quantity: 1 }], { id: 'buyer', role: 'client' }), invalid(/Actualiza tu carrito/));
 });

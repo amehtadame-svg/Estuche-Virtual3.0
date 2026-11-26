@@ -1,5 +1,6 @@
+import { atomic, requestLock } from '../employee/employee.domain';
 import { prisma } from '../../lib/prisma';
-import { forbidden, notFound } from '../../lib/errors';
+import { forbidden, notFound, conflict, tooManyRequests } from '../../lib/errors';
 import { sendPqrResponseNotification } from '../../lib/mailer';
 
 export interface PqrActor {
@@ -34,14 +35,18 @@ export const pqrService = {
   create(data: { type: 'petition' | 'complaint' | 'claim'; subject: string; description: string }, actor: PqrActor) {
     if (actor.role !== 'client') throw forbidden('Solo los clientes pueden crear un PQR.');
 
-    return prisma.pqrRequest.create({
-      data: {
-        customerId: actor.id,
-        type: data.type,
-        subject: data.subject,
-        description: data.description,
-      },
-      include: pqrInclude,
+    return atomic(async tx => {
+      // Un bloqueo por cliente protege también doble clic, pestañas y procesos distintos.
+      await requestLock(tx, `pqr:${actor.id}`);
+      const normalize = (value: string) => value.normalize('NFKC').trim().replace(/\s+/g, ' ').toLocaleLowerCase('es');
+      const previous = await tx.pqrRequest.findMany({ where: { customerId: actor.id },
+        select: { id: true, type: true, subject: true, description: true, createdAt: true }, orderBy: { createdAt: 'desc' } });
+      const duplicate = previous.find(item => item.type === data.type && normalize(item.subject) === normalize(data.subject) && normalize(item.description) === normalize(data.description));
+      if (duplicate) throw conflict('Ya enviaste este PQR. Puedes consultar su seguimiento en Mis PQR.', { existingId: duplicate.id });
+      const latest = previous[0];
+      const retryAfter = latest ? Math.ceil((latest.createdAt.getTime() + 60000 - Date.now()) / 1000) : 0;
+      if (retryAfter > 0) throw tooManyRequests(`Espera ${retryAfter} segundos antes de enviar otro PQR.`, { retryAfter });
+      return tx.pqrRequest.create({ data: { customerId: actor.id, type: data.type, subject: data.subject.trim(), description: data.description.trim() }, include: pqrInclude });
     });
   },
 

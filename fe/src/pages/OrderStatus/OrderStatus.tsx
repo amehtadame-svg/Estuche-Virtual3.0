@@ -124,6 +124,7 @@ export default function OrderStatus() {
         </section>
       </>}
       <div className="order-status-actions">
+        {order?.status === 'delivered' && <Link className="ui-btn" to={`/mis-devoluciones?pedido=${order.id}`}>Solicitar devolución</Link>}
         <Link className="ui-btn" to="/mis-pedidos">Volver a mis pedidos</Link>
         <button type="button" className="ui-btn ui-btn--primary" disabled={loading} onClick={() => setRefresh((value) => value + 1)}>
           {loading ? 'Consultando…' : 'Actualizar estado'}

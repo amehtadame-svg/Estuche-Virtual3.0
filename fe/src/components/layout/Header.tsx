@@ -74,10 +74,6 @@ export default function Header() {
             ["/", "Inicio"],
             ["/catalogo", "Catálogo"],
             ["/Nosotros", "Nosotros"],
-            ["/Contacto", "Contacto"],
-            ...(user?.role === "client"
-              ? ([["/mis-pedidos", "Mis pedidos"], ["/cliente/pqr", "PQR y soporte"]] as [string, string][])
-              : []),
           ];
 
   return (

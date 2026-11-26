@@ -1,3 +1,4 @@
+import { FREE_SHIPPING_THRESHOLD, DELIVERY_FEE } from '../../lib/shipping';
 import { Router } from 'express';
 import { rateLimit } from 'express-rate-limit';
 import { verifyToken } from '../../middlewares/auth.middleware';
@@ -10,7 +11,7 @@ import { demoCheckoutSchema, demoKeyParams, demoResolveSchema } from './payments
 const router = Router();
 router.use(verifyToken);
 router.get('/config', (_req, res) => {
-  res.json({ enabled: simulationEnabled(), simulated: true, currency: 'COP', shipping: 0 });
+  res.json({ enabled: simulationEnabled(), simulated: true, currency: 'COP', shipping: { deliveryFee: DELIVERY_FEE, freeFrom: FREE_SHIPPING_THRESHOLD, basis: 'subtotal_before_discount' } });
 });
 router.use(rateLimit({
   windowMs: 60000, limit: 60, standardHeaders: true, legacyHeaders: false,
