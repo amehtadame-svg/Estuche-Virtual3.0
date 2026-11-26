@@ -7,11 +7,11 @@ import { listReturns, getReturn, resolveReturn, createReturn } from './returns.c
 
 const router = Router();
 
-router.use(verifyToken, verifySuperAdmin);
+router.use(verifyToken);
 
 router.get('/',               listReturns);
 router.post('/', validate({ body: createReturnSchema }), createReturn);
 router.get('/:id',            validate({ params: uuidParam }), getReturn);
-router.patch('/:id/resolve',  validate({ params: uuidParam, body: resolveReturnSchema }), resolveReturn);
+router.patch('/:id/resolve', verifySuperAdmin,  validate({ params: uuidParam, body: resolveReturnSchema }), resolveReturn);
 
 export default router;

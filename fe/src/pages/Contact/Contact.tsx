@@ -1,3 +1,4 @@
+import AccountNav from '../../components/layout/AccountNav';
 import { useState, type FormEvent } from 'react';
 import { AlertCircle, Clock, MailCheck, MapPin, Phone } from 'lucide-react';
 import './Contact.css';
@@ -34,6 +35,7 @@ export default function Contact() {
   if (sent) {
     return (
       <div className="contacto-exito page-shell">
+        <AccountNav />
         <div className="contacto-exito-icono" aria-hidden="true"><MailCheck size={30} /></div>
         <h1>¡Mensaje enviado!</h1>
         <p>
@@ -54,6 +56,7 @@ export default function Contact() {
 
   return (
     <div className="contacto-container page-shell">
+      <AccountNav />
       <h1 className="contacto-titulo">Contáctanos</h1>
       <p className="contacto-subtitulo">¿Tienes alguna pregunta o sugerencia? Estamos para ayudarte.</p>
 

@@ -241,7 +241,7 @@ test('HTTP: un producto con UUID histórico puede agregarse al carrito, editarse
   let cartItem: any = null;
   const lookedUp: string[] = [];
   db.shopping.findUnique = async () => cartItem;
-  db.shopping.create = async ({ data }: any) => { cartItem = { id: 'cart-1', ...data }; return cartItem; };
+  db.shopping.upsert = async ({ create, update }: any) => { cartItem = cartItem ? { ...cartItem, quantity: cartItem.quantity + update.quantity.increment } : { id: 'cart-1', ...create }; return cartItem; };
   db.shopping.update = async ({ where, data }: any) => {
     assert.equal(where.userId_productId.productId, legacyId);
     cartItem = { ...cartItem, ...data };
@@ -262,7 +262,7 @@ test('HTTP: un producto con UUID histórico puede agregarse al carrito, editarse
     const pay = await fetch(`${base}/payments/demo/checkout`, { method: 'POST', headers, body: JSON.stringify(body) });
     assert.equal(pay.status, 200);
     assert.equal((await pay.json()).status, 'approved');
-    assert.deepEqual(lookedUp, [legacyId]);
+    assert.deepEqual(lookedUp, [legacyId, legacyId]);
     assert.equal(state.order.details[0].productId, legacyId);
     assert.equal(state.stock, 3);
     const retry = await fetch(`${base}/payments/demo/checkout`, { method: 'POST', headers, body: JSON.stringify(body) });

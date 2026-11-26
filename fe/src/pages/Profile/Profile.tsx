@@ -8,7 +8,7 @@ import {
   type ChangeEvent,
   type FormEvent,
 } from 'react';
-import { Camera, LogOut, Save, UserRound } from 'lucide-react';
+import { Camera, LogOut, Save, UserRound, Package, Undo2, LifeBuoy, ArrowUpRight, ShieldCheck, Check } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { API, authHeaders } from '../../api/api';
 import { useAuth } from '../../hooks/useAuth';
@@ -65,6 +65,8 @@ function makeAvatar(file: File): Promise<string> {
 export default function Profile() {
   const { user, logout, updateUserName } = useAuth();
   const navigate = useNavigate();
+  const userId = user?.id;
+  const saveLatch = useRef(false);
   const fileInput = useRef<HTMLInputElement>(null);
 
   const [profile, setProfile] = useState<ProfileData | null>(null);
@@ -76,13 +78,19 @@ export default function Profile() {
   );
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [loadError, setLoadError] = useState('');
+  const [refresh, setRefresh] = useState(0);
+  const [savedNotice, setSavedNotice] = useState('');
+  const dirty = Boolean(profile) && (name !== profile?.fullName || phone !== (profile?.phone ?? '') || address !== (profile?.address ?? ''));
+  const completion = [profile?.fullName, profile?.email, profile?.phone, profile?.address].filter(value => value?.trim()).length * 25;
 
   useEffect(() => {
-    if (!user) return;
-
+    if (!userId) return;
+    setLoading(true); setLoadError('');
+    setPhoto(localStorage.getItem(photoKey(userId)));
     let cancelled = false;
 
-    fetch(`${API.users}/${user.id}`, { headers: authHeaders() })
+    fetch(`${API.users}/${userId}`, { headers: authHeaders() })
       .then(async (response) => {
         const data = await response.json().catch(() => ({}));
 
@@ -96,13 +104,13 @@ export default function Profile() {
         if (cancelled) return;
 
         setProfile(data);
-        setName(data.fullName || user.name);
+        setName(data.fullName || '');
         setPhone(data.phone || '');
         setAddress(data.address || '');
       })
       .catch((error: Error) => {
         if (!cancelled) {
-          notify.error(error.message, 'No se pudo cargar el perfil');
+          setLoadError(error.message);
         }
       })
       .finally(() => {
@@ -112,23 +120,21 @@ export default function Profile() {
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, [userId, refresh]);
 
   const handleSave = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!user) return;
-
-    if (!validPhone(phone)) {
-      notify.error('El teléfono debe incluir indicativo y 10 dígitos.');
-      return;
-    }
+    if (!user || saveLatch.current || !dirty) return;
+    if (phone.trim() && !/^3\d{9}$/.test(phone.trim())) { setSavedNotice('El celular debe tener 10 dígitos y comenzar por 3.'); return; }
+    saveLatch.current = true;
+    setSavedNotice('');
     setSaving(true);
 
     try {
       const response = await fetch(`${API.users}/${user.id}/profile`, {
         method: 'PATCH',
         headers: authHeaders(),
-        body: JSON.stringify({ fullName: name, phone, address }),
+        body: JSON.stringify({ fullName: name.trim(), phone: phone.trim(), address: address.trim() }),
       });
 
       const data = await response.json().catch(() => ({}));
@@ -139,6 +145,8 @@ export default function Profile() {
 
       setProfile(data as ProfileData);
       setName(data.fullName);
+      setPhone(data.phone ?? ''); setAddress(data.address ?? '');
+      setSavedNotice('Tus cambios se guardaron correctamente.');
       updateUserName(data.fullName);
 
       notify.success(
@@ -153,6 +161,7 @@ export default function Profile() {
         'Error al guardar los cambios',
       );
     } finally {
+      saveLatch.current = false;
       setSaving(false);
     }
   };
@@ -214,9 +223,9 @@ export default function Profile() {
       <AccountNav />
         <header className="profile-heading">
           <div>
-            <span className="profile-eyebrow">{user?.role === 'superadmin' ? 'CUENTA DE SUPERADMINISTRADOR' : 'MI CUENTA'}</span>
-            <h1>Mi perfil</h1>
-            <p>{user?.role === 'superadmin' ? 'Administra tu identidad y tus datos de contacto.' : 'Consulta y actualiza tus datos personales.'}</p>
+            <span className="profile-eyebrow">MI CUENTA</span>
+<h1>Mi perfil</h1>
+            <p>Hola, {user?.name?.split(/\s+/)[0] || 'qué gusto verte'}. Este es tu espacio para gestionar tu cuenta.</p>
           </div>
 
           <span className="profile-account-mark">
@@ -224,6 +233,11 @@ export default function Profile() {
           </span>
         </header>
 
+        {user?.role === 'client' && <section className="profile-shortcuts" aria-label="Accesos de mi cuenta">
+          <Link to="/mis-pedidos"><Package size={22} /><div><strong>Mis pedidos</strong><span>Sigue tus compras y entregas</span></div><ArrowUpRight size={17} /></Link>
+          <Link to="/mis-devoluciones"><Undo2 size={22} /><div><strong>Devoluciones</strong><span>Solicita una revisión y sigue su estado</span></div><ArrowUpRight size={17} /></Link>
+          <Link to="/cliente/pqr"><LifeBuoy size={22} /><div><strong>Estamos para ayudarte</strong><span>Consulta o envía tus PQR</span></div><ArrowUpRight size={17} /></Link>
+        </section>}
         <div className="profile-layout">
           <aside className="profile-photo-card">
             <div className="profile-avatar" aria-label="Foto de perfil">
@@ -234,7 +248,8 @@ export default function Profile() {
               )}
             </div>
 
-            <h2>{name || 'Tu perfil'}</h2>
+            <span className="profile-client-badge"><ShieldCheck size={14} /> Cuenta personal</span>
+            <h2>{profile?.fullName || user?.name || 'Tu perfil'}</h2>
             <p>{profile?.email || user?.email}</p>
             {user?.role === 'superadmin' && <p>Superadministrador · acceso de gestión</p>}
 
@@ -264,6 +279,7 @@ export default function Profile() {
               </button>
             )}
 
+            <div className="profile-completion"><div><strong>Tu perfil</strong><span>{completion}% completo</span></div><progress value={completion} max={100} aria-label="Datos del perfil completados" /><p>{completion === 100 ? '¡Todo listo para tu próxima compra!' : 'Completa tu celular y dirección para comprar con menos pasos.'}</p></div>
             <p className="profile-photo-note">
               La foto se guarda solo en este navegador y dispositivo.
             </p>
@@ -277,10 +293,12 @@ export default function Profile() {
               </div>
             </div>
 
+            {loadError && <p className="profile-inline-error" role="alert">{loadError} <button type="button" className="ui-btn" onClick={() => setRefresh(value => value + 1)}>Reintentar</button></p>}
+            {savedNotice && <p className="profile-inline-notice" role="status"><Check size={16} /> {savedNotice}</p>}
             {loading ? (
               <div className="profile-loading">Cargando tus datos…</div>
-            ) : (
-              <>
+            ) : !loadError && (
+              <fieldset className="profile-fields" disabled={saving}>
                 <label className="profile-field">
                   <span>Nombre completo</span>
                   <input
@@ -304,8 +322,18 @@ export default function Profile() {
 
                 <div className="profile-field">
                   <span>Teléfono</span>
-                  <PhoneInput value={phone} onChange={setPhone} />
-                </div>
+                  <input
+                    type="tel"
+                    inputMode="tel"
+                    maxLength={10}
+                    pattern="3[0-9]{9}"
+                    title="Celular colombiano de 10 dígitos, comienza por 3"
+                    value={phone}
+                    onChange={(event) => setPhone(event.target.value)}
+                    autoComplete="tel"
+                    placeholder="Añade tu teléfono"
+                  />
+                </label>
 
                 <label className="profile-field">
                   <span>Dirección</span>
@@ -320,16 +348,18 @@ export default function Profile() {
                 </label>
 
                 <div className="profile-form-footer">
+                  {dirty && <button type="button" className="ui-btn" onClick={() => { if (profile) { setName(profile.fullName); setPhone(profile.phone ?? ''); setAddress(profile.address ?? ''); setSavedNotice(''); } }}>Descartar cambios</button>}
                   <button
                     className="profile-save-btn"
                     type="submit"
-                    disabled={saving}
+                    disabled={saving || !dirty}
                   >
                     <Save size={17} />
-                    {saving ? 'Guardando…' : 'Guardar cambios'}
+                    {saving ? 'Guardando…' : dirty ? 'Guardar cambios' : 'Datos actualizados'}
                   </button>
                 </div>
-              </>
+                <p className="profile-security-note"><ShieldCheck size={15} /> Tu correo identifica tu cuenta y no se puede cambiar aquí. <Link to="/forgot-password">Recuperar contraseña</Link></p>
+              </fieldset>
             )}
           </form>
         </div>

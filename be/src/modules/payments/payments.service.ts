@@ -1,3 +1,4 @@
+import { assertCoupon, normalizeCoupon, couponDiscount } from '../promotional-code/promotional-code.domain';
 import { shippingCost } from '../../lib/shipping';
 import { Prisma } from '@prisma/client';
 import { badRequest, conflict, forbidden, notFound } from '../../lib/errors';
@@ -129,19 +130,13 @@ export const paymentsService = {
       let promotionalCodeId: string | undefined;
       if (input.code) {
         // Bloqueo compartido con otros checkouts para no exceder maxUses.
-        const candidate = await tx.promotionalCode.findFirst({ where: { code: { equals: input.code.trim(), mode: 'insensitive' } } });
+        const candidate = await tx.promotionalCode.findFirst({ where: { code: { equals: normalizeCoupon(input.code), mode: 'insensitive' } } });
         if (!candidate) throw badRequest('No encontramos ese cupón. Revisa el código e intenta de nuevo.');
         await tx.$queryRaw`SELECT id FROM promotional_codes WHERE id = ${candidate.id}::uuid FOR UPDATE`;
         const promo = await tx.promotionalCode.findUnique({ where: { id: candidate.id } });
-        const today = new Date().toISOString().slice(0, 10);
-        if (!promo || !promo.active || promo.startDate.toISOString().slice(0, 10) > today ||
-          promo.endDate.toISOString().slice(0, 10) < today || total.lt(promo.minPurchase ?? 0) ||
-          (promo.maxUses !== null && (promo.currentUses ?? 0) >= promo.maxUses)) {
-          throw badRequest('El código no está vigente, no cumple el mínimo o agotó sus usos.');
-        }
-        total = promo.type === 'percentage'
-          ? total.mul(new Prisma.Decimal(100).minus(promo.value)).div(100)
-          : total.minus(promo.value);
+        assertCoupon(promo, total.toNumber());
+        if (!promo) throw badRequest('No encontramos ese cupón.');
+        total = total.minus(couponDiscount(total, promo));
         promotionalCodeId = promo.id;
         await tx.promotionalCode.update({
           where: { id: promo.id }, data: { currentUses: (promo.currentUses ?? 0) + 1 },

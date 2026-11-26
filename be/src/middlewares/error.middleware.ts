@@ -4,6 +4,7 @@ import { HttpError } from '../lib/errors';
 // Middleware global de errores: convierte HttpError en JSON y el resto en 500.
 export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
   if (err instanceof HttpError) {
+    if (err.status === 429 && typeof err.details?.retryAfter === 'number') res.setHeader('Retry-After', err.details.retryAfter);
     return res.status(err.status).json({
       ok: false,
       message: err.message,
