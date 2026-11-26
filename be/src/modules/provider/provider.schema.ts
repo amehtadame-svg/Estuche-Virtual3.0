@@ -1,8 +1,9 @@
 import { z } from 'zod';
+import { phoneSchema } from '../../lib/phone';
 
 export const createProviderSchema = z.object({
   name: z.string().trim().min(1).max(150),
-  phone: z.string().max(30).optional(),
+  phone: phoneSchema.optional(),
   email: z.string().email().max(255).optional(),
   address: z.string().max(255).optional(),
 });

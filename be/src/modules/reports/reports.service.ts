@@ -1,5 +1,7 @@
 import { prisma } from '../../lib/prisma';
 import { badRequest } from '../../lib/errors';
+import { toDateKey } from '../../lib/reportDate';
+export { toDateKey } from '../../lib/reportDate';
 
 const MONTH_NAMES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
@@ -11,16 +13,6 @@ const DESPATCH_STATUS_ES: Record<string, string> = {
 };
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
-
-export const toDateKey = (value: Date | string | null | undefined): string | null => {
-  if (!value) return null;
-  const d = value instanceof Date ? value : new Date(value);
-  if (Number.isNaN(d.getTime())) return null;
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
-  return `${yyyy}-${mm}-${dd}`;
-};
 
 export interface DailyReportRow {
   id: string;
@@ -120,9 +112,10 @@ async function computeDailyMap(preseedRecentDays: boolean) {
   };
 
   if (preseedRecentDays) {
-    const now = new Date();
+    const today = toDateKey(new Date())!;
+    const noon = new Date(`${today}T12:00:00Z`);
     for (let offset = 0; offset < 6; offset++) {
-      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - offset);
+      const d = new Date(noon.getTime() - offset * 86400000);
       const key = toDateKey(d);
       if (key) ensureDay(key);
     }

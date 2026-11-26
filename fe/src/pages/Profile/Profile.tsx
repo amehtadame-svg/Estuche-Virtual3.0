@@ -1,3 +1,5 @@
+import PhoneInput from '../../components/ui/PhoneInput';
+import { validPhone } from '../../lib/phone';
 import AccountNav from '../../components/layout/AccountNav';
 import {
   useEffect,
@@ -7,7 +9,7 @@ import {
   type FormEvent,
 } from 'react';
 import { Camera, LogOut, Save, UserRound } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { API, authHeaders } from '../../api/api';
 import { useAuth } from '../../hooks/useAuth';
 import { notify } from '../../lib/notifications';
@@ -116,6 +118,10 @@ export default function Profile() {
     event.preventDefault();
     if (!user) return;
 
+    if (!validPhone(phone)) {
+      notify.error('El teléfono debe incluir indicativo y 10 dígitos.');
+      return;
+    }
     setSaving(true);
 
     try {
@@ -208,13 +214,13 @@ export default function Profile() {
       <AccountNav />
         <header className="profile-heading">
           <div>
-            <span className="profile-eyebrow">MI CUENTA</span>
+            <span className="profile-eyebrow">{user?.role === 'superadmin' ? 'CUENTA DE SUPERADMINISTRADOR' : 'MI CUENTA'}</span>
             <h1>Mi perfil</h1>
-            <p>Consulta y actualiza tus datos personales.</p>
+            <p>{user?.role === 'superadmin' ? 'Administra tu identidad y tus datos de contacto.' : 'Consulta y actualiza tus datos personales.'}</p>
           </div>
 
           <span className="profile-account-mark">
-            <UserRound size={18} /> Cuenta protegida
+            <UserRound size={18} /> {user?.role === 'superadmin' ? 'Cuenta administrativa' : 'Mi cuenta'}
           </span>
         </header>
 
@@ -230,6 +236,7 @@ export default function Profile() {
 
             <h2>{name || 'Tu perfil'}</h2>
             <p>{profile?.email || user?.email}</p>
+            {user?.role === 'superadmin' && <p>Superadministrador · acceso de gestión</p>}
 
             <input
               ref={fileInput}
@@ -295,17 +302,10 @@ export default function Profile() {
                   />
                 </label>
 
-                <label className="profile-field">
+                <div className="profile-field">
                   <span>Teléfono</span>
-                  <input
-                    type="tel"
-                    maxLength={30}
-                    value={phone}
-                    onChange={(event) => setPhone(event.target.value)}
-                    autoComplete="tel"
-                    placeholder="Añade tu teléfono"
-                  />
-                </label>
+                  <PhoneInput value={phone} onChange={setPhone} />
+                </div>
 
                 <label className="profile-field">
                   <span>Dirección</span>
@@ -315,7 +315,7 @@ export default function Profile() {
                     value={address}
                     onChange={(event) => setAddress(event.target.value)}
                     autoComplete="street-address"
-                    placeholder="Añade tu dirección de entrega"
+                    placeholder={user?.role === 'superadmin' ? 'Añade tu dirección de contacto' : 'Añade tu dirección de entrega'}
                   />
                 </label>
 
@@ -334,6 +334,12 @@ export default function Profile() {
           </form>
         </div>
 
+        {user?.role === 'superadmin' && (
+          <div className="profile-admin-note">
+            <div><strong>Acceso de superadministrador</strong><p>Desde este perfil puedes mantener tus datos de contacto y cerrar la sesión. La gestión del negocio está en el panel.</p></div>
+            <Link to="/superadmin">Ir al panel</Link>
+          </div>
+        )}
         <div className="profile-logout-row">
           <span>¿Terminaste de revisar tu cuenta?</span>
           <button

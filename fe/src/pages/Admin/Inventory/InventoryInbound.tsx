@@ -396,8 +396,9 @@ export default function InventoryInbound() {
       {/* Bitácora de auditoría de recepciones recientes (CA-002.4) */}
       <div className="inbound-card inbound-history-card">
         <h2 className="inbound-card-title">
-          Ingresos recientes
+          Historial de ingresos
         </h2>
+        <p className="inbound-muted">Cada fila es un movimiento registrado, no un producto nuevo. Un mismo producto puede aparecer varias veces.</p>
         {movements.length === 0 ? (
           <p className="inbound-muted">Aún no se han registrado entradas de mercancía.</p>
         ) : (

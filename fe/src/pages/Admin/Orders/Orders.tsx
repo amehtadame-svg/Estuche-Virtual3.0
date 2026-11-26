@@ -56,9 +56,9 @@ export default function Orders() {
 
   const loadOrders = () => {
     fetch(API.orders, { headers: authHeaders() })
-      .then((r) => r.json())
+      .then((r) => { if (!r.ok) throw new Error('No se pudieron cargar los pedidos.'); return r.json(); })
       .then((data) => {
-        setOrders(data);
+        setOrders(Array.isArray(data) ? data : []);
         setLoading(false);
       })
       .catch(() => {
@@ -372,7 +372,7 @@ export default function Orders() {
                   </td>
 
                   <td>
-                    {order.createdById || order.work ? <Link className="btn-editar-pedido" to="/empleado/supervision">Gestionar</Link> : <>
+                    {order.createdById || order.work ? <Link className="btn-editar-pedido" to={`/empleado/supervision?pedido=${encodeURIComponent(order.id)}`}>Gestionar</Link> : <>
                     <button
                       className="btn-editar-pedido"
                       onClick={() => handleEdit(order)}

@@ -87,7 +87,7 @@ export default function Checkout() {
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (data) {
-          setPhone(data.phone || '');
+          setPhone(/^\+57 \d{10}$/.test(data.phone || '') ? data.phone.slice(4) : (data.phone || ''));
           setAddress(data.address || '');
         }
       })

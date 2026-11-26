@@ -312,6 +312,8 @@ test(
 
     const origMovCreate =
       prisma.inventoryMovement.create;
+    const origTransaction = prisma.$transaction;
+    prisma.$transaction = async (fn: any) => fn(prisma);
 
     let createdData: any = null;
     let createdMovement: any = null;
@@ -414,6 +416,45 @@ test(
 
       prisma.inventoryMovement.create =
         origMovCreate;
+      prisma.$transaction = origTransaction;
     }
   }
 );
+test('Un fallo en el movimiento inicial revierte la creación del producto', async () => {
+  const findFirst = prisma.product.findFirst;
+  const transaction = prisma.$transaction;
+  let committed = false;
+  let attempts = 0;
+  prisma.product.findFirst = async () => null;
+  prisma.$transaction = async (fn: any) => {
+    const tx = {
+      product: { create: async () => { attempts++; return { id: UUID }; } },
+      productImage: { create: async () => ({}) },
+      inventoryMovement: { create: async () => { throw new Error('falló el movimiento'); } },
+    };
+    const result = await fn(tx);
+    committed = true;
+    return result;
+  };
+  try {
+    await assert.rejects(productService.create({ name: 'Producto', price: 100, stock: 1 }), /falló el movimiento/);
+    assert.equal(attempts, 1);
+    assert.equal(committed, false);
+  } finally {
+    prisma.product.findFirst = findFirst;
+    prisma.$transaction = transaction;
+  }
+});
+
+test('La búsqueda de SKU y código de barras incluye productos eliminados', async () => {
+  const findFirst = prisma.product.findFirst;
+  let query: any;
+  prisma.product.findFirst = async (args: any) => { query = args; return { id: UUID }; };
+  try {
+    await assert.rejects(productService.create({ name: 'Nuevo', sku: 'SKU-01', barcode: '123', price: 10 }), HttpError);
+    assert.equal(query.where.deletedAt, undefined);
+    assert.equal(query.where.OR[0].deletedAt, null);
+    assert.equal(query.where.OR[1].sku.equals, 'SKU-01');
+    assert.equal(query.where.OR[2].barcode.equals, '123');
+  } finally { prisma.product.findFirst = findFirst; }
+});

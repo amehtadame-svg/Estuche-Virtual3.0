@@ -37,3 +37,8 @@
 .profile-logout-row button { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 10px 14px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--text); cursor: pointer; }
 @media (max-width: 700px) { .profile-page { padding: 24px 16px 48px; } .profile-heading { align-items: flex-start; flex-direction: column; } .profile-layout { grid-template-columns: 1fr; } .profile-photo-card { padding: 24px 20px; } .profile-form-card { padding: 22px 19px; } }
 @media (max-width: 420px) { .profile-logout-row { align-items: flex-start; flex-direction: column; } .profile-save-btn { width: 100%; } }
+
+.profile-admin-note { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-top: 20px; padding: 18px 22px; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); }
+.profile-admin-note p { margin: 6px 0 0; color: var(--muted); font-size: 13px; }
+.profile-admin-note a { color: var(--accent-text); font-weight: 700; white-space: nowrap; }
+@media (max-width: 600px) { .profile-admin-note { align-items: flex-start; flex-direction: column; } }

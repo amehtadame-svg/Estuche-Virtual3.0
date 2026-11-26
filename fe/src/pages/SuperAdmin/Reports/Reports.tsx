@@ -53,6 +53,7 @@ const INVALID_RANGE_MSG =
 
 export default function Reports() {
   const [reports, setReports] = useState<Report[]>([]);
+  const [todayReports, setTodayReports] = useState<Report[]>([]);
   const [summary, setSummary] = useState<Summary | null>(null);
   const [loading, setLoading] = useState(true);
   const [fromDate, setFromDate] = useState('');
@@ -67,19 +68,24 @@ export default function Reports() {
     const qs = params.toString() ? `?${params.toString()}` : '';
 
     try {
-      const [r1, r2] = await Promise.all([
+      const today = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'America/Bogota', year: 'numeric', month: '2-digit', day: '2-digit',
+      }).format(new Date());
+      const [r1, r2, r3] = await Promise.all([
         fetch(`${API.reports}${qs}`, { headers }),
         fetch(`${API.reports}/summary${qs}`, { headers }),
+        fetch(`${API.reports}?from=${today}&to=${today}`, { headers }),
       ]);
 
-      if (!r1.ok || !r2.ok) {
-        const err = await (!r1.ok ? r1 : r2).json().catch(() => null);
+      if (!r1.ok || !r2.ok || !r3.ok) {
+        const err = await (!r1.ok ? r1 : !r2.ok ? r2 : r3).json().catch(() => null);
         notify.error(err?.message ?? 'No se pudieron cargar los reportes.');
         return;
       }
 
-      const [rowsData, summaryData] = await Promise.all([r1.json(), r2.json()]);
+      const [rowsData, summaryData, todayData] = await Promise.all([r1.json(), r2.json(), r3.json()]);
       setReports(Array.isArray(rowsData) ? rowsData : []);
+      setTodayReports(Array.isArray(todayData) ? todayData.filter((row: Report) => row.date.slice(0, 10) === today) : []);
       setSummary(summaryData);
     } catch {
       notify.error('Error de conexión al cargar los reportes.');
@@ -234,11 +240,12 @@ export default function Reports() {
       </div>
 
       <div className="reportes-tabla-section">
-        <h2 className="section-heading">Detalle diario</h2>
+        <h2 className="section-heading">Detalle de hoy</h2>
+        <p>Esta tabla muestra únicamente los registros del día en Colombia; los filtros afectan las gráficas y el resumen.</p>
         {loading ? (
           <p style={{ color: 'var(--text)', margin: 0 }}>Calculando reportes…</p>
-        ) : reports.length === 0 ? (
-          <p style={{ color: 'var(--text)', margin: 0 }}>No hay registros diarios para mostrar.</p>
+        ) : todayReports.length === 0 ? (
+          <p style={{ color: 'var(--text)', margin: 0 }}>No hay registros para el día de hoy.</p>
         ) : (
           <div className="table-wrapper">
             <table className="tabla-reportes">
@@ -256,7 +263,7 @@ export default function Reports() {
                 </tr>
               </thead>
               <tbody>
-                {reports.map((r) => (
+                {todayReports.map((r) => (
                   <tr key={r.id}>
                     <td className="fecha-reporte">{r.date.slice(0, 10)}</td>
                     <td>{r.totalOrders}</td>
