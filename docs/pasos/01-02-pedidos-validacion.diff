@@ -1,0 +1,727 @@
+# Paso 1+2 — Pedidos: al menos un producto, cantidades válidas,
+# sin registros si la validación falla, y dirección de entrega.
+# Base: main. Aplicar desde la raíz:  git apply docs/pasos/01-02-pedidos-validacion.diff
+
+--- a/be/src/modules/orders/orders.schema.ts
++++ b/be/src/modules/orders/orders.schema.ts
+@@ -11,21 +11,53 @@
+   'returned',
+ ] as const;
+ 
+-export const createOrderSchema = z.object({
+-  deliveryAddressId: databaseUuidSchema.optional(),
+-  total: z.coerce.number().min(0),
+-  promotionalCodeId: databaseUuidSchema.optional(),
+-  status: z.enum(orderStatusEnum).optional(),
+-  details: z
+-    .array(
+-      z.object({
+-        productId: databaseUuidSchema,
+-        quantity: z.coerce.number().int().min(1),
+-        unitPrice: z.coerce.number().min(0),
+-      })
+-    )
+-    .optional(),
+-});
++/**
++ * A-01/A-02/A-03: una venta siempre lleva al menos una línea, cantidades
++ * válidas y una dirección cuando es domicilio.
++ * `total` y `unitPrice` se siguen aceptando por compatibilidad con clientes
++ * anteriores, pero el servidor los IGNORA: los precios se leen de la BD.
++ * La dirección NO se exige aquí porque el servicio usa la del perfil cuando
++ * el cuerpo no la trae; validarla en ambos lados rompía el checkout.
++ */
++export const createOrderSchema = z
++  .object({
++    deliveryAddressId: databaseUuidSchema.optional(),
++    deliveryAddress: z
++      .string()
++      .trim()
++      .min(8, 'Indica una dirección de entrega válida.')
++      .max(500, 'La dirección de entrega no puede superar los 500 caracteres.')
++      .optional(),
++    // Se acepta por compatibilidad, pero el total SIEMPRE lo calcula el servidor.
++    total: z.coerce.number().min(0).optional(),
++    promotionalCodeId: databaseUuidSchema.optional(),
++    status: z.enum(orderStatusEnum).optional(),
++    fulfillmentMethod: z.enum(['delivery', 'pickup']).optional(),
++    customerId: databaseUuidSchema.optional(),
++    details: z
++      .array(
++        z.object({
++          productId: databaseUuidSchema,
++          quantity: z.coerce.number().int().min(1).max(999),
++          unitPrice: z.coerce.number().min(0).optional(),
++        })
++      )
++      .min(1, 'Un pedido debe incluir al menos un producto.')
++      .max(100),
++  })
++  .refine(
++    (data) =>
++      new Set(data.details.map((line) => line.productId)).size ===
++      data.details.length,
++    {
++      message: 'No se permiten productos repetidos en el pedido.',
++      path: ['details'],
++    }
++  )
++  .refine((data) => !(data.deliveryAddressId && data.deliveryAddress), {
++    message: 'Envía deliveryAddressId o deliveryAddress, no ambos.',
++    path: ['deliveryAddress'],
++  });
+ 
+ export const updateOrderSchema = z.object({
+   customerId: databaseUuidSchema.optional(),
+@@ -37,5 +69,5 @@
+ });
+ 
+ export const applyPromotionalCodeSchema = z.object({
+-  code: z.string().min(1),
++  code: z.string().trim().min(1).max(50),
+ });
+--- a/be/src/modules/orders/orders.service.ts
++++ b/be/src/modules/orders/orders.service.ts
+@@ -157,8 +157,11 @@
+   async create(
+     data: {
+       deliveryAddressId?: string;
++      deliveryAddress?: string;
+       promotionalCodeId?: string;
+       status?: string;
++      fulfillmentMethod?: 'delivery' | 'pickup';
++      customerId?: string;
+       details?: {
+         productId: string;
+         quantity: number;
+@@ -183,24 +186,85 @@
+       details,
+     } = data;
+ 
+-    const customerId = requester.id;
++    // ── A-01: nunca se crea un pedido sin líneas ────────────────────────
++    // Se valida ANTES de abrir la transacción para que un intento inválido no
++    // deje NINGÚN registro (ni pedido, ni detalle, ni movimiento, ni uso de cupón).
++    if (!Array.isArray(details) || details.length === 0) {
++      throw badRequest(
++        'Un pedido debe incluir al menos un producto.'
++      );
++    }
++
++    // ── A-02: cantidades válidas y sin productos repetidos ──────────────
++    // El esquema ya lo valida; aquí se repite porque el servicio también se
++    // invoca desde otros módulos.
++    const seen = new Set<string>();
++
++    for (const item of details) {
++      const quantity = Number(item.quantity);
++
++      if (!Number.isInteger(quantity) || quantity < 1) {
++        throw badRequest(
++          'Cada producto debe tener una cantidad entera de al menos 1 unidad.'
++        );
++      }
++
++      if (quantity > 999) {
++        throw badRequest(
++          'La cantidad máxima por producto es de 999 unidades.'
++        );
++      }
++
++      if (seen.has(item.productId)) {
++        throw badRequest(
++          'No se permiten productos repetidos en el pedido.'
++        );
++      }
++
++      seen.add(item.productId);
++    }
++
++    const fulfillmentMethod =
++      data.fulfillmentMethod ?? 'delivery';
++    const isPickup = fulfillmentMethod === 'pickup';
++
++    const customerId =
++      isAdmin(requester) && data.customerId
++        ? data.customerId
++        : requester.id;
++
++    // Un cliente solo puede comprar para sí mismo.
++    if (
++      !isAdmin(requester) &&
++      data.customerId &&
++      data.customerId !== requester.id
++    ) {
++      throw forbidden(
++        'No puedes crear un pedido a nombre de otro usuario.'
++      );
++    }
+ 
+     return prisma.$transaction(async (tx) => {
++      // ── A-04: la dirección se resuelve antes de escribir nada ─────────
++      // Orden: dirección explícita del cuerpo → dirección guardada del
++      // cliente. En domicilio, si no hay ninguna de las dos, se rechaza.
+       let deliverySnapshot: string | null =
+         null;
+ 
+-      if (deliveryAddressId) {
++      if (isPickup) {
++        deliverySnapshot = null;
++      } else if (deliveryAddressId) {
+         const address =
+           await tx.deliveryAddress.findFirst({
+             where: {
+               id: deliveryAddressId,
+-              userId: requester.id,
++              userId: customerId,
+             },
+           });
+ 
+         if (!address) {
+           throw forbidden(
+-            'La dirección no pertenece a tu cuenta.'
++            'La dirección no pertenece a la cuenta del cliente.'
+           );
+         }
+ 
+@@ -211,6 +275,9 @@
+         ]
+           .filter(Boolean)
+           .join(', ');
++      } else if (data.deliveryAddress?.trim()) {
++        deliverySnapshot =
++          data.deliveryAddress.trim();
+       } else {
+         const customer =
+           await tx.user.findUnique({
+@@ -222,8 +289,20 @@
+             },
+           });
+ 
++        if (!customer) {
++          throw notFound(
++            'Cliente no encontrado.'
++          );
++        }
++
+         deliverySnapshot =
+-          customer?.address ?? null;
++          customer.address ?? null;
++      }
++
++      if (!isPickup && !deliverySnapshot) {
++        throw badRequest(
++          'Indica una dirección para la entrega a domicilio.'
++        );
+       }
+ 
+       const items: {
+@@ -235,52 +314,52 @@
+ 
+       let total = 0;
+ 
+-      if (
+-        Array.isArray(details) &&
+-        details.length > 0
+-      ) {
+-        for (const item of details) {
+-          const product =
+-            await tx.product.findUnique({
+-              where: {
+-                id: item.productId,
+-              },
+-            });
+-
+-          if (!product) {
+-            throw badRequest(
+-              `Producto ${item.productId} no encontrado.`
+-            );
+-          }
+-
+-          if (
+-            product.stock < item.quantity
+-          ) {
+-            throw badRequest(
+-              `Stock insuficiente para "${product.name}". Disponible: ${product.stock}, solicitado: ${item.quantity}.`
+-            );
+-          }
++      for (const item of data.details ?? []) {
++        const product =
++          await tx.product.findUnique({
++            where: {
++              id: item.productId,
++            },
++          });
+ 
+-          const unitPrice = Number(
+-            product.price
++        if (!product) {
++          throw badRequest(
++            `Producto ${item.productId} no encontrado.`
+           );
++        }
+ 
+-          const subtotal =
+-            unitPrice * item.quantity;
++        if (
++          product.stock < item.quantity
++        ) {
++          throw badRequest(
++            `Stock insuficiente para "${product.name}". Disponible: ${product.stock}, solicitado: ${item.quantity}.`
++          );
++        }
+ 
+-          items.push({
+-            productId: item.productId,
+-            quantity: item.quantity,
+-            unitPrice,
+-            subtotal,
+-          });
++        const unitPrice = Number(
++          product.price
++        );
++
++        // El precio SIEMPRE viene de la BD, nunca del cuerpo de la petición.
++        const subtotal =
++          unitPrice * item.quantity;
++
++        items.push({
++          productId: item.productId,
++          quantity: item.quantity,
++          unitPrice,
++          subtotal,
++        });
+ 
+-          total += subtotal;
+-        }
++        total += subtotal;
+       }
+ 
+-      const deliveryFee = shippingCost(total);
+-      let finalCodeId =
++      const deliveryFee = shippingCost(
++        total,
++        isPickup
++      );
++
++      let finalCodeId: string | null =
+         promotionalCodeId ?? null;
+ 
+       if (promotionalCodeId) {
+@@ -323,7 +402,9 @@
+       }
+ 
+       total =
+-        Math.round((Math.max(0, total) + deliveryFee) * 100) / 100;
++        Math.round(
++          (Math.max(0, total) + deliveryFee) * 100
++        ) / 100;
+ 
+       const newOrder =
+         await tx.order.create({
+@@ -347,6 +428,7 @@
+             ),
+             deliveryAddressId:
+               deliveryAddressId ?? null,
++            fulfillmentMethod,
+             promotionalCodeId:
+               finalCodeId,
+             total,
+@@ -355,52 +437,50 @@
+           },
+         });
+ 
+-      if (items.length > 0) {
+-        for (const item of items) {
+-          const updated =
+-            await tx.product.updateMany({
+-              where: {
+-                id: item.productId,
+-                stock: {
+-                  gte: item.quantity,
+-                },
+-              },
+-              data: {
+-                stock: {
+-                  decrement: item.quantity,
+-                },
++      for (const item of items) {
++        const updated =
++          await tx.product.updateMany({
++            where: {
++              id: item.productId,
++              stock: {
++                gte: item.quantity,
+               },
+-            });
+-
+-          if (updated.count === 0) {
+-            throw badRequest(
+-              `Stock insuficiente para el producto ${item.productId}.`
+-            );
+-          }
+-
+-          await tx.inventoryMovement.create({
++            },
+             data: {
+-              productId: item.productId,
+-              type: 'out',
+-              quantity: item.quantity,
+-              reason:
+-                `Venta - pedido ${newOrder.id}`,
+-              userId: customerId,
++              stock: {
++                decrement: item.quantity,
++              },
+             },
+           });
++
++        if (updated.count === 0) {
++          throw badRequest(
++            `Stock insuficiente para el producto ${item.productId}.`
++          );
+         }
+ 
+-        await tx.orderDetail.createMany({
+-          data: items.map((item) => ({
+-            orderId: newOrder.id,
++        await tx.inventoryMovement.create({
++          data: {
+             productId: item.productId,
++            type: 'out',
+             quantity: item.quantity,
+-            unitPrice: item.unitPrice,
+-            subtotal: item.subtotal,
+-          })),
++            reason:
++              `Venta - pedido ${newOrder.id}`,
++            userId: customerId,
++          },
+         });
+       }
+ 
++      await tx.orderDetail.createMany({
++        data: items.map((item) => ({
++          orderId: newOrder.id,
++          productId: item.productId,
++          quantity: item.quantity,
++          unitPrice: item.unitPrice,
++          subtotal: item.subtotal,
++        })),
++      });
++
+       return newOrder;
+     });
+   },
+--- a/be/src/modules/orders/orders.test.ts
++++ b/be/src/modules/orders/orders.test.ts
+@@ -261,28 +261,47 @@
+   }
+ );
+ 
++// A-01: el pedido vacío es el defecto que se está corrigiendo. Antes esta
++// prueba afirmaba que "un pedido sin detalles queda en cero" (el defecto);
++// ahora exige el comportamiento correcto y comprueba que no deja registros.
+ test(
+-  'C-02: pedido sin detalles queda en cero (ningún precio del cliente)',
++  'A-01: un pedido sin líneas se rechaza y no deja registros',
+   async () => {
+     const { tx, calls } = fakeTx();
+     stubTransaction(tx);
+ 
+-    const order =
+-      await orderService.create(
+-        {
+-          total: 999999,
+-        } as any,
+-        requester
++    for (const payload of [
++      {},
++      { total: 999999 },
++      { details: [] },
++    ]) {
++      await assert.rejects(
++        orderService.create(
++          payload as any,
++          requester
++        ),
++        (err: HttpError) =>
++          err.status === 400 &&
++          /al menos un producto/.test(err.message)
+       );
++    }
+ 
+     assert.strictEqual(
+-      order.total,
+-      0
++      calls.createMany,
++      null,
++      'no debe crear líneas de detalle'
+     );
+ 
+     assert.strictEqual(
+-      calls.createMany,
+-      null
++      calls.orderCreate,
++      null,
++      'no debe crear el pedido'
++    );
++
++    assert.strictEqual(
++      calls.movements.length,
++      0,
++      'no debe registrar movimientos de inventario'
+     );
+   }
+ );
+@@ -419,25 +438,242 @@
+   }
+ );
+ 
++// A-01: antes esta prueba se conformaba con que un pedido vacío no tocara el
++// stock. Ahora el pedido vacío ni siquiera debe existir.
+ test(
+-  'C-03: un pedido sin detalles no descuenta stock ni registra movimientos',
++  'A-01: el pedido vacío se corta antes de tocar el stock',
+   async () => {
+     const { tx, calls } = fakeTx();
+     stubTransaction(tx);
+ 
+-    await orderService.create(
+-      {},
+-      requester
++    await assert.rejects(
++      orderService.create(
++        {} as any,
++        requester
++      ),
++      (err: HttpError) =>
++        err.status === 400 &&
++        /al menos un producto/.test(err.message)
+     );
+ 
+     assert.strictEqual(
+       calls.updateMany.length,
+-      0
++      0,
++      'no debe descontar stock'
+     );
+ 
+     assert.strictEqual(
+       calls.movements.length,
+-      0
++      0,
++      'no debe registrar movimientos'
++    );
++
++    assert.strictEqual(
++      calls.orderCreate,
++      null,
++      'no debe crear el pedido'
++    );
++  }
++);
++// ─── A-02: validar cantidades ────────────────────────────────────────────
++test(
++  'A-02: una cantidad inválida se rechaza antes de escribir nada',
++  async () => {
++    for (const quantity of [0, -1, 1.5, 1000, NaN]) {
++      const { tx, calls } = fakeTx();
++      stubTransaction(tx);
++
++      await assert.rejects(
++        orderService.create(
++          {
++            details: [
++              { productId: PRODUCT.id, quantity },
++            ],
++          } as any,
++          requester
++        ),
++        (err: HttpError) =>
++          err.status === 400 &&
++          /cantidad|999/i.test(err.message),
++        `la cantidad ${quantity} debe rechazarse`
++      );
++
++      assert.strictEqual(
++        calls.orderCreate,
++        null,
++        'no debe crear el pedido'
++      );
++      assert.strictEqual(
++        calls.createMany,
++        null,
++        'no debe crear líneas'
++      );
++      assert.strictEqual(
++        calls.updateMany.length,
++        0,
++        'no debe descontar stock'
++      );
++    }
++  }
++);
++
++test(
++  'A-02: el mismo producto no puede ir dos veces en un pedido',
++  async () => {
++    const { tx, calls } = fakeTx();
++    stubTransaction(tx);
++
++    await assert.rejects(
++      orderService.create(
++        {
++          details: [
++            { productId: PRODUCT.id, quantity: 1 },
++            { productId: PRODUCT.id, quantity: 2 },
++          ],
++        } as any,
++        requester
++      ),
++      (err: HttpError) =>
++        err.status === 400 &&
++        /repetidos/i.test(err.message)
+     );
++
++    assert.strictEqual(calls.orderCreate, null);
++    assert.strictEqual(calls.updateMany.length, 0);
+   }
+-);
+\ No newline at end of file
++);
++
++test(
++  'A-02: una cantidad mayor al stock no descuenta nada',
++  async () => {
++    const { tx, calls } = fakeTx();
++    stubTransaction(tx);
++
++    await assert.rejects(
++      orderService.create(
++        {
++          details: [
++            { productId: PRODUCT.id, quantity: PRODUCT.stock + 1 },
++          ],
++        } as any,
++        requester
++      ),
++      (err: HttpError) =>
++        err.status === 400 &&
++        /Stock insuficiente/i.test(err.message)
++    );
++
++    assert.strictEqual(calls.orderCreate, null);
++    assert.strictEqual(calls.updateMany.length, 0);
++    assert.strictEqual(calls.movements.length, 0);
++  }
++);
++
++// ─── A-04: validar la dirección de entrega ───────────────────────────────
++test(
++  'A-04: domicilio sin dirección y sin dirección de perfil se rechaza',
++  async () => {
++    const { tx, calls } = fakeTx({
++      user: {
++        findUnique: async () => ({ address: null }),
++      },
++    });
++    stubTransaction(tx);
++
++    await assert.rejects(
++      orderService.create(
++        {
++          details: [{ productId: PRODUCT.id, quantity: 1 }],
++        } as any,
++        requester
++      ),
++      (err: HttpError) =>
++        err.status === 400 &&
++        /dirección/i.test(err.message)
++    );
++
++    assert.strictEqual(
++      calls.orderCreate,
++      null,
++      'no debe crear el pedido sin dirección de entrega'
++    );
++  }
++);
++
++test(
++  'A-04: la dirección que llega en el cuerpo es la que se guarda',
++  async () => {
++    const { tx, calls } = fakeTx();
++    stubTransaction(tx);
++
++    await orderService.create(
++      {
++        deliveryAddress: '  Calle 123 # 45-67, Bogotá  ',
++        details: [{ productId: PRODUCT.id, quantity: 1 }],
++      } as any,
++      requester
++    );
++
++    assert.strictEqual(
++      calls.orderCreate?.data?.deliverySnapshot,
++      'Calle 123 # 45-67, Bogotá',
++      'debe guardar la dirección del cuerpo sin espacios sobrantes'
++    );
++  }
++);
++
++test(
++  'A-04: en domicilio, si el cuerpo no trae dirección se usa la del perfil',
++  async () => {
++    const { tx, calls } = fakeTx();
++    stubTransaction(tx);
++
++    await orderService.create(
++      {
++        details: [{ productId: PRODUCT.id, quantity: 1 }],
++      } as any,
++      requester
++    );
++
++    assert.strictEqual(
++      calls.orderCreate?.data?.deliverySnapshot,
++      'Dirección de prueba',
++      'debe reutilizar la dirección guardada del cliente'
++    );
++  }
++);
++
++test(
++  'A-04: el retiro en tienda no exige dirección ni cobra envío',
++  async () => {
++    const { tx, calls } = fakeTx({
++      user: {
++        findUnique: async () => ({ address: null }),
++      },
++    });
++    stubTransaction(tx);
++
++    await orderService.create(
++      {
++        fulfillmentMethod: 'pickup',
++        details: [{ productId: PRODUCT.id, quantity: 1 }],
++      } as any,
++      requester
++    );
++
++    assert.strictEqual(
++      calls.orderCreate?.data?.deliverySnapshot,
++      null,
++      'el retiro no registra dirección de entrega'
++    );
++    assert.strictEqual(
++      Number(calls.orderCreate?.data?.shippingCost),
++      0,
++      'el retiro no cobra domicilio'
++    );
++    assert.strictEqual(
++      calls.orderCreate?.data?.fulfillmentMethod,
++      'pickup'
++    );
++  }
++);
