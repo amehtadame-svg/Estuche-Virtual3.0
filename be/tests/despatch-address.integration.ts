@@ -100,7 +100,7 @@ test('Direcciones de despacho: validación HTTP y persistencia real', async (t) 
       assert.equal((await request('worker', `${path}/pack`, {})).status, 200);
 
       for (let attempt = 0; attempt < 2; attempt++) {
-        const dispatched = await request('worker', `${path}/dispatch`, { driverId: users.driver.id });
+        const dispatched = await request('driver', `/delivery/pending-orders/${orderId}/claim`, {});
         assert.equal(dispatched.status, 200, JSON.stringify(dispatched.body));
       }
 

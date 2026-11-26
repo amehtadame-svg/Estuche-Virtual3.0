@@ -63,6 +63,8 @@ export interface Product {
   price: string;
   stock: number;
   stockMin: number;
+  category?: { name?: string } | null;
+  images?: { url: string; isPrimary?: boolean }[];
 }
 
 export interface Person {

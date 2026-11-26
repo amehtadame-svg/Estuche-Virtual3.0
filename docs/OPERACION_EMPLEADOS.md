@@ -2,12 +2,14 @@
 
 ## Acceso y responsabilidades
 
-- **Empleado**: `/empleado`. Puede crear pedidos para clientes, consultar los pedidos propios, tomar pedidos pagados de la cola, preparar y empacar, reportar incidencias, despachar a un repartidor, confirmar retiros mediante código y registrar movimientos de inventario. No puede consultar la supervisión, resolver incidencias, reasignar ni cancelar reservas.
+- **Empleado**: `/empleado`. Puede crear pedidos para clientes, consultar los pedidos propios, tomar pedidos pagados de la cola, preparar y empacar, reportar incidencias, dejar domicilios listos para que los tome un repartidor, confirmar retiros mediante código y registrar movimientos de inventario. No puede consultar la supervisión, resolver incidencias, reasignar ni cancelar reservas.
 - **Administrador y superadministrador**: pueden entrar a `/empleado` y utilizar las acciones de supervisión; el registro de pagos simulados sigue restringido a superadministrador y al entorno de pruebas configurado.
 - **Cliente**: `/cliente/retiros`, para generar un código de retiro de un pedido propio que esté listo. El código anterior queda invalidado al generar uno nuevo.
-- **Repartidor**: `/repartidor`. Solo ve hasta 100 despachos operativos asignados a él y en tránsito y puede confirmar que el cliente los recibió. No puede editar la dirección ni reasignar el envío; las incidencias o devoluciones requieren gestión administrativa fuera de esta vista.
+- **Repartidor**: `/repartidor`. Ve hasta 100 pedidos pagados, empacados y disponibles en «Pedidos pendientes» y puede tomar uno. En «Mis entregas» ve hasta 100 envíos que tomó y puede confirmar que el cliente los recibió. Los datos del cliente y la dirección se muestran solo después de tomar el pedido. No puede editar la dirección ni reasignar el envío; las incidencias o devoluciones requieren gestión administrativa fuera de esta vista.
 
 El servidor comprueba el rol y, cuando corresponde, la asignación o propiedad; ocultar un botón no es el mecanismo de seguridad. Administradores y superadministradores conservan sus paneles y acciones generales anteriores.
+
+El carrito y las acciones de compra no se muestran a empleados ni repartidores; al crear pedidos o movimientos de inventario el empleado elige productos en un catálogo con búsqueda por nombre e imágenes.
 
 ## Pago recibido en tienda
 
@@ -22,6 +24,7 @@ La separación cambia rutas: deben desplegarse frontend y backend compatibles ju
 - `/api/employee`: operaciones del empleado, actividad y movimientos propios, pago en tienda `POST /orders/:id/store-payment` (`requestKey` UUID y `method` `cash|card`).
 - `/api/client/my-pickups` y `POST /api/client/orders/:id/pickup-code`: retiro del comprador.
 - `/api/supervision`: pedidos de supervisión, empleados, actividad y movimientos del equipo, `resolve`, `reassign`, `cancel` y `simulate-payment`. Exige admin/superadmin; la simulación exige superadmin y configuración de desarrollo/pruebas.
+- `GET /api/delivery/pending-orders` y `POST /api/delivery/pending-orders/:id/claim`: lista y toma de domicilios empacados por el repartidor. La asignación se serializa para evitar que dos repartidores tomen el mismo pedido.
 - `/api/delivery/despatches` y `POST /api/delivery/despatches/:id/confirm`: repartidor asignado. La confirmación vuelve a validar el estado de despacho, preparación y pago dentro de una transacción.
 
 No requiere migración de esquema. El checkout de cliente existente y sus rutas no se sustituyen por el registro en tienda.

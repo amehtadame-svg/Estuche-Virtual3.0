@@ -5,6 +5,7 @@ import EmployeeWorkspace from './pages/Employee/EmployeeWorkspace';
 import DeliveryWorkspace from './pages/Delivery/DeliveryWorkspace';
 import CustomerPickups from './pages/Client/CustomerPickups';
 import AccessDenied from './pages/AccessDenied/AccessDenied';
+import CartAccess from './components/ui/CartAccess';
 import ProtectedRoute from './components/ui/ProtectedRoute';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
@@ -61,7 +62,7 @@ function App() {
               <Route path="/register" element={<Register />} />
               <Route path="/catalogo" element={<Catalogo />} />
               <Route path="/producto/:id" element={<Producto />} />
-              <Route path="/carrito" element={<Carrito />} />
+              <Route path="/carrito" element={<CartAccess><Carrito /></CartAccess>} />
               <Route path="/Contacto" element={<Contacto />} />
               <Route path="/Nosotros" element={<Nosotros />} />
               <Route path="/no-acceso" element={<AccessDenied />} />
@@ -125,7 +126,7 @@ function App() {
               </Route>
 
               <Route element={<ProtectedRoute />}>
-                <Route path="/Pago" element={<Pago />} />
+                <Route path="/Pago" element={<CartAccess><Pago /></CartAccess>} />
                 <Route path="/perfil" element={<Profile />} />
               </Route>
 

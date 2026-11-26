@@ -1,3 +1,4 @@
+import { useCanShop } from '../../hooks/useCanShop';
 import { productImage } from "../../lib/productImage";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
@@ -65,6 +66,7 @@ const money = (value: number) => `$ ${Number(value).toLocaleString("es-CO")}`;
 const catLabel = (name: string) => DISPLAY_CAT[name] ?? name;
 
 export default function Catalog() {
+  const canShop = useCanShop();
   const { add } = useCart();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -373,6 +375,7 @@ export default function Catalog() {
                           fill={isLoved ? "#c026f5" : "none"}
                         />
                       </button>
+                      {canShop && (
                       <button
                         type="button"
                         className="catalog-add"
@@ -381,6 +384,7 @@ export default function Catalog() {
                       >
                         <ShoppingBag size={15} /> Agregar al carrito
                       </button>
+                      )}
                     </div>
                     <div className="catalog-content">
                       <p>
@@ -413,7 +417,7 @@ export default function Catalog() {
         </section>
       </div>
 
-      {toast && (
+      {canShop && toast && (
         <div className="catalog-toast" role="status">
           <span>
             <Check size={16} />

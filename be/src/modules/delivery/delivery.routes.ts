@@ -3,8 +3,9 @@ import { verifyToken } from '../../middlewares/auth.middleware';
 import { asyncHandler } from '../../middlewares/asyncHandler';
 import { validate } from '../../middlewares/validate';
 import { uuidParam } from '../../lib/schemas';
-import { badRequest, conflict, forbidden, notFound } from '../../lib/errors';
+import { conflict, forbidden, notFound } from '../../lib/errors';
 import { prisma } from '../../lib/prisma';
+import { deliveryService, assertEmptyBody } from './delivery.service';
 import { atomic, event, financiallyPaid, lockOrder } from '../employee/employee.domain';
 
 const router = Router();
@@ -13,6 +14,13 @@ router.use(verifyToken, (req, res, next) => {
   if ((req as any).user.role !== 'delivery') return next(forbidden());
   next();
 });
+router.get('/pending-orders', asyncHandler(async (req, res) => {
+  res.json(await deliveryService.pending((req as any).user));
+}));
+router.post('/pending-orders/:id/claim', validate({ params: uuidParam }), asyncHandler(async (req, res) => {
+  assertEmptyBody(req.body);
+  res.json(await deliveryService.claim(req.params.id, (req as any).user));
+}));
 router.get('/despatches', asyncHandler(async (req, res) => {
   res.json(await prisma.despatch.findMany({
     where: { driverId: (req as any).user.id, status: 'in_transit', order: { deletedAt: null, status: 'shipped', work: { is: { status: 'dispatched' } } } },
@@ -21,7 +29,7 @@ router.get('/despatches', asyncHandler(async (req, res) => {
   }));
 }));
 router.post('/despatches/:id/confirm', validate({ params: uuidParam }), asyncHandler(async (req, res) => {
-  if (req.body && Object.keys(req.body).length) throw badRequest('Esta operación no acepta campos.');
+  assertEmptyBody(req.body);
   const actorId = (req as any).user.id as string;
   const initial = await prisma.despatch.findUnique({ where: { id: req.params.id }, select: { orderId: true } });
   if (!initial) throw notFound();

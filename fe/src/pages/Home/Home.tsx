@@ -1,3 +1,4 @@
+import { useCanShop } from '../../hooks/useCanShop';
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -145,6 +146,7 @@ const apiImage = (product?: ApiProduct | null) =>
   null;
 
 export default function Home() {
+  const canShop = useCanShop();
   const { add } = useCart();
   const [categories, setCategories] = useState<{ id: string; name: string; _count: { products: number } }[]>([]);
   const [categoriesError, setCategoriesError] = useState(false);
@@ -444,6 +446,7 @@ export default function Home() {
                     >
                       <Heart size={15} fill={isLoved ? "var(--accent)" : "none"} />
                     </button>
+                    {canShop && (
                     <button
                       type="button"
                       className="product-add"
@@ -451,6 +454,7 @@ export default function Home() {
                     >
                       <ShoppingBag size={15} /> Agregar al carrito
                     </button>
+                    )}
                   </div>
                   <div className="product-content">
                     <p>
@@ -660,7 +664,7 @@ export default function Home() {
         )}
       </section>
 
-      {toast && (
+      {canShop && toast && (
         <div className="cart-toast" role="status">
           <span className="cart-toast-check">
             <Check size={16} />

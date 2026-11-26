@@ -87,17 +87,7 @@ for (
   );
 }
 
-router.get(
-  '/drivers',
-  asyncHandler(async (req, res) => {
-    res.json(
-      await service.people(
-        actor(req),
-        'delivery'
-      )
-    );
-  })
-);
+
 
 router.get(
   '/orders',
@@ -219,22 +209,7 @@ router.post(
   })
 );
 
-router.post(
-  '/orders/:id/dispatch',
-  validate({
-    params: uuidParam,
-    body: schema.dispatchSchema,
-  }),
-  asyncHandler(async (req, res) => {
-    res.json(
-      await service.dispatch(
-        req.params.id,
-        req.body.driverId,
-        actor(req)
-      )
-    );
-  })
-);
+
 
 router.post(
   '/orders/:id/pickup',

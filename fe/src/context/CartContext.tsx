@@ -47,9 +47,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   // Cargar carrito desde la BD cuando el usuario inicia sesión
   const loadFromDb = useCallback(async () => {
-    if (!user) {
+    if (!user || user.role === 'employee' || user.role === 'delivery') {
       setItems([]);
       setError('');
+      setLoading(false);
       return true;
     }
     setLoading(true);
@@ -107,6 +108,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const add = async (product: Omit<CartItem, 'quantity'>) => {
+    if (user?.role === 'employee' || user?.role === 'delivery') return;
     // Optimistic update — actualiza UI inmediatamente
     setItems((prev) => {
       const existing = prev.find((i) => i.id === product.id);

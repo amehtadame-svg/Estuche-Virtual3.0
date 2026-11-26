@@ -39,6 +39,8 @@ test('Fronteras HTTP separan cliente, supervisión, empleado y repartidor', asyn
     assert.equal((await get('client', '/client/my-pickups')).status, 200);
     assert.equal((await get('client', '/employee/my-pickups')).status, 403);
     assert.equal((await get('employee', '/delivery/despatches')).status, 403);
+    assert.equal((await get('employee', '/shopping')).status, 403);
+    assert.equal((await get('delivery', '/shopping')).status, 403);
     assert.equal((await get('delivery', '/delivery/despatches')).status, 200);
   } finally {
     server.closeAllConnections();

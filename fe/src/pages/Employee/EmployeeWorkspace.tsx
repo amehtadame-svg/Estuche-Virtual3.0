@@ -10,6 +10,7 @@ import {
 } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import Modal from '../../components/ui/Modal';
+import ProductCatalogPicker from './ProductCatalogPicker';
 import {
   BASE,
   authHeaders,
@@ -273,9 +274,7 @@ export default function EmployeeWorkspace() {
 
   const [note, setNote] = useState('');
   const [people, setPeople] = useState<Person[]>([]);
-  const [drivers, setDrivers] = useState<Person[]>([]);
   const [assigneeId, setAssigneeId] = useState('');
-  const [driverId, setDriverId] = useState('');
   const [pickupCode, setPickupCode] = useState('');
   const [recipient, setRecipient] = useState('');
   const [revision, setRevision] = useState(0);
@@ -416,15 +415,6 @@ export default function EmployeeWorkspace() {
                 line.pickedQuantity,
               ]
             )
-          )
-        );
-
-        setDrivers(
-          await api<Person[]>(
-            '/drivers',
-            undefined,
-            'GET',
-            controller.signal
           )
         );
 
@@ -796,11 +786,7 @@ export default function EmployeeWorkspace() {
               </p>
             )}
 
-            <SearchBox<Product>
-              resource="products"
-              label="Buscar producto por nombre o SKU"
-              onSelect={addProduct}
-            />
+            <ProductCatalogPicker forOrder onSelect={addProduct} />
 
             <div className="emp-table-scroll">
               <table>
@@ -1072,9 +1058,7 @@ export default function EmployeeWorkspace() {
             </p>
 
             <fieldset disabled={busy}>
-              <SearchBox<Product>
-                resource="products"
-                label="Buscar producto"
+              <ProductCatalogPicker
                 onSelect={(product) => {
                   setSelectedProduct(product);
 
@@ -1504,50 +1488,9 @@ export default function EmployeeWorkspace() {
                   </>
                 )}
 
-                {detail.work?.status === 'packed' &&
-                  detail.fulfillmentMethod ===
-                    'delivery' && (
-                    <>
-                      <label>
-                        Repartidor
-
-                        <select
-                          value={driverId}
-                          onChange={(event) =>
-                            setDriverId(
-                              event.target.value
-                            )
-                          }
-                        >
-                          <option value="">
-                            Seleccionar
-                          </option>
-
-                          {drivers.map((person) => (
-                            <option
-                              key={person.id}
-                              value={person.id}
-                            >
-                              {person.fullName}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-
-                      <button
-                        disabled={!driverId}
-                        onClick={() =>
-                          action(
-                            'dispatch',
-                            { driverId }
-                          )
-                        }
-                      >
-                        Registrar entrega
-                        al repartidor
-                      </button>
-                    </>
-                  )}
+                {detail.work?.status === 'packed' && detail.fulfillmentMethod === 'delivery' && (
+                  <p>Pedido listo para que un repartidor lo tome desde «Pedidos pendientes».</p>
+                )}
 
                 {detail.work?.status === 'packed' &&
                   detail.fulfillmentMethod ===

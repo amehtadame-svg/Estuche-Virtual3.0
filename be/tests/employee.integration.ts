@@ -1109,35 +1109,17 @@ test(
             200
           );
 
-          assert.equal(
-            (
-              await request(
-                'first',
-                path + '/dispatch',
-                {
-                  driverId:
-                    users.customer.id,
-                }
-              )
-            ).status,
-            400
-          );
-
-          for (let i = 0; i < 2; i++) {
-            assert.equal(
-              (
-                await request(
-                  'first',
-                  path + '/dispatch',
-                  {
-                    driverId:
-                      users.driver.id,
-                  }
-                )
-              ).status,
-              200
-            );
-          }
+          assert.equal((await request('first', `/delivery/pending-orders/${deliveryOrder.id}/claim`, {})).status, 403);
+          const available = await request('driver', '/delivery/pending-orders');
+          assert.ok(available.body.some((item: any) => item.id === deliveryOrder.id));
+          const claims = await Promise.all([
+            request('driver', `/delivery/pending-orders/${deliveryOrder.id}/claim`, {}),
+            request('otherDriver', `/delivery/pending-orders/${deliveryOrder.id}/claim`, {}),
+          ]);
+          assert.deepEqual(claims.map(item => item.status).sort(), [200, 409]);
+          const winner = claims[0].status === 200 ? 'driver' : 'otherDriver';
+          const loser = winner === 'driver' ? 'otherDriver' : 'driver';
+          assert.equal((await request(winner, `/delivery/pending-orders/${deliveryOrder.id}/claim`, {})).status, 200);
 
           const shipments =
             await db.despatch.findMany({
@@ -1182,13 +1164,13 @@ test(
             403
           );
 
-          const assigned = await request('driver', '/delivery/despatches');
+          const assigned = await request(winner, '/delivery/despatches');
           assert.equal(assigned.status, 200);
           assert.ok(assigned.body.some((item: any) => item.id === shipments[0].id));
           assert.equal((await request('first', '/delivery/despatches')).status, 403);
-          assert.equal((await request('otherDriver', `/delivery/despatches/${shipments[0].id}/confirm`, {})).status, 404);
-          const result = await request('driver', `/delivery/despatches/${shipments[0].id}/confirm`, {});
-          assert.equal((await request('driver', `/delivery/despatches/${shipments[0].id}/confirm`, {})).status, 200);
+          assert.equal((await request(loser, `/delivery/despatches/${shipments[0].id}/confirm`, {})).status, 404);
+          const result = await request(winner, `/delivery/despatches/${shipments[0].id}/confirm`, {});
+          assert.equal((await request(winner, `/delivery/despatches/${shipments[0].id}/confirm`, {})).status, 200);
 
           assert.equal(
             result.status,
@@ -1587,7 +1569,6 @@ test(
               '/movements',
               `/customers?q=${run}`,
               `/products?q=${run}`,
-              '/drivers',
               '/orders?scope=mine',
             ]
           ) {

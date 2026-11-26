@@ -2,11 +2,13 @@ import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { Menu, Moon, Search, ShoppingBag, Sun, UserRound, X } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
+import { useCanShop } from "../../hooks/useCanShop";
 import { useCart } from "../../hooks/useCart";
 import "./Header.css";
 
 export default function Header() {
   const { user } = useAuth();
+  const canShop = useCanShop();
   const { totalItems } = useCart();
   const navigate = useNavigate();
   const location = useLocation();
@@ -134,7 +136,7 @@ export default function Header() {
             {isDarkMode ? <Moon size={18} /> : <Sun size={18} />}
           </button>
 
-          {!isStaff && (
+          {!isStaff && canShop && (
             <button
               type="button"
               className="header-icon-btn cart-btn"
