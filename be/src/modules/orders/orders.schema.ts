@@ -54,16 +54,10 @@ export const createOrderSchema = z
     (data) => new Set(data.details.map((line) => line.productId)).size === data.details.length,
     { message: 'No se permiten productos repetidos.', path: ['details'] }
   )
-  .refine(
-    (data) =>
-      (data.fulfillmentMethod ?? 'delivery') !== 'delivery' ||
-      !!data.deliveryAddressId ||
-      !!data.deliveryAddress,
-    {
-      message: 'Indica una dirección para domicilio.',
-      path: ['deliveryAddress'],
-    }
-  )
+  // La dirección de domicilio NO se exige aquí: el servicio la toma del perfil
+  // del cliente cuando el cuerpo no la trae, y solo rechaza si tampoco hay una
+  // guardada. Validarlo en el esquema rompía el checkout del cliente que ya
+  // tenía su dirección registrada.
   .refine(
     (data) => !(data.deliveryAddressId && data.deliveryAddress),
     {

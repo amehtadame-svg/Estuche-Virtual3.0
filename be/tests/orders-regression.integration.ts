@@ -108,6 +108,12 @@ test(
     assert.equal(noAddress.status, 400);
     assert.match((await noAddress.json()).message, /dirección/i);
 
+    // Con dirección en el perfil, el domicilio no necesita enviarla de nuevo.
+    await db.user.update({ where: { id: user.id }, data: { address: 'Calle 1 #2-3, Bogotá' } });
+    const fromProfile = await post({ details: [{ productId: product.id, quantity: 1 }] });
+    assert.equal(fromProfile.status, 201, 'usa la dirección del perfil');
+    assert.match((await fromProfile.json()).deliverySnapshot, /Calle 1/);
+
     const pickup = await post({
       fulfillmentMethod: 'pickup',
       details: [{ productId: product.id, quantity: 1 }],
@@ -153,7 +159,7 @@ test(
     });
     assert.equal(stillAlive.status, 201);
     const sold = await db.product.findUnique({ where: { id: productId } });
-    assert.equal(sold!.stock, 7, '10 − 1 (retiro) − 2 (domicilio) = 7');
+    assert.equal(sold!.stock, 6, '10 − 1 (retiro) − 1 (perfil) − 2 (domicilio) = 6');
 
     // ── A-07: dos checkouts simultáneos con maxUses = 1 ──────────────────
     const race = await Promise.all([
