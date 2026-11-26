@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import EmployeeWorkspace from './pages/Employee/EmployeeWorkspace';
@@ -23,7 +23,7 @@ import ForgotPassword from './pages/ResetPassword/ForgotPassword';
 import ResetPassword from './pages/ResetPassword/ResetPassword';
 import Profile from './pages/Profile/Profile';
 
-import ClienteDashboard from './pages/ClientDashboard/ClientDashboard';
+import MyOrders from './pages/MyOrders/MyOrders';
 import ClientPqr from './pages/PQR/ClientPqr';
 
 import AdminDashboard from './pages/Admin/AdminDashboard';
@@ -80,7 +80,7 @@ function App() {
               >
                 <Route
                   path="/cliente"
-                  element={<ClienteDashboard />}
+                  element={<Navigate to="/" replace />}
                 />
               </Route>
 
@@ -117,6 +117,7 @@ function App() {
               </Route>
 
               <Route element={<ProtectedRoute allowedRoles={['client', 'admin', 'superadmin']} />}>
+                <Route path="/mis-pedidos" element={<MyOrders />} />
                 <Route path="/pedidos/:id" element={<OrderStatus />} />
               </Route>
 

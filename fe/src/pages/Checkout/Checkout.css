@@ -392,7 +392,7 @@
   padding: 16px 20px;
   margin-bottom: 20px;
   border: 1px solid var(--border);
-  border-left: 4px solid var(--primary, #2563eb);
+  border-left: 4px solid var(--accent);
   border-radius: 12px;
   background: var(--bg);
   color: var(--text);

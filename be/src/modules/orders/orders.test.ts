@@ -131,8 +131,8 @@ test(
 
     assert.strictEqual(
       order.total,
-      300,
-      'el total debe ser 3 × 100 (precio en BD), no 0'
+      10300,
+      'incluye envío: el total debe ser 3 × 100 (precio en BD), no 0'
     );
 
     assert.deepStrictEqual(
@@ -181,8 +181,8 @@ test(
 
     assert.strictEqual(
       order.total,
-      270,
-      '300 - 10% = 270'
+      10270,
+      '300 - 10% + 10000 de envío = 10270'
     );
   }
 );
@@ -220,8 +220,8 @@ test(
 
     assert.strictEqual(
       order.total,
-      250,
-      '300 - 50 = 250'
+      10250,
+      '300 - 50 + 10000 de envío = 10250'
     );
   }
 );

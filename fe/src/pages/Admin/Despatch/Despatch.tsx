@@ -1,3 +1,5 @@
+import ReferenceSelect from '../../../components/ui/ReferenceSelect';
+import { shortReference } from '../../../lib/reference';
 import { useState, useEffect } from 'react';
 import Modal from '../../../components/ui/Modal';
 import { API, authHeaders } from '../../../api/api';
@@ -90,7 +92,7 @@ export default function Despatch() {
   };
 
   const handleOrderChange = async (
-    e: React.ChangeEvent<HTMLInputElement>
+    e: React.ChangeEvent<HTMLSelectElement>
   ) => {
     const id = e.target.value;
 
@@ -274,12 +276,12 @@ export default function Despatch() {
                 {despatches.map((despatch) => (
                   <tr key={despatch.id}>
                     <td className="numero-envio">
-                      ENV-{despatch.id.slice(-6).toUpperCase()}
+                      ENV-{shortReference(despatch.id)}
                     </td>
 
                     <td>
                       {despatch.order
-                        ? `PED-${despatch.order.id.slice(-6).toUpperCase()}`
+                        ? `PED-${shortReference(despatch.order.id)}`
                         : '—'}
                     </td>
 
@@ -387,15 +389,14 @@ export default function Despatch() {
             }
           >
             <p className="label-envio">
-              N° Pedido (ID)
+              Pedido
             </p>
 
-            <input
+            <ReferenceSelect endpoint={API.orders} kind="order"
               className="input-envio"
               name="orderId"
               value={form.orderId}
               onChange={handleOrderChange}
-              placeholder="UUID del pedido"
               disabled={editingId !== null}
             />
 

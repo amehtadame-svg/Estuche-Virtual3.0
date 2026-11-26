@@ -1,3 +1,4 @@
+import { shortReference } from '../../../lib/reference';
 import { useState, useEffect } from 'react';
 import { API, authHeaders } from '../../../api/api';
 import { runApiAction } from '../../../lib/apiAction';
@@ -142,7 +143,7 @@ export default function Returns() {
               {filteredReturns.length === 0 && (<tr><td colSpan={10} className="table-empty">No hay devoluciones para mostrar.</td></tr>)}
               {filteredReturns.map((d) => (
                 <tr key={d.id}>
-                  <td className="id-devolucion">#{d.id.slice(-6).toUpperCase()}</td>
+                  <td className="id-devolucion">#{shortReference(d.id)}</td>
                   <td>
                     <p className="cliente-dev-nombre">{d.customer.fullName}</p>
                     <p className="cliente-dev-email">{d.customer.email}</p>
@@ -176,7 +177,7 @@ export default function Returns() {
           <div className="modal-overlay-dev" onClick={closeModal}>
             <div className="modal-devoluciones" onClick={(e) => e.stopPropagation()}>
               <div className="modal-header-dev">
-                <h3 className="modal-titulo-dev">Resolver devolución #{selected.id.slice(-6).toUpperCase()}</h3>
+                <h3 className="modal-titulo-dev">Resolver devolución #{shortReference(selected.id)}</h3>
                 <button className="modal-cerrar-dev" onClick={closeModal}>
                   ✕
                 </button>

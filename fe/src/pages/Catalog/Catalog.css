@@ -515,3 +515,7 @@ body:not(.dark-mode) .catalog-media {
 body:not(.dark-mode) .catalog-clear {
   border-color: var(--border-strong);
 }
+
+/* El panel tiene su propio desplazamiento, sin esperar al final de la página. */
+.catalog-sidebar { max-height: calc(100dvh - 110px); overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
+@media (max-width: 760px) { .catalog-sidebar { position: static; max-height: none; overflow: visible; } .catalog-cats { max-height: 240px; overflow-y: auto; overscroll-behavior: contain; } }
