@@ -300,11 +300,12 @@ export default function EmployeeWorkspace() {
 
   useEffect(() => {
     setPage(1);
-    setSelectedId(null);
+    const requested = tab === 'supervision' ? new URLSearchParams(location.search).get('pedido') : null;
+    setSelectedId(requested && /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(requested) ? requested : null);
     setDetail(null);
     setError('');
     setMessage('');
-  }, [tab]);
+  }, [tab, location.search]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -1312,6 +1313,11 @@ export default function EmployeeWorkspace() {
               )}
 
               <fieldset disabled={busy}>
+                {detail.status === 'paid' && !detail.work && <div className="emp-actions">
+                  <p>El pedido está pagado y aún no tiene responsable. Tómalo para iniciar la preparación.</p>
+                  <button onClick={() => action('claim')}>Tomar pedido</button>
+                </div>}
+                {detail.status === 'pending' && <p>El pedido está pendiente de pago. Su preparación se habilita al confirmar el pago.</p>}
                 <div className="emp-table-scroll">
                   <table>
                     <thead>

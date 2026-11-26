@@ -213,6 +213,10 @@ export default function Products() {
     const stockNum = form.stock === '' ? NaN : Number(form.stock);
     const stockMinNum = form.stockMin === '' ? 5 : Number(form.stockMin);
 
+    if (costNum > 999999999999.99 || priceNum > 999999999999.99 || stockNum > 2147483647 || stockMinNum > 2147483647) {
+      setFormError('El precio, costo o cantidad supera el límite permitido.');
+      return;
+    }
     // CA-001.2 — Validación estricta de reglas de negocio y restricciones numéricas
     if (!Number.isFinite(costNum) || costNum <= 0) nextInvalid.cost = true;
     if (!Number.isFinite(priceNum) || priceNum <= 0) nextInvalid.price = true;
@@ -237,7 +241,7 @@ export default function Products() {
       barcode: form.barcode.trim() || null,
       cost: costNum,
       price: priceNum,
-      stock: stockNum,
+      ...(editingId === null ? { stock: stockNum } : {}),
       stockMin: stockMinNum,
       categoryId: form.categoryId || null,
       supplierId: form.supplierId || null,
@@ -642,7 +646,7 @@ export default function Products() {
                 className="label-producto"
                 title="Unidades físicas recibidas inicialmente en bodega (no puede ser negativo)"
               >
-                Stock inicial en bodega <span className="campo-obligatorio">*</span>{' '}
+                {editingId ? 'Existencias actuales' : 'Stock inicial en bodega'} <span className="campo-obligatorio">*</span>{' '}
                 <span className="tooltip-icon" title="Existencias disponibles (>= 0)">ⓘ</span>
               </label>
               <input
@@ -650,10 +654,12 @@ export default function Products() {
                 type="number"
                 min="0"
                 name="stock"
+                disabled={editingId !== null}
                 value={form.stock}
                 onChange={handleChange}
                 placeholder="Cantidad inicial (>= 0)"
               />
+              {editingId && <small>Para modificar existencias usa Ingresos o Salidas.</small>}
             </div>
 
             <div>

@@ -1,3 +1,5 @@
+import PhoneInput from '../../../components/ui/PhoneInput';
+import { validPhone } from '../../../lib/phone';
 import { shortReference } from '../../../lib/reference';
 import { useState, useEffect, type ChangeEvent } from 'react';
 import Modal from '../../../components/ui/Modal';
@@ -74,6 +76,11 @@ export default function SuperAdminUsers() {
       setCreateError(errorMessage);
       notify.error(errorMessage);
       return;
+    }
+
+    if (!validPhone(form.phone)) {
+      const errorMessage = 'El teléfono debe incluir indicativo y 10 dígitos.';
+      setCreateError(errorMessage); notify.error(errorMessage); return;
     }
 
     setCreating(true);
@@ -308,7 +315,7 @@ export default function SuperAdminUsers() {
           <input name="password" maxLength={72} type="password" value={form.password} onChange={handleChange} placeholder="Mínimo 6 caracteres" />
 
           <label>Teléfono</label>
-          <input name="phone" maxLength={30} value={form.phone} onChange={handleChange} placeholder="Opcional" />
+          <PhoneInput value={form.phone} onChange={phone => setForm({ ...form, phone })} />
 
           <label>Rol</label>
           <select name="role" value={form.role} onChange={handleChange}>

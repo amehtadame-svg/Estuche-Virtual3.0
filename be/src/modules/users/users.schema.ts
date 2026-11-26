@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { phoneSchema } from '../../lib/phone';
 
 export const validRoles = ['superadmin', 'admin', 'employee', 'delivery', 'client'] as const;
 
@@ -6,7 +7,7 @@ export const createUserSchema = z.object({
   fullName: z.string().trim().min(1).max(150),
   email: z.string().email().max(255),
   password: z.string().min(6).max(72),
-  phone: z.string().max(30).optional(),
+  phone: phoneSchema.optional(),
   role: z.enum(validRoles).optional(),
 });
 
@@ -18,7 +19,7 @@ export const editUserSchema = z.object({
 
 export const updateProfileSchema = z.object({
   fullName: z.string().trim().min(1).max(150).optional(),
-  phone: z.string().trim().max(30).optional(),
+  phone: phoneSchema.optional(),
   address: z.string().trim().max(255).optional(),
 });
 

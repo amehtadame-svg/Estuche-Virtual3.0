@@ -400,7 +400,8 @@ export default function InventoryOutbound() {
       </div>
 
       <div className="inbound-card inbound-history-card">
-        <h2 className="inbound-card-title">Salidas recientes</h2>
+        <h2 className="inbound-card-title">Historial de salidas</h2>
+        <p className="inbound-muted">Cada fila es un movimiento registrado, no un producto nuevo. Un mismo producto puede aparecer varias veces.</p>
         {movements.length === 0 ? (
           <p className="inbound-muted">Aún no se han registrado salidas de mercancía.</p>
         ) : (

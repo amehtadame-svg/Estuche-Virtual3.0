@@ -1,3 +1,5 @@
+import PhoneInput from '../../components/ui/PhoneInput';
+import { validPhone } from '../../lib/phone';
 import AccountNav from '../../components/layout/AccountNav';
 import {
   useEffect,
@@ -227,7 +229,7 @@ export default function Profile() {
           </div>
 
           <span className="profile-account-mark">
-            <UserRound size={18} /> Cuenta protegida
+            <UserRound size={18} /> {user?.role === 'superadmin' ? 'Cuenta administrativa' : 'Mi cuenta'}
           </span>
         </header>
 
@@ -249,6 +251,7 @@ export default function Profile() {
             <span className="profile-client-badge"><ShieldCheck size={14} /> Cuenta personal</span>
             <h2>{profile?.fullName || user?.name || 'Tu perfil'}</h2>
             <p>{profile?.email || user?.email}</p>
+            {user?.role === 'superadmin' && <p>Superadministrador · acceso de gestión</p>}
 
             <input
               ref={fileInput}
@@ -317,7 +320,7 @@ export default function Profile() {
                   />
                 </label>
 
-                <label className="profile-field">
+                <div className="profile-field">
                   <span>Teléfono</span>
                   <input
                     type="tel"
@@ -340,7 +343,7 @@ export default function Profile() {
                     value={address}
                     onChange={(event) => setAddress(event.target.value)}
                     autoComplete="street-address"
-                    placeholder="Añade tu dirección de entrega"
+                    placeholder={user?.role === 'superadmin' ? 'Añade tu dirección de contacto' : 'Añade tu dirección de entrega'}
                   />
                 </label>
 
@@ -361,6 +364,12 @@ export default function Profile() {
           </form>
         </div>
 
+        {user?.role === 'superadmin' && (
+          <div className="profile-admin-note">
+            <div><strong>Acceso de superadministrador</strong><p>Desde este perfil puedes mantener tus datos de contacto y cerrar la sesión. La gestión del negocio está en el panel.</p></div>
+            <Link to="/superadmin">Ir al panel</Link>
+          </div>
+        )}
         <div className="profile-logout-row">
           <span>¿Terminaste de revisar tu cuenta?</span>
           <button

@@ -232,7 +232,8 @@ export default function Returns() {
             <label htmlFor="return-quantity">Cantidad</label>
             <input id="return-quantity" type="number" min="1" max="100000" step="1" value={newReturn.quantity} onChange={e => setNewReturn({ ...newReturn, quantity: e.target.value })} />
             <label htmlFor="return-reason">Motivo</label>
-            <textarea id="return-reason" className="input-dev" maxLength={500} rows={3} value={newReturn.reason} onChange={e => setNewReturn({ ...newReturn, reason: e.target.value })} />
+            <textarea id="return-reason" className="input-dev" maxLength={50} rows={6} value={newReturn.reason} onChange={e => setNewReturn({ ...newReturn, reason: e.target.value })} />
+            <small>{newReturn.reason.length}/50 caracteres</small>
           </Modal>
         )}
         {/* Modal */}
