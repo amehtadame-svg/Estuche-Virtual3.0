@@ -202,10 +202,9 @@ export const orderService = {
       throw badRequest('Un pedido debe incluir al menos un producto.');
     }
 
-    // A-02: domicilio exige dirección; retiro no.
-    if (!isPickup && !data.deliveryAddressId && !data.deliveryAddress) {
-      throw badRequest('Indica una dirección para domicilio.');
-    }
+    // A-02: domicilio exige una dirección, pero sirve la del perfil del
+    // cliente. Solo se rechaza si tampoco hay dirección guardada (se comprueba
+    // más abajo, ya con el cliente leído).
 
     const customerId = isAdmin(requester) && data.customerId
       ? data.customerId
@@ -252,6 +251,9 @@ export const orderService = {
       if (!isPickup && !deliverySnapshot) {
         throw badRequest('Indica una dirección para domicilio.');
       }
+
+      // En retiro no se registra dirección de entrega.
+      if (isPickup) deliverySnapshot = null;
 
       // ── A-01/A-03: validación de líneas y producto activo ───────────────
       const lines: PricedLine[] = [];
@@ -469,9 +471,10 @@ export const orderService = {
     assertOrderAccess(requester);
 
     return atomic(async (tx) => {
-      await assertUnmanaged(tx, id);
-
-      // Bloqueo por pedido: dos PATCH simultáneos no consumen el cupón dos veces.
+      // Se aplica antes de la regla de "pedido operativo" porque aplicar un
+      // cupón es una operación financiera del cliente sobre su propia compra,
+      // no una edición del contenido del pedido. El pedido se sigue bloqueando
+      // aquí (FOR UPDATE) para que dos PATCH no consuman el cupón dos veces.
       await requestLock(tx, `order:${id}`);
 
       const order = await tx.order.findUnique({

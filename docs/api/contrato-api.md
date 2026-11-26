@@ -192,7 +192,7 @@ Entrada:
 | `details[].productId` | UUID | **Sí** | Debe ser un producto **activo** (`deletedAt = null`) |
 | `details[].quantity` | entero | **Sí** | 1–999 y ≤ stock disponible |
 | `fulfillmentMethod` | `delivery` \| `pickup` | No (default `delivery`) | — |
-| `deliveryAddress` | string | **Sí si `delivery`** | 8–500 caracteres |
+| `deliveryAddress` | string | Sí si `delivery` y el perfil no tiene dirección | 8–500 caracteres; si falta se usa la del perfil |
 | `deliveryAddressId` | UUID | Alternativa | Debe pertenecer al cliente |
 | `promotionalCode` | string | No | Se valida completo (vigencia, estado, mínimo, usos) |
 | `promotionalCodeId` | UUID | Alternativa | **No** salta la validación: se resuelve y valida igual |
@@ -228,7 +228,7 @@ Errores esperados:
 | Status | Mensaje | Causa |
 | --- | --- | --- |
 | 400 | `Un pedido debe incluir al menos un producto.` | `details` vacío o ausente |
-| 400 | `Indica una dirección para domicilio.` | `delivery` sin dirección |
+| 400 | `Indica una dirección para domicilio.` | `delivery`, sin dirección en el cuerpo **y** sin dirección en el perfil |
 | 400 | `El producto … ya no está disponible en el catálogo.` | Producto inexistente o eliminado |
 | 400 | `Stock insuficiente para "…"…` | Cantidad > stock |
 | 400 | `El producto … dejó de estar disponible o no tiene stock suficiente.` | Carrera de stock al descontar |
@@ -259,6 +259,9 @@ Respuesta **200**: el pedido con `promotionalCode { code, value, type }`.
 Reglas:
 - El pedido debe ser del cliente o el solicitante ser admin.
 - Solo en `pending`.
+- Aplica también a pedidos creados por el checkout, aunque tengan
+  `createdById` (esa marca solo restringe la *edición* del contenido, no esta
+  operación financiera).
 - **Un pedido admite un único cupón**: si ya tiene uno → 400 `Este pedido ya tiene un cupón aplicado.`
 - Se validan vigencia, estado, compra mínima y usos disponibles.
 - El uso se consume **una sola vez** por pedido (`currentUses + 1`).

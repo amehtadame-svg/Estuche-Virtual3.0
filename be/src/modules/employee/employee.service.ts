@@ -307,6 +307,12 @@ export const employeeService = {
         )
       );
 
+      // Un pedido operativo siempre debe reservar unidades: si una línea no
+      // descontó stock, el checkout no puede seguir con existencias fantasma.
+      if (!details.length) {
+        throw badRequest('El pedido debe incluir al menos un producto.');
+      }
+
       const deliveryFee = shippingCost(total.toNumber(), data.fulfillmentMethod === 'pickup');
       total = total.plus(deliveryFee);
       const order = await tx.order.create({

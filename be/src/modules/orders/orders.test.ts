@@ -855,3 +855,80 @@ test(
     assert.strictEqual(calls.couponUpdates.length, 0, 'no debe consumir otro cupón');
   }
 );
+
+test(
+  'A-02: domicilio sin dirección en el cuerpo usa la dirección del perfil',
+  async () => {
+    const { tx, calls } = fakeTx();
+    stubTransaction(tx);
+
+    const order = await orderService.create(
+      { details: [line(1)] },
+      requester
+    );
+
+    assert.equal(
+      order.deliverySnapshot,
+      ADDRESS,
+      'la dirección del servidor completa los datos que el cliente ya guardó'
+    );
+    assert.notStrictEqual(calls.orderCreate, null);
+  }
+);
+
+test(
+  'A-06: un cliente puede aplicar un cupón a un pedido creado por el checkout',
+  async () => {
+    // Regresión: el pedido del checkout lleva createdById, y la regla de
+    // "pedido operativo" no debe impedir esta operación financiera.
+    const promo = {
+      id: 'promo-1',
+      code: 'PROMO10',
+      active: true,
+      type: 'percentage',
+      value: 10,
+      minPurchase: 0,
+      startDate: new Date('2020-01-01'),
+      endDate: new Date('2099-01-01'),
+      maxUses: null,
+      currentUses: 0,
+    };
+
+    const { tx, calls } = fakeTx({
+      order: {
+        findUnique: async ({ where }: any) => {
+          if (where.include && where.include.promotionalCode) {
+            return { total: 10270, promotionalCode: { code: promo.code } };
+          }
+          return {
+            id: 'order-1',
+            customerId: 'user-1',
+            createdById: 'user-1',
+            status: 'pending',
+            shippingCost: 10000,
+            promotionalCodeId: null,
+            details: [{ unitPrice: 100, quantity: 3 }],
+          };
+        },
+        update: async (args: any) => {
+          calls.orderUpdate.push(args);
+          return {};
+        },
+      },
+      promotionalCode: {
+        findFirst: async () => promo,
+        findUnique: async () => promo,
+        updateMany: async (args: any) => {
+          calls.couponUpdates.push(args);
+          return { count: 1 };
+        },
+      },
+    });
+
+    stubTransaction(tx);
+
+    await orderService.applyPromotionalCode('order-1', 'PROMO10', requester);
+
+    assert.strictEqual(calls.couponUpdates.length, 1, 'el cupón se consume una vez');
+  }
+);
