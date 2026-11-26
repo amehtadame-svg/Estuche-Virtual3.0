@@ -1,4 +1,4 @@
-import { assertCoupon, normalizeCoupon, couponDiscount } from '../promotional-code/promotional-code.domain';
+import { consumeCoupon, normalizeCoupon, couponDiscount } from '../promotional-code/promotional-code.domain';
 import { shippingCost } from '../../lib/shipping';
 import { Prisma } from '@prisma/client';
 import { badRequest, conflict, forbidden, notFound } from '../../lib/errors';
@@ -129,18 +129,13 @@ export const paymentsService = {
       const deliveryFee = shippingCost(total.toNumber());
       let promotionalCodeId: string | undefined;
       if (input.code) {
-        // Bloqueo compartido con otros checkouts para no exceder maxUses.
+        // A-07: mismo bloqueo por cupón y mismo incremento condicional que el
+        // checkout de pedidos, para que dos intentos simultáneos no superen maxUses.
         const candidate = await tx.promotionalCode.findFirst({ where: { code: { equals: normalizeCoupon(input.code), mode: 'insensitive' } } });
         if (!candidate) throw badRequest('No encontramos ese cupón. Revisa el código e intenta de nuevo.');
-        await tx.$queryRaw`SELECT id FROM promotional_codes WHERE id = ${candidate.id}::uuid FOR UPDATE`;
-        const promo = await tx.promotionalCode.findUnique({ where: { id: candidate.id } });
-        assertCoupon(promo, total.toNumber());
-        if (!promo) throw badRequest('No encontramos ese cupón.');
+        const promo = await consumeCoupon(tx, candidate.id, total.toNumber());
         total = total.minus(couponDiscount(total, promo));
         promotionalCodeId = promo.id;
-        await tx.promotionalCode.update({
-          where: { id: promo.id }, data: { currentUses: (promo.currentUses ?? 0) + 1 },
-        });
       }
       total = Prisma.Decimal.max(0, total).plus(deliveryFee).toDecimalPlaces(2);
       if (total.lte(0)) throw badRequest('La demostración requiere un total mayor que cero.');

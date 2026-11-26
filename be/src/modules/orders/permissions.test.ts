@@ -83,7 +83,10 @@ test('Empleado no hereda permisos de pedidos', async () => {
 });
 
 test('No se puede crear ni marcar un pedido pagado mediante el CRUD', async () => {
-  await assert.rejects(orderService.create({ status: 'paid' }, client), hasStatus(400));
+  await assert.rejects(
+    orderService.create({ status: 'paid', details: [] } as any, client),
+    hasStatus(400),
+  );
   assert.throws(() => orderService.update('order-1', { status: 'paid' }), hasStatus(400));
 });
 

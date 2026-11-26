@@ -235,3 +235,19 @@
     padding: 22px 18px;
   }
 }
+
+/* B-01: aviso de sesión requerida para registrar el mensaje de contacto. */
+.contacto-nota {
+  margin: 0;
+  padding: 10px 14px;
+  border: 1px solid color-mix(in srgb, var(--info, #2563eb) 25%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--info, #2563eb) 8%, transparent);
+  color: var(--text-muted, #475569);
+  font-size: 0.9rem;
+}
+
+.contacto-nota a {
+  color: var(--info, #2563eb);
+  font-weight: 600;
+}

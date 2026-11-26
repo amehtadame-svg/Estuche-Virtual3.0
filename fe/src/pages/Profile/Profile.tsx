@@ -125,7 +125,8 @@ export default function Profile() {
   const handleSave = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!user || saveLatch.current || !dirty) return;
-    if (phone.trim() && !/^3\d{9}$/.test(phone.trim())) { setSavedNotice('El celular debe tener 10 dígitos y comenzar por 3.'); return; }
+    // validPhone acepta el indicativo opcional; el servidor guarda 10 dígitos.
+    if (phone.trim() && !validPhone(phone.trim())) { setSavedNotice('El celular debe tener 10 dígitos y comenzar por 3.'); return; }
     saveLatch.current = true;
     setSavedNotice('');
     setSaving(true);
@@ -322,18 +323,8 @@ export default function Profile() {
 
                 <div className="profile-field">
                   <span>Teléfono</span>
-                  <input
-                    type="tel"
-                    inputMode="tel"
-                    maxLength={10}
-                    pattern="3[0-9]{9}"
-                    title="Celular colombiano de 10 dígitos, comienza por 3"
-                    value={phone}
-                    onChange={(event) => setPhone(event.target.value)}
-                    autoComplete="tel"
-                    placeholder="Añade tu teléfono"
-                  />
-                </label>
+                  <PhoneInput value={phone} onChange={setPhone} />
+                </div>
 
                 <label className="profile-field">
                   <span>Dirección</span>

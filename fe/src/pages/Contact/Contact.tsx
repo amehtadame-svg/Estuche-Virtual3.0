@@ -1,5 +1,8 @@
 import AccountNav from '../../components/layout/AccountNav';
 import { useState, type FormEvent } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { API, authHeaders } from '../../api/api';
+import { useAuth } from '../../hooks/useAuth';
 import { AlertCircle, Clock, MailCheck, MapPin, Phone } from 'lucide-react';
 import './Contact.css';
 
@@ -7,23 +10,68 @@ export default function Contact() {
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
   const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
+  const [sending, setSending] = useState(false);
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
     setError('');
   };
 
-  const handleSubmit = (event?: FormEvent) => {
+  // B-01: el mensaje se guarda como PQR del cliente en el servidor.
+  const handleSubmit = async (event?: FormEvent) => {
     event?.preventDefault();
+    if (sending) return;
+
     if (!form.name || !form.email || !form.message) {
       setError('Por favor completa los campos obligatorios.');
       return;
     }
+
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
       setError('Ingresa un correo electrónico válido.');
       return;
     }
-    setSent(true);
+
+    if (!user) {
+      navigate('/login', { state: { from: '/Contacto' } });
+      return;
+    }
+
+    if (form.message.trim().length < 20) {
+      setError('Cuéntanos un poco más: al menos 20 caracteres.');
+      return;
+    }
+
+    setError('');
+    setSending(true);
+
+    try {
+      const response = await fetch(`${API.pqr}/contact`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({
+          name: form.name.trim(),
+          email: form.email.trim(),
+          topic: form.subject || 'otro',
+          message: form.message.trim(),
+        }),
+      });
+
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        setError(data?.message || 'No pudimos enviar tu mensaje. Intenta de nuevo.');
+        return;
+      }
+
+      setSent(true);
+    } catch {
+      setError('No pudimos enviar tu mensaje. Revisa tu conexión e intenta de nuevo.');
+    } finally {
+      setSending(false);
+    }
   };
 
   const contactInfo = [
@@ -114,8 +162,15 @@ export default function Contact() {
               </p>
             )}
 
-            <button type="submit" className="contacto-btn-primary">
-              Enviar mensaje
+            {!user && (
+              <p className="contacto-nota">
+                Para registrar tu mensaje y poder responderte necesitas{' '}
+                <Link to="/login">iniciar sesión</Link>.
+              </p>
+            )}
+
+            <button type="submit" className="contacto-btn-primary" disabled={sending}>
+              {sending ? 'Enviando…' : 'Enviar mensaje'}
             </button>
           </form>
         </div>

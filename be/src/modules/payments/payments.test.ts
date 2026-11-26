@@ -75,6 +75,15 @@ beforeEach(() => {
   db.shopping.upsert = async ({ create }: any) => { state.cartRestored += create.quantity; return create; };
   db.promotionalCode.findFirst = async () => state.promo;
   db.promotionalCode.findUnique = async () => state.promo;
+  // A-07: el consumo del cupón es un incremento CONDICIONAL (updateMany), no
+  // un update ciego. El doble debe reflejar esa semántica real.
+  db.promotionalCode.updateMany = async ({ where, data }: any) => {
+    if (!state.promo || state.promo.id !== where.id) return { count: 0 };
+    if (where.active === true && !state.promo.active) return { count: 0 };
+    if (where.currentUses?.lt !== undefined && (state.promo.currentUses ?? 0) >= where.currentUses.lt) return { count: 0 };
+    state.promo = { ...state.promo, currentUses: (state.promo.currentUses ?? 0) + (data.currentUses?.increment ?? 0) };
+    return { count: 1 };
+  };
   db.promotionalCode.update = async ({ data }: any) => { state.promo = { ...state.promo, ...data }; return state.promo; };
 });
 
