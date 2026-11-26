@@ -1,3 +1,4 @@
+import CustomerReturns from './pages/Returns/CustomerReturns';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
@@ -96,6 +97,7 @@ function App() {
                   path="/cliente/retiros"
                   element={<CustomerPickups />}
                 />
+                <Route path="/mis-devoluciones" element={<CustomerReturns />} />
                 <Route
                   path="/cliente/pqr"
                   element={<ClientPqr />}

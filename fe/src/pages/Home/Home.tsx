@@ -230,8 +230,8 @@ export default function Home() {
     }).filter((item) => item.product);
   }, [products, tab]);
 
-  const addProduct = (product: ApiProduct) => {
-    add({
+  const addProduct = async (product: ApiProduct) => {
+    const saved = await add({
       id: product.id,
       name: product.name,
       price: Number(product.price),
@@ -239,7 +239,7 @@ export default function Home() {
       icon: "📦",
       imageUrl: apiImage(product),
     });
-    setToast({ id: product.id, name: product.name });
+    if (saved) setToast({ id: product.id, name: product.name });
   };
 
   return (

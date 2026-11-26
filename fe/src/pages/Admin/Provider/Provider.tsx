@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import PhoneInput from '../../../components/ui/PhoneInput';
+import { validPhone } from '../../../lib/phone';
 import Modal from '../../../components/ui/Modal';
 import './Provider.css';
 import { API, authHeaders } from '../../../api/api';
@@ -72,6 +74,8 @@ export default function Provider() {
       notify.error('Por favor completa todos los campos obligatorios.');
       return;
     }
+
+    if (!validPhone(form.phone)) { notify.error('El teléfono debe incluir indicativo y 10 dígitos.'); return; }
 
     const body = {
       name: form.name,
@@ -235,7 +239,7 @@ export default function Provider() {
         >
           <p className="label-proveedor">Empresa</p>
           <input
-            name="name"
+            name="name" maxLength={150}
             value={form.name}
             onChange={handleChange}
             placeholder="Nombre de la empresa"
@@ -244,7 +248,7 @@ export default function Provider() {
 
           <p className="label-proveedor">Correo</p>
           <input
-            name="email"
+            name="email" maxLength={255}
             value={form.email}
             onChange={handleChange}
             placeholder="correo@empresa.com"
@@ -252,17 +256,11 @@ export default function Provider() {
           />
 
           <p className="label-proveedor">Teléfono</p>
-          <input
-            name="phone"
-            value={form.phone}
-            onChange={handleChange}
-            placeholder="Número de teléfono"
-            className="input-proveedor"
-          />
+          <PhoneInput required value={form.phone} onChange={phone => setForm({ ...form, phone })} />
 
           <p className="label-proveedor">Dirección</p>
           <input
-            name="address"
+            name="address" maxLength={255}
             value={form.address}
             onChange={handleChange}
             placeholder="Dirección de la empresa"

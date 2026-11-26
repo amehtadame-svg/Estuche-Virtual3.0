@@ -1,6 +1,8 @@
 import { shortReference } from '../../../lib/reference';
 import { useState, useEffect } from 'react';
 import { API, authHeaders } from '../../../api/api';
+import { notify } from '../../../lib/notifications';
+import { runApiAction } from '../../../lib/apiAction';
 import { paymentStatusLabel } from '../../../lib/statusLabels';
 import './Payout.css';
 
@@ -46,8 +48,11 @@ export default function Payout() {
   };
 
   const load = async () => {
-    const res = await fetch(API.payouts, { headers });
-    if (res.ok) setPayouts(await res.json());
+    try {
+      const res = await fetch(API.payouts, { headers });
+      if (!res.ok) throw new Error();
+      setPayouts(await res.json());
+    } catch { notify.error('No se pudieron cargar los pagos.'); }
   };
 
   useEffect(() => {
@@ -56,15 +61,14 @@ export default function Payout() {
   }, []);
 
   const handleStatus = async (id: string, status: string) => {
-    const res = await fetch(`${API.payouts}/${id}/status`, {
-      method: 'PATCH',
-      headers,
-      body: JSON.stringify({ status }),
+    const res = await runApiAction({
+      url: `${API.payouts}/${id}/status`,
+      init: { method: 'PATCH', headers, body: JSON.stringify({ status }) },
+      successMessage: 'Estado del pago actualizado.',
+      errorMessage: 'No se pudo actualizar el pago.',
     });
-    if (res.ok) {
-      showMessage('Estado actualizado.');
-      load();
-    }
+    if (res) { showMessage('Estado actualizado.'); await load(); }
+
   };
 
   const filteredPayouts = filter === 'all' ? payouts : payouts.filter((p) => p.status === filter);
@@ -134,13 +138,14 @@ export default function Payout() {
                 <td>
                   <select
                     className="select-estado-pago"
+                    disabled={p.status !== 'pending'}
                     value={p.status}
                     onChange={(e) => handleStatus(p.id, e.target.value)}
                   >
                     <option value="pending">Pendiente</option>
                     <option value="approved">Aprobado</option>
                     <option value="rejected">Rechazado</option>
-                    <option value="refunded">Reembolsado</option>
+                    {p.status === 'refunded' && <option value="refunded">Reembolsado</option>}
                   </select>
                 </td>
               </tr>

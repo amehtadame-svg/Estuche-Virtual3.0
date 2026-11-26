@@ -188,8 +188,8 @@ export default function Catalog() {
     return copy;
   }, [products, activeCategory, search, maxPrice, onlyOffers, sort]);
 
-  const addProduct = (item: Product) => {
-    add({
+  const addProduct = async (item: Product) => {
+    const saved = await add({
       id: item.id,
       name: item.name,
       price: Number(item.price),
@@ -197,7 +197,7 @@ export default function Catalog() {
       icon: "📦",
       imageUrl: productImage(item),
     });
-    setToast({ id: item.id, name: item.name });
+    if (saved) setToast({ id: item.id, name: item.name });
   };
 
   const clearFilters = () => {

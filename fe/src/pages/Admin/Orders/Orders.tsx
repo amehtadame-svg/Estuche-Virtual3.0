@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { shortReference } from '../../../lib/reference';
 import { useState, useEffect } from 'react';
 import Modal from '../../../components/ui/Modal';
@@ -5,6 +6,7 @@ import { API, authHeaders } from '../../../api/api';
 import { runDeleteAction } from '../../../lib/deleteAction';
 import { runApiAction } from '../../../lib/apiAction';
 import { notify } from '../../../lib/notifications';
+import { orderStatusLabel } from '../../../lib/statusLabels';
 import './Orders.css';
 
 const statusTone: Record<string, string> = {
@@ -31,6 +33,8 @@ interface Customer {
 interface Order {
   id: string;
   customerId: string | null;
+  createdById: string | null;
+  work: { id: string } | null;
   total: number | null;
   status: string | null;
   orderDate: string | null;
@@ -52,9 +56,9 @@ export default function Orders() {
 
   const loadOrders = () => {
     fetch(API.orders, { headers: authHeaders() })
-      .then((r) => r.json())
+      .then((r) => { if (!r.ok) throw new Error('No se pudieron cargar los pedidos.'); return r.json(); })
       .then((data) => {
-        setOrders(data);
+        setOrders(Array.isArray(data) ? data : []);
         setLoading(false);
       })
       .catch(() => {
@@ -271,6 +275,10 @@ export default function Orders() {
           </div>
         </div>
 
+        <div style={{ margin: '12px 0' }}>
+          <Link className="btn-guardar-pedido" to="/empleado/nuevo">+ Crear pedido</Link>{' '}
+          <Link className="btn-editar-pedido" to="/empleado/supervision">Supervisar pedidos operativos</Link>
+        </div>
         {message && (
           <div className="mensaje-pedidos">
             {message}
@@ -330,7 +338,7 @@ export default function Orders() {
                   </td>
 
                   <td>
-                    <select
+                    {order.createdById || order.work ? <span>{orderStatusLabel[order.status ?? ''] ?? order.status}</span> : <select
                       value={order.status ?? 'pending'}
                       onChange={(e) =>
                         changeStatus(order.id, e.target.value)
@@ -360,10 +368,11 @@ export default function Orders() {
                       >
                         Cancelado
                       </option>
-                    </select>
+                    </select>}
                   </td>
 
                   <td>
+                    {order.createdById || order.work ? <Link className="btn-editar-pedido" to={`/empleado/supervision?pedido=${encodeURIComponent(order.id)}`}>Gestionar</Link> : <>
                     <button
                       className="btn-editar-pedido"
                       onClick={() => handleEdit(order)}
@@ -377,6 +386,7 @@ export default function Orders() {
                     >
                       Eliminar
                     </button>
+                    </>}
                   </td>
                 </tr>
               ))}
@@ -497,6 +507,7 @@ export default function Orders() {
                 <input
                   className="input-pedido"
                   placeholder="Ej: REGRESO10"
+                  maxLength={50}
                   value={discountCode}
                   onChange={(e) =>
                     setDiscountCode(e.target.value)

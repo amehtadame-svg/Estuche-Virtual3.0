@@ -1,3 +1,5 @@
+import { atomic, requestLock } from '../employee/employee.domain';
+import { badRequest } from '../../lib/errors';
 import { prisma } from '../../lib/prisma';
 
 const PRODUCT_INCLUDE = { select: { name: true, price: true } } as const;
@@ -14,21 +16,17 @@ export const shoppingService = {
   },
 
   async addItem(userId: string, productId: string, quantity = 1) {
-    const existing = await prisma.shopping.findUnique({
-      where: { userId_productId: { userId, productId } },
-    });
-
-    if (existing) {
-      return prisma.shopping.update({
+    return atomic(async tx => {
+      await requestLock(tx, `cart:${userId}:${productId}`);
+      const product = await tx.product.findUnique({ where: { id: productId, deletedAt: null } });
+      if (!product) throw badRequest('Este producto ya no está disponible.');
+      const current = await tx.shopping.findUnique({ where: { userId_productId: { userId, productId } } });
+      if ((current?.quantity ?? 0) + quantity > Math.min(999, product.stock)) throw badRequest('No hay suficientes unidades disponibles para agregar esa cantidad.');
+      return tx.shopping.upsert({
         where: { userId_productId: { userId, productId } },
-        data: { quantity: existing.quantity + quantity },
-        include: { product: PRODUCT_INCLUDE },
+        create: { userId, productId, quantity },
+        update: { quantity: { increment: quantity } }, include: { product: PRODUCT_INCLUDE },
       });
-    }
-
-    return prisma.shopping.create({
-      data: { userId, productId, quantity },
-      include: { product: PRODUCT_INCLUDE },
     });
   },
 

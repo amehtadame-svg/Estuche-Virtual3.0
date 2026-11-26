@@ -1,6 +1,7 @@
 import { referenceText } from '../../../lib/reference';
 import { useState, useEffect, useMemo } from 'react';
 import { AlertTriangle, Package } from 'lucide-react';
+import Modal from '../../../components/ui/Modal';
 import { API, authHeaders } from '../../../api/api';
 import { notify } from '../../../lib/notifications';
 import './InventoryInbound.css';
@@ -63,6 +64,7 @@ export default function InventoryInbound() {
 
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const loadData = async () => {
     setLoading(true);
@@ -142,6 +144,16 @@ export default function InventoryInbound() {
       return;
     }
 
+    if (unitCost && (!Number.isFinite(Number(unitCost)) || Number(unitCost) <= 0)) {
+      setError('El costo unitario debe ser mayor a cero.');
+      return;
+    }
+    setError('');
+    setShowConfirm(true);
+  };
+
+  const handleConfirm = async () => {
+    if (!selectedProduct || submitting) return;
     setSubmitting(true);
     setError('');
 
@@ -161,11 +173,12 @@ export default function InventoryInbound() {
 
       if (!res.ok) {
         const errData = await res.json().catch(() => null);
-        setError(errData?.message || QUANTITY_ERROR_MSG);
+        setError(errData?.message || 'No se pudo registrar el ingreso.');
         return;
       }
 
       const data = await res.json();
+      setShowConfirm(false);
       notify.success(
         `Ingreso confirmado: "${selectedProduct.name}" pasó de ${data.previousStock} a ${data.newStock} unidades (+${parsedQty}).`,
         'Ingreso exitoso',
@@ -211,6 +224,7 @@ export default function InventoryInbound() {
             type="text"
             className="inbound-input"
             placeholder="Escribe nombre, código SKU (ej. EV-001) o código de barras..."
+            maxLength={150}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -319,6 +333,7 @@ export default function InventoryInbound() {
                 type="text"
                 className="inbound-input"
                 placeholder="Ej. FAC-2026-089"
+                maxLength={100}
                 value={invoiceNumber}
                 onChange={(e) => setInvoiceNumber(e.target.value)}
               />
@@ -344,6 +359,7 @@ export default function InventoryInbound() {
             className="inbound-input"
             rows={2}
             placeholder="Ej. Reposición mensual de temporada escolar..."
+            maxLength={500}
             value={reason}
             onChange={(e) => setReason(e.target.value)}
           />
@@ -358,11 +374,31 @@ export default function InventoryInbound() {
         </form>
       </div>
 
+      {showConfirm && selectedProduct && (
+        <Modal titulo="Confirmar ingreso de mercancía" onClose={() => { if (!submitting) setShowConfirm(false); }} footer={<>
+          <button type="button" className="inventory-confirm-cancel" disabled={submitting} onClick={() => setShowConfirm(false)}>Cancelar</button>
+          <button type="button" className="inventory-confirm-primary" disabled={submitting} onClick={handleConfirm}>{submitting ? 'Procesando...' : 'Confirmar ingreso'}</button>
+        </>}>
+          <p className="inventory-confirm-intro">Revisa los datos antes de actualizar las existencias.</p>
+          {error && <p className="inbound-alert-error" role="alert">{error}</p>}
+          <dl className="inventory-confirm-list">
+            <div><dt>Producto</dt><dd>{selectedProduct.name}</dd></div>
+            <div><dt>SKU</dt><dd>{selectedProduct.sku || '—'}</dd></div>
+            <div><dt>Cantidad</dt><dd>+{parsedQty} uds.</dd></div>
+            <div><dt>Proveedor</dt><dd>{providers.find(p => p.id === supplierId)?.name || 'Sin proveedor'}</dd></div>
+            <div><dt>Factura / lote</dt><dd>{invoiceNumber || '—'}</dd></div>
+            <div><dt>Costo unitario</dt><dd>{unitCost ? `$${Number(unitCost).toLocaleString('es-CO')}` : '—'}</dd></div>
+            <div><dt>Observaciones</dt><dd>{reason.trim() || '—'}</dd></div>
+            <div><dt>Stock resultante</dt><dd>{selectedProduct.stock} → <strong>{selectedProduct.stock + parsedQty} uds.</strong></dd></div>
+          </dl>
+        </Modal>
+      )}
       {/* Bitácora de auditoría de recepciones recientes (CA-002.4) */}
       <div className="inbound-card inbound-history-card">
         <h2 className="inbound-card-title">
-          Ingresos recientes
+          Historial de ingresos
         </h2>
+        <p className="inbound-muted">Cada fila es un movimiento registrado, no un producto nuevo. Un mismo producto puede aparecer varias veces.</p>
         {movements.length === 0 ? (
           <p className="inbound-muted">Aún no se han registrado entradas de mercancía.</p>
         ) : (

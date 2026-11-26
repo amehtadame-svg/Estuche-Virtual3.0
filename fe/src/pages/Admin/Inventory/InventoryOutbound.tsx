@@ -1,6 +1,7 @@
 import { referenceText } from '../../../lib/reference';
 import { useState, useEffect, useMemo, type FormEvent } from 'react';
 import { AlertTriangle, CheckCircle2, Package } from 'lucide-react';
+import Modal from '../../../components/ui/Modal';
 import { API, authHeaders } from '../../../api/api';
 import { notify } from '../../../lib/notifications';
 import './InventoryInbound.css';
@@ -261,6 +262,7 @@ export default function InventoryOutbound() {
             type="text"
             className="inbound-input"
             placeholder="Escribe nombre, código SKU (ej. EV-001) o código de barras..."
+            maxLength={150}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -377,6 +379,7 @@ export default function InventoryOutbound() {
             className="inbound-input"
             rows={3}
             placeholder="Ej. Traslado de 10 cuadernos a la sede norte para reposición de vitrina"
+            maxLength={500}
             value={reasonDetail}
             onChange={(e) => {
               setReasonDetail(e.target.value);
@@ -397,7 +400,8 @@ export default function InventoryOutbound() {
       </div>
 
       <div className="inbound-card inbound-history-card">
-        <h2 className="inbound-card-title">Salidas recientes</h2>
+        <h2 className="inbound-card-title">Historial de salidas</h2>
+        <p className="inbound-muted">Cada fila es un movimiento registrado, no un producto nuevo. Un mismo producto puede aparecer varias veces.</p>
         {movements.length === 0 ? (
           <p className="inbound-muted">Aún no se han registrado salidas de mercancía.</p>
         ) : (
@@ -435,14 +439,12 @@ export default function InventoryOutbound() {
       </div>
 
       {showConfirm && selectedProduct && (
-        <div className="outbound-modal-backdrop" role="dialog" aria-modal="true">
-          <div className="outbound-modal">
-            <h3 className="outbound-modal-title">Confirmar salida de mercancía</h3>
-            <p className="outbound-modal-text">
-              Esta acción descontará existencias de forma permanente. Revisa el resumen antes de continuar.
-            </p>
-
-            <dl className="outbound-modal-list">
+        <Modal titulo="Confirmar salida de mercancía" onClose={closeConfirm} footer={<>
+          <button type="button" className="inventory-confirm-cancel" onClick={closeConfirm} disabled={submitting}>Cancelar</button>
+          <button type="button" className="inventory-confirm-primary inventory-confirm-danger" onClick={handleConfirm} disabled={submitting}>{submitting ? 'Procesando...' : 'Confirmar salida'}</button>
+        </>}>
+            <p className="inventory-confirm-intro">Esta acción descontará existencias. Revisa el resumen antes de continuar.</p>
+            <dl className="inventory-confirm-list">
               <div>
                 <dt>Producto</dt>
                 <dd>{selectedProduct.name}</dd>
@@ -473,26 +475,7 @@ export default function InventoryOutbound() {
               </div>
             </dl>
 
-            <footer className="confirm-delete-footer">
-              <button
-                type="button"
-                className="confirm-delete-cancel"
-                onClick={closeConfirm}
-                disabled={submitting}
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                className="outbound-confirm-submit"
-                onClick={handleConfirm}
-                disabled={submitting}
-              >
-                {submitting ? 'Procesando...' : 'Confirmar salida'}
-              </button>
-            </footer>
-          </div>
-        </div>
+        </Modal>
       )}
     </div>
   );
