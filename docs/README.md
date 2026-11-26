@@ -21,13 +21,13 @@ Punto de entrada a la documentación del proyecto.
 - [HU-006 — Visualización de productos agotados](requisitos/HUs/HU-006-visualizacion-de-productos-agotados.md)
 - [HU-007 — Visualización de productos con bajo stock](requisitos/HUs/HU-007-visualizacion-de-productos-con.md)
 - [HU-008 — Generación de reportes de ventas](requisitos/HUs/HU-008-generacion-de-reportes-de.md)
-- [HU-009 — Generación de reportes de compras](requisitos/HUs/HU-009-generacion-de-reportes-de.md)
+- [HU-009 — Consulta de ingresos de inventario](requisitos/HUs/HU-009-generacion-de-reportes-de.md)
 - [HU-010 — Visualización del historial de movimientos](requisitos/HUs/HU-010-visualizacion-del-historial-de.md)
 - [HU-011 — Cálculo de ganancias](requisitos/HUs/HU-011-calculo-de-ganancias.md)
 - [HU-012 — Registro de combos escolares](requisitos/HUs/HU-012-registro-de-combos-escolares.md)
 - [HU-013 — Venta de combos](requisitos/HUs/HU-013-venta-de-combos.md)
 - [HU-014 — Identificación de productos más vendidos](requisitos/HUs/HU-014-identificacion-de-productos-mas.md)
-- [HU-015 — Registro de proveedores](requisitos/HUs/HU-015-registro-de-proveedores.md)
+- [HU-015 — Preparación y empaque de pedidos](requisitos/HUs/HU-015-preparacion-y-empaque.md)
 - [HU-016 — Asignación de precios a productos](requisitos/HUs/HU-016-asignacion-de-precios-a.md)
 - [HU-017 — Alerta de faltantes de stock](requisitos/HUs/HU-017-alerta-de-faltantes-de.md)
 - [HU-018 — Control de usuarios y permisos](requisitos/HUs/HU-018-control-de-usuarios-y.md)
@@ -43,7 +43,7 @@ Punto de entrada a la documentación del proyecto.
 - [HU-028 — Categorización de productos](requisitos/HUs/HU-028-categorizacion-de-productos.md)
 - [HU-029 — Visualización del historial de precios](requisitos/HUs/HU-029-visualizacion-del-historial-de.md)
 - [HU-030 — Respaldo automático de información](requisitos/HUs/HU-030-respaldo-automatico-de-informacion.md)
-- [HU-031 — Registro de cuenta (Cliente / Proveedor)](requisitos/HUs/HU-031-registro-de-cuenta-cliente.md)
+- [HU-031 — Registro de cuenta de cliente](requisitos/HUs/HU-031-registro-de-cuenta-cliente.md)
 - [HU-032 — Agregar productos al carrito de compras](requisitos/HUs/HU-032-agregar-productos-al-carrito.md)
 - [HU-033 — Finalizar compra, selección de pago y facturación](requisitos/HUs/HU-033-finalizar-compra-seleccion-de.md)
 - [HU-034 — Gestión de pedidos por el administrador](requisitos/HUs/HU-034-gestion-de-pedidos-por.md)
@@ -70,7 +70,7 @@ Punto de entrada a la documentación del proyecto.
 - [RF-012 — Ofertas y Promociones](requisitos/RFs/RF-012-ofertas-y-promociones.md)
 - [RF-013 — Panel de Administración](requisitos/RFs/RF-013-panel-de-administracion.md)
 - [RF-014 — Gestión de Categorías de Productos](requisitos/RFs/RF-014-gestion-de-categorias-de.md)
-- [RF-015 — Gestión de Proveedores](requisitos/RFs/RF-015-gestion-de-proveedores.md)
+- [RF-015 — Preparación y entrega de pedidos](requisitos/RFs/RF-015-preparacion-y-entrega.md)
 - [RF-016 — Gestión de Inventario y Movimientos de Stock](requisitos/RFs/RF-016-gestion-de-inventario-y.md)
 - [RF-017 — Historial de Precios de Productos](requisitos/RFs/RF-017-historial-de-precios-de.md)
 - [RF-018 — Gestión de Imágenes de Producto](requisitos/RFs/RF-018-gestion-de-imagenes-de.md)
@@ -118,3 +118,9 @@ Punto de entrada a la documentación del proyecto.
 
 Esta tabla registra trabajo documental pendiente; no certifica
 ausencia de implementación ni sustituye la matriz de cumplimiento.
+
+## Alcance de los diagramas
+
+Los diagramas de dominio y datos publicados son **vistas parciales** de las funciones documentadas; omiten elementos que no forman parte de este alcance. No describen exhaustivamente el esquema físico ni implican cambios en la base de datos. Para una inspección técnica completa, consultar el esquema Prisma en el repositorio.
+
+Las historias HU-009, HU-015 y HU-037, así como los requisitos RF-003, RF-006, RF-015 y RF-019, fueron actualizados para reflejar funciones documentadas del catálogo, inventario y operación. Conservar el mismo identificador no significa que tengan el mismo alcance que en revisiones antiguas; los informes históricos no certifican las nuevas definiciones.

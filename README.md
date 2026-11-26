@@ -14,7 +14,7 @@
 
 **ESTUCHE VIRTUAL** es una plataforma e-commerce para la comercialización de útiles escolares y artículos de papelería, diseñada para gestionar de manera eficiente productos, pedidos y usuarios dentro de un entorno digital.
 
-El sistema facilita la interacción entre clientes, proveedores y administradores, permitiendo la automatización de procesos comerciales, el control de inventario en tiempo real y el seguimiento de pedidos. Su propósito es modernizar la gestión tradicional de papelerías mediante una solución accesible, intuitiva y segura.
+El sistema facilita la interacción entre clientes, empleados, repartidores y administradores, permitiendo la automatización de procesos comerciales, el control de inventario en tiempo real y el seguimiento de pedidos. Su propósito es modernizar la gestión tradicional de papelerías mediante una solución accesible, intuitiva y segura.
 
 ---
 
@@ -54,9 +54,6 @@ Roles definidos en el modelo de datos:
 - Repartidor: `delivery`.
 - Administrador: `admin`.
 - Superadministrador: `superadmin`.
-
-Proveedor no es un rol de autenticación en el modelo actual.
-Su gestión comercial no implica acceso propio al sistema.
 
 El middleware verifica la sesión y consulta el rol vigente en la base de datos.
 `verifyAdmin` admite admin y superadmin; `verifySuperAdmin` solo superadmin.

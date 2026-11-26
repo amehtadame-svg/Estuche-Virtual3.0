@@ -38,7 +38,7 @@ La bandeja de ayuda requiere aplicar la migración `20261127000000_employee_supp
 
 ## Limitaciones y comprobaciones pendientes
 
-- El registro de pago es manual y no sustituye conciliación bancaria, terminal de tarjeta ni comprobante de un proveedor; un registro erróneo debe tratarse como incidencia financiera.
+- El registro de pago es manual y no sustituye conciliación bancaria, terminal de tarjeta ni comprobante externo; un registro erróneo debe tratarse como incidencia financiera.
 - La cancelación/vencimiento existente libera inventario y anula el recibo, pero no cambia automáticamente pagos pendientes. Su posterior aprobación por el flujo de la aplicación se bloquea; un cobro externo incierto requiere conciliación manual. No se alteró el estado de pasarela por seguridad.
 - Las pruebas transaccionales necesitan PostgreSQL aislado y migrado, con `EMPLOYEE_TEST_DATABASE_URL` apuntando a una base cuyo nombre termine en `_test`. No usar la base habitual ni compartir credenciales en el chat. Algunas suites exigen además un servidor local; consultar la validación de cada archivo. Ejecutar con `pnpm test:integration` desde `be` y verificar restricciones de cada suite.
 - La aplicación de código promocional del CRUD de pedidos no recalcula actualmente el total del recibo; no se modificó el flujo de descuentos ni el checkout de demostración en este cambio.

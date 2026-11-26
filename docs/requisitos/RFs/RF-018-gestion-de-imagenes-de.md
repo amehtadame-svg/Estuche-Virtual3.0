@@ -18,7 +18,7 @@ El sistema debe permitir cargar una o varias imágenes por producto, definir cu�
 
 | Paso | Descripción |
 |------|-------------|
-| 1 | El proveedor o administrador sube una o varias imágenes para un producto. |
+| 1 | El administrador sube una o varias imágenes para un producto. |
 | 2 | El sistema valida el formato (JPG, PNG, WEBP) y el tamaño máximo permitido. |
 | 3 | Las imágenes se almacenan y se registran en `imagenes_producto`. |
 | 4 | El usuario puede marcar una imagen como principal (`principal = true`). |

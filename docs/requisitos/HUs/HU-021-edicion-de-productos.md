@@ -23,7 +23,7 @@
 
 **Como** administrador del catálogo comercial, especialista de inventarios o responsable de la gestión de información de productos, encargado de la integridad, calidad y actualización constante de la base de datos de mercancías,  
 **quiero** contar con un formulario de modificación integral dentro del panel administrativo que me permita actualizar los datos técnicos, nombres comerciales, descripciones extendidas, códigos SKU/barras auxiliares, imágenes descriptivas, unidades de medida y categorías asignadas a cualquier producto previamente registrado,  
-**para** corregir errores tipográficos o imprecisiones en las fichas técnicas, adaptar la información de los artículos ante cambios del fabricante o proveedor, mantener la consistencia y calidad de los datos del catálogo en los puntos de venta y canales digitales, sin alterar ni corromper las transacciones históricas de venta previamente registradas.
+**para** corregir errores tipográficos o imprecisiones en las fichas técnicas, adaptar la información de los artículos ante cambios en las características del artículo, mantener la consistencia y calidad de los datos del catálogo en los puntos de venta y canales digitales, sin alterar ni corromper las transacciones históricas de venta previamente registradas.
 
 ---
 

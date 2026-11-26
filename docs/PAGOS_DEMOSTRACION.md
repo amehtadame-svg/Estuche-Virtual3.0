@@ -217,9 +217,9 @@ compras ni cambios de stock sobre ella.
 
 ## Evolución a una pasarela oficial
 
-Para validar una integración bancaria real en sandbox será necesario elegir un
-proveedor, crear su cuenta y configurar sus credenciales por variables de
+Para validar una integración bancaria real en sandbox será necesario elegir una
+pasarela, crear una cuenta y configurar sus credenciales por variables de
 entorno. Ese trabajo debe incluir creación de sesiones desde el backend,
-webhooks autenticados y verificación del importe, moneda y referencia con el
-proveedor. No basta con cambiar esta bandera ni confiar en un resultado enviado
+webhooks autenticados y verificación del importe, moneda y referencia con la
+pasarela. No basta con cambiar esta bandera ni confiar en un resultado enviado
 por el navegador. No reutilices este endpoint de simulación para cobros reales.

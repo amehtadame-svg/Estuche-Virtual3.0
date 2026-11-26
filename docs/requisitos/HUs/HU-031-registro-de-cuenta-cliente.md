@@ -1,17 +1,19 @@
 <!--
   ¿Qué? Historia de usuario que describe la creación de una cuenta nueva en Estuche Virtual.
-  ¿Para qué? Formalizar la puerta de entrada de clientes y proveedores a la plataforma.
+  ¿Para qué? Formalizar la puerta de entrada de clientes a la plataforma.
   ¿Impacto? Sin registro no existen usuarios ni pedidos — es la base de todo el flujo comercial.
 -->
 
-# HU-031 — Registro de cuenta (Cliente / Proveedor)
+# HU-031 — Registro de cuenta de cliente
+
+> La verificación de correo indicada aquí sigue pendiente: actualmente el registro de cliente inicia sesión sin activación previa.
 
 ## Identificación
 
 | Campo | Valor |
 |-------|-------|
 | **ID** | HU-031 |
-| **Título** | Registro de cuenta (Cliente / Proveedor) |
+| **Título** | Registro de cuenta de cliente |
 | **Módulo** | Autenticación |
 | **Prioridad** | Alta |
 | **Estado** | Por Implementar |
@@ -21,18 +23,18 @@
 
 ## Historia
 
-**Como** visitante interesado en comprar o vender útiles escolares,
-**quiero** crear una cuenta indicando mi nombre completo, correo electrónico, teléfono, contraseña y el rol que deseo (Cliente o Proveedor),
+**Como** visitante interesado en comprar útiles escolares,
+**quiero** crear una cuenta indicando mi nombre completo, correo electrónico y contraseña,
 **para** poder acceder a las funcionalidades correspondientes a mi rol dentro de la plataforma.
 
 ---
 
 ## Criterios de Aceptación
 
-### CA-031.1 — Formulario de registro con selección de rol
+### CA-031.1 — Formulario de registro de cliente
 - **Dado que** estoy en la página de registro (`/registro`),
 - **cuando** visualizo el formulario,
-- **entonces** debo encontrar campos para nombre completo, correo, teléfono, contraseña, confirmación de contraseña y el selector de tipo de cuenta (Cliente o Proveedor).
+- **entonces** debo encontrar campos para nombre completo, correo, contraseña y confirmación de contraseña.
 
 ### CA-031.2 — Validación de correo único
 - **Dado que** intento registrarme con un correo ya existente en el sistema,
@@ -61,8 +63,8 @@
 
 | Método | Ruta | Descripción |
 |--------|------|-------------|
-| POST | `/api/auth/register` | Crea la cuenta y envía el correo de verificación |
-| POST | `/api/auth/verify-email` | Activa la cuenta mediante el token recibido |
+| POST | `/api/auth/register` | Crea la cuenta de cliente; envío de verificación pendiente |
+| POST | `/api/auth/verify-email` | Ruta requerida para activación; no implementada actualmente |
 
 ---
 
@@ -70,4 +72,4 @@
 
 - La contraseña se almacena con hash bcrypt.
 - El rol **Administrador** nunca se asigna desde este formulario — solo puede crearlo otro administrador.
-- El registro crea la fila en la tabla `usuarios` con `rol = 'cliente'` o `'proveedor'`.
+- El registro crea la fila en la tabla `usuarios` con el rol de cliente.

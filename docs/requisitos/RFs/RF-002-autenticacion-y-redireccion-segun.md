@@ -6,11 +6,13 @@
 
 # RF-002 — Autenticación y Redirección según Rol
 
+> La verificación de correo indicada aquí sigue pendiente: actualmente el registro de cliente inicia sesión sin activación previa.
+
 **Historia de usuario relacionada**: HU-019
 
 ## Descripción
 
-El sistema debe permitir que los usuarios autenticados inicien sesión utilizando su correo electrónico y contraseña. Una vez validadas las credenciales, el sistema redirigirá al usuario al panel correspondiente según su rol (**Administrador, Proveedor o Cliente**).
+El sistema debe permitir que los usuarios autenticados inicien sesión utilizando su correo electrónico y contraseña. Una vez validadas las credenciales, el sistema redirigirá al usuario al panel correspondiente según su rol (**Cliente, Empleado, Repartidor, Administrador o Superadministrador**).
 
 ---
 

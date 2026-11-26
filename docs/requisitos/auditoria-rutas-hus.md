@@ -1,5 +1,7 @@
-<!-- Generado por revisar_hus.py; informe de inspeccion estatica. -->
+<!-- Informe histórico de inspección estática; ver nota de actualización. -->
 # Auditoria conjunta de rutas de historias de usuario
+
+> Informe histórico: los resultados corresponden al commit indicado. HU-009, HU-015 y HU-037 se redefinieron posteriormente; sus filas y detalles no representan una nueva auditoría funcional. Consulte las historias actuales y la auditoría de requisitos.
 
 - Commit local de referencia: `7d6de1d`; rama: `docs/modelos-arquitectura-evidencias`.
 - HUs inspeccionadas: **40**.
@@ -30,13 +32,13 @@
 | [HU-006](HUs/HU-006-visualizacion-de-productos-agotados.md) | Por Implementar | Requiere contraste adicional de contrato |
 | [HU-007](HUs/HU-007-visualizacion-de-productos-con.md) | Por Implementar | Requiere contraste adicional de contrato |
 | [HU-008](HUs/HU-008-generacion-de-reportes-de.md) | Por Implementar | Requiere contraste adicional de contrato |
-| [HU-009](HUs/HU-009-generacion-de-reportes-de.md) | Por Implementar | Sin endpoint en tabla reconocible; revision funcional pendiente |
+| [HU-009](HUs/HU-009-generacion-de-reportes-de.md) | Alcance actualizado | Nueva definición; revisión de aceptación pendiente |
 | [HU-010](HUs/HU-010-visualizacion-del-historial-de.md) | Por Implementar | Rutas declaradas coinciden; funcionalidad sin certificar |
 | [HU-011](HUs/HU-011-calculo-de-ganancias.md) | Por Implementar | Requiere contraste adicional de contrato |
 | [HU-012](HUs/HU-012-registro-de-combos-escolares.md) | Por Implementar | Rutas declaradas coinciden; funcionalidad sin certificar |
 | [HU-013](HUs/HU-013-venta-de-combos.md) | Por Implementar | Requiere contraste adicional de contrato |
 | [HU-014](HUs/HU-014-identificacion-de-productos-mas.md) | Por Implementar | Requiere contraste adicional de contrato |
-| [HU-015](HUs/HU-015-registro-de-proveedores.md) | Por Implementar | Requiere contraste adicional de contrato |
+| [HU-015](HUs/HU-015-preparacion-y-empaque.md) | Alcance actualizado | Nueva definición; revisión de aceptación pendiente |
 | [HU-016](HUs/HU-016-asignacion-de-precios-a.md) | Por Implementar | Requiere contraste adicional de contrato |
 | [HU-017](HUs/HU-017-alerta-de-faltantes-de.md) | Por Implementar | Requiere contraste adicional de contrato |
 | [HU-018](HUs/HU-018-control-de-usuarios-y.md) | Por Implementar | Rutas declaradas coinciden; funcionalidad sin certificar |
@@ -58,7 +60,7 @@
 | [HU-034](HUs/HU-034-gestion-de-pedidos-por.md) | Por Implementar | Requiere contraste adicional de contrato |
 | [HU-035](HUs/HU-035-historial-de-compras-y.md) | Por Implementar | Requiere contraste adicional de contrato |
 | [HU-036](HUs/HU-036-gestion-de-ofertas-promociones.md) | Por Implementar | Requiere contraste adicional de contrato |
-| [HU-037](HUs/HU-037-seguimiento-de-envio-y.md) | Por Implementar | Requiere contraste adicional de contrato |
+| [HU-037](HUs/HU-037-seguimiento-de-envio-y.md) | Alcance actualizado | Nueva definición; revisión de aceptación pendiente |
 | [HU-038](HUs/HU-038-gestion-de-direcciones-de.md) | Por Implementar | Requiere contraste adicional de contrato |
 | [HU-039](HUs/HU-039-solicitud-y-gestion-de.md) | Por Implementar | Requiere contraste adicional de contrato |
 | [HU-040](HUs/HU-040-resenas-calificaciones-y-notificaciones.md) | Por Implementar | Requiere contraste adicional de contrato |
@@ -129,11 +131,9 @@ Historia: [documento](HUs/HU-008-generacion-de-reportes-de.md).
 |---|---|---|---|---|
 | GET | `/api/v1/reports/sales` | Sin coincidencia literal en routers analizados; revisar contrato | Por determinar | Sin coincidencia literal |
 
-### HU-009 — Generación de reportes de compras
+### HU-009 — Consulta de ingresos de inventario (alcance actualizado)
 
-Historia: [documento](HUs/HU-009-generacion-de-reportes-de.md).
-
-Sin tabla de endpoints reconocible; no se concluye ausencia de implementacion.
+Historia: [documento](HUs/HU-009-generacion-de-reportes-de.md). La revisión anterior no aplica al alcance actual. Referencia: `GET /api/inventory/movements?type=in`; verificación funcional adicional pendiente.
 
 ### HU-010 — Visualización del historial de movimientos
 
@@ -175,13 +175,9 @@ Historia: [documento](HUs/HU-014-identificacion-de-productos-mas.md).
 |---|---|---|---|---|
 | GET | `/api/v1/reports/top-selling` | Sin coincidencia literal en routers analizados; revisar contrato | Por determinar | Sin coincidencia literal |
 
-### HU-015 — Registro de proveedores
+### HU-015 — Preparación y empaque de pedidos (alcance actualizado)
 
-Historia: [documento](HUs/HU-015-registro-de-proveedores.md).
-
-| Metodo | Ruta encontrada antes de aplicar | Resultado | Ruta coincidente/propuesta | Fuente backend |
-|---|---|---|---|---|
-| POST | `/api/v1/suppliers` | Sin coincidencia literal en routers analizados; revisar contrato | Por determinar | Sin coincidencia literal |
+Historia: [documento](HUs/HU-015-preparacion-y-empaque.md). Revisión de rutas previa no aplicable al alcance actual. Rutas de referencia: `POST /api/employee/orders/:id/claim`, `PATCH /api/employee/orders/:id/picking` y `POST /api/employee/orders/:id/pack`; verificación funcional adicional pendiente.
 
 ### HU-016 — Asignación de precios a productos
 
@@ -301,7 +297,7 @@ Historia: [documento](HUs/HU-030-respaldo-automatico-de-informacion.md).
 |---|---|---|---|---|
 | POST | `/api/v1/system/backups` | Sin coincidencia literal en routers analizados; revisar contrato | Por determinar | Sin coincidencia literal |
 
-### HU-031 — Registro de cuenta (Cliente / Proveedor)
+### HU-031 — Registro de cuenta de cliente
 
 Historia: [documento](HUs/HU-031-registro-de-cuenta-cliente.md).
 
@@ -360,15 +356,9 @@ Historia: [documento](HUs/HU-036-gestion-de-ofertas-promociones.md).
 | PUT | `/api/descuentos/{id}` | Sin coincidencia literal en routers analizados; revisar contrato | Por determinar | Sin coincidencia literal |
 | POST | `/api/descuentos/validar` | Sin coincidencia literal en routers analizados; revisar contrato | Por determinar | Sin coincidencia literal |
 
-### HU-037 — Seguimiento de envío y estado del pedido
+### HU-037 — Seguimiento y entrega (alcance actualizado)
 
-Historia: [documento](HUs/HU-037-seguimiento-de-envio-y.md).
-
-| Metodo | Ruta encontrada antes de aplicar | Resultado | Ruta coincidente/propuesta | Fuente backend |
-|---|---|---|---|---|
-| GET | `/api/envios/{idPedido}` | Sin coincidencia literal en routers analizados; revisar contrato | Por determinar | Sin coincidencia literal |
-| PUT | `/api/envios/{id}` | Sin coincidencia literal en routers analizados; revisar contrato | Por determinar | Sin coincidencia literal |
-| GET | `/api/envios/mis-entregas` | Sin coincidencia literal en routers analizados; revisar contrato | Por determinar | Sin coincidencia literal |
+Historia: [documento](HUs/HU-037-seguimiento-de-envio-y.md). La revisión anterior no aplica al alcance actual. Rutas de referencia: `GET /api/delivery/pending-orders`, `POST /api/delivery/pending-orders/:id/claim`, `GET /api/delivery/despatches` y `POST /api/delivery/despatches/:id/confirm`; verificación adicional pendiente.
 
 ### HU-038 — Gestión de direcciones de entrega
 
@@ -406,7 +396,7 @@ Historia: [documento](HUs/HU-040-resenas-calificaciones-y-notificaciones.md).
 ## Pendientes comunes
 
 - HU-001: criterio de redireccion, is_active y restricciones de datos requieren comprobacion aparte.
-- Proveedor no es rol del enum actual; contrastar tambien HU-031 sin cambiarla automaticamente.
-- No renombrar suppliers/providers, carrito/shopping o pedidos/orders sin revisar campos, permisos y comportamiento.
+- Los roles y las rutas deben contrastarse con el código actual; HU-031 fue actualizada después de esta auditoría.
+- No renombrar rutas de carrito o pedidos sin revisar campos, permisos y comportamiento.
 - No convertir un endpoint ausente en uno inventado de reportes, respaldos, resenas, notificaciones o pagos.
 - Ejecutar pruebas y obtener confirmacion por HU antes de declarar terminado.
