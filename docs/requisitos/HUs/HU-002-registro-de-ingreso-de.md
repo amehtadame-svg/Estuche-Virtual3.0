@@ -55,7 +55,7 @@
 
 | Método | Ruta | Descripción |
 |--------|------|-------------|
-| POST | `/api/v1/inventory/inbound` | Registra el ingreso y actualiza el stock |
+| POST | `/api/inventory/inbound` | Registra el ingreso y actualiza el stock |
 
 ---
 

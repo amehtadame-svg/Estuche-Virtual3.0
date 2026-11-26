@@ -55,7 +55,7 @@
 
 | Método | Ruta | Descripción |
 |--------|------|-------------|
-| POST | `/api/v1/categories` | Crea y asigna categorías de productos |
+| POST | `/api/categories` | Crea y asigna categorías de productos |
 
 ---
 

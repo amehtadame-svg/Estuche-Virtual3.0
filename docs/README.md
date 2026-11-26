@@ -98,6 +98,8 @@ Punto de entrada a la documentación del proyecto.
 
 ## Seguimiento documental
 
+- [Auditoría conjunta de rutas de las 40 HUs](requisitos/auditoria-rutas-hus.md)
+
 - [Contradicciones y propuestas de corrección](requisitos/contradicciones.md)
 
 ## Entregables por incorporar o consolidar

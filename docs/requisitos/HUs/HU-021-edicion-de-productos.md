@@ -55,7 +55,7 @@
 
 | Método | Ruta | Descripción |
 |--------|------|-------------|
-| PUT | `/api/v1/products/{id}` | Guarda las modificaciones del producto |
+| PUT | `/api/products/{id}` | Guarda las modificaciones del producto |
 
 ---
 
