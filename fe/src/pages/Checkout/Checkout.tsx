@@ -1,18 +1,16 @@
+import { shippingCost } from '../../lib/shipping';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../hooks/useCart';
 import { useAuth } from '../../hooks/useAuth';
 import { API, authHeaders } from '../../api/api';
 import Modal from '../../components/ui/Modal';
-import { Banknote, CheckCircle2, CreditCard, Landmark, ShoppingCart, Smartphone } from 'lucide-react';
+import { CreditCard, Landmark, ShoppingCart, Smartphone } from 'lucide-react';
 import './Checkout.css';
 
-type PaymentMethod =
-  | 'tarjeta'
-  | 'nequi'
-  | 'daviplata'
-  | 'transferencia'
-  | 'efectivo';
+import { useDemoPayment, type PaymentMethod, type Outcome, type PaymentResult } from './useDemoPayment';
+import DemoPaymentResult from './DemoPaymentResult';
+import { formatCOP } from './paymentFormat';
 
 interface Discount {
   code: string;
@@ -22,18 +20,16 @@ interface Discount {
 
 export default function Checkout() {
   const { user } = useAuth();
-  const { items, total, clear } = useCart();
+  const { items, total, reload, loading: cartLoading } = useCart();
   const navigate = useNavigate();
 
   const [method, setMethod] =
     useState<PaymentMethod>('tarjeta');
 
-  const [processing, setProcessing] = useState(false);
+  const payment = useDemoPayment(user?.id);
+  const [outcome, setOutcome] = useState<Outcome>('approved');
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
-
-  const [createdOrderId, setCreatedOrderId] =
-    useState<string | null>(null);
+  const { processing } = payment;
 
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
@@ -81,12 +77,13 @@ export default function Checkout() {
     return total;
   };
 
-  const finalTotal = calculateTotal();
+  const shipping = shippingCost(total);
+  const finalTotal = Math.round((Math.max(0, calculateTotal()) + shipping) * 100) / 100;
 
   useEffect(() => {
     if (!user) return;
 
-    fetch(`${API.users}/${user.id}`, { headers })
+    fetch(`${API.users}/${user.id}`, { headers: authHeaders() })
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (data) {
@@ -99,6 +96,7 @@ export default function Checkout() {
 
   const openAddressModal = () => {
     setAddressErrors({});
+    setAddressForm((prev) => ({ ...prev, contactName: prev.contactName || user?.name || '', phoneNumber: phone }));
     setAddressModalOpen(true);
   };
 
@@ -125,11 +123,10 @@ export default function Checkout() {
     }
 
     if (
-      !addressForm.phoneNumber.trim() ||
-      addressForm.phoneNumber.trim().length < 10
+      !/^3\d{9}$/.test(addressForm.phoneNumber.trim())
     ) {
       errors.phoneNumber =
-        'Por favor, introduce 10-11 dígitos.';
+        'Introduce un celular colombiano de 10 dígitos que empiece por 3.';
     }
 
     if (!addressForm.street.trim()) {
@@ -168,18 +165,12 @@ export default function Checkout() {
       .filter(Boolean)
       .join(', ');
 
-    const newPhone = addressForm.phoneNumber;
-
-    await fetch(`${API.users}/${user?.id}/profile`, {
-      method: 'PATCH',
-      headers,
-      body: JSON.stringify({
-        phone: newPhone,
-        address: composedAddress,
-      }),
-    });
-
-    setPhone(newPhone);
+    if (composedAddress.length > 255) {
+      setAddressErrors({ street: 'La dirección completa no debe superar 255 caracteres.' });
+      return;
+    }
+    // Se guarda en el servidor junto al pedido, en la transacción de checkout.
+    setPhone(addressForm.phoneNumber.trim());
     setAddress(composedAddress);
     setAddressModalOpen(false);
   };
@@ -204,10 +195,10 @@ export default function Checkout() {
       );
 
       if (!res.ok) {
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
 
         setDiscountError(
-          data.message || 'Código inválido'
+          data.message || (res.status === 404 ? 'No se pudo validar el cupón. Verifica que el servidor esté actualizado.' : 'No se pudo validar el cupón')
         );
 
         setDiscount(null);
@@ -224,8 +215,9 @@ export default function Checkout() {
 
       setDiscountError('');
     } catch {
+      setDiscount(null);
       setDiscountError(
-        'Error al validar el código'
+        'No pudimos conectar para validar el cupón. Intenta nuevamente.'
       );
     } finally {
       setApplyingDiscount(false);
@@ -233,118 +225,59 @@ export default function Checkout() {
   };
 
   const confirmPayment = async () => {
-    if (items.length === 0) return;
-
-    if (createdOrderId) {
-      setError(
-        `El pedido ${createdOrderId} ya fue creado. Verifica su recibo con administración antes de volver a comprar.`
-      );
+    if (!payment.retrying && (!phone.trim() || !address.trim())) {
+      setError('Completa tu teléfono y dirección de envío.');
       return;
     }
-
-    if (!phone.trim() || !address.trim()) {
-      setError(
-        'Por favor completa tu teléfono y dirección de envío.'
-      );
-      return;
-    }
-
-    setProcessing(true);
     setError('');
-
-    try {
-      await fetch(`${API.users}/${user?.id}/profile`, {
-        method: 'PATCH',
-        headers,
-        body: JSON.stringify({
-          phone,
-          address,
-        }),
-      });
-
-      let promotionalCodeId: string | null = null;
-
-      if (discount) {
-        const resApply = await fetch(
-          `${API.promotionalCodes}/apply`,
-          {
-            method: 'POST',
-            headers,
-            body: JSON.stringify({
-              code: discount.code,
-            }),
-          }
-        );
-
-        if (resApply.ok) {
-          const data = await resApply.json();
-          promotionalCodeId = data.id;
-        }
-      }
-
-      const resOrder = await fetch(API.orders, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          total: finalTotal,
-          ...(promotionalCodeId
-            ? { promotionalCodeId }
-            : {}),
-          status: 'pending',
-          details: items.map((item) => ({
-            productId: item.id,
-            quantity: item.quantity,
-            unitPrice: item.price,
-          })),
-        }),
-      });
-
-      if (!resOrder.ok) {
-        const data = await resOrder
-          .json()
-          .catch(() => null);
-
-        setError(
-          data?.message || 'No se pudo crear el pedido.'
-        );
-        return;
-      }
-
-      const order = await resOrder.json();
-
-      setCreatedOrderId(order.id);
-
-      const resReceipt = await fetch(API.receipts, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          customerId: user?.id,
-          orderId: order.id,
-          total: finalTotal,
-          paymentStatus: 'pending',
-        }),
-      });
-
-      if (!resReceipt.ok) {
-        throw new Error(
-          `El pedido ${order.id} fue creado, pero no se pudo confirmar su recibo. Contacta a administración y no repitas la compra.`
-        );
-      }
-
-      await clear();
-      setSuccess(true);
-    } catch (error) {
-      setError(
-        error instanceof Error
-          ? error.message
-          : 'Error de conexión. Verifica si se creó el pedido antes de reintentar.'
-      );
-    } finally {
-      setProcessing(false);
+    const result = await payment.start({
+      method, outcome, phone, address,
+      ...(discount ? { code: discount.code } : {}),
+      items: items.map((item) => ({ productId: item.id, quantity: item.quantity })),
+    });
+    if (result && !(await reload())) {
+      setError('El pago se registró, pero no pudimos sincronizar el carrito. Vuelve a consultar o reintenta recuperar el carrito.');
     }
   };
 
-  if (items.length === 0 && !success) {
+  const retryPayment = async () => {
+    setError('');
+    if (!(await reload())) {
+      setError('No se pudo recuperar el carrito. Intenta nuevamente; no se creará ningún pago.');
+      return;
+    }
+    if (payment.reset()) {
+      setOutcome('approved');
+      setDiscount(null);
+      setDiscountCode('');
+      setDiscountError('');
+    }
+  };
+
+  const syncPayment = async (operation: Promise<PaymentResult | null>) => {
+    setError('');
+    if (await operation && !(await reload())) setError('El estado se consultó, pero no pudimos sincronizar el carrito. Intenta nuevamente.');
+  };
+
+  if (payment.loading) return <main className="empty-state" role="status">Consultando pagos de demostración…</main>;
+
+  if (payment.result) return <DemoPaymentResult
+    result={payment.result}
+    processing={processing}
+    error={payment.error || error}
+    notice={payment.notice}
+    lastCheckedAt={payment.lastCheckedAt}
+    action={payment.action}
+    cartSyncing={cartLoading}
+    onResolve={(value) => { void syncPayment(payment.resolve(value)); }}
+    onRefresh={() => { void syncPayment(payment.refresh()); }}
+    onRetry={() => { void retryPayment(); }}
+    onLeave={() => { if (payment.reset()) navigate('/catalogo'); }}
+  />;
+
+  if (cartLoading) return <main className="empty-state" role="status">Recuperando carrito…</main>;
+
+  if (items.length === 0 && !payment.retrying) {
     return (
       <main className="empty-state">
         <span className="empty-state-icon" aria-hidden="true">
@@ -363,45 +296,20 @@ export default function Checkout() {
     );
   }
 
-  if (success) {
-    return (
-      <div className="pago-exito">
-        <div className="pago-exito-icono" aria-hidden="true">
-          <CheckCircle2 size={56} strokeWidth={1.75} />
-        </div>
-
-        <h2>
-          Pedido registrado, pendiente de pago
-        </h2>
-
-        <p>
-          Tu pedido y su recibo fueron registrados.
-          Todavía no se ha procesado ningún pago.
-        </p>
-
-        <button
-          className="pago-btn-confirmar"
-          onClick={() => navigate('/')}
-        >
-          Volver al inicio
-        </button>
-
-        <button
-          className="pago-btn-secundario"
-          onClick={() => navigate('/catalogo')}
-        >
-          Seguir comprando
-        </button>
-      </div>
-    );
-  }
-
   return (
     <div className="pago-container">
       <h1 className="pago-titulo">
-        Confirmar pedido
+        Pago de demostración
       </h1>
 
+      <div className="pago-demo-aviso" role="note">
+        <strong>Modo académico · COP · Envío gratis desde $120.000</strong>
+        <p>No se harán cobros reales. No introduzcas tarjetas, claves bancarias ni códigos de Nequi.</p>
+      </div>
+      {!payment.enabled && <p className="pago-error" role="alert">{payment.error || 'La simulación está deshabilitada. Activa NODE_ENV=development y ENABLE_PAYMENT_SIMULATION=true en el backend.'}</p>}
+      {payment.retrying && <p className="pago-demo-aviso">Hay un intento guardado. Al reintentar se usarán sus datos originales para evitar pedidos duplicados.</p>}
+      <fieldset className="pago-demo-fieldset" disabled={processing || payment.retrying}>
+      <legend className="pago-demo-sr-only">Datos de la compra de demostración</legend>
       <div className="pago-body">
         <div className="pago-izq">
           <div className="pago-seccion">
@@ -448,9 +356,7 @@ export default function Checkout() {
                 [
                   'tarjeta',
                   'nequi',
-                  'daviplata',
-                  'transferencia',
-                  'efectivo',
+                  'pse',
                 ] as PaymentMethod[]
               ).map((paymentMethod) => (
                 <label
@@ -476,24 +382,30 @@ export default function Checkout() {
                   <span className="pago-metodo-icono" aria-hidden="true">
                     {paymentMethod === 'tarjeta' ? (
                       <CreditCard size={20} />
-                    ) : paymentMethod === 'nequi' || paymentMethod === 'daviplata' ? (
+                    ) : paymentMethod === 'nequi' ? (
                       <Smartphone size={20} />
-                    ) : paymentMethod === 'transferencia' ? (
-                      <Landmark size={20} />
                     ) : (
-                      <Banknote size={20} />
+                      <Landmark size={20} />
                     )}
                   </span>
 
                   <span className="pago-metodo-label">
-                    {paymentMethod.charAt(0).toUpperCase() +
-                      paymentMethod.slice(1)}
+                    {paymentMethod === 'pse' ? 'PSE' : paymentMethod.charAt(0).toUpperCase() + paymentMethod.slice(1)}
                   </span>
                 </label>
               ))}
             </div>
           </div>
 
+          <div className="pago-seccion">
+            <label className="pago-form-label" htmlFor="demo-outcome">Resultado que quieres demostrar</label>
+            <select id="demo-outcome" className="pago-descuento-input" value={outcome} onChange={(e) => setOutcome(e.target.value as Outcome)}>
+              <option value="approved">Aprobado</option>
+              <option value="rejected">Rechazado</option>
+              <option value="pending">Pendiente</option>
+            </select>
+            <p className="pago-seguro">Los tres métodos son simulados. No necesitas una cuenta bancaria.</p>
+          </div>
           <div className="pago-seccion">
             <h2 className="pago-seccion-titulo">
               Productos
@@ -510,10 +422,7 @@ export default function Checkout() {
                   </span>
 
                   <span>
-                    $
-                    {(
-                      item.price * item.quantity
-                    ).toLocaleString()}
+                    {formatCOP(item.price * item.quantity)}
                   </span>
                 </div>
               ))}
@@ -533,17 +442,18 @@ export default function Checkout() {
               </span>
 
               <span>
-                ${total.toLocaleString()}
+                {formatCOP(total)}
               </span>
             </div>
 
             <div className="pago-descuento-wrap">
               <input
                 className="pago-descuento-input"
+                aria-label="Código de descuento"
                 placeholder="Código de descuento"
                 value={discountCode}
                 onChange={(e) =>
-                  setDiscountCode(e.target.value)
+                  { setDiscountCode(e.target.value); setDiscount(null); setDiscountError(''); }
                 }
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
@@ -577,42 +487,34 @@ export default function Checkout() {
                   -
                   {discount.type === 'percentage'
                     ? `${discount.value}%`
-                    : `$${discount.value.toLocaleString()}`}
+                    : formatCOP(discount.value)}
                 </span>
               </div>
             )}
 
+            <div className="pago-linea"><span>Envío a domicilio</span><strong>{shipping === 0 ? 'Gratis' : formatCOP(shipping)}</strong></div>
+            <p className="pago-seguro">Envío $10.000 COP. Gratis desde $120.000 COP en productos antes de descuentos.</p>
             <div className="pago-total">
               <span>
                 Total
               </span>
 
               <span>
-                ${finalTotal.toLocaleString()}
+                {formatCOP(finalTotal)} COP
               </span>
             </div>
 
-            {error && (
-              <p className="pago-error">
-                {error}
-              </p>
-            )}
-
-            <button
-              className="pago-btn-confirmar"
-              onClick={confirmPayment}
-              disabled={processing}
-            >
-              {processing
-                ? 'Procesando...'
-                : `Registrar pedido por $${finalTotal.toLocaleString()}`}
-            </button>
-
-            <p className="pago-seguro">
-              El pago simulado todavía no está habilitado.
-            </p>
+            <p className="pago-seguro">El importe definitivo se calcula en el servidor con los precios y descuentos vigentes.</p>
           </div>
         </div>
+      </div>
+
+      </fieldset>
+      {(error || payment.error) && <p className="pago-error" role="alert">{error || payment.error}</p>}
+      <div className="pago-demo-acciones">
+        <button className="pago-btn-confirmar" onClick={() => { void confirmPayment(); }} disabled={processing || !payment.enabled}>
+          {processing ? 'Procesando simulación…' : payment.retrying ? 'Reintentar el mismo pago' : `Simular pago por ${formatCOP(finalTotal)} COP`}
+        </button>
       </div>
 
       {addressModalOpen && (

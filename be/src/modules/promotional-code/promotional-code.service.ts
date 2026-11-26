@@ -49,13 +49,13 @@ export const promotionalCodeService = {
 
   // Valida si un código puede usarse para un total dado (no consume usos).
   async validate(code: string, total?: number) {
-    const promo = await prisma.promotionalCode.findFirst({ where: { code: code.trim() } });
-    if (!promo) throw notFound('Código inválido');
+    const promo = await prisma.promotionalCode.findFirst({ where: { code: { equals: code.trim(), mode: 'insensitive' } } });
+    if (!promo) throw badRequest('No encontramos ese cupón. Revisa el código e intenta de nuevo.');
     if (!promo.active) throw badRequest('Este código ya no está activo');
 
-    const now = new Date();
-    if (promo.startDate && now < promo.startDate) throw badRequest('Este código aún no está disponible');
-    if (promo.endDate && now > promo.endDate) throw badRequest('Este código ha expirado');
+    const today = new Date().toISOString().slice(0, 10);
+    if (promo.startDate && today < promo.startDate.toISOString().slice(0, 10)) throw badRequest('Este código aún no está disponible');
+    if (promo.endDate && today > promo.endDate.toISOString().slice(0, 10)) throw badRequest('Este código ha expirado');
     if (promo.minPurchase && total !== undefined && total < Number(promo.minPurchase)) {
       throw badRequest(`Compra mínima de $${promo.minPurchase.toLocaleString()} requerida`);
     }
@@ -67,8 +67,8 @@ export const promotionalCodeService = {
 
   // Aplica el código: incrementa el contador de usos y devuelve el id.
   async apply(code: string) {
-    const promo = await prisma.promotionalCode.findFirst({ where: { code: code.trim() } });
-    if (!promo) throw notFound('Código inválido');
+    const promo = await prisma.promotionalCode.findFirst({ where: { code: { equals: code.trim(), mode: 'insensitive' } } });
+    if (!promo) throw badRequest('No encontramos ese cupón. Revisa el código e intenta de nuevo.');
 
     await prisma.promotionalCode.update({
       where: { id: promo.id },

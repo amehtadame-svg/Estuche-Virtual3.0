@@ -1,4 +1,15 @@
 const getBaseUrl = () => {
+  // Prioridad documentada en fe/.env-example (C-07):
+  //   1. VITE_API_URL explícita (que no apunte a localhost) → Docker/producción
+  //   2. Detección de plataforma (Arena/e2b, Codespaces)    → entornos con proxy
+  //   3. VITE_API_URL apuntando a localhost                 → desarrollo local
+  //   4. localhost:4000                                     → fallback
+  const explicit = (import.meta.env.VITE_API_URL as string | undefined)?.trim();
+
+  if (explicit && !explicit.includes('localhost')) {
+    return explicit.replace(/\/+$/, '');
+  }
+
   if (typeof window !== 'undefined') {
     const host = window.location.host;
 
@@ -19,15 +30,7 @@ const getBaseUrl = () => {
     }
   }
 
-  const explicit = import.meta.env.VITE_API_URL as
-    | string
-    | undefined;
-
-  if (
-    explicit &&
-    explicit.trim() !== '' &&
-    !explicit.includes('localhost')
-  ) {
+  if (explicit) {
     return explicit.replace(/\/+$/, '');
   }
 
@@ -51,6 +54,7 @@ export const API = {
   shopping: `${BASE}/api/shopping`,
   promotionalCodes: `${BASE}/api/promotional-codes`,
   payouts: `${BASE}/api/payouts`,
+  payments: `${BASE}/api/payments`,
   returns: `${BASE}/api/returns`,
   pqr: `${BASE}/api/pqr`,
   reports: `${BASE}/api/reports`,

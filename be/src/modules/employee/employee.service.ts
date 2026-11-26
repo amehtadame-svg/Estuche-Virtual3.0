@@ -1,3 +1,4 @@
+import { shippingCost } from '../../lib/shipping';
 import { Prisma } from '@prisma/client';
 import { randomBytes } from 'node:crypto';
 import { prisma } from '../../lib/prisma';
@@ -306,6 +307,8 @@ export const employeeService = {
         )
       );
 
+      const deliveryFee = shippingCost(total.toNumber(), data.fulfillmentMethod === 'pickup');
+      total = total.plus(deliveryFee);
       const order = await tx.order.create({
         data: {
           customerId: customer.id,
@@ -322,6 +325,7 @@ export const employeeService = {
             Date.now() + minutes * 60000
           ),
           total,
+          shippingCost: deliveryFee,
           status: 'pending',
           details: {
             create: details,

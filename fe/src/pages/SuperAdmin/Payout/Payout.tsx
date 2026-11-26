@@ -1,3 +1,4 @@
+import { shortReference } from '../../../lib/reference';
 import { useState, useEffect } from 'react';
 import { API, authHeaders } from '../../../api/api';
 import { paymentStatusLabel } from '../../../lib/statusLabels';
@@ -115,12 +116,12 @@ export default function Payout() {
             {filteredPayouts.length === 0 && (<tr><td colSpan={9} className="table-empty">No hay pagos para mostrar.</td></tr>)}
             {filteredPayouts.map((p) => (
               <tr key={p.id}>
-                <td className="id-pago">#{p.id.slice(-6).toUpperCase()}</td>
+                <td className="id-pago">#{shortReference(p.id)}</td>
                 <td>
                   <p className="cliente-pago-nombre">{p.user.fullName}</p>
                   <p className="cliente-pago-email">{p.user.email}</p>
                 </td>
-                <td className="transaccion-pago">{p.transactionId}</td>
+                <td className="transaccion-pago">{`PAG-${shortReference(p.transactionId)}`}</td>
                 <td>{p.gateway}</td>
                 <td>{p.method ?? '—'}</td>
                 <td className="monto-pago">${Number(p.amount).toLocaleString()}</td>

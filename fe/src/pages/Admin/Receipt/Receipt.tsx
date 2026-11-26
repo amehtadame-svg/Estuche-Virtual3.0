@@ -1,3 +1,5 @@
+import ReferenceSelect from '../../../components/ui/ReferenceSelect';
+import { shortReference } from '../../../lib/reference';
 import { useState, useEffect } from 'react';
 import Modal from '../../../components/ui/Modal';
 import { API, authHeaders } from '../../../api/api';
@@ -236,7 +238,7 @@ export default function Receipt() {
 
                   <td>
                     {receipt.order
-                      ? `PED-${receipt.order.id.slice(-6).toUpperCase()}`
+                      ? `PED-${shortReference(receipt.order.id)}`
                       : '—'}
                   </td>
 
@@ -356,15 +358,14 @@ export default function Receipt() {
           }
         >
           <label className="label-factura">
-            ID Cliente
+            Cliente
           </label>
 
-          <input
+          <ReferenceSelect endpoint={API.users} kind="customer"
             className="input-factura"
             name="customerId"
             value={form.customerId}
             onChange={handleChange}
-            placeholder="UUID del cliente"
           />
 
           <label className="label-factura">

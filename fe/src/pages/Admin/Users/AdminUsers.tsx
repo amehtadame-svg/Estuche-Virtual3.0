@@ -1,3 +1,4 @@
+import { shortReference } from '../../../lib/reference';
 import { useEffect, useState } from 'react';
 import './AdminUsers.css';
 import { API, authHeaders } from '../../../api/api';
@@ -128,7 +129,7 @@ export default function AdminUsers() {
                 {users.length === 0 && (<tr><td colSpan={6} className="table-empty">No se encontraron usuarios.</td></tr>)}
                 {users.map((u) => (
                   <tr key={u.id}>
-                    <td title={u.id}>#{u.id.slice(-6).toUpperCase()}</td>
+                    <td >#{shortReference(u.id)}</td>
                     <td>{u.fullName}</td>
                     <td>{u.email}</td>
                     <td>

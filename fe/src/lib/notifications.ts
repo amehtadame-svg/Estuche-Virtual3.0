@@ -1,3 +1,5 @@
+import { referenceText } from './reference';
+
 export type ToastKind = 'success' | 'error' | 'info';
 
 export interface ToastMessage {
@@ -27,7 +29,7 @@ function emit(kind: ToastKind, message: string, title = defaultTitle(kind)) {
   if (typeof window === 'undefined') return;
   window.dispatchEvent(
     new CustomEvent<ToastMessage>(EVENT_NAME, {
-      detail: { id: nextId++, kind, title, message },
+      detail: { id: nextId++, kind, title: referenceText(title), message: referenceText(message) },
     }),
   );
 }

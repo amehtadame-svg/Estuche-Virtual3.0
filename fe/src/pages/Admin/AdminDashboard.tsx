@@ -1,3 +1,4 @@
+import { shortReference } from '../../lib/reference';
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -226,7 +227,7 @@ const AdminDashboard = () => {
                 ) : (
                   recentOrders.map((p) => (
                     <tr key={p.id}>
-                      <td className="num-pedido" title={p.id}>#{p.id.slice(-6).toUpperCase()}</td>
+                      <td className="num-pedido" >#{shortReference(p.id)}</td>
                       <td>{p.customer?.fullName ?? '—'}</td>
                       <td>{p.orderDate ? new Date(p.orderDate).toLocaleDateString('es-CO') : '—'}</td>
                       <td>{money(Number(p.total ?? 0))}</td>

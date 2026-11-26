@@ -7,7 +7,7 @@ export const shoppingService = {
     return prisma.shopping.findMany({
       where: { userId },
       include: {
-        product: { select: { id: true, name: true, price: true, stock: true, description: true } },
+        product: { select: { id: true, name: true, price: true, stock: true, description: true, category: { select: { name: true } }, images: { orderBy: { sortOrder: 'asc' } } } },
       },
       orderBy: { addedAt: 'asc' },
     });

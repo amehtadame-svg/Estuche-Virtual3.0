@@ -97,3 +97,40 @@ test('El rol vigente de BD prevalece sobre el rol antiguo del token', async () =
   assert.equal(nextCalled, true);
   assert.equal((req as any).user.role, 'client');
 });
+
+test('El detalle de pedido incluye productos y recibo sin exponer tokens de pago', async () => {
+  let query: any;
+  const ownOrder = { id: 'order-1', customerId: client.id, status: 'paid', details: [], receipt: null };
+  db.order.findUnique = async (args: any) => { query = args; return ownOrder; };
+  assert.deepEqual(await orderService.getById('order-1', client), ownOrder);
+  assert.deepEqual(query.where, { id: 'order-1', deletedAt: null });
+  assert.equal(query.include.details.select.quantity, true);
+  assert.deepEqual(query.include.details.select.product, { select: { name: true } });
+  assert.deepEqual(query.include.receipt.select.payouts.select, { gateway: true });
+});
+
+test('HTTP: consultar estado devuelve el pedido propio y rechaza pedidos ajenos o inexistentes', async () => {
+  process.env.JWT_SECRET = 'test-order-tracking-secret-not-production';
+  db.user.findUnique = async () => ({ ...client, isActive: true, deletedAt: null });
+  const headers = { Authorization: `Bearer ${jwt.sign(client, process.env.JWT_SECRET)}` };
+  const id = '11111111-1111-4111-8111-111111111111';
+  let savedOrder: any = {
+    id, customerId: client.id, status: 'preparing', total: '25000.00',
+    details: [{ id: 'detail-1', product: { name: 'Cuaderno' }, quantity: 2, unitPrice: '12500.00', subtotal: '25000.00' }],
+    receipt: { receiptNumber: 45, paymentStatus: 'paid', payouts: [{ gateway: 'demo-academica' }] },
+  };
+  db.order.findUnique = async () => savedOrder;
+  await withServer(async (base) => {
+    const response = await fetch(`${base}/api/orders/${id}`, { headers });
+    assert.equal(response.status, 200);
+    const data = await response.json();
+    assert.equal(data.status, 'preparing');
+    assert.equal(data.details[0].product.name, 'Cuaderno');
+    assert.equal(data.receipt.receiptNumber, 45);
+    savedOrder = { ...savedOrder, customerId: 'other-client' };
+    assert.equal((await fetch(`${base}/api/orders/${id}`, { headers })).status, 403);
+    savedOrder = null;
+    assert.equal((await fetch(`${base}/api/orders/${id}`, { headers })).status, 404);
+    assert.equal((await fetch(`${base}/api/orders/no-es-un-uuid`, { headers })).status, 400);
+  });
+});
