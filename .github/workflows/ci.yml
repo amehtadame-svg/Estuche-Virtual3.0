@@ -142,4 +142,19 @@ jobs:
         run: pnpm prisma migrate deploy
 
       - name: Suites de integración
-        run: pnpm test:integration
+        run: pnpm test:integration 2>&1 | tee /tmp/integration.log
+        shell: bash
+
+      # El log del job no siempre es descargable desde herramientas externas
+      # (blob storage). Publicar las líneas de fallo como anotaciones deja el
+      # diagnóstico visible en la pestaña de checks del PR.
+      - name: Publicar fallos como anotaciones
+        if: failure()
+        run: |
+          grep -E '^(not ok|# (tests|pass|fail|skipped))|Error:|AssertionError|error:|expected|actual|at .*\.ts:' /tmp/integration.log \
+            | head -60 \
+            | while IFS= read -r line; do
+                echo "::error::$line"
+              done
+          exit 0
+        shell: bash
