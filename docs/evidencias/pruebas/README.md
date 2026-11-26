@@ -1,5 +1,7 @@
 # Ejecución local de pruebas — 26-11-2026
 
+**Ejecución posterior:** [Favoritos, código `01788d5`](favoritos-01788d5.md). Los resultados siguientes se conservan como registro histórico de `6af297a`.
+
 **Código probado:** `6af297a4651f204eeb6166b2b50279e24c90549f`. Ejecutor: asistente de documentación, entorno local aislado. Estos logs se generaron antes de añadir la presente documentación; no acreditan CI, pruebas manuales ni validación por desarrolladores. Los logs conservan la salida y se normalizó el espacio en blanco al final de líneas. No confundir con el [informe histórico](../../INFORME_PRUEBAS.md) del commit `3998245`.
 
 | Evidencia | Comando y carpeta | Resultado |
