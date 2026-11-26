@@ -7,7 +7,7 @@ import Modal from '../../components/ui/Modal';
 import { CreditCard, Landmark, ShoppingCart, Smartphone } from 'lucide-react';
 import './Checkout.css';
 
-import { useDemoPayment, type PaymentMethod, type Outcome } from './useDemoPayment';
+import { useDemoPayment, type PaymentMethod, type Outcome, type PaymentResult } from './useDemoPayment';
 import DemoPaymentResult from './DemoPaymentResult';
 import { formatCOP } from './paymentFormat';
 
@@ -19,7 +19,7 @@ interface Discount {
 
 export default function Checkout() {
   const { user } = useAuth();
-  const { items, total, clear } = useCart();
+  const { items, total, reload, loading: cartLoading } = useCart();
   const navigate = useNavigate();
 
   const [method, setMethod] =
@@ -232,7 +232,28 @@ export default function Checkout() {
       ...(discount ? { code: discount.code } : {}),
       items: items.map((item) => ({ productId: item.id, quantity: item.quantity })),
     });
-    if (result) await clear();
+    if (result && !(await reload())) {
+      setError('El pago se registró, pero no pudimos sincronizar el carrito. Vuelve a consultar o reintenta recuperar el carrito.');
+    }
+  };
+
+  const retryPayment = async () => {
+    setError('');
+    if (!(await reload())) {
+      setError('No se pudo recuperar el carrito. Intenta nuevamente; no se creará ningún pago.');
+      return;
+    }
+    if (payment.reset()) {
+      setOutcome('approved');
+      setDiscount(null);
+      setDiscountCode('');
+      setDiscountError('');
+    }
+  };
+
+  const syncPayment = async (operation: Promise<PaymentResult | null>) => {
+    setError('');
+    if (await operation && !(await reload())) setError('El estado se consultó, pero no pudimos sincronizar el carrito. Intenta nuevamente.');
   };
 
   if (payment.loading) return <main className="empty-state" role="status">Consultando pagos de demostración…</main>;
@@ -240,11 +261,18 @@ export default function Checkout() {
   if (payment.result) return <DemoPaymentResult
     result={payment.result}
     processing={processing}
-    error={payment.error}
-    onResolve={(value) => { void payment.resolve(value); }}
-    onRefresh={() => { void payment.refresh(); }}
-    onLeave={() => { payment.reset(); navigate('/catalogo'); }}
+    error={payment.error || error}
+    notice={payment.notice}
+    lastCheckedAt={payment.lastCheckedAt}
+    action={payment.action}
+    cartSyncing={cartLoading}
+    onResolve={(value) => { void syncPayment(payment.resolve(value)); }}
+    onRefresh={() => { void syncPayment(payment.refresh()); }}
+    onRetry={() => { void retryPayment(); }}
+    onLeave={() => { if (payment.reset()) navigate('/catalogo'); }}
   />;
+
+  if (cartLoading) return <main className="empty-state" role="status">Recuperando carrito…</main>;
 
   if (items.length === 0 && !payment.retrying) {
     return (

@@ -61,12 +61,16 @@ no puede verificarla. No hacen falta credenciales de Wompi, PayU u otra pasarela
 3. Elige tarjeta, PSE o Nequi. No se piden datos bancarios.
 4. Elige el resultado que quieres demostrar y pulsa **Simular pago**:
    - **Aprobado:** pedido y recibo pagados en el simulador; stock descontado.
-   - **Rechazado:** pedido cancelado, recibo anulado y stock restituido.
+   - **Rechazado:** pedido cancelado, recibo anulado, stock restituido y productos
+     devueltos al carrito. **Reintentar pago** vuelve al formulario con una
+     referencia nueva; puedes cambiar el método y el resultado de prueba.
    - **Pendiente:** pedido/recibo pendientes, stock reservado durante 30 minutos.
 5. En la pantalla de resultado se muestran importe confirmado por el servidor,
    referencia `DEMO-…`, pedido, número de recibo y aviso de simulación.
 6. Un pendiente se puede aprobar o rechazar con los botones de demostración
-   mientras la reserva esté vigente. **Consultar estado del pago** vuelve a leer el pago de la BD.
+   mientras la reserva esté vigente. **Consultar estado del pago** vuelve a leer el pago de la BD,
+   muestra el indicador de carga, la hora de consulta y confirma si hubo cambios.
+   Consultar **no** aprueba ni rechaza: para eso están los controles de simulación.
 7. **Ver estado del pedido** abre `/pedidos/:id` con el pedido asociado al comprobante.
    Muestra su estado actual, productos, cantidades, total, dirección y recibo.
    **Actualizar estado** consulta de nuevo el servidor sin crear pedidos ni pagos.
@@ -75,8 +79,11 @@ no puede verificarla. No hacen falta credenciales de Wompi, PayU u otra pasarela
 8. Una vez terminado, **Volver al catálogo** permite comenzar otra compra.
 
 Si hay un corte de conexión, usa **Reintentar el mismo pago** o recarga la página.
-El intento original se conserva en `sessionStorage`, separado por usuario, para
-recuperar el resultado sin duplicar pedidos. No cierres la pestaña ni borres ese
+El intento original se conserva en `sessionStorage`, separado por usuario, mientras
+esté pendiente o no se conozca su resultado, para recuperarlo sin duplicar pedidos.
+Al recibir un resultado definitivo se elimina el bloqueo guardado (no el pedido ni
+el pago de la BD). El comprobante actual sigue consultable mientras permanezcas en
+la pantalla; volver al checkout no arrastra comprobantes definitivos antiguos. No cierres la pestaña ni borres ese
 almacenamiento durante un intento sin resultado conocido. La recuperación
 automática es de la misma pestaña; no es un historial de pagos entre dispositivos.
 
@@ -127,7 +134,7 @@ pnpm test
 cd ../fe
 pnpm build
 pnpm lint
-node --test src/modules/frontend/frontend.test.ts
+pnpm test
 ```
 
 Se añadieron 16 pruebas unitarias/HTTP con dobles de Prisma: métodos, esquema
@@ -148,6 +155,37 @@ contra PostgreSQL real ni el recorrido completo en navegador: este entorno no
 tiene una base de pruebas configurada y restringe la descarga del motor nativo
 de Prisma. Para compilar y ejecutar los dobles se generó localmente el cliente
 sin motor. Esto no cambia el código ni los comandos normales de instalación.
+
+## Rechazos, reintentos y consulta de estado
+
+- Un rechazo devuelve stock **y productos al carrito** en la misma transacción.
+  Confirmar otra vez el mismo rechazo no duplica la devolución.
+- El frontend sincroniza el carrito leyendo la BD; ya no ejecuta un borrado global
+  después del pago que pudiera eliminar los productos recuperados u otros artículos.
+- **Reintentar pago** recupera el carrito y vuelve al formulario. La nueva compra
+  obtiene otra referencia; el pedido rechazado anterior sigue cancelado y auditable.
+  El resultado de prueba vuelve a «Aprobado» y los descuentos deben validarse otra vez.
+- **Consultar estado del pago** hace una consulta sin caché, indica carga y fecha,
+  y muestra «No hay cambios» cuando el estado sigue igual. Un fallo de red deja el
+  comprobante visible y permite consultar de nuevo.
+- Pendientes o intentos con resultado desconocido no se pueden descartar para crear
+  otro pago accidentalmente; los cortes de red reutilizan la referencia guardada.
+- Los comprobantes definitivos guardados por versiones anteriores se liberan al
+  regresar al checkout. Si aquella versión ya borró los productos del carrito,
+  habrá que agregarlos desde el catálogo: esta actualización no modifica compras
+  antiguas ni repone retroactivamente artículos eliminados.
+
+Pruebas automatizadas: `pnpm test` en `fe/` incluye clics sobre el checkout completo
+con React, JSDOM y API simulada, además de casos de rechazo a aprobación, pendiente
+a rechazo, recuperación, doble clic, pérdida de conexión y cambio de sesión. JSDOM
+es solo una dependencia de desarrollo. La CI ejecuta estas regresiones.
+En el backend se verifican también restitución única de carrito/stock y rollback
+si falla la restitución. En esta revisión pasaron 99 pruebas del backend y 17 del
+frontend; compilaron ambas aplicaciones y ESLint quedó sin errores (5 advertencias
+preexistentes en administración). Las pruebas con PostgreSQL real siguen separadas;
+no se ejecutaron en este entorno, ni se hicieron compras o escrituras en la base
+remota. La prueba de interacción usa DOM/API simulados, no un navegador con la
+base del usuario.
 
 ## Error «UUID inválido» al pagar
 

@@ -61,6 +61,8 @@ test('Pagos académicos: idempotencia y carreras con transacciones reales', asyn
         paymentsService.resolve(body.requestKey, 'rejected', actor),
       ]);
       assert.equal((await db.product.findUniqueOrThrow({ where: { id: product.id } })).stock, 18);
+      const cart = await db.shopping.findUniqueOrThrow({ where: { userId_productId: { userId: buyer.id, productId: product.id } } });
+      assert.equal(cart.quantity, 2);
     });
     await t.test('Aprobar y rechazar simultáneamente solo permite un resultado definitivo', async () => {
       const body = input({ method: 'tarjeta' });
@@ -96,6 +98,23 @@ test('Pagos académicos: idempotencia y carreras con transacciones reales', asyn
       assert.equal(order.status, 'canceled');
       assert.ok(order.stockReleasedAt);
     });
+    await t.test('Rechazo y nueva compra recuperan carrito sin dejar bloqueado el pedido siguiente', async () => {
+      await db.shopping.deleteMany({ where: { userId: buyer.id } });
+      await db.shopping.create({ data: { userId: buyer.id, productId: product.id, quantity: 2 } });
+      const first = input({ outcome: 'rejected' });
+      const rejected = await paymentsService.checkout(first, actor);
+      assert.equal(rejected.status, 'rejected');
+      const restored = await db.shopping.findUniqueOrThrow({ where: { userId_productId: { userId: buyer.id, productId: product.id } } });
+      assert.equal(restored.quantity, 2);
+      const second = input({ outcome: 'approved' });
+      const approved = await paymentsService.checkout(second, actor);
+      assert.equal(approved.status, 'approved');
+      assert.notEqual(approved.reference, rejected.reference);
+      assert.notEqual(approved.orderId, rejected.orderId);
+      assert.equal(await db.shopping.count({ where: { userId: buyer.id } }), 0);
+      const original = await paymentsService.get(first.requestKey, actor);
+      assert.equal(original.status, 'rejected');
+    });
   } finally {
     const orders = await db.order.findMany({ where: { customerId: buyer.id }, select: { id: true } });
     const orderIds = orders.map((order: any) => order.id);
@@ -108,6 +127,7 @@ test('Pagos académicos: idempotencia y carreras con transacciones reales', asyn
     await db.orderDetail.deleteMany({ where: { orderId: { in: orderIds } } });
     await db.order.deleteMany({ where: { id: { in: orderIds } } });
     await db.inventoryMovement.deleteMany({ where: { productId: { in: [product.id, scarce.id] } } });
+    await db.shopping.deleteMany({ where: { userId: buyer.id } });
     await db.product.deleteMany({ where: { id: { in: [product.id, scarce.id] } } });
     await db.user.delete({ where: { id: buyer.id } });
     await db.$disconnect();

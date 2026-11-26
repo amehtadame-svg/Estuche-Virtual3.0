@@ -85,8 +85,8 @@ jobs:
       - name: Compilar frontend (tsc -b + vite build)
         run: pnpm build
 
-      - name: Tests del frontend (C-07)
-        run: node --test src/modules/frontend/frontend.test.ts
+      - name: Tests del frontend y flujos de pago
+        run: pnpm test
 
   # ── Integración: PostgreSQL real + migraciones + suites de integración ───
   integration:
