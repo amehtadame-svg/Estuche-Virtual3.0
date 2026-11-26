@@ -186,7 +186,8 @@ export default function SuperAdminUsers() {
         <input
           className="busqueda-usuariossa"
           placeholder="Buscar por nombre o email..."
-          value={search}
+          maxLength={150}
+            value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
         <div className="filtros-rol">
@@ -298,16 +299,16 @@ export default function SuperAdminUsers() {
           }
         >
           <label>Nombre</label>
-          <input name="fullName" value={form.fullName} onChange={handleChange} placeholder="Nombre completo" />
+          <input name="fullName" maxLength={150} value={form.fullName} onChange={handleChange} placeholder="Nombre completo" />
 
           <label>Email</label>
-          <input name="email" type="email" value={form.email} onChange={handleChange} placeholder="correo@ejemplo.com" />
+          <input name="email" maxLength={255} type="email" value={form.email} onChange={handleChange} placeholder="correo@ejemplo.com" />
 
           <label>Contraseña</label>
-          <input name="password" type="password" value={form.password} onChange={handleChange} placeholder="Mínimo 6 caracteres" />
+          <input name="password" maxLength={72} type="password" value={form.password} onChange={handleChange} placeholder="Mínimo 6 caracteres" />
 
           <label>Teléfono</label>
-          <input name="phone" value={form.phone} onChange={handleChange} placeholder="Opcional" />
+          <input name="phone" maxLength={30} value={form.phone} onChange={handleChange} placeholder="Opcional" />
 
           <label>Rol</label>
           <select name="role" value={form.role} onChange={handleChange}>
@@ -347,10 +348,10 @@ export default function SuperAdminUsers() {
           }
         >
           <label>Nombre</label>
-          <input name="fullName" value={form.fullName} onChange={handleChange} />
+          <input name="fullName" maxLength={150} value={form.fullName} onChange={handleChange} />
 
           <label>Email</label>
-          <input name="email" type="email" value={form.email} onChange={handleChange} />
+          <input name="email" maxLength={255} type="email" value={form.email} onChange={handleChange} />
 
           <label>Rol</label>
           <select name="role" value={form.role} onChange={handleChange}>

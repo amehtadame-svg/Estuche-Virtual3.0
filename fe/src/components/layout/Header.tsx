@@ -40,7 +40,6 @@ export default function Header() {
   const links: [string, string][] =
     user?.role === "superadmin"
       ? [
-          ["/", "Inicio"],
           ["/superadmin", "Resumen"],
           ["/admin/productos", "Productos"],
           ["/admin/combos", "Combos"],

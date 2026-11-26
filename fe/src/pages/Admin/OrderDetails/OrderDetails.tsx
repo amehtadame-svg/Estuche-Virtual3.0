@@ -159,6 +159,7 @@ export default function OrderDetails() {
             type="search"
             aria-label="Buscar artículos de pedidos"
             placeholder="Buscar por N° pedido o producto..."
+            maxLength={150}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
