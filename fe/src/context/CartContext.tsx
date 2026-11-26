@@ -17,6 +17,7 @@ interface CartContextType {
   remove: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
   clear: () => void;
+  reload: () => Promise<boolean>;
   total: number;
   totalItems: number;
   loading: boolean;
@@ -44,28 +45,39 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const loadFromDb = useCallback(async () => {
     if (!user) {
       setItems([]);
-      return;
+      return true;
     }
     setLoading(true);
     try {
       const res = await fetch(`${API.shopping}`, { headers: authHeaders() });
-      if (!res.ok) return;
+      if (!res.ok) return false;
       const data = await res.json();
       setItems(
-        data.map((item: any) => {
-          const category = item.product?.category?.name ?? '';
-          return {
-            id: item.productId,
-            name: item.product?.name ?? '',
-            price: Number(item.product?.price ?? 0),
-            category,
-            icon: iconsByCategory[category] ?? '📦',
-            quantity: item.quantity,
-          };
-        })
+        data.map(
+          (item: {
+            productId: string;
+            quantity: number;
+            product?: {
+              name?: string;
+              price?: number | string;
+              category?: { name?: string };
+            };
+          }) => {
+            const category = item.product?.category?.name ?? '';
+            return {
+              id: item.productId,
+              name: item.product?.name ?? '',
+              price: Number(item.product?.price ?? 0),
+              category,
+              icon: iconsByCategory[category] ?? '📦',
+              quantity: item.quantity,
+            };
+          },
+        ),
       );
+      return true;
     } catch {
-      // Si falla la BD, el carrito queda vacío
+      return false;
     } finally {
       setLoading(false);
     }
@@ -139,7 +151,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const totalItems = items.reduce((acc, i) => acc + i.quantity, 0);
 
   return (
-    <CartContext.Provider value={{ items, add, remove, updateQuantity, clear, total, totalItems, loading }}>
+    <CartContext.Provider value={{ items, add, remove, updateQuantity, clear, reload: loadFromDb, total, totalItems, loading }}>
       {children}
     </CartContext.Provider>
   );

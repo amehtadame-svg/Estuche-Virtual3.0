@@ -373,29 +373,6 @@
   color: var(--text);
 }
 
-/* ── Éxito ───────────────────────────────────────────── */
-.pago-exito {
-  text-align: center;
-  padding: 80px 30px;
-  max-width: 500px;
-  margin: 0 auto;
-}
-
-.pago-exito-icono { display: inline-flex; margin-bottom: 20px; color: var(--success); }
-
-.pago-exito h2 {
-  font-size: 28px;
-  font-weight: 700;
-  color: var(--text-h);
-  margin: 0 0 12px;
-}
-
-.pago-exito p {
-  color: var(--text);
-  font-size: 15px;
-  margin: 0 0 32px;
-}
-
 /* ═══════════════════════════════════════════════════════
    RESPONSIVE
 ═══════════════════════════════════════════════════════ */
@@ -409,4 +386,23 @@
 
 @media (max-width: 400px) {
   .pago-metodos { grid-template-columns: 1fr; }
+}
+/* Pasarela académica: estilos sólidos, sin datos bancarios. */
+.pago-demo-aviso {
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--primary, #2563eb);
+  border-radius: 12px;
+  background: var(--bg);
+  color: var(--text);
+}
+.pago-demo-aviso p { margin: 6px 0 0; }
+.pago-demo-fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+.pago-demo-fieldset:disabled { opacity: .7; }
+.pago-demo-acciones { display: flex; justify-content: flex-end; gap: 12px; flex-wrap: wrap; margin: 16px 0; }
+.pago-demo-acciones button { width: auto; margin: 0; }
+.pago-demo-sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+@media (max-width: 540px) {
+  .pago-demo-acciones button { width: 100%; }
 }

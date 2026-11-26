@@ -69,10 +69,10 @@ export default function SuperAdminDashboard() {
           if (Array.isArray(reportRows)) setReports(reportRows);
         }
         if (r3.ok) {
-          const users = await r3.json();
+          const users: Array<{ role?: string }> = await r3.json();
           if (Array.isArray(users)) {
             const count: Record<string, number> = {};
-            users.forEach((u: { role?: string }) => {
+            users.forEach((u) => {
               const r = u.role ?? 'client';
               count[r] = (count[r] || 0) + 1;
             });
