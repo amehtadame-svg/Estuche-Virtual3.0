@@ -1493,7 +1493,7 @@ test(
 
           assert.equal(
             saved.total.toString(),
-            '12500.5'
+            '22500.5'
           );
 
           assert.equal(

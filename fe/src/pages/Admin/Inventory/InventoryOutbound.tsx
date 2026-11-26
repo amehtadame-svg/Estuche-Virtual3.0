@@ -1,3 +1,4 @@
+import { referenceText } from '../../../lib/reference';
 import { useState, useEffect, useMemo, type FormEvent } from 'react';
 import { AlertTriangle, CheckCircle2, Package } from 'lucide-react';
 import { API, authHeaders } from '../../../api/api';
@@ -424,7 +425,7 @@ export default function InventoryOutbound() {
                   <td>
                     <span className="outbound-qty-badge">−{m.quantity} uds.</span>
                   </td>
-                  <td>{m.reason || 'Salida manual'}</td>
+                  <td>{referenceText(m.reason) || 'Salida manual'}</td>
                   <td>{m.user?.fullName || 'Administrador'}</td>
                 </tr>
               ))}

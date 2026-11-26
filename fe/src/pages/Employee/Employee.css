@@ -359,3 +359,8 @@
     max-height: 65vh;
   }
 }
+.emp-shell:has(.account-nav) { width: min(1040px, calc(100% - 48px)); padding-top: 40px; }
+.emp-shell:has(.account-nav) > h1 { font-size: clamp(30px, 4vw, 42px); }
+@media (max-width: 600px) { .emp-shell:has(.account-nav) { width: calc(100% - 32px); padding-top: 24px; } }
+
+.emp-shell:has(.account-nav) code { font-family: var(--sans); }

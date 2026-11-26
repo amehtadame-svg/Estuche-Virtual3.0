@@ -509,3 +509,6 @@
     width: 100%;
   }
 }
+.pqr-page:has(.account-nav) { width: min(1040px, calc(100% - 48px)); padding-top: 40px; }
+.pqr-eyebrow { color: var(--accent-text); }
+@media (max-width: 600px) { .pqr-page:has(.account-nav) { width: calc(100% - 32px); padding-top: 24px; } }

@@ -85,7 +85,7 @@ export default function Footer() {
             <Link to="/">Inicio</Link>
             <Link to="/Nosotros">Nosotros</Link>
             <Link to="/Contacto">Contáctanos</Link>
-            <Link to="/cliente">Seguimiento de envíos</Link>
+            <Link to="/mis-pedidos">Seguimiento de envíos</Link>
             <Link to="/Contacto">Devoluciones</Link>
             <Link to="/Contacto">Preguntas frecuentes</Link>
           </nav>

@@ -9,6 +9,7 @@ export interface PaymentResult {
   status: Outcome;
   method: PaymentMethod;
   amount: string;
+  shippingCost?: string | number;
   currency: string;
   orderId: string;
   orderStatus: string;

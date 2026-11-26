@@ -1,3 +1,5 @@
+import AccountNav from '../../components/layout/AccountNav';
+import { shortReference } from '../../lib/reference';
 import {
   useEffect,
   useState,
@@ -76,6 +78,7 @@ export default function CustomerPickups() {
 
   return (
     <main className="emp-shell">
+      <AccountNav />
       <h1>Mis retiros en tienda</h1>
 
       <p>
@@ -112,7 +115,7 @@ export default function CustomerPickups() {
           key={order.id}
         >
           <h2>
-            Pedido {order.id.slice(-6).toUpperCase()}
+            Pedido {shortReference(order.id)}
           </h2>
 
           <p>

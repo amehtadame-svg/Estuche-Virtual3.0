@@ -3,7 +3,8 @@
 ## Alcance
 
 Simulador propio integrado al checkout de Estuche Virtual. Permite demostrar
-**PSE, tarjeta y Nequi**, con moneda **COP** y **envío gratis**. No usa una cuenta
+**PSE, tarjeta y Nequi**, con moneda **COP**. El domicilio cuesta **$10.000 COP**
+y es **gratis desde $120.000 COP** en productos antes de cupones; el retiro en tienda no tiene costo de envío. No usa una cuenta
 externa, no llama a bancos y no es una integración oficial de esos servicios.
 No solicita números de tarjeta, CVV, claves, OTP ni credenciales financieras.
 

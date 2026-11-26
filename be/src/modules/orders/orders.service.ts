@@ -1,3 +1,4 @@
+import { shippingCost } from '../../lib/shipping';
 import {
   atomic,
   assertUnmanaged,
@@ -41,6 +42,7 @@ const assertOrderAccess = (
 };
 
 const LIST_INCLUDE = {
+  details: { select: { quantity: true, product: { select: { name: true } } } },
   customer: {
     select: {
       fullName: true,
@@ -275,6 +277,7 @@ export const orderService = {
         }
       }
 
+      const deliveryFee = shippingCost(total);
       let finalCodeId =
         promotionalCodeId ?? null;
 
@@ -318,7 +321,7 @@ export const orderService = {
       }
 
       total =
-        Math.round(total * 100) / 100;
+        Math.round((Math.max(0, total) + deliveryFee) * 100) / 100;
 
       const newOrder =
         await tx.order.create({
@@ -345,6 +348,7 @@ export const orderService = {
             promotionalCodeId:
               finalCodeId,
             total,
+            shippingCost: deliveryFee,
             status: 'pending',
           },
         });

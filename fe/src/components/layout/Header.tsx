@@ -77,7 +77,7 @@ export default function Header() {
             ["/Nosotros", "Nosotros"],
             ["/Contacto", "Contacto"],
             ...(user?.role === "client"
-              ? ([["/cliente/pqr", "PQR y soporte"]] as [string, string][])
+              ? ([["/mis-pedidos", "Mis pedidos"], ["/cliente/pqr", "PQR y soporte"]] as [string, string][])
               : []),
           ];
 

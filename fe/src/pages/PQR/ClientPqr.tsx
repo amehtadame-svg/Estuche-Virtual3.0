@@ -1,3 +1,4 @@
+import AccountNav from '../../components/layout/AccountNav';
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { API, authHeaders } from '../../api/api';
 import { runApiAction } from '../../lib/apiAction';
@@ -101,6 +102,7 @@ export default function ClientPqr() {
 
   return (
     <main className="pqr-page">
+      <AccountNav />
       <header className="pqr-heading">
         <div>
           <p className="pqr-eyebrow">ATENCIÓN AL CLIENTE</p>

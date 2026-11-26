@@ -1,3 +1,4 @@
+import { shortReference, orderReference } from '../../lib/reference';
 import { useEffect, useState } from 'react';
 import { ArrowRight, CheckCircle2, Clock3, RefreshCw, ShieldCheck, XCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -54,11 +55,11 @@ export default function DemoPaymentResult({ result, processing, error, notice = 
         <div className="payment-result-amount"><span>Importe de la compra</span><strong>{formatCOP(result.amount)} <small>COP</small></strong></div>
         <dl className="payment-result-details">
           <div><dt>Método de pago</dt><dd>{result.method === 'pse' ? 'PSE' : result.method === 'nequi' ? 'Nequi' : 'Tarjeta'}</dd></div>
-          <div><dt>Envío</dt><dd>Gratis</dd></div>
+          <div><dt>Envío</dt><dd>{Number(result.shippingCost ?? 0) === 0 ? 'Gratis' : formatCOP(result.shippingCost!)}</dd></div>
           <div><dt>Recibo de demostración</dt><dd>#{result.receiptNumber}</dd></div>
           {result.expiresAt && <div><dt>Reserva hasta</dt><dd>{new Date(result.expiresAt).toLocaleString('es-CO')}</dd></div>}
-          <div className="payment-result-wide"><dt>Referencia del pago</dt><dd>{result.reference}</dd></div>
-          <div className="payment-result-wide"><dt>Número de pedido</dt><dd>{result.orderId}</dd></div>
+          <div className="payment-result-wide"><dt>Referencia del pago</dt><dd>{`PAG-${shortReference(result.reference)}`}</dd></div>
+          <div className="payment-result-wide"><dt>Número de pedido</dt><dd>{orderReference(result.orderId)}</dd></div>
         </dl>
         {error && <p className="payment-result-error" role="alert">{error}</p>}
         {notice && <p className="payment-result-notice" role="status">{notice}</p>}
