@@ -18,24 +18,28 @@ import jwt from 'jsonwebtoken';
 const target = process.env.EMPLOYEE_TEST_DATABASE_URL;
 const url = target ? new URL(target) : null;
 
-if (
-  !url ||
-  !['postgres:', 'postgresql:'].includes(url.protocol) ||
-  !['localhost', '127.0.0.1', '[::1]'].includes(url.hostname) ||
-  !url.pathname.endsWith('_test')
-) {
-  throw new Error('Usa EMPLOYEE_TEST_DATABASE_URL con una base local exclusiva terminada en _test. Nunca uses tu base habitual.');
-}
+const safe =
+  !!url &&
+  ['postgres:', 'postgresql:'].includes(url.protocol) &&
+  ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname) &&
+  url.pathname.endsWith('_test');
 
-process.env.DATABASE_URL = target;
-process.env.NODE_ENV = 'test';
-process.env.ENABLE_PAYMENT_SIMULATION = 'true';
-process.env.JWT_SECRET = 'orders-regression-integration-test-only-2026';
+if (safe) {
+  process.env.DATABASE_URL = target;
+  process.env.NODE_ENV = 'test';
+  process.env.ENABLE_PAYMENT_SIMULATION = 'true';
+  process.env.JWT_SECRET = 'orders-regression-integration-test-only-2026';
+}
 
 const { prisma: db } = require('../src/lib/prisma');
 const app = require('../src/app').default;
 
-test('Regresión de pedidos y cupones contra PostgreSQL real', async () => {
+// Si el runner ejecuta varios *.integration.ts en un mismo proceso, este
+// archivo debe omitirse en vez de abortar las demás suites.
+test(
+  'Regresión de pedidos y cupones contra PostgreSQL real',
+  { skip: !safe && 'EMPLOYEE_TEST_DATABASE_URL no apunta a una base local *_test' },
+  async () => {
   const run = randomUUID();
   const server = createServer(app);
   let productId: string | undefined;
@@ -60,17 +64,6 @@ test('Regresión de pedidos y cupones contra PostgreSQL real', async () => {
       data: { name: `Regresión ${run}`, price: '1000.00', cost: '500.00', stock: 10 },
     });
     productId = product.id;
-
-    const deletedProduct = await db.product.create({
-      data: {
-        name: `Eliminado ${run}`,
-        price: '1000.00',
-        cost: '500.00',
-        stock: 10,
-        deletedAt: new Date(),
-      },
-    });
-    deletedProductId = deletedProduct.id;
 
     const coupon = await db.promotionalCode.create({
       data: {
@@ -133,6 +126,17 @@ test('Regresión de pedidos y cupones contra PostgreSQL real', async () => {
     }
 
     // ── A-04: producto eliminado ─────────────────────────────────────────
+    const deletedProduct = await db.product.create({
+      data: {
+        name: `Eliminado ${run}`,
+        price: '1000.00',
+        cost: '500.00',
+        stock: 10,
+        deletedAt: new Date(),
+      },
+    });
+    deletedProductId = deletedProduct.id;
+
     const deleted = await post({
       deliveryAddress: 'Calle 1 #2-3, Bogotá',
       details: [{ productId: deletedProduct.id, quantity: 1 }],
@@ -229,8 +233,10 @@ test('Regresión de pedidos y cupones contra PostgreSQL real', async () => {
     assert.equal(couponUntouched!.currentUses, 1, 'el segundo intento no consume el cupón');
 
   } finally {
-    server.closeAllConnections();
-    await new Promise<void>((resolve) => server.close(() => resolve()));
+    if (server.listening) {
+      server.closeAllConnections();
+      await new Promise<void>((resolve) => server.close(() => resolve()));
+    }
 
     // Limpieza: el orden respeta las claves foráneas.
     if (productId || deletedProductId) {
