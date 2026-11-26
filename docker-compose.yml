@@ -28,6 +28,8 @@ services:
     restart: unless-stopped
     environment:
       PORT: "4000"
+      NODE_ENV: ${NODE_ENV:-development}
+      ENABLE_PAYMENT_SIMULATION: ${ENABLE_PAYMENT_SIMULATION:-false}
       # Base principal (Supabase). Se resuelve desde el .env de la raíz o desde
       # un Codespaces secret con el mismo nombre. Si no existe, Compose falla
       # con un mensaje claro en vez de dejar el backend sin URL.

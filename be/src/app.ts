@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import { rateLimit } from 'express-rate-limit';
 import { prisma } from './lib/prisma';
 
+import paymentRoutes from './modules/payments/payments.routes';
 import employeeRoutes from './modules/employee/employee.routes';
 import authRoutes from './modules/auth/auth.routes';
 import userRoutes from './modules/users/users.routes';
@@ -126,6 +127,7 @@ app.use('/api/combos', comboRoutes);
 
 app.use('/api/promotional-codes', promotionalCodeRoutes);
 app.use('/api/payouts', payoutRoutes);
+app.use('/api/payments', paymentRoutes);
 app.use('/api/returns', returnRoutes);
 app.use('/api/pqr', pqrRoutes);
 app.use('/api/reports', reportRoutes);
