@@ -1,4 +1,5 @@
 import { CheckCircle2, Clock3, XCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import type { PaymentResult } from './useDemoPayment';
 
 import { formatCOP } from './paymentFormat';
@@ -45,7 +46,8 @@ export default function DemoPaymentResult({ result, processing, error, onResolve
         <button className="pago-btn-confirmar" disabled={processing} onClick={() => onResolve('approved')}>Simular aprobación</button>
       </div>}
       <div className="pago-demo-acciones">
-        <button className="pago-btn-secundario" disabled={processing} onClick={onRefresh}>Consultar estado</button>
+        <Link className="ui-btn ui-btn--primary" to={`/pedidos/${encodeURIComponent(result.orderId)}`}>Ver estado del pedido</Link>
+        <button className="pago-btn-secundario" disabled={processing} onClick={onRefresh}>Consultar estado del pago</button>
         {(!pending || expired) && <button className="pago-btn-confirmar" disabled={processing} onClick={onLeave}>Volver al catálogo</button>}
       </div>
       <p className="pago-seguro">No es un comprobante de una entidad financiera ni una integración oficial con PSE o Nequi.</p>
