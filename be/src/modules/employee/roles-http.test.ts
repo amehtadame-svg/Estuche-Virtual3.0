@@ -12,8 +12,9 @@ import { clientService } from '../client/client.service';
 test('Fronteras HTTP separan cliente, supervisión, empleado y repartidor', async () => {
   process.env.JWT_SECRET = 'test-role-separation-only-not-production';
   const db = prisma as any;
-  const originals = { user: db.user.findUnique, list: employeeService.list, people: employeeService.people, pickups: clientService.customerPickups, despatches: db.despatch.findMany };
+  const originals = { user: db.user.findUnique, list: employeeService.list, create: employeeService.create, people: employeeService.people, pickups: clientService.customerPickups, despatches: db.despatch.findMany };
   db.user.findUnique = async ({ where }: any) => ({ id: where.id, role: where.id, isActive: true, deletedAt: null });
+  (employeeService as any).create = async (input: any) => ({ ...input, id: 'order' });
   (employeeService as any).list = async (_a: any, scope: string) => ({ scope, items: [], total: 0 });
   (employeeService as any).people = async () => [];
   (clientService as any).customerPickups = async (actor: any) => { if (actor.role !== 'client') { const e: any = new Error('Prohibido'); e.status = 403; throw e; } return []; };
@@ -23,6 +24,12 @@ test('Fronteras HTTP separan cliente, supervisión, empleado y repartidor', asyn
   const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}/api`;
   const get = async (role: string | null, path: string) => fetch(base + path, { headers: role ? { Authorization: `Bearer ${jwt.sign({ id: role }, process.env.JWT_SECRET!)}` } : {} });
   try {
+    const legacy = '10000000-0000-0000-0000-000000000001';
+    const postOrder = (body: any) => fetch(`${base}/employee/orders`, { method: 'POST', headers: { Authorization: `Bearer ${jwt.sign({ id: 'employee' }, process.env.JWT_SECRET!)}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const input = { requestKey: '11111111-1111-4111-8111-111111111111', customerId: legacy, fulfillmentMethod: 'pickup', details: [{ productId: legacy, quantity: 1 }] };
+    assert.equal((await postOrder(input)).status, 201);
+    assert.equal((await postOrder({ ...input, requestKey: legacy })).status, 400);
+    assert.equal((await postOrder({ ...input, customerId: 'invalido' })).status, 400);
     assert.equal((await get(null, '/supervision/employees')).status, 401);
     assert.equal((await get('employee', '/supervision/employees')).status, 403);
     assert.equal((await get('admin', '/supervision/employees')).status, 200);
@@ -36,7 +43,7 @@ test('Fronteras HTTP separan cliente, supervisión, empleado y repartidor', asyn
   } finally {
     server.closeAllConnections();
     await new Promise<void>(resolve => server.close(() => resolve()));
-    db.user.findUnique = originals.user; (employeeService as any).list = originals.list;
+    db.user.findUnique = originals.user; (employeeService as any).list = originals.list; (employeeService as any).create = originals.create;
     (employeeService as any).people = originals.people; (clientService as any).customerPickups = originals.pickups;
     db.despatch.findMany = originals.despatches;
   }
