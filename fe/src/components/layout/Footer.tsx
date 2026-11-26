@@ -11,7 +11,8 @@ export default function Footer() {
   const isStaff =
     user?.role === "admin" ||
     user?.role === "superadmin" ||
-    user?.role === "employee";
+    user?.role === "employee" ||
+    user?.role === "delivery";
 
   const onSubmit = (event: FormEvent) => {
     event.preventDefault();

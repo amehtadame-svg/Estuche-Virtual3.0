@@ -56,6 +56,7 @@ export default function Header() {
           ["/superadmin/pagos", "Pagos"],
           ["/superadmin/devoluciones", "Devoluciones"],
           ["/admin/pqr", "PQR"],
+          ["/admin/soporte", "Ayuda empleados"],
           ["/superadmin/reportes", "Reportes"],
         ]
       : user?.role === "admin"
@@ -69,6 +70,7 @@ export default function Header() {
             ["/admin/salidas", "Salidas"],
             ["/admin/pedidos", "Pedidos"],
             ["/admin/pqr", "PQR"],
+            ["/admin/soporte", "Ayuda empleados"],
             ["/admin/recibos", "Recibos"],
             ["/admin/envios", "Envíos"],
             ["/admin/proveedores", "Proveedores"],
@@ -80,8 +82,7 @@ export default function Header() {
             ...(user?.role === "employee" ? [["/empleado", "Mi trabajo"]] as [string, string][] : []),
             ...(user?.role === "delivery" ? [["/repartidor", "Mis entregas"]] as [string, string][] : []),
             ["/catalogo", "Catálogo"],
-            ["/Nosotros", "Nosotros"],
-            ["/Contacto", "Contacto"],
+            ...(!user || user.role === "client" ? [["/Nosotros", "Nosotros"], ["/Contacto", "Contacto"]] as [string, string][] : []),
             ...(user?.role === "client"
               ? ([["/mis-pedidos", "Mis pedidos"], ["/cliente/pqr", "PQR y soporte"]] as [string, string][])
               : []),

@@ -21,16 +21,20 @@ test('Experiencia de empleado y repartidor', async t => {
   const { default: Header } = await server.ssrLoadModule('/src/components/layout/Header.tsx');
   const { default: CatalogPicker } = await server.ssrLoadModule('/src/pages/Employee/ProductCatalogPicker.tsx');
   const { default: Delivery } = await server.ssrLoadModule('/src/pages/Delivery/DeliveryWorkspace.tsx');
+  const { default: EmployeeWorkspace } = await server.ssrLoadModule('/src/pages/Employee/EmployeeWorkspace.tsx');
+  const { default: SupportPanel } = await server.ssrLoadModule('/src/pages/Support/SupportPanel.tsx');
   const root = createRoot(document.getElementById('root')!);
-  const mount = async (component: ReactElement, role: string | null = 'employee') => {
+  const mount = async (component: ReactElement, role: string | null = 'employee', path = '/') => {
     const user = role ? { id: role, role, name: 'Prueba', email: 'demo@example.test' } : null;
-    await act(async () => root.render(h(AuthContext.Provider, { value: { user, loading: false } }, h(CartContext.Provider, { value: { items: [], totalItems: 0, add: () => {} } }, h(MemoryRouter, { key: Math.random() }, component)))));
+    await act(async () => root.render(h(AuthContext.Provider, { value: { user, loading: false } }, h(CartContext.Provider, { value: { items: [], totalItems: 0, add: () => {} } }, h(MemoryRouter, { key: Math.random(), initialEntries: [path] }, component)))));
   };
   try {
     await t.test('Carrito visible para cliente y visitante, oculto para empleado y repartidor', async () => {
       for (const role of ['employee', 'delivery']) {
         await mount(h(Header), role);
         assert.equal(document.querySelector('[aria-label="Ver carrito"]'), null);
+        assert.equal(document.querySelector('a[href="/Nosotros"]'), null);
+        assert.equal(document.querySelector('a[href="/Contacto"]'), null);
       }
       for (const role of ['client', null]) {
         await mount(h(Header), role);
@@ -73,6 +77,51 @@ test('Experiencia de empleado y repartidor', async t => {
       assert.match(document.body.textContent!, /Mis entregas/);
       assert.match(document.body.textContent!, /Calle 123/);
       assert.ok([...document.querySelectorAll('button')].some(b => b.textContent === 'Confirmar entrega'));
+    });
+
+    await t.test('Empacar muestra imagen, confirma el producto y finaliza solo al completar', async () => {
+      let picked = 0;
+      let packed = false;
+      const id = '11111111-1111-4111-8111-1234abcd5678';
+      const job = () => ({ id, total: '1000', status: 'preparing', fulfillmentMethod: 'pickup', orderDate: '2026-11-26', customer: { fullName: 'Prueba' }, work: { status: packed ? 'packed' : 'picking', assigneeId: 'employee', assignee: { fullName: 'Empleado' } }, details: [{ id: 'line', quantity: 2, pickedQuantity: picked, product: { name: 'Cuaderno azul', images: [{ url: 'https://example.test/foto.png', isPrimary: true }] } }], events: [], shipments: [] });
+      globalThis.fetch = async (url, options) => {
+        const path = String(url);
+        if (path.endsWith('/summary')) return json({ available: 0, picking: 1, packed: 0, blocked: 0, lowStock: [], recent: [], supervisor: false, paymentSimulation: false });
+        if (path.includes('/orders?scope=')) return json({ items: [job()], total: 1 });
+        if (path.endsWith('/picking') && options?.method === 'PATCH') { picked = JSON.parse(String(options.body)).items[0].pickedQuantity; return json({ message: 'Guardado' }); }
+        if (path.endsWith('/pack') && options?.method === 'POST') { packed = true; return json({ message: 'Empacado' }); }
+        if (path.endsWith(`/orders/${id}`)) return json(job());
+        return json({}, 404);
+      };
+      await mount(h(EmployeeWorkspace), 'employee', '/empleado/pedidos');
+      await act(async () => { [...document.querySelectorAll('button')].find(b => b.textContent?.trim() === 'Empacar')!.click(); });
+      assert.equal(document.querySelector('.emp-pack-item img')?.getAttribute('src'), 'https://example.test/foto.png');
+      const finish = () => [...document.querySelectorAll('button')].find(b => b.textContent?.trim() === 'Finalizar empacado')!;
+      assert.equal(finish().disabled, true);
+      await act(async () => { [...document.querySelectorAll('button')].find(b => b.textContent?.trim() === 'Confirmar producto')!.click(); });
+      assert.equal(picked, 2);
+      assert.equal(finish().disabled, false);
+      await act(async () => { finish().click(); });
+      assert.equal(packed, true);
+    });
+    await t.test('Ayuda interna permite crear una solicitud', async () => {
+      const creator = { id: 'employee', fullName: 'Empleado', role: 'employee' };
+      let created = false;
+      globalThis.fetch = async (url, options) => {
+        if (options?.method === 'POST') { created = true; return json({ id: 'thread', subject: 'Ayuda turno', creator, messages: [{ id: 'one', body: 'Necesito apoyo', createdAt: '2026-11-26', sender: creator }] }, 201); }
+        if (String(url).endsWith('/threads')) return json(created ? [{ id: 'thread', subject: 'Ayuda turno', creator, updatedAt: '2026-11-26', _count: { messages: 1 } }] : []);
+        return json({}, 404);
+      };
+      await mount(h(SupportPanel), 'employee');
+      const change = (input: Element, value: string) => {
+        const key = Object.keys(input).find(k => k.startsWith('__reactProps$'))!;
+        (input as unknown as Record<string, { onChange: (event: { target: { value: string } }) => void }>)[key].onChange({ target: { value } });
+      };
+      await act(async () => { change(document.querySelector('input')!, 'Ayuda turno'); change(document.querySelector('textarea')!, 'Necesito apoyo'); });
+      await act(async () => { [...document.querySelectorAll('button')].find(b => b.textContent === 'Enviar solicitud')!.click(); });
+      assert.equal(created, true);
+      assert.match(document.body.textContent!, /Solicitud enviada/);
+      assert.match(document.body.textContent!, /Necesito apoyo/);
     });
   } finally {
     await act(async () => root.unmount());

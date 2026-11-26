@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import EmployeeWorkspace from './pages/Employee/EmployeeWorkspace';
+import AdminSupport from './pages/Support/AdminSupport';
 import DeliveryWorkspace from './pages/Delivery/DeliveryWorkspace';
 import CustomerPickups from './pages/Client/CustomerPickups';
 import AccessDenied from './pages/AccessDenied/AccessDenied';
@@ -181,6 +182,7 @@ function App() {
                   path="/admin/detallepedidos"
                   element={<DetallePedidos />}
                 />
+                <Route path="/admin/soporte" element={<AdminSupport />} />
                 <Route
                   path="/admin/pqr"
                   element={<AdminPqr />}

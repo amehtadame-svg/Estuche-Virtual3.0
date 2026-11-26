@@ -86,6 +86,8 @@ export const orderInclude = {
           id: true,
           name: true,
           sku: true,
+          category: { select: { name: true } },
+          images: { select: { url: true, isPrimary: true }, orderBy: { sortOrder: 'asc' } },
         },
       },
     },

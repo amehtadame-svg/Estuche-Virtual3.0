@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import { rateLimit } from 'express-rate-limit';
 import { prisma } from './lib/prisma';
 
+import supportRoutes from './modules/support/support.routes';
 import paymentRoutes from './modules/payments/payments.routes';
 import clientRoutes from './modules/client/client.routes';
 import supervisionRoutes from './modules/supervision/supervision.routes';
@@ -114,6 +115,7 @@ app.use(
 
 app.use(express.json());
 
+app.use('/api/support', supportRoutes);
 app.use('/api/employee', employeeRoutes);
 app.use('/api/client', clientRoutes);
 app.use('/api/supervision', supervisionRoutes);

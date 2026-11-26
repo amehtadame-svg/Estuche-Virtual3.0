@@ -40,7 +40,7 @@ export const supervisionService = {
 
       return {
         message:
-          'Incidencia resuelta; revisa la recogida antes de empacar.',
+          'Incidencia resuelta; revisa los productos antes de empacar.',
       };
     });
   },

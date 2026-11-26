@@ -1656,6 +1656,20 @@ test(
         assert.equal(receipt.paymentStatus, 'paid');
       });
 
+
+      await t.test('Ayuda interna: acceso privado y respuestas de administración', async () => {
+        const created = await request('first', '/support/threads', { subject: 'Ayuda turno', body: 'Necesito ayuda con el turno.' });
+        assert.equal(created.status, 201, JSON.stringify(created.body));
+        const id = created.body.id;
+        assert.equal((await request('third', `/support/threads/${id}`)).status, 404);
+        assert.equal((await request('customer', `/support/threads/${id}`)).status, 403);
+        assert.equal((await request('driver', '/support/threads')).status, 403);
+        assert.equal((await request('admin', `/support/threads/${id}/messages`, { body: 'Estamos revisando tu solicitud.' })).status, 201);
+        assert.equal((await request('first', `/support/threads/${id}/messages`, { body: 'Gracias por la ayuda.' })).status, 201);
+        const result = await request('super', `/support/threads/${id}`);
+        assert.equal(result.status, 200);
+        assert.equal(result.body.messages.length, 3);
+      });
     } finally {
       server.closeAllConnections();
 
@@ -1666,6 +1680,11 @@ test(
       const ids = Object.values(users).map(
         (user) => user.id
       );
+
+      const supportThreads = await db.supportThread.findMany({ where: { creatorId: { in: ids } }, select: { id: true } });
+      const threadIds = supportThreads.map((thread: any) => thread.id);
+      await db.supportMessage.deleteMany({ where: { threadId: { in: threadIds } } });
+      await db.supportThread.deleteMany({ where: { id: { in: threadIds } } });
 
       const orderIds = (
         await db.order.findMany({

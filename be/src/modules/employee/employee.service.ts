@@ -737,7 +737,7 @@ export const employeeService = {
           item.pickedQuantity > detail.quantity
         ) {
           throw badRequest(
-            'Cantidad recogida inválida.'
+            'Cantidad de productos inválida.'
           );
         }
 
@@ -759,7 +759,7 @@ export const employeeService = {
       );
 
       return {
-        message: 'Recogida guardada.',
+        message: 'Confirmación de producto guardada.',
       };
     });
   },
@@ -789,7 +789,7 @@ export const employeeService = {
         )
       ) {
         throw conflict(
-          'Completa la recogida y resuelve las incidencias antes de empacar.'
+          'Confirma todos los productos y resuelve las incidencias antes de empacar.'
         );
       }
 

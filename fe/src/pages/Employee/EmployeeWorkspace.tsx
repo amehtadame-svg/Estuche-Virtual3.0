@@ -11,6 +11,8 @@ import {
 import { useAuth } from '../../hooks/useAuth';
 import Modal from '../../components/ui/Modal';
 import ProductCatalogPicker from './ProductCatalogPicker';
+import SupportPanel from '../Support/SupportPanel';
+import { productImage } from '../../lib/productImage';
 import {
   BASE,
   authHeaders,
@@ -258,6 +260,7 @@ export default function EmployeeWorkspace() {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [supportOpen, setSupportOpen] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card'>('cash');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -626,12 +629,10 @@ export default function EmployeeWorkspace() {
           </p>
         </div>
 
-        <button
-          onClick={refresh}
-          disabled={busy || loading}
-        >
-          Actualizar
-        </button>
+        <div className="emp-heading-actions">
+          <button onClick={refresh} disabled={busy || loading}>Actualizar</button>
+          {user?.role === 'employee' && <button type="button" onClick={() => setSupportOpen(true)}>Ayuda con el jefe</button>}
+        </div>
       </header>
 
       <nav
@@ -1025,7 +1026,7 @@ export default function EmployeeWorkspace() {
                             setSelectedId(job.id)
                           }
                         >
-                          Ver detalle
+                          {job.work?.status === 'picking' && (supervisor || job.work.assigneeId === user?.id) ? 'Empacar' : 'Ver detalle'}
                         </button>
                       )}
                     </td>
@@ -1232,6 +1233,7 @@ export default function EmployeeWorkspace() {
         </section>
       )}
 
+      {supportOpen && <Modal titulo="Ayuda con el jefe" onClose={() => setSupportOpen(false)}><SupportPanel /></Modal>}
       {selectedId && (
         <Modal
           titulo={
@@ -1297,90 +1299,22 @@ export default function EmployeeWorkspace() {
               )}
 
               <fieldset disabled={busy}>
-                <div className="emp-table-scroll">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Producto</th>
-                        <th>Solicitado</th>
-                        <th>Recogido</th>
-                      </tr>
-                    </thead>
-
-                    <tbody>
-                      {detail.details?.map((line) => (
-                        <tr key={line.id}>
-                          <td>
-                            {line.product.name}
-                          </td>
-
-                          <td>
-                            {line.quantity}
-                          </td>
-
-                          <td>
-                            <input
-                              aria-label={
-                                `Recogido de ${line.product.name}`
-                              }
-                              type="number"
-                              min="0"
-                              max={line.quantity}
-                              disabled={
-                                detail.work?.status !==
-                                'picking'
-                              }
-                              value={
-                                picked[line.id] ?? 0
-                              }
-                              onChange={(event) =>
-                                setPicked((current) => ({
-                                  ...current,
-                                  [line.id]: Number(
-                                    event.target.value
-                                  ),
-                                }))
-                              }
-                            />
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <div className="emp-pack-list" aria-label="Productos del pedido">
+                  {detail.details?.map(line => {
+                    const checked = (picked[line.id] ?? 0) === line.quantity;
+                    const img = productImage(line.product);
+                    const canPack = detail.work?.status === 'picking' && (supervisor || detail.work.assigneeId === user?.id);
+                    return <div className="emp-pack-item" key={line.id}>
+                      <div className="emp-pack-image"><small>Sin foto</small>{img && <img src={img} alt={line.product.name} onError={e => { e.currentTarget.style.display = 'none'; }} />}</div>
+                      <div><strong>{line.product.name}</strong><small>Cantidad: {line.quantity}</small></div>
+                      {canPack && <button type="button" aria-pressed={checked} onClick={() => void perform(() => api(`/orders/${detail.id}/picking`, { items: [{ detailId: line.id, pickedQuantity: checked ? 0 : line.quantity }] }, 'PATCH'))}>{checked ? '✓ Confirmado' : 'Confirmar producto'}</button>}
+                    </div>;
+                  })}
                 </div>
-
-                {detail.work?.status === 'picking' && (
-                  <div className="emp-actions">
-                    <button
-                      onClick={() =>
-                        action(
-                          'picking',
-                          {
-                            items: Object.entries(
-                              picked
-                            ).map(
-                              ([
-                                detailId,
-                                pickedQuantity,
-                              ]) => ({
-                                detailId,
-                                pickedQuantity,
-                              })
-                            ),
-                          },
-                          'PATCH'
-                        )
-                      }
-                    >
-                      Guardar recogida
-                    </button>
-
-                    <button
-                      onClick={() => action('pack')}
-                    >
-                      Marcar empacado
-                    </button>
-                  </div>
+                {detail.work?.status === 'picking' && (supervisor || detail.work.assigneeId === user?.id) && (
+                  <button disabled={!detail.details?.length || detail.details.some(line => (picked[line.id] ?? 0) !== line.quantity)} onClick={() => action('pack')}>
+                    Finalizar empacado
+                  </button>
                 )}
 
                 {[

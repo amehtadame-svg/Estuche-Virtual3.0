@@ -103,7 +103,7 @@ export interface Job {
     id: string;
     quantity: number;
     pickedQuantity: number;
-    product: Product;
+    product: { id: string; name: string; sku: string | null; category?: { name?: string } | null; images?: { url: string; isPrimary?: boolean }[] };
   }[];
 
   events?: Activity[];
@@ -172,7 +172,7 @@ export const labels: Record<string, string> = {
   canceled: 'Cancelado',
   returned: 'Devuelto',
 
-  picking: 'Recogiendo productos',
+  picking: 'Preparando productos',
   packed: 'Empacado',
   blocked: 'Incidencia',
   dispatched: 'Con el repartidor',
@@ -183,7 +183,7 @@ export const labels: Record<string, string> = {
 
   created: 'Pedido registrado',
   claimed: 'Pedido tomado',
-  picking_updated: 'Recogida actualizada',
+  picking_updated: 'Confirmación de productos actualizada',
   incident: 'Incidencia',
   incident_resolved: 'Incidencia resuelta',
   reassigned: 'Reasignación',
