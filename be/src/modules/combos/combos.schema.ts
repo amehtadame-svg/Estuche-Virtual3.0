@@ -1,7 +1,8 @@
 import { z } from 'zod';
+import { databaseUuidSchema } from '../../lib/schemas';
 
 const comboItemSchema = z.object({
-  productId: z.string().uuid('El identificador del producto no es válido'),
+  productId: databaseUuidSchema,
   quantity: z.coerce.number().int('La cantidad debe ser un número entero').min(1, 'La cantidad mínima por producto es 1'),
 });
 

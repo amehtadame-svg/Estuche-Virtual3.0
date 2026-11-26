@@ -50,3 +50,26 @@ test('Normaliza mayúsculas y detecta el mismo producto duplicado con distinta c
   ] });
   assert.equal(result.success, false);
 });
+
+import { createProductSchema, updateProductSchema } from '../modules/products/products.schema';
+import { createComboSchema, updateComboSchema } from '../modules/combos/combos.schema';
+import { createInboundSchema, createOutboundSchema } from '../modules/inventory/inventory.schema';
+import { newEmployeeOrder, pickingSchema } from '../modules/employee/employee.schema';
+import { createReturnSchema } from '../modules/returns/returns.schema';
+
+test('Formularios administrativos aceptan identificadores históricos sin admitir texto arbitrario', () => {
+  for (const id of [legacy, v4, v7]) {
+    assert.equal(createProductSchema.safeParse({ name: 'Prueba', price: 10, categoryId: id, supplierId: id }).success, true);
+    assert.equal(updateProductSchema.safeParse({ categoryId: id }).success, true);
+    assert.equal(createComboSchema.safeParse({ name: 'Combo', items: [{ productId: id, quantity: 1 }] }).success, true);
+    assert.equal(updateComboSchema.safeParse({ items: [{ productId: id, quantity: 1 }] }).success, true);
+    assert.equal(createInboundSchema.safeParse({ productId: id, supplierId: id, quantity: 1 }).success, true);
+    assert.equal(createOutboundSchema.safeParse({ productId: id, quantity: 1, reasonType: 'Otro', reason: 'Prueba' }).success, true);
+    assert.equal(newEmployeeOrder.safeParse({ requestKey: v4, customerId: id, fulfillmentMethod: 'pickup', details: [{ productId: id, quantity: 1 }] }).success, true);
+    assert.equal(pickingSchema.safeParse({ items: [{ detailId: id, pickedQuantity: 1 }] }).success, true);
+    assert.equal(createReturnSchema.safeParse({ orderId: id, productId: id, quantity: 1, reason: 'Defecto' }).success, true);
+  }
+  assert.equal(createInboundSchema.safeParse({ productId: 'invalido', quantity: 1 }).success, false);
+  assert.equal(newEmployeeOrder.safeParse({ requestKey: legacy, customerId: v4, fulfillmentMethod: 'pickup', details: [{ productId: v4, quantity: 1 }] }).success, false);
+  assert.equal(createReturnSchema.safeParse({ orderId: v4, productId: v4, quantity: 0, reason: 'x' }).success, false);
+});

@@ -130,6 +130,7 @@ function SearchBox<
         {label}
 
         <input
+          maxLength={80}
           value={query}
           onChange={(event) =>
             setQuery(event.target.value)

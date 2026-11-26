@@ -307,3 +307,14 @@
   color: var(--text);
   font-size: 13px;
 }
+/* Resumen compartido de confirmación de movimientos */
+.inventory-confirm-intro { color: var(--text); line-height: 1.5; margin: 0 0 16px; }
+.inventory-confirm-list { margin: 0; border: 1px solid var(--border); border-radius: var(--radius-md, 8px); overflow: hidden; }
+.inventory-confirm-list > div { display: flex; justify-content: space-between; gap: 16px; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+.inventory-confirm-list > div:last-child { border-bottom: 0; background: var(--accent-bg); }
+.inventory-confirm-list dt { color: var(--text); font-size: 13px; }
+.inventory-confirm-list dd { margin: 0; text-align: right; color: var(--text-h); overflow-wrap: anywhere; }
+.inventory-confirm-cancel, .inventory-confirm-primary { border-radius: var(--radius-md, 8px); padding: 10px 16px; cursor: pointer; }
+.inventory-confirm-cancel { border: 1px solid var(--border); background: transparent; color: var(--text-h); }
+.inventory-confirm-primary { border: 0; background: var(--accent); color: var(--on-accent); }
+.inventory-confirm-danger { background: var(--danger); }

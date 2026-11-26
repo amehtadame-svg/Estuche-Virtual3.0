@@ -1,11 +1,12 @@
 import { z } from 'zod';
+import { databaseUuidSchema } from '../../lib/schemas';
 
 export const receiptStatusEnum = ['pending', 'paid', 'partial', 'overdue', 'voided'] as const;
 
 export const createReceiptSchema = z.object({
-  customerId: z.string().uuid().optional(),
-  employeeId: z.string().uuid().optional(),
-  orderId: z.string().uuid().optional(),
+  customerId: databaseUuidSchema.optional(),
+  employeeId: databaseUuidSchema.optional(),
+  orderId: databaseUuidSchema.optional(),
   total: z.coerce.number().min(0).optional(),
   paymentStatus: z.enum(receiptStatusEnum).optional(),
 });

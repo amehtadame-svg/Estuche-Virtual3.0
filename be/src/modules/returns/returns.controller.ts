@@ -16,3 +16,7 @@ export const resolveReturn = asyncHandler(async (req: Request, res: Response) =>
   const returnRequest = await returnService.resolve(req.params.id, req.body);
   return res.json(returnRequest);
 });
+
+export const createReturn = asyncHandler(async (req: Request, res: Response) => {
+  return res.status(201).json(await returnService.create(req.body));
+});

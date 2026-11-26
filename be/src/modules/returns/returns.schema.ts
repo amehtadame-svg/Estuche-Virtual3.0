@@ -1,4 +1,12 @@
 import { z } from 'zod';
+import { databaseUuidSchema } from '../../lib/schemas';
+
+export const createReturnSchema = z.object({
+  orderId: databaseUuidSchema,
+  productId: databaseUuidSchema,
+  quantity: z.coerce.number().int().min(1).max(100000),
+  reason: z.string().trim().min(3).max(500),
+});
 
 export const returnStatusEnum = ['approved', 'rejected', 'refunded'] as const;
 

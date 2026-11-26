@@ -168,6 +168,7 @@ export default function AdminUsers() {
             <div className="usr-modal-body">
               <label>Nombre</label>
               <input
+                maxLength={150}
                 value={form.fullName}
                 onChange={(e) => setForm({ ...form, fullName: e.target.value })}
                 placeholder="Nombre completo"
@@ -176,6 +177,7 @@ export default function AdminUsers() {
               <label>Email</label>
               <input
                 type="email"
+                maxLength={255}
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
                 placeholder="correo@ejemplo.com"
@@ -186,6 +188,7 @@ export default function AdminUsers() {
                   <label>Contraseña</label>
                   <input
                     type="password"
+                    maxLength={72}
                     value={form.password}
                     onChange={(e) => setForm({ ...form, password: e.target.value })}
                     placeholder="Mínimo 6 caracteres"

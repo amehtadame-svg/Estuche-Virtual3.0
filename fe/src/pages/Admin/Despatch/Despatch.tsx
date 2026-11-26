@@ -406,7 +406,7 @@ export default function Despatch() {
 
             <input
               className="input-envio"
-              name="address"
+              name="address" maxLength={500}
               value={form.address}
               onChange={handleChange}
               placeholder="Se carga automáticamente o escribe manualmente"

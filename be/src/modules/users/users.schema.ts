@@ -3,16 +3,16 @@ import { z } from 'zod';
 export const validRoles = ['superadmin', 'admin', 'employee', 'delivery', 'client'] as const;
 
 export const createUserSchema = z.object({
-  fullName: z.string().min(1),
-  email: z.string().email(),
-  password: z.string().min(6),
-  phone: z.string().optional(),
+  fullName: z.string().trim().min(1).max(150),
+  email: z.string().email().max(255),
+  password: z.string().min(6).max(72),
+  phone: z.string().max(30).optional(),
   role: z.enum(validRoles).optional(),
 });
 
 export const editUserSchema = z.object({
-  fullName: z.string().min(1).optional(),
-  email: z.string().email().optional(),
+  fullName: z.string().trim().min(1).max(150).optional(),
+  email: z.string().email().max(255).optional(),
   role: z.enum(validRoles).optional(),
 });
 

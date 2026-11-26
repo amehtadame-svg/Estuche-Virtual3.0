@@ -42,7 +42,8 @@ const assertOrderAccess = (
 };
 
 const LIST_INCLUDE = {
-  details: { select: { quantity: true, product: { select: { name: true } } } },
+  details: { select: { productId: true, quantity: true, product: { select: { name: true } } } },
+  work: { select: { id: true } },
   customer: {
     select: {
       fullName: true,

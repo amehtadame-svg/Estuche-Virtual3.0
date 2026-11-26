@@ -235,7 +235,7 @@ export default function Provider() {
         >
           <p className="label-proveedor">Empresa</p>
           <input
-            name="name"
+            name="name" maxLength={150}
             value={form.name}
             onChange={handleChange}
             placeholder="Nombre de la empresa"
@@ -244,7 +244,7 @@ export default function Provider() {
 
           <p className="label-proveedor">Correo</p>
           <input
-            name="email"
+            name="email" maxLength={255}
             value={form.email}
             onChange={handleChange}
             placeholder="correo@empresa.com"
@@ -253,7 +253,7 @@ export default function Provider() {
 
           <p className="label-proveedor">Teléfono</p>
           <input
-            name="phone"
+            name="phone" maxLength={30}
             value={form.phone}
             onChange={handleChange}
             placeholder="Número de teléfono"
@@ -262,7 +262,7 @@ export default function Provider() {
 
           <p className="label-proveedor">Dirección</p>
           <input
-            name="address"
+            name="address" maxLength={255}
             value={form.address}
             onChange={handleChange}
             placeholder="Dirección de la empresa"
