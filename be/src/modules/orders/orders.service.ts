@@ -110,6 +110,25 @@ export const orderService = {
             city: true,
           },
         },
+        details: {
+          select: {
+            id: true,
+            quantity: true,
+            unitPrice: true,
+            subtotal: true,
+            product: { select: { name: true } },
+          },
+          orderBy: { id: 'asc' },
+        },
+        receipt: {
+          select: {
+            receiptNumber: true,
+            paymentStatus: true,
+            payouts: {
+              select: { gateway: true },
+            },
+          },
+        },
       },
     });
 

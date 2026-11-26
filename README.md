@@ -76,14 +76,35 @@ Desarrollar una plataforma web integral que optimice la compra y venta de útile
 
 <pre>
 estuche-virtual/
-├── frontend/        # Interfaz de usuario (HTML, CSS, JS)
-├── backend/         # Lógica del servidor y APIs
-├── database/        # Scripts y configuración de la base de datos
+├── fe/              # Frontend React + Vite (TypeScript)
+├── be/              # Backend Express + Prisma (TypeScript)
+├── db/              # Scripts de inicialización de la base de datos
 ├── docs/            # Documentación del proyecto
+├── .github/         # CI (build + tests + PostgreSQL de pruebas)
 └── README.md        # Información general del proyecto
 </pre>
 
 </p>
+
+---
+
+## Inicio rápido
+
+```bash
+git clone https://github.com/amehtadame-svg/Estuche-Virtual3.0.git
+cd Estuche-Virtual3.0
+cp .env-example .env        # rellena SUPABASE_DATABASE_URL y JWT_SECRET
+docker compose up --build   # backend :4000 · frontend :5173
+curl http://localhost:4000/api/health
+```
+
+Guía completa (instalación nativa, variables de entorno, pruebas, despliegue a
+producción y flujo de Git): **[docs/INSTALACION_Y_DESPLIEGUE.md](./docs/INSTALACION_Y_DESPLIEGUE.md)**
+
+- Pasarela académica (PSE, tarjeta y Nequi, sin cobros reales): **[docs/PAGOS_DEMOSTRACION.md](./docs/PAGOS_DEMOSTRACION.md)**
+- Informe de pruebas (102 pruebas, fecha/entorno/commit): **[docs/INFORME_PRUEBAS.md](./docs/INFORME_PRUEBAS.md)**
+- Auditoría de seguridad y rotación de credenciales: **[docs/SEGURIDAD_ENTORNO.md](./docs/SEGURIDAD_ENTORNO.md)**
+- Reglas del equipo (RT/RH): **[docs/restricciones.md](./docs/restricciones.md)**
 
 ---
 
@@ -95,7 +116,12 @@ En desarrollo
 
 ## Contribuciones
 
-Las contribuciones son bienvenidas. Para cambios importantes, se recomienda abrir un issue previamente para discutir las modificaciones.
+1. Crea una rama desde `dev` (`git checkout -b fix/mi-cambio dev`).
+2. Usa la **convención de commits** (`fix(be): descripción…`) — ver guía §10.
+3. Ejecuta `pnpm lint` (fe) y `pnpm test` (be) antes de abrir el PR.
+4. Abre un pull request: la CI debe quedar **verde** y recibir revisión.
+
+Nunca se hace push directo a `main` ni force-push (RH-002).
 
 ---
 
