@@ -10,6 +10,7 @@ import Footer from './components/layout/Footer';
 import ToastProvider from './components/ui/ToastProvider';
 
 import Pago from './pages/Checkout/Checkout';
+import OrderStatus from './pages/OrderStatus/OrderStatus';
 import Home from './pages/Home/Home';
 import Login from './pages/Login/Login';
 import Register from './pages/Register/Register';
@@ -113,6 +114,10 @@ function App() {
                   path="/empleado/*"
                   element={<EmployeeWorkspace />}
                 />
+              </Route>
+
+              <Route element={<ProtectedRoute allowedRoles={['client', 'admin', 'superadmin']} />}>
+                <Route path="/pedidos/:id" element={<OrderStatus />} />
               </Route>
 
               <Route element={<ProtectedRoute />}>

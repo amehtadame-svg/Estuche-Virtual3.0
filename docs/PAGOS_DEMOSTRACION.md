@@ -66,8 +66,13 @@ no puede verificarla. No hacen falta credenciales de Wompi, PayU u otra pasarela
 5. En la pantalla de resultado se muestran importe confirmado por el servidor,
    referencia `DEMO-…`, pedido, número de recibo y aviso de simulación.
 6. Un pendiente se puede aprobar o rechazar con los botones de demostración
-   mientras la reserva esté vigente. **Consultar estado** vuelve a leer la BD.
-7. Una vez terminado, **Volver al catálogo** permite comenzar otra compra.
+   mientras la reserva esté vigente. **Consultar estado del pago** vuelve a leer el pago de la BD.
+7. **Ver estado del pedido** abre `/pedidos/:id` con el pedido asociado al comprobante.
+   Muestra su estado actual, productos, cantidades, total, dirección y recibo.
+   **Actualizar estado** consulta de nuevo el servidor sin crear pedidos ni pagos.
+   La vista exige sesión y el backend rechaza consultas de clientes a pedidos ajenos.
+   Esta consulta no depende de `sessionStorage` ni de que la simulación siga activa.
+8. Una vez terminado, **Volver al catálogo** permite comenzar otra compra.
 
 Si hay un corte de conexión, usa **Reintentar el mismo pago** o recarga la página.
 El intento original se conserva en `sessionStorage`, separado por usuario, para
