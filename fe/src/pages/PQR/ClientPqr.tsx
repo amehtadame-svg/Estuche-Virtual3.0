@@ -1,6 +1,8 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import AccountNav from '../../components/layout/AccountNav';
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
 import { API, authHeaders } from '../../api/api';
-import { runApiAction } from '../../lib/apiAction';
+import { notify } from '../../lib/notifications';
+import { useAuth } from '../../hooks/useAuth';
 import './PQR.css';
 
 type PqrType = 'petition' | 'complaint' | 'claim';
@@ -38,6 +40,13 @@ const formatDate = (value: string) =>
   }).format(new Date(value));
 
 export default function ClientPqr() {
+  const { user } = useAuth();
+  const submitting = useRef(false);
+  const [sending, setSending] = useState(false);
+  const [availableAt, setAvailableAt] = useState(0);
+  const [now, setNow] = useState(Date.now());
+  const remaining = Math.max(0, Math.ceil((availableAt - now) / 1000));
+  useEffect(() => { const timer = window.setInterval(() => setNow(Date.now()), 1000); return () => window.clearInterval(timer); }, []);
   const [requests, setRequests] = useState<PqrRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({
@@ -57,7 +66,10 @@ export default function ClientPqr() {
         throw new Error('No se pudieron cargar tus solicitudes.');
       }
 
-      setRequests(await response.json());
+      const data: PqrRequest[] = await response.json();
+      setRequests(data);
+      setNow(Date.now());
+      setAvailableAt(data.length ? Math.max(...data.map(item => new Date(item.createdAt).getTime())) + 60000 : 0);
     } catch (error) {
       setFormError(
         error instanceof Error
@@ -75,32 +87,35 @@ export default function ClientPqr() {
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (submitting.current || remaining > 0) return;
+    const normalize = (value: string) => value.normalize('NFKC').trim().replace(/\s+/g, ' ').toLocaleLowerCase('es');
+    if (requests.some(item => item.type === form.type && normalize(item.subject) === normalize(form.subject) && normalize(item.description) === normalize(form.description))) {
+      setFormError('Ya enviaste este PQR. Consulta su seguimiento en Mis PQR.'); return;
+    }
+    submitting.current = true;
+    setSending(true);
     setFormError('');
-
-    const response = await runApiAction({
-      url: API.pqr,
-      init: {
-        method: 'POST',
-        headers: authHeaders(),
-        body: JSON.stringify(form),
-      },
-      successMessage: 'Tu PQR quedó registrado correctamente.',
-      errorMessage: 'No se pudo registrar el PQR.',
-    });
-
-    if (!response) return;
-
-    setForm({
-      type: 'petition',
-      subject: '',
-      description: '',
-    });
-
-    await loadRequests();
+    try {
+      const response = await fetch(API.pqr, { method: 'POST', headers: authHeaders(), body: JSON.stringify(form) });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        if (response.status === 429) setAvailableAt(Date.now() + Number(data.retryAfter ?? 60) * 1000);
+        throw new Error(data.message || 'No se pudo registrar el PQR.');
+      }
+      setAvailableAt(Date.now() + 60000);
+      setNow(Date.now());
+      setForm({ type: 'petition', subject: '', description: '' });
+      notify.success('Tu PQR quedó registrado. Puedes enviar otro dentro de un minuto.');
+      await loadRequests();
+    } catch (reason) {
+      setFormError(reason instanceof Error && !(reason instanceof TypeError) ? reason.message : 'No se pudo conectar. Conservamos tu texto; revisa Mis PQR antes de reintentar.');
+    } finally { submitting.current = false; setSending(false); }
   };
+
 
   return (
     <main className="pqr-page">
+      <AccountNav />
       <header className="pqr-heading">
         <div>
           <p className="pqr-eyebrow">ATENCIÓN AL CLIENTE</p>
@@ -120,7 +135,8 @@ export default function ClientPqr() {
             automáticamente.
           </p>
 
-          <form className="pqr-form" onSubmit={submit}>
+          <form key={user?.id} className="pqr-form" onSubmit={submit} aria-busy={sending}>
+            <p className="pqr-help">Puedes enviar una solicitud por minuto. Las solicitudes con el mismo tipo, asunto y descripción no se vuelven a enviar.</p>
             <label htmlFor="pqr-type">Tipo de solicitud</label>
             <select
               id="pqr-type"
@@ -171,8 +187,8 @@ export default function ClientPqr() {
               </p>
             )}
 
-            <button className="pqr-primary-btn" type="submit">
-              Enviar PQR
+            <button className="pqr-primary-btn" type="submit" disabled={sending || remaining > 0 || loading}>
+              {sending ? 'Enviando…' : remaining > 0 ? `Podrás enviar otro en ${remaining}s` : 'Enviar PQR'}
             </button>
           </form>
         </section>

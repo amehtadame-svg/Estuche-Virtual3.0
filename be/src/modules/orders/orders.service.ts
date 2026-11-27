@@ -1,10 +1,13 @@
+import { shippingCost } from '../../lib/shipping';
 import {
   atomic,
   assertUnmanaged,
 } from '../employee/employee.domain';
+import { Prisma } from '@prisma/client';
 import { prisma } from '../../lib/prisma';
 import {
   badRequest,
+  conflict,
   forbidden,
   notFound,
 } from '../../lib/errors';
@@ -41,6 +44,8 @@ const assertOrderAccess = (
 };
 
 const LIST_INCLUDE = {
+  details: { select: { productId: true, quantity: true, product: { select: { name: true } } } },
+  work: { select: { id: true } },
   customer: {
     select: {
       fullName: true,
@@ -66,24 +71,53 @@ const LIST_INCLUDE = {
 } as const;
 
 export const orderService = {
-  list(requester: Requester) {
+  async list(requester: Requester, archived?: boolean) {
     assertOrderAccess(requester);
-
-    return prisma.order.findMany({
+    if (archived !== undefined && !isAdmin(requester)) throw forbidden();
+    const orders = await prisma.order.findMany({
       where: {
         deletedAt: null,
-        ...(
-          !isAdmin(requester)
-            ? {
-                customerId: requester.id,
-              }
-            : {}
-        ),
+        ...(!isAdmin(requester) ? { customerId: requester.id } : {}),
       },
-      include: LIST_INCLUDE,
-      orderBy: {
-        orderDate: 'desc',
+      include: {
+        ...LIST_INCLUDE,
+        events: {
+          where: { action: { in: ['admin_archived', 'admin_unarchived'] } },
+          select: { action: true },
+          orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+          take: 1,
+        },
       },
+      orderBy: { orderDate: 'desc' },
+    });
+    return orders
+      .filter((order) => archived === undefined || (order.events[0]?.action === 'admin_archived') === archived)
+      .map(({ events: _archiveEvents, ...order }) => order);
+  },
+
+  async setArchive(id: string, requester: Requester, archive: boolean) {
+    if (!isAdmin(requester)) throw forbidden();
+    return atomic(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM orders WHERE id = ${id}::uuid FOR UPDATE`;
+      const order = await tx.order.findUnique({ where: { id, deletedAt: null }, select: { id: true } });
+      if (!order) throw notFound('Pedido no encontrado.');
+      const previous = await tx.orderEvent.findFirst({
+        where: { orderId: id, action: { in: ['admin_archived', 'admin_unarchived'] } },
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        select: { action: true, createdAt: true },
+      });
+      const currentlyArchived = previous?.action === 'admin_archived';
+      if (currentlyArchived !== archive) {
+        // El bloqueo por pedido ordena las transiciones incluso entre usuarios concurrentes.
+        const nextTime = new Date(Math.max(Date.now(), previous ? previous.createdAt.getTime() + 1 : 0));
+        await tx.orderEvent.create({ data: {
+          orderId: id, actorId: requester.id,
+          action: archive ? 'admin_archived' : 'admin_unarchived',
+          note: archive ? 'Ocultado de la lista administrativa. Pedido y pagos conservados.' : 'Restaurado a la lista administrativa.',
+          createdAt: nextTime,
+        } });
+      }
+      return { archived: archive, sinCambios: currentlyArchived === archive };
     });
   },
 
@@ -113,6 +147,7 @@ export const orderService = {
         details: {
           select: {
             id: true,
+            productId: true,
             quantity: true,
             unitPrice: true,
             subtotal: true,
@@ -275,6 +310,7 @@ export const orderService = {
         }
       }
 
+      const deliveryFee = shippingCost(total);
       let finalCodeId =
         promotionalCodeId ?? null;
 
@@ -318,7 +354,7 @@ export const orderService = {
       }
 
       total =
-        Math.round(total * 100) / 100;
+        Math.round((Math.max(0, total) + deliveryFee) * 100) / 100;
 
       const newOrder =
         await tx.order.create({
@@ -345,6 +381,7 @@ export const orderService = {
             promotionalCodeId:
               finalCodeId,
             total,
+            shippingCost: deliveryFee,
             status: 'pending',
           },
         });
@@ -408,15 +445,51 @@ export const orderService = {
       ...rest
     } = data;
 
-    if (status === 'paid') {
-      throw badRequest(
-        'El estado pagado solo puede establecerse desde el flujo de pagos.'
-      );
-    }
-
     return atomic(async (tx) => {
-      await assertUnmanaged(tx, id);
+      // Bloqueamos el pedido antes de comparar para no confirmar datos obsoletos.
+      await tx.$queryRaw`
+        SELECT id FROM orders WHERE id = ${id}::uuid FOR UPDATE
+      `;
+      const actual = await tx.order.findUnique({
+        where: { id, deletedAt: null },
+      });
+      if (!actual) throw notFound('Pedido no encontrado.');
 
+      const campos = [
+        'customerId', 'driverId', 'promotionalCodeId',
+        'deliveryAddressId', 'total', 'status',
+      ] as const;
+      const esCampoPermitido = (campo: string) =>
+        (campos as readonly string[]).includes(campo);
+      const sinCambios = Object.keys(data).every((campo) => {
+        if (!esCampoPermitido(campo)) return false;
+        const valor = data[campo];
+        if (valor === undefined) return true;
+        if (campo === 'total') {
+          return actual.total !== null &&
+            new Prisma.Decimal(valor).equals(actual.total);
+        }
+        return valor === actual[campo as Exclude<(typeof campos)[number], 'total'>];
+      });
+
+      if (sinCambios) {
+        // Confirmar una lectura idéntica no modifica historial, pagos ni stock.
+        return { ...actual, sinCambios: true };
+      }
+
+      if (actual.status === 'paid') {
+        throw conflict(
+          'Este pedido está pagado. Sus cambios requieren revisión en el flujo de pagos.'
+        );
+      }
+      if (status === 'paid') {
+        throw badRequest(
+          'El estado pagado solo puede establecerse desde el flujo de pagos.'
+        );
+      }
+
+      // Se mantiene la protección de los pedidos operativos si hay cambios reales.
+      await assertUnmanaged(tx, id);
       return tx.order.update({
         where: {
           id,

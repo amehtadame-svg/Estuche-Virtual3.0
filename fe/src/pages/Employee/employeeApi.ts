@@ -6,14 +6,15 @@ import {
 export const EMPLOYEE_API =
   `${BASE}/api/employee`;
 
-export async function employeeApi<T>(
+export async function moduleApi<T>(
+  module: string,
   path: string,
   body?: unknown,
   method = body === undefined ? 'GET' : 'POST',
   signal?: AbortSignal
 ): Promise<T> {
   const response = await fetch(
-    `${EMPLOYEE_API}${path}`,
+    `${BASE}/api/${module}${path}`,
     {
       method,
       headers: authHeaders(),
@@ -50,6 +51,11 @@ export async function employeeApi<T>(
   return data as T;
 }
 
+export const employeeApi = <T,>(path: string, body?: unknown, method?: string, signal?: AbortSignal) => moduleApi<T>('employee', path, body, method, signal);
+export const supervisionApi = <T,>(path: string, body?: unknown, method?: string, signal?: AbortSignal) => moduleApi<T>('supervision', path, body, method, signal);
+export const clientApi = <T,>(path: string, body?: unknown, method?: string, signal?: AbortSignal) => moduleApi<T>('client', path, body, method, signal);
+export const deliveryApi = <T,>(path: string, body?: unknown, method?: string, signal?: AbortSignal) => moduleApi<T>('delivery', path, body, method, signal);
+
 export interface Product {
   id: string;
   name: string;
@@ -57,6 +63,8 @@ export interface Product {
   price: string;
   stock: number;
   stockMin: number;
+  category?: { name?: string } | null;
+  images?: { url: string; isPrimary?: boolean }[];
 }
 
 export interface Person {
@@ -95,7 +103,7 @@ export interface Job {
     id: string;
     quantity: number;
     pickedQuantity: number;
-    product: Product;
+    product: { id: string; name: string; sku: string | null; category?: { name?: string } | null; images?: { url: string; isPrimary?: boolean }[] };
   }[];
 
   events?: Activity[];
@@ -164,7 +172,7 @@ export const labels: Record<string, string> = {
   canceled: 'Cancelado',
   returned: 'Devuelto',
 
-  picking: 'Recogiendo productos',
+  picking: 'Preparando productos',
   packed: 'Empacado',
   blocked: 'Incidencia',
   dispatched: 'Con el repartidor',
@@ -175,11 +183,17 @@ export const labels: Record<string, string> = {
 
   created: 'Pedido registrado',
   claimed: 'Pedido tomado',
-  picking_updated: 'Recogida actualizada',
+  picking_updated: 'Confirmación de productos actualizada',
   incident: 'Incidencia',
   incident_resolved: 'Incidencia resuelta',
   reassigned: 'Reasignación',
   payment_confirmed: 'Pago confirmado',
+  store_payment_registered: 'Pago en tienda registrado',
+  demo_checkout: 'Pago de demostración iniciado',
+  demo_payment_approved: 'Pago de demostración aprobado',
+  demo_payment_rejected: 'Pago de demostración rechazado',
+  payment_approved: 'Pago aprobado',
+  payment_rejected: 'Pago rechazado',
 
   simulation_approved:
     'Pago de prueba aprobado',

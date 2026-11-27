@@ -13,11 +13,11 @@ export const createOrderDetail = asyncHandler(async (req: Request, res: Response
 });
 
 export const updateOrderDetail = asyncHandler(async (req: Request, res: Response) => {
-  const detail = await orderDetailService.update(req.params.id, req.body);
+  const detail = await orderDetailService.update(req.params.id, req.body, (req as any).user);
   return res.json(detail);
 });
 
 export const deleteOrderDetail = asyncHandler(async (req: Request, res: Response) => {
-  await orderDetailService.remove(req.params.id);
+  await orderDetailService.remove(req.params.id, req.body.expected, (req as any).user);
   return res.status(204).send();
 });

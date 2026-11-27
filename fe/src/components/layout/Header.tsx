@@ -2,11 +2,13 @@ import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { Menu, Moon, Search, ShoppingBag, Sun, UserRound, X } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
+import { useCanShop } from "../../hooks/useCanShop";
 import { useCart } from "../../hooks/useCart";
 import "./Header.css";
 
 export default function Header() {
   const { user } = useAuth();
+  const canShop = useCanShop();
   const { totalItems } = useCart();
   const navigate = useNavigate();
   const location = useLocation();
@@ -40,8 +42,8 @@ export default function Header() {
   const links: [string, string][] =
     user?.role === "superadmin"
       ? [
-          ["/", "Inicio"],
           ["/superadmin", "Resumen"],
+          ["/empleado", "Operaciones"],
           ["/admin/productos", "Productos"],
           ["/admin/combos", "Combos"],
           ["/admin/ingresos", "Ingresos"],
@@ -53,18 +55,21 @@ export default function Header() {
           ["/superadmin/pagos", "Pagos"],
           ["/superadmin/devoluciones", "Devoluciones"],
           ["/admin/pqr", "PQR"],
+          ["/admin/soporte", "Ayuda empleados"],
           ["/superadmin/reportes", "Reportes"],
         ]
       : user?.role === "admin"
         ? [
             ["/", "Inicio"],
             ["/admin", "Resumen"],
+            ["/empleado", "Operaciones"],
             ["/admin/productos", "Productos"],
             ["/admin/combos", "Combos"],
             ["/admin/ingresos", "Ingresos"],
             ["/admin/salidas", "Salidas"],
             ["/admin/pedidos", "Pedidos"],
             ["/admin/pqr", "PQR"],
+            ["/admin/soporte", "Ayuda empleados"],
             ["/admin/recibos", "Recibos"],
             ["/admin/envios", "Envíos"],
             ["/admin/proveedores", "Proveedores"],
@@ -73,11 +78,12 @@ export default function Header() {
           ]
         : [
             ["/", "Inicio"],
+            ...(user?.role === "employee" ? [["/empleado", "Mi trabajo"]] as [string, string][] : []),
+            ...(user?.role === "delivery" ? [["/repartidor", "Mis entregas"]] as [string, string][] : []),
             ["/catalogo", "Catálogo"],
-            ["/Nosotros", "Nosotros"],
-            ["/Contacto", "Contacto"],
+            ...(!user || user.role === "client" ? [["/Nosotros", "Nosotros"], ["/Contacto", "Contacto"]] as [string, string][] : []),
             ...(user?.role === "client"
-              ? ([["/cliente/pqr", "PQR y soporte"]] as [string, string][])
+              ? ([["/mis-pedidos", "Mis pedidos"], ["/cliente/pqr", "PQR y soporte"]] as [string, string][])
               : []),
           ];
 
@@ -130,7 +136,7 @@ export default function Header() {
             {isDarkMode ? <Moon size={18} /> : <Sun size={18} />}
           </button>
 
-          {!isStaff && (
+          {!isStaff && canShop && (
             <button
               type="button"
               className="header-icon-btn cart-btn"

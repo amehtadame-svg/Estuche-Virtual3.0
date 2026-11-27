@@ -1,6 +1,7 @@
-import { createContext, useState, useEffect, useCallback, type ReactNode } from 'react';
+import { createContext, useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { API, authHeaders } from '../api/api';
+import { notify } from '../lib/notifications';
 
 export interface CartItem {
   id: string;
@@ -8,151 +9,116 @@ export interface CartItem {
   price: number;
   category: string;
   icon: string;
+  imageUrl?: string | null;
   quantity: number;
 }
-
 interface CartContextType {
   items: CartItem[];
-  add: (product: Omit<CartItem, 'quantity'>) => void;
-  remove: (id: string) => void;
-  updateQuantity: (id: string, quantity: number) => void;
-  clear: () => void;
+  add: (product: Omit<CartItem, 'quantity'>, quantity?: number) => Promise<boolean>;
+  remove: (id: string) => Promise<boolean>;
+  updateQuantity: (id: string, quantity: number) => Promise<boolean>;
+  clear: () => Promise<boolean>;
   reload: () => Promise<boolean>;
   total: number;
   totalItems: number;
   loading: boolean;
+  syncing: boolean;
+  error: string;
 }
-
 export const CartContext = createContext<CartContextType | undefined>(undefined);
-
-const iconsByCategory: Record<string, string> = {
-  Cuadernos: '📓',
-  Lapices: '✏️',
-  Colores: '🎨',
-  Arte: '🖌️',
-  Oficina: '📁',
-  Mochilas: '🎒',
-  Tecnologia: '💻',
-  Papeleria: '📄',
-};
-
+interface ServerItem {
+  productId: string; quantity: number;
+  product?: { name?: string; price?: number | string; category?: { name?: string }; images?: { url: string; isPrimary?: boolean }[] };
+}
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
+  const userId = user?.id;
+  const blocked = user?.role === 'employee' || user?.role === 'delivery';
+  const scopeKey = `${userId ?? 'guest'}:${user?.role ?? 'guest'}`;
   const [items, setItems] = useState<CartItem[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(Boolean(userId));
+  const [pending, setPending] = useState(0);
+  const [error, setError] = useState('');
+  const scope = useRef(scopeKey);
+  const queue = useRef<Promise<unknown>>(Promise.resolve());
+  const lastNotice = useRef({ text: '', at: 0 });
+  const enqueue = useCallback(<T,>(operation: () => Promise<T>) => {
+    const result = queue.current.catch(() => undefined).then(operation);
+    queue.current = result.catch(() => undefined);
+    return result;
+  }, []);
 
-  // Cargar carrito desde la BD cuando el usuario inicia sesión
-  const loadFromDb = useCallback(async () => {
-    if (!user) {
-      setItems([]);
-      return true;
-    }
+  const loadFromDb = useCallback(() => enqueue(async () => {
+    if (scope.current !== scopeKey) return false;
+    if (!userId || blocked) { setItems([]); setError(''); setLoading(false); return true; }
     setLoading(true);
+    setError('');
     try {
-      const res = await fetch(`${API.shopping}`, { headers: authHeaders() });
-      if (!res.ok) return false;
-      const data = await res.json();
-      setItems(
-        data.map(
-          (item: {
-            productId: string;
-            quantity: number;
-            product?: {
-              name?: string;
-              price?: number | string;
-              category?: { name?: string };
-            };
-          }) => {
-            const category = item.product?.category?.name ?? '';
-            return {
-              id: item.productId,
-              name: item.product?.name ?? '',
-              price: Number(item.product?.price ?? 0),
-              category,
-              icon: iconsByCategory[category] ?? '📦',
-              quantity: item.quantity,
-            };
-          },
-        ),
-      );
+      const response = await fetch(API.shopping, { headers: authHeaders() });
+      if (!response.ok) throw new Error();
+      const data: ServerItem[] = await response.json();
+      if (!Array.isArray(data)) throw new Error();
+      if (scope.current !== scopeKey) return false;
+      setItems(data.map(item => ({ id: item.productId, quantity: item.quantity,
+        name: item.product?.name ?? 'Producto no disponible', price: Number(item.product?.price ?? 0),
+        category: item.product?.category?.name ?? '', icon: '📦',
+        imageUrl: item.product?.images?.find(image => image.isPrimary)?.url ?? item.product?.images?.[0]?.url,
+      })));
       return true;
     } catch {
+      if (scope.current === scopeKey) setError('No se pudo cargar tu carrito. Verifica tu conexión e intenta nuevamente.');
       return false;
-    } finally {
-      setLoading(false);
-    }
-  }, [user]);
+    } finally { if (scope.current === scopeKey) setLoading(false); }
+  }), [userId, blocked, scopeKey, enqueue]);
 
   useEffect(() => {
-    loadFromDb();
-  }, [loadFromDb]);
-
-  const add = async (product: Omit<CartItem, 'quantity'>) => {
-    // Optimistic update — actualiza UI inmediatamente
-    setItems((prev) => {
-      const existing = prev.find((i) => i.id === product.id);
-      if (existing) return prev.map((i) => (i.id === product.id ? { ...i, quantity: i.quantity + 1 } : i));
-      return [...prev, { ...product, quantity: 1 }];
-    });
-
-    // Sincronizar con BD si hay usuario
-    if (user) {
-      try {
-        await fetch(`${API.shopping}`, {
-          method: 'POST',
-          headers: authHeaders(),
-          body: JSON.stringify({ productId: product.id, quantity: 1 }),
-        });
-      } catch {
-        /* noop */
-      }
-    }
-  };
-
-  const remove = async (id: string) => {
-    setItems((prev) => prev.filter((i) => i.id !== id));
-    if (user) {
-      try {
-        await fetch(`${API.shopping}/${id}`, { method: 'DELETE', headers: authHeaders() });
-      } catch {
-        /* noop */
-      }
-    }
-  };
-
-  const updateQuantity = async (id: string, quantity: number) => {
-    if (quantity < 1) return remove(id);
-    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, quantity } : i)));
-    if (user) {
-      try {
-        await fetch(`${API.shopping}/${id}`, {
-          method: 'PUT',
-          headers: authHeaders(),
-          body: JSON.stringify({ quantity }),
-        });
-      } catch {
-        /* noop */
-      }
-    }
-  };
-
-  const clear = async () => {
+    scope.current = scopeKey;
+    lastNotice.current = { text: '', at: 0 };
     setItems([]);
-    if (user) {
+    setError('');
+    void loadFromDb();
+  }, [scopeKey, loadFromDb]);
+
+  function mutate(url: string, method: string, body: unknown, update: (previous: CartItem[]) => CartItem[]) {
+    if (blocked) return Promise.resolve(false);
+    const headers = authHeaders();
+    setPending(count => count + 1);
+    return enqueue(async () => {
+      if (scope.current !== scopeKey) return false;
       try {
-        await fetch(`${API.shopping}/clear`, { method: 'DELETE', headers: authHeaders() });
-      } catch {
-        /* noop */
+        if (userId) {
+          const response = await fetch(url, { method, headers, ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
+          if (!response.ok) {
+            const data = await response.json().catch(() => ({}));
+            throw new Error(data.message || (response.status === 401 ? 'Tu sesión venció. Inicia sesión nuevamente.' : 'No pudimos guardar el cambio del carrito. Intenta nuevamente.'));
+          }
+        }
+        if (scope.current !== scopeKey) return false;
+        setItems(update);
+        setError('');
+        return true;
+      } catch (reason) {
+        if (scope.current !== scopeKey) return false;
+        const text = reason instanceof Error && !(reason instanceof TypeError) ? reason.message : 'No hay conexión con el servidor. Tu carrito no ha cambiado.';
+        if (lastNotice.current.text !== text || Date.now() - lastNotice.current.at > 5000) {
+          notify.error(text, 'No se pudo actualizar el carrito');
+          lastNotice.current = { text, at: Date.now() };
+        }
+        return false;
       }
-    }
+    }).finally(() => setPending(count => count - 1));
+  }
+  const add = (product: Omit<CartItem, 'quantity'>, quantity = 1) => {
+    if (!Number.isInteger(quantity) || quantity < 1 || quantity > 999) return Promise.resolve(false);
+    return mutate(API.shopping, 'POST', { productId: product.id, quantity }, previous => previous.some(item => item.id === product.id)
+      ? previous.map(item => item.id === product.id ? { ...item, quantity: item.quantity + quantity } : item)
+      : [...previous, { ...product, quantity }]);
   };
-
-  const total = items.reduce((acc, i) => acc + i.price * i.quantity, 0);
-  const totalItems = items.reduce((acc, i) => acc + i.quantity, 0);
-
-  return (
-    <CartContext.Provider value={{ items, add, remove, updateQuantity, clear, reload: loadFromDb, total, totalItems, loading }}>
-      {children}
-    </CartContext.Provider>
-  );
+  const remove = (id: string) => mutate(`${API.shopping}/${id}`, 'DELETE', undefined, previous => previous.filter(item => item.id !== id));
+  const updateQuantity = (id: string, quantity: number) => quantity < 1 ? remove(id)
+    : mutate(`${API.shopping}/${id}`, 'PUT', { quantity }, previous => previous.map(item => item.id === id ? { ...item, quantity } : item));
+  const clear = () => mutate(`${API.shopping}/clear`, 'DELETE', undefined, () => []);
+  const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
+  return <CartContext.Provider value={{ items, add, remove, updateQuantity, clear, reload: loadFromDb, total, totalItems, loading, syncing: pending > 0, error }}>{children}</CartContext.Provider>;
 };

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { databaseUuidSchema } from '../../lib/schemas';
 
 export const despatchStatusEnum = [
   'in_transit',
@@ -13,14 +14,19 @@ const addressSchema = z.string().max(
 );
 
 export const createDespatchSchema = z.object({
-  orderId: z.string().uuid(),
-  driverId: z.string().uuid().optional(),
+  orderId: databaseUuidSchema,
+  driverId: databaseUuidSchema.nullable().optional(),
   address: addressSchema.optional(),
   status: z.enum(despatchStatusEnum).optional(),
 });
 
 export const updateDespatchSchema = z.object({
-  driverId: z.string().uuid().optional(),
+  expected: z.object({
+    driverId: databaseUuidSchema.nullable(),
+    address: z.string().nullable(),
+    status: z.enum(despatchStatusEnum),
+  }).optional(),
+  driverId: databaseUuidSchema.nullable().optional(),
   address: addressSchema.optional(),
   status: z.enum(despatchStatusEnum).optional(),
   deliveredAt: z.coerce.date().optional(),

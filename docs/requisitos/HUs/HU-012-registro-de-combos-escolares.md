@@ -30,7 +30,7 @@
 ## Criterios de Aceptación
 
 ### CA-012.1 — Formulario de empaquetado de productos
-- **Dado que** me ubico en la interfaz de creación de paquetes y combos (`/combos/new`),
+- **Dado que** accedo a `/admin/combos` y abro el formulario mediante «+ Nuevo combo»,
 - **cuando** asigno un nombre al combo, selecciono dos o más productos del catálogo especificando las cantidades de cada uno y fijo el precio de venta global del paquete,
 - **entonces** el sistema valida los componentes y habilita el botón de guardado.
 
@@ -55,7 +55,7 @@
 
 | Método | Ruta | Descripción |
 |--------|------|-------------|
-| POST | `/api/v1/combos` | Crea la agrupación del combo y sus ítems |
+| POST | `/api/combos` | Crea la agrupación del combo y sus ítems |
 
 ---
 
@@ -63,3 +63,13 @@
 
 - Entidad `Combo` con relación de uno a muchos hacia `ComboItem` (`combo_id`, `product_id`, `quantity`).
 - Los combos no poseen stock físico individual; el stock disponible se calcula dinámicamente según la disponibilidad de sus productos componentes.
+
+## Evidencia del contraste de rutas
+
+- Frontend: [ruta registrada](../../../fe/src/App.tsx) y
+  [formulario modal](../../../fe/src/pages/Admin/Combos/Combos.tsx).
+- Backend: [montaje de API](../../../be/src/app.ts) y
+  [router de combos](../../../be/src/modules/combos/combos.routes.ts).
+- La creación exige sesión y el control verifyAdmin, que admite Admin y SuperAdmin.
+- Verificación por inspección de código; no se ejecutó el flujo completo.
+- Esta corrección no cambia el estado de la HU ni certifica sus criterios de aceptación.

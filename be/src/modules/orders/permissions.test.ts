@@ -35,7 +35,8 @@ test('Las rutas de pedidos y recibos rechazan peticiones sin token', async () =>
     for (const [method, path] of [
       ['GET', '/api/orders'], ['GET', `/api/orders/${id}`],
       ['POST', '/api/orders'], ['PUT', `/api/orders/${id}`],
-      ['DELETE', `/api/orders/${id}`], ['PATCH', `/api/orders/${id}/apply-code`],
+      ['DELETE', `/api/orders/${id}`], ['POST', `/api/orders/${id}/archive`],
+      ['POST', `/api/orders/${id}/unarchive`], ['PATCH', `/api/orders/${id}/apply-code`],
       ['GET', '/api/receipts'], ['POST', '/api/receipts'],
       ['PUT', `/api/receipts/${id}`], ['DELETE', `/api/receipts/${id}`],
     ]) {
@@ -82,9 +83,34 @@ test('Empleado no hereda permisos de pedidos', async () => {
   );
 });
 
-test('No se puede crear ni marcar un pedido pagado mediante el CRUD', async () => {
+test('El CRUD no marca pagado y verifica un pedido pagado sin cambios', async () => {
   await assert.rejects(orderService.create({ status: 'paid' }, client), hasStatus(400));
-  assert.throws(() => orderService.update('order-1', { status: 'paid' }), hasStatus(400));
+
+  // La operación usa una transacción asíncrona. Esta simulación no accede a la base.
+  const originalTransaction = db.$transaction;
+  let current: { id: string; status: string; total: number; createdById: string | null; work: { id: string } | null } =
+    { id: 'order-1', status: 'pending', total: 100, createdById: null, work: null };
+  let writes = 0;
+  const tx = {
+    $queryRaw: async () => [],
+    order: {
+      findUnique: async () => current,
+      update: async () => { writes++; return current; },
+    },
+  };
+  db.$transaction = async (fn: any) => fn(tx);
+  try {
+    await assert.rejects(orderService.update('order-1', { status: 'paid' }), hasStatus(400));
+    current = { ...current, status: 'paid' };
+    const result = await orderService.update('order-1', { status: 'paid' });
+    assert.ok('sinCambios' in result && result.sinCambios === true);
+    await assert.rejects(orderService.update('order-1', { total: 200 }), hasStatus(409));
+    current = { ...current, status: 'pending', createdById: 'empleado-1' };
+    await assert.rejects(orderService.update('order-1', { total: 200 }), hasStatus(409));
+    assert.equal(writes, 0);
+  } finally {
+    db.$transaction = originalTransaction;
+  }
 });
 
 test('El rol vigente de BD prevalece sobre el rol antiguo del token', async () => {

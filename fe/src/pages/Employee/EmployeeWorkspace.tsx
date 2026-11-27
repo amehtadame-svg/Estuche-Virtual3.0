@@ -1,3 +1,4 @@
+import { shortReference, referenceText } from '../../lib/reference';
 import {
   useCallback,
   useEffect,
@@ -9,12 +10,16 @@ import {
 } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import Modal from '../../components/ui/Modal';
+import ProductCatalogPicker from './ProductCatalogPicker';
+import SupportPanel from '../Support/SupportPanel';
+import { productImage } from '../../lib/productImage';
 import {
   BASE,
   authHeaders,
 } from '../../api/api';
 import {
   employeeApi as api,
+  supervisionApi,
   money,
   date,
   labels,
@@ -129,6 +134,7 @@ function SearchBox<
         {label}
 
         <input
+          maxLength={80}
           value={query}
           onChange={(event) =>
             setQuery(event.target.value)
@@ -199,10 +205,10 @@ function EventList({
             {item.actor?.fullName || 'Sistema'}
           </small>
 
-          <span>{item.note}</span>
+          <span>{referenceText(item.note)}</span>
 
           {item.orderId && (
-            <code>{item.orderId}</code>
+            <code>{shortReference(item.orderId)}</code>
           )}
         </li>
       ))}
@@ -255,6 +261,8 @@ export default function EmployeeWorkspace() {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [supportOpen, setSupportOpen] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card'>('cash');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
@@ -270,9 +278,7 @@ export default function EmployeeWorkspace() {
 
   const [note, setNote] = useState('');
   const [people, setPeople] = useState<Person[]>([]);
-  const [drivers, setDrivers] = useState<Person[]>([]);
   const [assigneeId, setAssigneeId] = useState('');
-  const [driverId, setDriverId] = useState('');
   const [pickupCode, setPickupCode] = useState('');
   const [recipient, setRecipient] = useState('');
   const [revision, setRevision] = useState(0);
@@ -298,11 +304,12 @@ export default function EmployeeWorkspace() {
 
   useEffect(() => {
     setPage(1);
-    setSelectedId(null);
+    const requested = tab === 'supervision' ? new URLSearchParams(location.search).get('pedido') : null;
+    setSelectedId(requested && /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(requested) ? requested : null);
     setDetail(null);
     setError('');
     setMessage('');
-  }, [tab]);
+  }, [tab, location.search]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -331,7 +338,7 @@ export default function EmployeeWorkspace() {
                 ? 'supervision'
                 : 'mine';
 
-          const result = await api<{
+          const result = await (tab === 'supervision' ? supervisionApi : api)<{
             items: Job[];
             total: number;
           }>(
@@ -347,7 +354,7 @@ export default function EmployeeWorkspace() {
 
         if (tab === 'actividad') {
           setActivity(
-            await api<Activity[]>(
+            await (supervisor ? supervisionApi : api)<Activity[]>(
               `/activity?page=${page}`,
               undefined,
               'GET',
@@ -358,7 +365,7 @@ export default function EmployeeWorkspace() {
 
         if (tab === 'inventario') {
           setMovements(
-            await api<Movement[]>(
+            await (supervisor ? supervisionApi : api)<Movement[]>(
               `/movements?page=${page}`,
               undefined,
               'GET',
@@ -380,7 +387,7 @@ export default function EmployeeWorkspace() {
     void load();
 
     return () => controller.abort();
-  }, [tab, page, revision]);
+  }, [tab, page, revision, supervisor]);
 
   useEffect(() => {
     if (!selectedId) {
@@ -416,18 +423,9 @@ export default function EmployeeWorkspace() {
           )
         );
 
-        setDrivers(
-          await api<Person[]>(
-            '/drivers',
-            undefined,
-            'GET',
-            controller.signal
-          )
-        );
-
         if (supervisor) {
           setPeople(
-            await api<Person[]>(
+            await supervisionApi<Person[]>(
               '/employees',
               undefined,
               'GET',
@@ -486,7 +484,7 @@ export default function EmployeeWorkspace() {
     if (selectedId) {
       void perform(
         () =>
-          api(
+          (['resolve', 'reassign', 'cancel', 'simulate-payment'].includes(suffix) ? supervisionApi : api)(
             `/orders/${selectedId}/${suffix}`,
             body,
             method
@@ -534,7 +532,7 @@ export default function EmployeeWorkspace() {
 
       return {
         message:
-          `Pedido ${result.id} y recibo registrados. Pendiente de pago; aún no entra en la cola.`,
+          `Pedido ${shortReference(result.id)} y recibo registrados. Pendiente de pago; aún no entra en la cola.`,
       };
     });
 
@@ -633,12 +631,10 @@ export default function EmployeeWorkspace() {
           </p>
         </div>
 
-        <button
-          onClick={refresh}
-          disabled={busy || loading}
-        >
-          Actualizar
-        </button>
+        <div className="emp-heading-actions">
+          <button onClick={refresh} disabled={busy || loading}>Actualizar</button>
+          {user?.role === 'employee' && <button type="button" onClick={() => setSupportOpen(true)}>Ayuda con el jefe</button>}
+        </div>
       </header>
 
       <nav
@@ -793,11 +789,7 @@ export default function EmployeeWorkspace() {
               </p>
             )}
 
-            <SearchBox<Product>
-              resource="products"
-              label="Buscar producto por nombre o SKU"
-              onSelect={addProduct}
-            />
+            <ProductCatalogPicker forOrder onSelect={addProduct} />
 
             <div className="emp-table-scroll">
               <table>
@@ -984,7 +976,7 @@ export default function EmployeeWorkspace() {
                   <tr key={job.id}>
                     <td>
                       <code>
-                        {job.id.slice(-6).toUpperCase()}
+                        {shortReference(job.id)}
                       </code>
 
                       <small>
@@ -1036,7 +1028,7 @@ export default function EmployeeWorkspace() {
                             setSelectedId(job.id)
                           }
                         >
-                          Ver detalle
+                          {job.work?.status === 'picking' && (supervisor || job.work.assigneeId === user?.id) ? 'Empacar' : 'Ver detalle'}
                         </button>
                       )}
                     </td>
@@ -1069,9 +1061,7 @@ export default function EmployeeWorkspace() {
             </p>
 
             <fieldset disabled={busy}>
-              <SearchBox<Product>
-                resource="products"
-                label="Buscar producto"
+              <ProductCatalogPicker
                 onSelect={(product) => {
                   setSelectedProduct(product);
 
@@ -1215,7 +1205,7 @@ export default function EmployeeWorkspace() {
                       </td>
 
                       <td>
-                        {item.reason}
+                        {referenceText(item.reason)}
                       </td>
 
                       <td>
@@ -1245,10 +1235,11 @@ export default function EmployeeWorkspace() {
         </section>
       )}
 
+      {supportOpen && <Modal titulo="Ayuda con el jefe" onClose={() => setSupportOpen(false)}><SupportPanel /></Modal>}
       {selectedId && (
         <Modal
           titulo={
-            `Pedido ${selectedId.slice(-6).toUpperCase()}`
+            `Pedido ${shortReference(selectedId)}`
           }
           onClose={() => {
             if (!busy) {
@@ -1310,90 +1301,27 @@ export default function EmployeeWorkspace() {
               )}
 
               <fieldset disabled={busy}>
-                <div className="emp-table-scroll">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Producto</th>
-                        <th>Solicitado</th>
-                        <th>Recogido</th>
-                      </tr>
-                    </thead>
-
-                    <tbody>
-                      {detail.details?.map((line) => (
-                        <tr key={line.id}>
-                          <td>
-                            {line.product.name}
-                          </td>
-
-                          <td>
-                            {line.quantity}
-                          </td>
-
-                          <td>
-                            <input
-                              aria-label={
-                                `Recogido de ${line.product.name}`
-                              }
-                              type="number"
-                              min="0"
-                              max={line.quantity}
-                              disabled={
-                                detail.work?.status !==
-                                'picking'
-                              }
-                              value={
-                                picked[line.id] ?? 0
-                              }
-                              onChange={(event) =>
-                                setPicked((current) => ({
-                                  ...current,
-                                  [line.id]: Number(
-                                    event.target.value
-                                  ),
-                                }))
-                              }
-                            />
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                {detail.status === 'paid' && !detail.work && <div className="emp-actions">
+                  <p>El pedido está pagado y aún no tiene responsable. Tómalo para iniciar la preparación.</p>
+                  <button onClick={() => action('claim')}>Tomar pedido</button>
+                </div>}
+                {detail.status === 'pending' && <p>El pedido está pendiente de pago. Su preparación se habilita al confirmar el pago.</p>}
+                <div className="emp-pack-list" aria-label="Productos del pedido">
+                  {detail.details?.map(line => {
+                    const checked = (picked[line.id] ?? 0) === line.quantity;
+                    const img = productImage(line.product);
+                    const canPack = detail.work?.status === 'picking' && (supervisor || detail.work.assigneeId === user?.id);
+                    return <div className="emp-pack-item" key={line.id}>
+                      <div className="emp-pack-image"><small>Sin foto</small>{img && <img src={img} alt={line.product.name} onError={e => { e.currentTarget.style.display = 'none'; }} />}</div>
+                      <div><strong>{line.product.name}</strong><small>Cantidad: {line.quantity}</small></div>
+                      {canPack && <button type="button" aria-pressed={checked} onClick={() => void perform(() => api(`/orders/${detail.id}/picking`, { items: [{ detailId: line.id, pickedQuantity: checked ? 0 : line.quantity }] }, 'PATCH'))}>{checked ? '✓ Confirmado' : 'Confirmar producto'}</button>}
+                    </div>;
+                  })}
                 </div>
-
-                {detail.work?.status === 'picking' && (
-                  <div className="emp-actions">
-                    <button
-                      onClick={() =>
-                        action(
-                          'picking',
-                          {
-                            items: Object.entries(
-                              picked
-                            ).map(
-                              ([
-                                detailId,
-                                pickedQuantity,
-                              ]) => ({
-                                detailId,
-                                pickedQuantity,
-                              })
-                            ),
-                          },
-                          'PATCH'
-                        )
-                      }
-                    >
-                      Guardar recogida
-                    </button>
-
-                    <button
-                      onClick={() => action('pack')}
-                    >
-                      Marcar empacado
-                    </button>
-                  </div>
+                {detail.work?.status === 'picking' && (supervisor || detail.work.assigneeId === user?.id) && (
+                  <button disabled={!detail.details?.length || detail.details.some(line => (picked[line.id] ?? 0) !== line.quantity)} onClick={() => action('pack')}>
+                    Finalizar empacado
+                  </button>
                 )}
 
                 {[
@@ -1501,50 +1429,9 @@ export default function EmployeeWorkspace() {
                   </>
                 )}
 
-                {detail.work?.status === 'packed' &&
-                  detail.fulfillmentMethod ===
-                    'delivery' && (
-                    <>
-                      <label>
-                        Repartidor
-
-                        <select
-                          value={driverId}
-                          onChange={(event) =>
-                            setDriverId(
-                              event.target.value
-                            )
-                          }
-                        >
-                          <option value="">
-                            Seleccionar
-                          </option>
-
-                          {drivers.map((person) => (
-                            <option
-                              key={person.id}
-                              value={person.id}
-                            >
-                              {person.fullName}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-
-                      <button
-                        disabled={!driverId}
-                        onClick={() =>
-                          action(
-                            'dispatch',
-                            { driverId }
-                          )
-                        }
-                      >
-                        Registrar entrega
-                        al repartidor
-                      </button>
-                    </>
-                  )}
+                {detail.work?.status === 'packed' && detail.fulfillmentMethod === 'delivery' && (
+                  <p>Pedido listo para que un repartidor lo tome desde «Pedidos pendientes».</p>
+                )}
 
                 {detail.work?.status === 'packed' &&
                   detail.fulfillmentMethod ===
@@ -1641,6 +1528,25 @@ export default function EmployeeWorkspace() {
                     </>
                   )}
 
+                {detail.status === 'pending' && (supervisor || detail.createdById === user?.id) && (
+                  <div className="emp-panel">
+                    <strong>Registrar pago recibido en tienda</strong>
+                    <p>Confirma solo después de recibir el total. Esta acción no procesa tarjetas ni cobra dinero.</p>
+                    <label>Medio de pago
+                      <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value as 'cash' | 'card')}>
+                        <option value="cash">Efectivo</option><option value="card">Tarjeta</option>
+                      </select>
+                    </label>
+                    <button onClick={() => {
+                      if (!window.confirm(`¿Confirmas que recibiste ${money(detail.total)} en ${paymentMethod === 'cash' ? 'efectivo' : 'tarjeta'}?`)) return;
+                      const keyName = `store-payment-${detail.id}-${paymentMethod}`;
+                      let requestKey = sessionStorage.getItem(keyName);
+                      if (!requestKey) { requestKey = crypto.randomUUID(); sessionStorage.setItem(keyName, requestKey); }
+                      action('store-payment', { requestKey, method: paymentMethod });
+                    }}>Registrar pago recibido</button>
+                  </div>
+                )}
+
                 {summary?.paymentSimulation &&
                   detail.status === 'pending' && (
                     <div className="emp-warning">
@@ -1725,7 +1631,7 @@ export default function EmployeeWorkspace() {
                       >
                         Confirmar entrega final
                         del envío{' '}
-                        {shipment.id.slice(-6).toUpperCase()}
+                        {shortReference(shipment.id)}
                       </button>
                     )
                   )}

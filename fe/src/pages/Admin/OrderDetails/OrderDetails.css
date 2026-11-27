@@ -233,3 +233,86 @@
     margin-right: 6px;
   }
 }
+/* Detalle de pedidos: seis columnas parejas con títulos y datos centrados. */
+@media (min-width: 601px) {
+  .detalle-pedidos-page { width: calc(100% - 48px); }
+  .detalle-pedidos-page .tabla-detalle-pedidos {
+    width: 100%;
+    table-layout: fixed;
+  }
+  .detalle-pedidos-page .tabla-detalle-pedidos th { width: 16.666667%; }
+  .detalle-pedidos-page .tabla-detalle-pedidos th,
+  .detalle-pedidos-page .tabla-detalle-pedidos td {
+    box-sizing: border-box;
+    padding: 12px 8px;
+    text-align: center;
+    vertical-align: middle;
+  }
+  .detalle-pedidos-page .tabla-detalle-pedidos td:first-child,
+  .detalle-pedidos-page .tabla-detalle-pedidos td:nth-child(4),
+  .detalle-pedidos-page .tabla-detalle-pedidos td:nth-child(5),
+  .detalle-pedidos-page .tabla-detalle-pedidos td:last-child { white-space: nowrap; }
+  .detalle-pedidos-page .tabla-detalle-pedidos td:last-child button {
+    display: inline-block;
+    vertical-align: middle;
+    white-space: nowrap;
+    padding: 6px 8px;
+  }
+}
+
+/* Solo la tabla se desplaza cuando no caben las seis columnas. */
+@media (min-width: 601px) and (max-width: 1127px) {
+  .detalle-pedidos-page .tabla-detalle-pedidos { display: block; overflow-x: auto; }
+  .detalle-pedidos-page .tabla-detalle-pedidos thead,
+  .detalle-pedidos-page .tabla-detalle-pedidos tbody {
+    display: table;
+    width: 100%;
+    min-width: 1080px;
+    table-layout: fixed;
+    border-collapse: collapse;
+  }
+}
+
+.detalle-pedidos-page .tabla-detalle-pedidos .producto-detalle-pedido {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 600px) {
+  .detalle-pedidos-page .tabla-detalle-pedidos td:last-child { white-space: nowrap; }
+}
+
+.detalle-pedidos-page .detalle-pedidos-total {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 8px;
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* Centrar Nuevo artículo sobre Acciones cuando la tabla cabe completa. */
+.detalle-pedidos-page { container: detalles-pedidos / inline-size; }
+@container detalles-pedidos (min-width: 1080px) {
+  .detalle-pedidos-topbar {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 1fr);
+    column-gap: 0;
+  }
+  .detalle-pedidos-topbar .btn-nuevo-detalle-pedido { justify-self: center; }
+}
+
+/* Si el espacio del contenido se reduce, la tabla conserva su desplazamiento. */
+@media (min-width: 601px) {
+  @container detalles-pedidos (max-width: 1079px) {
+    .tabla-detalle-pedidos { display: block; overflow-x: auto; }
+    .tabla-detalle-pedidos thead,
+    .tabla-detalle-pedidos tbody {
+      display: table;
+      width: 100%;
+      min-width: 1080px;
+      table-layout: fixed;
+      border-collapse: collapse;
+    }
+  }
+}

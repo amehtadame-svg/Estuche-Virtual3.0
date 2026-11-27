@@ -30,7 +30,7 @@
 ## Criterios de Aceptación
 
 ### CA-035.1 — Listado del historial de compras
-- **Dado que** accedo a "Mis compras" (`/cuenta/historial`),
+- **Dado que** accedo a "Mis compras" (`/mis-pedidos`),
 - **cuando** la sección termina de cargar,
 - **entonces** veo cada pedido con su número, fecha, estado y total.
 
@@ -56,14 +56,16 @@
 
 | Método | Ruta | Descripción |
 |--------|------|-------------|
-| GET | `/api/historial` | Consulta el historial de compras del usuario autenticado |
+| GET | `/api/orders` | Consulta pedidos del cliente autenticado |
 | GET | `/api/lista-deseos` | Consulta la lista de deseos del usuario |
 | POST | `/api/lista-deseos` | Agrega un producto a la lista de deseos |
-| DELETE | `/api/lista-deseos/{id}` | Elimina un producto de la lista de deseos |
+| DELETE | `/api/lista-deseos/{productId}` | Elimina un producto de la lista propia |
 
 ---
 
 ## Notas técnicas
+
+La implementación de favoritos está sujeta a revisión y aceptación del equipo; esta historia incluye también historial y no se declara terminada. Para detalle y limitaciones consultar [RF-025](../RFs/RF-025-lista-de-deseos.md).
 
 - Restricción `UNIQUE(id_usuario, id_producto)` en `lista_deseos` evita duplicados.
 - El historial solo expone pedidos donde `id_cliente` coincide con el usuario autenticado.

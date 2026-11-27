@@ -73,6 +73,7 @@ beforeEach(() => {
   db.orderEvent.create = async ({ data }: any) => { state.events.push(data); return data; };
   db.shopping.deleteMany = async () => { state.cartCleared = true; return { count: 1 }; };
   db.shopping.upsert = async ({ create }: any) => { state.cartRestored += create.quantity; return create; };
+  db.promotionalCode.findFirst = async () => state.promo;
   db.promotionalCode.findUnique = async () => state.promo;
   db.promotionalCode.update = async ({ data }: any) => { state.promo = { ...state.promo, ...data }; return state.promo; };
 });
@@ -102,9 +103,10 @@ test('El empleado no puede usar el checkout de cliente', async () => {
   await assert.rejects(paymentsService.checkout(input(), { ...buyer, role: 'employee' }), status(403));
 });
 
-test('Calcula COP desde BD, envío gratis y reserva pendiente sin marcar recibo pagado', async () => {
+test('Calcula COP desde BD, envío de $10.000 y reserva pendiente sin marcar recibo pagado', async () => {
   const result = await paymentsService.checkout(input(), buyer);
-  assert.equal(result.amount.toString(), '25000.5');
+  assert.equal(result.amount.toString(), '35000.5');
+  assert.equal(Number(result.shippingCost), 10000);
   assert.equal(result.currency, 'COP');
   assert.equal(result.status, 'pending');
   assert.equal(result.orderStatus, 'pending');
@@ -200,7 +202,7 @@ test('Valida descuento vigente y mínimo en servidor; consume un solo uso por re
     maxUses: 1, currentUses: 0,
   };
   const result = await paymentsService.checkout(input({ code: 'DEMO10' }), buyer);
-  assert.equal(result.amount.toString(), '22500.45');
+  assert.equal(result.amount.toString(), '32500.45');
   await paymentsService.checkout(input({ code: 'DEMO10' }), buyer);
   assert.equal(state.promo.currentUses, 1);
   await assert.rejects(paymentsService.checkout(input({ code: 'DEMO10', requestKey: 'otra-referencia' }), buyer), status(400));
@@ -239,7 +241,7 @@ test('HTTP: un producto con UUID histórico puede agregarse al carrito, editarse
   let cartItem: any = null;
   const lookedUp: string[] = [];
   db.shopping.findUnique = async () => cartItem;
-  db.shopping.create = async ({ data }: any) => { cartItem = { id: 'cart-1', ...data }; return cartItem; };
+  db.shopping.upsert = async ({ create, update }: any) => { cartItem = cartItem ? { ...cartItem, quantity: cartItem.quantity + update.quantity.increment } : { id: 'cart-1', ...create }; return cartItem; };
   db.shopping.update = async ({ where, data }: any) => {
     assert.equal(where.userId_productId.productId, legacyId);
     cartItem = { ...cartItem, ...data };
@@ -260,7 +262,7 @@ test('HTTP: un producto con UUID histórico puede agregarse al carrito, editarse
     const pay = await fetch(`${base}/payments/demo/checkout`, { method: 'POST', headers, body: JSON.stringify(body) });
     assert.equal(pay.status, 200);
     assert.equal((await pay.json()).status, 'approved');
-    assert.deepEqual(lookedUp, [legacyId]);
+    assert.deepEqual(lookedUp, [legacyId, legacyId]);
     assert.equal(state.order.details[0].productId, legacyId);
     assert.equal(state.stock, 3);
     const retry = await fetch(`${base}/payments/demo/checkout`, { method: 'POST', headers, body: JSON.stringify(body) });
@@ -315,4 +317,33 @@ test('Un fallo restaurando carrito revierte el rechazo completo y permite confir
   await paymentsService.resolve(key, 'rejected', buyer);
   assert.equal(state.stock, 5);
   assert.equal(state.cartRestored, 2);
+});
+
+for (const [subtotal, expectedShipping] of [[119999, 10000], [120000, 0], [120001, 0]]) {
+  test(`Envío del checkout para subtotal ${subtotal}: ${expectedShipping} COP`, async () => {
+    db.product.findUnique = async () => ({ id: productId, price: new Prisma.Decimal(subtotal), stock: 5 });
+    const result = await paymentsService.checkout(input({ items: [{ productId, quantity: 1 }] }), buyer);
+    assert.equal(Number(result.shippingCost), expectedShipping);
+    assert.equal(Number(result.amount), subtotal + expectedShipping);
+    assert.equal(Number(state.order.shippingCost), expectedShipping);
+    assert.equal(Number(state.receipt.total), Number(result.amount));
+    assert.equal(Number(state.payment.amount), Number(result.amount));
+  });
+}
+
+test('El cupón no descuenta el domicilio ni elimina el beneficio de envío gratis', async () => {
+  db.product.findUnique = async () => ({ id: productId, price: new Prisma.Decimal(120000), stock: 5 });
+  state.promo = { id: 'promo-1', active: true, type: 'percentage', value: new Prisma.Decimal(10), minPurchase: 0,
+    startDate: new Date('2020-01-01'), endDate: new Date('2099-01-01'), maxUses: null, currentUses: 0 };
+  const result = await paymentsService.checkout(input({ code: ' demo10 ', items: [{ productId, quantity: 1 }] }), buyer);
+  assert.equal(Number(result.amount), 108000);
+  assert.equal(Number(result.shippingCost), 0);
+});
+
+test('Un descuento fijo mayor al subtotal nunca produce un envío negativo', async () => {
+  state.promo = { id: 'promo-1', active: true, type: 'fixed', value: new Prisma.Decimal(50000), minPurchase: 0,
+    startDate: new Date('2020-01-01'), endDate: new Date('2099-01-01'), maxUses: null, currentUses: 0 };
+  const result = await paymentsService.checkout(input({ code: 'FIJO' }), buyer);
+  assert.equal(Number(result.amount), 10000);
+  assert.equal(Number(result.shippingCost), 10000);
 });

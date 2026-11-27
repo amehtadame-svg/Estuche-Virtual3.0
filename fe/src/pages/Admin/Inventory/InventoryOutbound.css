@@ -33,17 +33,17 @@
   padding: 12px 18px;
   border: none;
   border-radius: var(--radius-md, 8px);
-  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  background: var(--gradient-accent, linear-gradient(135deg, #7c1fc5, #b026ea));
   color: var(--on-accent);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 6px 18px rgba(200, 30, 30, 0.25);
+  box-shadow: 0 6px 18px rgba(124, 31, 197, 0.22);
   transition: opacity 0.2s;
 }
 
 .outbound-submit-btn:disabled {
-  opacity: 0.45;
+  opacity: 0.65;
   cursor: not-allowed;
   box-shadow: none;
 }
@@ -156,7 +156,7 @@
   padding: 11px 16px;
   border: none;
   border-radius: 8px;
-  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  background: var(--gradient-accent, linear-gradient(135deg, #7c1fc5, #b026ea));
   color: var(--on-accent);
   font-size: 14px;
   font-weight: 600;
@@ -165,6 +165,110 @@
 
 .outbound-btn-confirm:hover:not(:disabled) {
   filter: brightness(1.06);
+}
+
+.outbound-btn-confirm:disabled,
+.outbound-btn-cancel:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Confirmación de salida con la identidad morada del sitio. */
+.outbound-dialog .modal-box {
+  max-width: 500px;
+  overflow: hidden;
+}
+.outbound-dialog .modal-header { padding: 22px 24px; }
+.outbound-dialog .modal-titulo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 18px;
+}
+.outbound-dialog .modal-titulo::before {
+  content: '';
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--accent-border);
+  border-radius: 13px;
+  background-color: var(--accent-bg);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%23b026ea' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z'/%3E%3Cpath d='M3.3 7 12 12l8.7-5M12 22V12M9 3.1l8.5 4.9'/%3E%3C/svg%3E");
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.outbound-dialog .modal-body { padding: 24px; }
+.outbound-dialog .outbound-modal-text {
+  margin: 0 0 16px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text-h);
+}
+.outbound-dialog .outbound-modal-list {
+  margin: 0;
+  padding: 16px;
+  border: 1px solid var(--accent-border);
+  border-radius: 14px;
+  background: var(--accent-bg);
+}
+.outbound-dialog .outbound-modal-list > div { border-bottom-color: var(--accent-border); }
+.outbound-dialog .outbound-modal-list dd { max-width: 65%; overflow-wrap: anywhere; }
+.outbound-dialog .modal-footer { padding: 0 24px 24px; border: 0; }
+.outbound-dialog .modal-footer button { min-height: 44px; border-radius: 12px; font-weight: 700; }
+.outbound-dialog .outbound-btn-cancel {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-h);
+}
+.outbound-dialog .outbound-btn-confirm {
+  background: var(--gradient-accent, linear-gradient(135deg, #7c1fc5, #b026ea));
+  border: 1px solid var(--accent-border);
+  color: var(--on-accent, #fff);
+}
+.outbound-dialog button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.outbound-dialog-saving .modal-cerrar { opacity: 0.5; cursor: not-allowed; }
+@media (max-width: 480px) {
+  .outbound-dialog .modal-header { padding: 18px; }
+  .outbound-dialog .modal-body { padding: 18px; }
+  .outbound-dialog .modal-footer { padding: 0 18px 18px; }
+  .outbound-dialog .modal-footer button { min-width: 0; padding: 10px 8px; }
+  .outbound-dialog .outbound-modal-list > div { gap: 10px; }
+}
+
+/* En Salidas, la fecha y el SKU permanecen completos en una sola línea. */
+.inbound-page:has(.outbound-submit-btn) .inbound-history-card .inbound-table th:first-child,
+.inbound-page:has(.outbound-submit-btn) .inbound-history-card .inbound-table td:first-child,
+.inbound-page:has(.outbound-submit-btn) .inbound-history-card .inbound-table th:nth-child(2),
+.inbound-page:has(.outbound-submit-btn) .inbound-history-card .inbound-table td:nth-child(2),
+.inbound-page:has(.outbound-submit-btn) .inbound-history-card .inbound-sku {
+  white-space: nowrap;
+}
+
+/* Distribución equilibrada para la tabla de salidas, sin afectar Ingresos. */
+.inbound-page:has(.outbound-submit-btn) .inbound-history-card .inbound-table {
+  min-width: 1100px;
+  table-layout: auto;
+}
+
+.inbound-page:has(.outbound-submit-btn) .inbound-history-card .inbound-table th,
+.inbound-page:has(.outbound-submit-btn) .inbound-history-card .inbound-table td {
+  box-sizing: border-box;
+  padding: 13px 12px;
+  vertical-align: middle;
+  text-align: left;
+}
+
+.inbound-page:has(.outbound-submit-btn) .inbound-history-card .inbound-table th:nth-child(1) { width: 16%; }
+.inbound-page:has(.outbound-submit-btn) .inbound-history-card .inbound-table th:nth-child(2) { width: 8%; }
+.inbound-page:has(.outbound-submit-btn) .inbound-history-card .inbound-table th:nth-child(3) { width: 20%; }
+.inbound-page:has(.outbound-submit-btn) .inbound-history-card .inbound-table th:nth-child(4) { width: 11%; }
+.inbound-page:has(.outbound-submit-btn) .inbound-history-card .inbound-table th:nth-child(5) { width: 32%; }
+.inbound-page:has(.outbound-submit-btn) .inbound-history-card .inbound-table th:nth-child(6) { width: 13%; }
+
+.inbound-page:has(.outbound-submit-btn) .inbound-history-card .inbound-table td:nth-child(3),
+.inbound-page:has(.outbound-submit-btn) .inbound-history-card .inbound-table td:nth-child(5),
+.inbound-page:has(.outbound-submit-btn) .inbound-history-card .inbound-table td:nth-child(6) {
+  overflow-wrap: anywhere;
 }
 
 .outbound-confirm-submit:hover:not(:disabled) {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Modal from '../../../components/ui/Modal';
 import { API, authHeaders } from '../../../api/api';
 import { runDeleteAction } from '../../../lib/deleteAction';
@@ -63,6 +63,8 @@ export default function Products() {
   const [message, setMessage] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const savingRef = useRef(false);
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
 
@@ -193,6 +195,7 @@ export default function Products() {
   };
 
   const closeModal = () => {
+    if (savingRef.current) return;
     setModalOpen(false);
     setEditingId(null);
     setInvalidFields({});
@@ -201,6 +204,7 @@ export default function Products() {
   };
 
   const handleSave = async () => {
+    if (savingRef.current) return;
     const nextInvalid: Record<string, boolean> = {};
     if (!form.name.trim()) nextInvalid.name = true;
     if (!form.sku.trim()) nextInvalid.sku = true;
@@ -211,11 +215,15 @@ export default function Products() {
     const stockNum = form.stock === '' ? NaN : Number(form.stock);
     const stockMinNum = form.stockMin === '' ? 5 : Number(form.stockMin);
 
+    if (costNum > 999999999999.99 || priceNum > 999999999999.99 || stockNum > 2147483647 || stockMinNum > 2147483647) {
+      setFormError('El precio, costo o cantidad supera el límite permitido.');
+      return;
+    }
     // CA-001.2 — Validación estricta de reglas de negocio y restricciones numéricas
     if (!Number.isFinite(costNum) || costNum <= 0) nextInvalid.cost = true;
     if (!Number.isFinite(priceNum) || priceNum <= 0) nextInvalid.price = true;
-    if (!Number.isFinite(stockNum) || stockNum < 0) nextInvalid.stock = true;
-    if (!Number.isFinite(stockMinNum) || stockMinNum < 0) nextInvalid.stockMin = true;
+    if (!Number.isInteger(stockNum) || stockNum < 0) nextInvalid.stock = true;
+    if (!Number.isInteger(stockMinNum) || stockMinNum < 0) nextInvalid.stockMin = true;
 
     if (nextInvalid.cost || nextInvalid.price || nextInvalid.stock) {
       setInvalidFields(nextInvalid);
@@ -235,7 +243,7 @@ export default function Products() {
       barcode: form.barcode.trim() || null,
       cost: costNum,
       price: priceNum,
-      stock: stockNum,
+      ...(editingId === null ? { stock: stockNum } : {}),
       stockMin: stockMinNum,
       categoryId: form.categoryId || null,
       supplierId: form.supplierId || null,
@@ -243,6 +251,8 @@ export default function Products() {
       ...(form.imageUrl.trim() ? { imageUrl: form.imageUrl.trim() } : {}),
     };
 
+    savingRef.current = true;
+    setSaving(true);
     try {
       const url = editingId !== null ? `${API.products}/${editingId}` : API.products;
       const method = editingId !== null ? 'PUT' : 'POST';
@@ -255,18 +265,39 @@ export default function Products() {
 
       if (!res.ok) {
         const errData = await res.json().catch(() => null);
-        const message = errData?.message || 'No se pudo guardar el producto. Revisa los datos e inténtalo de nuevo.';
+        const details = Array.isArray(errData?.errors)
+          ? errData.errors
+              .map((item: { path?: (string | number)[]; message?: string }) => {
+                const field = item.path?.join('.') || 'Campo';
+                const fieldNames: Record<string, string> = {
+                  categoryId: 'Categoría', supplierId: 'Proveedor', imageUrl: 'URL de imagen',
+                  stock: 'Stock', stockMin: 'Stock mínimo', price: 'Precio', cost: 'Costo',
+                  name: 'Nombre', sku: 'SKU', barcode: 'Código de barras', description: 'Descripción',
+                };
+                return `${fieldNames[field] || field}: ${item.message || 'valor inválido'}`;
+              })
+              .join(' | ')
+          : '';
+
+        const message = details
+          ? `Revisa estos datos: ${details}`
+          : errData?.message || 'No se pudo guardar el producto. Revisa los datos e inténtalo de nuevo.';
         setFormError(message);
-        notify.error(message);
         return;
       }
 
       loadProducts();
+      savingRef.current = false;
       closeModal();
-      notify.success(editingId !== null ? 'Producto actualizado exitosamente.' : 'Producto registrado exitosamente en el catálogo.');
+      notify.success(
+        editingId !== null ? 'El producto se actualizó correctamente.' : 'El producto se registró correctamente en el catálogo.',
+        editingId !== null ? 'Cambios guardados' : 'Producto registrado',
+      );
     } catch {
-      setFormError('Error de conexión al guardar el producto.');
-      notify.error('Error de conexión al guardar el producto.');
+      setFormError('No se pudo confirmar el guardado. Revisa la información antes de intentarlo de nuevo.');
+    } finally {
+      savingRef.current = false;
+      setSaving(false);
     }
   };
 
@@ -329,6 +360,7 @@ export default function Products() {
           <input
             className="productos-busqueda"
             placeholder="Buscar por nombre, SKU o código de barras..."
+            maxLength={150}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -446,10 +478,10 @@ export default function Products() {
           onClose={closeModal}
           footer={
             <>
-              <button className="btn-cancelar-producto" onClick={closeModal}>
+              <button className="btn-cancelar-producto" onClick={closeModal} disabled={saving}>
                 Cancelar
               </button>
-              <button className="btn-guardar-producto" onClick={handleSave}>
+              <button className="btn-guardar-producto" onClick={handleSave} disabled={saving}>
                 Guardar Producto
               </button>
             </>
@@ -470,7 +502,7 @@ export default function Products() {
           </label>
           <input
             className={`input-producto ${invalidFields.name ? 'input-invalido' : ''}`}
-            name="name"
+            name="name" maxLength={150}
             value={form.name}
             onChange={handleChange}
             onBlur={() => handleBlurDuplicateCheck('name')}
@@ -488,7 +520,7 @@ export default function Products() {
               </label>
               <input
                 className={`input-producto ${invalidFields.sku ? 'input-invalido' : ''}`}
-                name="sku"
+                name="sku" maxLength={80}
                 value={form.sku}
                 onChange={handleChange}
                 onBlur={() => handleBlurDuplicateCheck('sku')}
@@ -506,7 +538,7 @@ export default function Products() {
               </label>
               <input
                 className={`input-producto ${invalidFields.barcode ? 'input-invalido' : ''}`}
-                name="barcode"
+                name="barcode" maxLength={80}
                 value={form.barcode}
                 onChange={handleChange}
                 onBlur={() => handleBlurDuplicateCheck('barcode')}
@@ -636,7 +668,7 @@ export default function Products() {
                 className="label-producto"
                 title="Unidades físicas recibidas inicialmente en bodega (no puede ser negativo)"
               >
-                Stock inicial en bodega <span className="campo-obligatorio">*</span>{' '}
+                {editingId ? 'Existencias actuales' : 'Stock inicial en bodega'} <span className="campo-obligatorio">*</span>{' '}
                 <span className="tooltip-icon" title="Existencias disponibles (>= 0)">ⓘ</span>
               </label>
               <input
@@ -644,10 +676,12 @@ export default function Products() {
                 type="number"
                 min="0"
                 name="stock"
+                disabled={editingId !== null}
                 value={form.stock}
                 onChange={handleChange}
                 placeholder="Cantidad inicial (>= 0)"
               />
+              {editingId && <small>Para modificar existencias usa Ingresos o Salidas.</small>}
             </div>
 
             <div>
@@ -673,7 +707,7 @@ export default function Products() {
           <label className="label-producto">Descripción técnica</label>
           <textarea
             className="input-producto"
-            name="description"
+            name="description" maxLength={500}
             value={form.description}
             onChange={handleChange}
             placeholder="Características del producto, marca, presentación..."
@@ -683,7 +717,7 @@ export default function Products() {
           <label className="label-producto">URL de la imagen</label>
           <input
             className="input-producto"
-            name="imageUrl"
+            name="imageUrl" maxLength={500}
             value={form.imageUrl}
             onChange={handleChange}
             placeholder="https://i.postimg.cc/..."

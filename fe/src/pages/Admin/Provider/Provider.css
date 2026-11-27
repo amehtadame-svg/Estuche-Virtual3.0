@@ -325,3 +325,111 @@ height: fit-content;
   flex: 1;
   margin: 0;
 }
+/* Acciones de Proveedores: botones juntos y alineados sin modificar sus funciones. */
+.proveedores-page .tabla-proveedores tbody td:last-child {
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.proveedores-page .tabla-proveedores tbody td:last-child button {
+  display: inline-block;
+  width: auto;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+@media (min-width: 601px) {
+  .proveedores-page .table-wrapper {
+    overflow-x: auto;
+  }
+
+  .proveedores-page .tabla-proveedores {
+    min-width: 1100px;
+  }
+
+  .proveedores-page .tabla-proveedores thead th:last-child,
+  .proveedores-page .tabla-proveedores tbody td:last-child {
+    text-align: center;
+  }
+
+  .proveedores-page .tabla-proveedores tbody td:last-child {
+    min-width: 165px;
+  }
+
+  .proveedores-page .tabla-proveedores tbody td:not(:last-child) {
+    overflow-wrap: anywhere;
+  }
+}
+
+/* Información de proveedores: lectura clara y distribución equilibrada. */
+.proveedores-page .tabla-proveedores {
+  font-size: 15px;
+}
+
+.proveedores-page .tabla-proveedores th,
+.proveedores-page .tabla-proveedores td {
+  line-height: 1.45;
+  vertical-align: middle;
+}
+
+/* Evita que el último dígito del teléfono baje a otro renglón. */
+.proveedores-page .tabla-proveedores tbody td:nth-child(3) {
+  white-space: nowrap;
+}
+
+.proveedores-page .tabla-proveedores tbody td:not(:nth-child(3)):not(:last-child) {
+  overflow-wrap: anywhere;
+}
+
+@media (min-width: 601px) {
+  .proveedores-page .tabla-proveedores th,
+  .proveedores-page .tabla-proveedores td {
+    box-sizing: border-box;
+    padding: 14px 12px;
+  }
+
+  .proveedores-page .tabla-proveedores thead th:nth-child(1) { width: 15%; }
+  .proveedores-page .tabla-proveedores thead th:nth-child(2) { width: 18%; }
+  .proveedores-page .tabla-proveedores thead th:nth-child(3) { width: 10%; }
+  .proveedores-page .tabla-proveedores thead th:nth-child(4) { width: 14%; }
+  .proveedores-page .tabla-proveedores thead th:nth-child(5) { width: 27%; }
+  .proveedores-page .tabla-proveedores thead th:nth-child(6) { width: 16%; }
+}
+
+/* Proveedores: títulos y datos centrados en seis columnas parejas. */
+@media (min-width: 601px) {
+  .proveedores-page { width: calc(100% - 48px); }
+  .proveedores-page .tabla-proveedores {
+    width: 100%;
+    min-width: 1200px;
+    table-layout: fixed;
+  }
+  .proveedores-page .tabla-proveedores thead th:nth-child(n) {
+    width: 16.666667%;
+  }
+  .proveedores-page .tabla-proveedores th,
+  .proveedores-page .tabla-proveedores td {
+    padding: 14px 8px;
+    text-align: center;
+    vertical-align: middle;
+  }
+}
+
+@media (max-width: 600px) {
+  .proveedores-page .proveedores-topbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .proveedores-page .btn-nuevo-proveedor { width: 100%; }
+}
+
+/* Alinear Nuevo proveedor con el centro de la columna Acciones. */
+.proveedores-page { container: proveedores / inline-size; }
+@container proveedores (min-width: 1200px) {
+  .proveedores-topbar {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 1fr);
+    column-gap: 0;
+  }
+  .proveedores-topbar .btn-nuevo-proveedor { justify-self: center; }
+}

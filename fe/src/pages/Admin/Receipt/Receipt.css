@@ -122,7 +122,6 @@
   background: var(--accent-bg);
   color: var(--accent);
   border: 1px solid var(--accent-border);
-  margin-right: 8px;
 }
 
 .btn-editar-factura:hover {
@@ -318,7 +317,250 @@
     padding-top: 8px;
   }
 
-  .btn-editar-factura {
-    margin-right: 6px;
+}
+
+/* La acción se mantiene deshabilitada, pero su nombre es legible. */
+.facturas-page .btn-eliminar-factura:disabled {
+  opacity: 0.88 !important; /* Contrasta sin ocultar que la acción no está disponible. */
+  border-color: var(--accent-border);
+  color: var(--accent);
+  background: transparent;
+  cursor: not-allowed;
+}
+
+.recibo-acciones {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.recibo-aviso {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 0 0 18px;
+  padding: 14px;
+  border: 1px solid var(--accent-border);
+  border-radius: 12px;
+  background: var(--accent-bg);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.recibo-aviso-icono {
+  display: grid;
+  place-items: center;
+  flex: 0 0 26px;
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--accent-border);
+  border-radius: 9px;
+  color: var(--accent);
+  font-weight: 700;
+}
+.recibo-aviso strong { display: block; color: var(--text-h); font-size: 14px; }
+.recibo-aviso p { margin: 4px 0 0; overflow-wrap: anywhere; }
+.btn-guardar-factura:disabled, .btn-cancelar-factura:disabled { opacity: .65; cursor: not-allowed; }
+
+.recibo-ayuda {
+  display: block;
+  margin: -4px 0 12px;
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.recibo-vistas { display: flex; justify-content: flex-end; margin: 0 0 18px; }
+.recibo-vistas-boton { border: 1px solid var(--accent-border); border-radius: 10px; background: var(--accent-bg); color: var(--accent); padding: 9px 15px; font-weight: 600; cursor: pointer; }
+.recibo-vistas-boton:disabled, .recibo-acciones button:disabled { opacity: .65; cursor: wait; }
+.recibo-vista-ayuda { color: var(--text); font-size: 13px; margin: -5px 0 16px; }
+.recibo-acciones .btn-eliminar-factura:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-bg); }
+@media (max-width: 600px) { .recibo-vistas { justify-content: center; } }
+
+/* Cabecera y controles de archivo en una sección compacta. */
+.facturas-page {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 18px;
+  row-gap: 16px;
+  align-items: center;
+}
+.facturas-page > .facturas-topbar {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  margin-bottom: 2px;
+  padding-top: 0;
+}
+.facturas-page > .recibo-vistas {
+  grid-column: 2;
+  grid-row: 2;
+  justify-content: flex-end;
+  margin: 0;
+}
+.facturas-page > .recibo-vista-ayuda {
+  grid-column: 1;
+  grid-row: 2;
+  min-width: 0;
+  margin: 0;
+  line-height: 1.5;
+}
+.facturas-page > :not(.facturas-topbar):not(.recibo-vistas):not(.recibo-vista-ayuda) {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+.facturas-page > .recibo-aviso { margin: 0; }
+@media (max-width: 600px) {
+  .facturas-page { grid-template-columns: minmax(0, 1fr); row-gap: 14px; }
+  .facturas-page > .facturas-topbar,
+  .facturas-page > .recibo-vistas,
+  .facturas-page > .recibo-vista-ayuda { grid-column: 1; grid-row: auto; }
+  .facturas-page > .recibo-vistas { justify-content: flex-start; }
+}
+.facturas-page { align-content: start; }
+
+/* Controles alineados y estilo de archivados como en Pedidos. */
+.facturas-page .btn-nuevo-factura,
+.facturas-page .recibo-vistas-boton {
+  width: 150px;
+  height: 40px;
+  box-sizing: border-box;
+}
+.facturas-page .btn-nuevo-factura {
+  padding: 8px 10px;
+  white-space: nowrap;
+}
+.facturas-page .recibo-vistas-boton {
+  padding: 6px 10px;
+  white-space: nowrap;
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius-sm);
+  background: var(--accent-bg);
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s;
+}
+.facturas-page .recibo-vistas-boton:hover:not(:disabled) { opacity: 0.8; }
+.facturas-page .recibo-vistas-boton:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+@media (max-width: 600px) {
+  .facturas-page .btn-nuevo-factura,
+  .facturas-page .recibo-vistas-boton { width: 100%; }
+  .facturas-page > .recibo-vistas { width: 100%; }
+}
+
+/* Recibos: distribuir los siete títulos y sus datos en todo el ancho. */
+@media (min-width: 601px) {
+  .facturas-page { width: calc(100% - 48px); }
+
+  .facturas-page .tabla-facturas {
+    width: 100%;
+    table-layout: fixed;
   }
+  .facturas-page .tabla-facturas th { width: 14.285714%; }
+  .facturas-page .tabla-facturas th,
+  .facturas-page .tabla-facturas td {
+    box-sizing: border-box;
+    padding: 12px 8px;
+    text-align: center;
+    vertical-align: middle;
+  }
+  .facturas-page .tabla-facturas td:nth-child(1),
+  .facturas-page .tabla-facturas td:nth-child(2),
+  .facturas-page .tabla-facturas td:nth-child(3),
+  .facturas-page .tabla-facturas td:nth-child(4) { white-space: nowrap; }
+  .facturas-page .tabla-facturas td:nth-child(5) {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .facturas-page .recibo-acciones { justify-content: center; gap: 6px; }
+  .facturas-page .recibo-acciones button { padding: 6px 8px; white-space: nowrap; }
+  .facturas-page .estado-select-factura { max-width: 100%; }
+}
+
+/* En anchos intermedios solo se desplaza la tabla, no la página. */
+@media (min-width: 601px) and (max-width: 1167px) {
+  .facturas-page .tabla-facturas { display: block; overflow-x: auto; }
+  .facturas-page .tabla-facturas thead,
+  .facturas-page .tabla-facturas tbody {
+    display: table;
+    width: 100%;
+    min-width: 1120px;
+    table-layout: fixed;
+    border-collapse: collapse;
+  }
+}
+
+/* Los dos botones superiores quedan sobre el centro de Acciones. */
+@media (min-width: 1168px) {
+  .facturas-page .btn-nuevo-factura {
+    margin-right: calc((100% / 7 - 150px) / 2);
+  }
+  .facturas-page > .recibo-vistas {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    pointer-events: none;
+    z-index: 1;
+    margin-right: calc((100% / 7 - 150px) / 2);
+  }
+  .facturas-page .recibo-vistas-boton { pointer-events: auto; }
+}
+
+/* Botones superiores con el tamaño de «Ver archivados» de Pedidos. */
+@media (min-width: 601px) {
+  .facturas-page .btn-nuevo-factura,
+  .facturas-page .recibo-vistas-boton {
+    width: max-content;
+    min-width: 138px;
+    height: 29px;
+    padding: 6px 10px;
+    box-sizing: border-box;
+    white-space: nowrap;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: normal;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+@media (min-width: 1168px) {
+  .facturas-page > .facturas-topbar {
+    display: grid;
+    grid-template-columns: minmax(0, 6fr) minmax(0, 1fr);
+  }
+  .facturas-page .btn-nuevo-factura { justify-self: center; margin-right: 0; }
+  .facturas-page > .recibo-vistas {
+    display: grid;
+    grid-template-columns: minmax(0, 6fr) minmax(0, 1fr);
+    margin-right: 0;
+  }
+  .facturas-page .recibo-vistas-boton { grid-column: 2; justify-self: center; }
+}
+
+/* Nuevo recibo con el estilo de Nuevo proveedor; archivados más arriba. */
+.facturas-page .btn-nuevo-factura {
+  height: auto;
+  min-height: 36px;
+  padding: 10px 20px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 600;
+}
+@media (min-width: 601px) {
+  .facturas-page { row-gap: 8px; }
+}
+@media (min-width: 601px) and (max-width: 1167px) {
+  .facturas-page { grid-template-columns: minmax(0, 1fr) 180px; }
+  .facturas-page > .facturas-topbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 180px;
+    column-gap: 0;
+  }
+  .facturas-page .btn-nuevo-factura { justify-self: center; }
+  .facturas-page > .recibo-vistas { justify-content: center; }
+}
+@media (min-width: 1168px) {
+  .facturas-page > .facturas-topbar { column-gap: 0; }
 }

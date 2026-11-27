@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { databaseUuidSchema } from '../../lib/schemas';
 
 export const orderStatusEnum = [
   'pending',
@@ -11,14 +12,14 @@ export const orderStatusEnum = [
 ] as const;
 
 export const createOrderSchema = z.object({
-  deliveryAddressId: z.string().uuid().optional(),
+  deliveryAddressId: databaseUuidSchema.optional(),
   total: z.coerce.number().min(0),
-  promotionalCodeId: z.string().uuid().optional(),
+  promotionalCodeId: databaseUuidSchema.optional(),
   status: z.enum(orderStatusEnum).optional(),
   details: z
     .array(
       z.object({
-        productId: z.string().uuid(),
+        productId: databaseUuidSchema,
         quantity: z.coerce.number().int().min(1),
         unitPrice: z.coerce.number().min(0),
       })
@@ -27,10 +28,10 @@ export const createOrderSchema = z.object({
 });
 
 export const updateOrderSchema = z.object({
-  customerId: z.string().uuid().optional(),
-  driverId: z.string().uuid().nullable().optional(),
-  promotionalCodeId: z.string().uuid().nullable().optional(),
-  deliveryAddressId: z.string().uuid().nullable().optional(),
+  customerId: databaseUuidSchema.optional(),
+  driverId: databaseUuidSchema.nullable().optional(),
+  promotionalCodeId: databaseUuidSchema.nullable().optional(),
+  deliveryAddressId: databaseUuidSchema.nullable().optional(),
   total: z.coerce.number().min(0).optional(),
   status: z.enum(orderStatusEnum).optional(),
 });

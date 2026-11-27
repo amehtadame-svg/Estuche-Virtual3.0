@@ -55,7 +55,7 @@
 
 | Método | Ruta | Descripción |
 |--------|------|-------------|
-| GET | `/api/v1/inventory/movements` | Muestra la bitácora de movimientos de stock |
+| GET | `/api/inventory/movements` | Muestra la bitácora de movimientos de stock |
 
 ---
 

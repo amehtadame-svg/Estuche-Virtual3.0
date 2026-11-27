@@ -32,6 +32,7 @@ export default function PromotionalCode() {
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [formError, setFormError] = useState('');
   const headers = authHeaders();
 
   const load = async () => {
@@ -49,12 +50,14 @@ export default function PromotionalCode() {
   }, []);
 
   const closeModal = () => {
+    setFormError('');
     setModalOpen(false);
     setEditingId(null);
     setForm(emptyForm);
   };
 
   const openNewModal = () => {
+    setFormError('');
     setForm(emptyForm);
     setEditingId(null);
     setModalOpen(true);
@@ -65,20 +68,23 @@ export default function PromotionalCode() {
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
     >,
   ) => {
+    setFormError('');
     setForm({ ...form, [event.target.name]: event.target.value });
   };
 
   const handleSave = async () => {
-    if (
-      !form.code.trim() ||
-      !form.type ||
-      !form.value ||
-      !form.startDate ||
-      !form.endDate
-    ) {
-      notify.error('Completa los campos obligatorios del descuento.');
+    const missingFields = [
+      !form.code.trim() && 'código',
+      !form.type && 'tipo',
+      !form.value && 'valor',
+      !form.startDate && 'fecha de inicio',
+      !form.endDate && 'fecha de fin',
+    ].filter(Boolean);
+    if (missingFields.length) {
+      setFormError(`Completa los campos obligatorios: ${missingFields.join(', ')}.`);
       return;
     }
+    setFormError('');
 
     const body = {
       code: form.code.trim(),
@@ -113,6 +119,7 @@ export default function PromotionalCode() {
   };
 
   const handleEdit = (discount: PromotionalCode) => {
+    setFormError('');
     setForm({
       code: discount.code,
       description: discount.description ?? '',
@@ -138,6 +145,7 @@ export default function PromotionalCode() {
       successMessage: nextActive
         ? `Descuento "${discount.code}" activado exitosamente.`
         : `Descuento "${discount.code}" desactivado exitosamente.`,
+      successTitle: nextActive ? 'Descuento activado' : 'Descuento desactivado',
       errorMessage: 'No se pudo actualizar el estado del descuento.',
     });
 
@@ -252,12 +260,15 @@ export default function PromotionalCode() {
               </div>
 
               <div className="modal-body-descuento">
+                {formError && (
+                  <p className="error-formulario-descuento" role="alert">{formError}</p>
+                )}
                 <p className="label-descuento">
                   Código <span className="required">*</span>
                 </p>
                 <input
                   className="input-descuento"
-                  name="code"
+                  name="code" maxLength={50}
                   value={form.code}
                   onChange={handleChange}
                   placeholder="Ej: REGRESO10"
@@ -266,7 +277,7 @@ export default function PromotionalCode() {
                 <p className="label-descuento">Descripción</p>
                 <input
                   className="input-descuento"
-                  name="description"
+                  name="description" maxLength={500}
                   value={form.description}
                   onChange={handleChange}
                   placeholder="Descripción opcional"

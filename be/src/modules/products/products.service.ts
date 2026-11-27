@@ -1,11 +1,37 @@
 import { prisma } from '../../lib/prisma';
-import { badRequest, notFound } from '../../lib/errors';
+import { Prisma } from '@prisma/client';
+import { badRequest, conflict, notFound } from '../../lib/errors';
 
 const NUMERIC_RULE_ALERT =
   'El precio de venta y el costo de adquisición deben ser valores numéricos estrictamente mayores a cero, y el stock inicial no puede contener cifras negativas';
 
 const DUPLICATE_RULE_ALERT =
-  'No se puede completar el registro: Ya existe un producto almacenado con el mismo código SKU o nombre comercial dentro del sistema';
+  'No se puede completar el registro: Ya existe un producto almacenado con el mismo código SKU o nombre comercial, o un código de barras repetido. Los códigos de productos eliminados también permanecen reservados.';
+
+// La base conserva los SKU y códigos de barras incluso en productos eliminados.
+// Traducimos la restricción única a un aviso comprensible sin liberar esos códigos.
+async function withProductUniqueness<T>(operation: () => Promise<T>): Promise<T> {
+  try {
+    return await operation();
+  } catch (error: unknown) {
+    if (typeof error === 'object' && error !== null && 'code' in error && error.code === 'P2002') {
+      const metadata = 'meta' in error && typeof error.meta === 'object' && error.meta !== null
+        ? error.meta as { target?: unknown }
+        : undefined;
+      const target = Array.isArray(metadata?.target)
+        ? metadata.target.join(' ').toLowerCase()
+        : String(metadata?.target ?? '').toLowerCase();
+      if (target.includes('sku')) {
+        throw conflict('Este código SKU ya está registrado, incluso si el producto fue eliminado. Usa otro código.');
+      }
+      if (target.includes('barcode') || target.includes('bar_code')) {
+        throw conflict('Este código de barras ya está registrado, incluso si el producto fue eliminado. Usa otro código.');
+      }
+      throw conflict('El SKU o código de barras ya está registrado, incluso en un producto eliminado. Revisa los datos.');
+    }
+    throw error;
+  }
+}
 
 export interface CreateProductInput {
   name: string;
@@ -56,14 +82,13 @@ export const productService = {
     }
 
     // CA-001.3 — Control de duplicidad por código de barras, SKU y nombre comercial
-    const orConditions: any[] = [{ name: { equals: cleanName, mode: 'insensitive' } }];
+    const orConditions: any[] = [{ name: { equals: cleanName, mode: 'insensitive' }, deletedAt: null }];
     if (cleanSku) orConditions.push({ sku: { equals: cleanSku, mode: 'insensitive' } });
     if (cleanBarcode) orConditions.push({ barcode: { equals: cleanBarcode, mode: 'insensitive' } });
 
     if (typeof prisma.product.findFirst === 'function') {
       const duplicate = await prisma.product.findFirst({
         where: {
-          deletedAt: null,
           OR: orConditions,
         },
       });
@@ -72,44 +97,56 @@ export const productService = {
       }
     }
 
-    const product = await prisma.product.create({
-      data: {
-        name: cleanName,
-        sku: cleanSku,
-        barcode: cleanBarcode,
-        description: data.description ?? null,
-        cost: cost ?? 0,
-        price,
-        categoryId: data.categoryId || null,
-        supplierId: data.supplierId || null,
-        stock,
-        stockMin,
-      },
-      include: {
-        category: { select: { id: true, name: true } },
-        supplier: { select: { id: true, name: true } },
-      },
-    });
+    try {
+      return await prisma.$transaction(async (tx) => {
+        const product = await withProductUniqueness(() => tx.product.create({
+          data: {
+            name: cleanName,
+            sku: cleanSku,
+            barcode: cleanBarcode,
+            description: data.description ?? null,
+            cost: cost ?? 0,
+            price,
+            categoryId: data.categoryId || null,
+            supplierId: data.supplierId || null,
+            stock,
+            stockMin,
+          },
+          include: {
+            category: { select: { id: true, name: true } },
+            supplier: { select: { id: true, name: true } },
+          },
+        }));
 
-    if (data.imageUrl && data.imageUrl.trim() !== '') {
-      await prisma.productImage.create({
-        data: { productId: product.id, url: data.imageUrl.trim(), isPrimary: true, sortOrder: 1 },
+        if (data.imageUrl && data.imageUrl.trim() !== '') {
+          await tx.productImage.create({
+            data: { productId: product.id, url: data.imageUrl.trim(), isPrimary: true, sortOrder: 1 },
+          });
+        }
+
+        if (stock > 0 && tx.inventoryMovement && typeof tx.inventoryMovement.create === 'function') {
+          await tx.inventoryMovement.create({
+            data: {
+              productId: product.id,
+              type: 'in',
+              quantity: stock,
+              reason: 'Stock inicial de registro de producto',
+              userId: userId ?? null,
+            },
+          });
+        }
+
+        return product;
       });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        throw badRequest('El SKU o código de barras ya está registrado, incluso en un producto eliminado. Usa otro código.');
+      }
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') {
+        throw badRequest('La categoría o el proveedor seleccionado ya no existe. Actualiza la página y vuelve a seleccionar.');
+      }
+      throw error;
     }
-
-    if (stock > 0 && prisma.inventoryMovement && typeof prisma.inventoryMovement.create === 'function') {
-      await prisma.inventoryMovement.create({
-        data: {
-          productId: product.id,
-          type: 'in',
-          quantity: stock,
-          reason: 'Stock inicial de registro de producto (HU-001)',
-          userId: userId ?? null,
-        },
-      });
-    }
-
-    return product;
   },
 
   async update(
@@ -131,7 +168,7 @@ export const productService = {
 
     if (typeof prisma.product.findFirst === 'function') {
       const orConditions: any[] = [];
-      if (cleanName) orConditions.push({ name: { equals: cleanName, mode: 'insensitive' } });
+      if (cleanName) orConditions.push({ name: { equals: cleanName, mode: 'insensitive' }, deletedAt: null });
       if (cleanSku) orConditions.push({ sku: { equals: cleanSku, mode: 'insensitive' } });
       if (cleanBarcode) orConditions.push({ barcode: { equals: cleanBarcode, mode: 'insensitive' } });
 
@@ -139,7 +176,6 @@ export const productService = {
         const duplicate = await prisma.product.findFirst({
           where: {
             id: { not: id },
-            deletedAt: null,
             OR: orConditions,
           },
         });
@@ -154,62 +190,70 @@ export const productService = {
         ? await prisma.product.findUnique({ where: { id, deletedAt: null } })
         : null;
 
-    const product = await prisma.product.update({
-      where: { id, deletedAt: null },
-      data: {
-        ...(cleanName !== undefined ? { name: cleanName } : {}),
-        ...(cleanSku !== undefined ? { sku: cleanSku } : {}),
-        ...(cleanBarcode !== undefined ? { barcode: cleanBarcode } : {}),
-        ...(data.description !== undefined ? { description: data.description } : {}),
-        ...(data.cost !== undefined ? { cost: Number(data.cost) } : {}),
-        ...(data.price !== undefined ? { price: Number(data.price) } : {}),
-        ...(data.categoryId !== undefined ? { categoryId: data.categoryId || null } : {}),
-        ...(data.supplierId !== undefined ? { supplierId: data.supplierId || null } : {}),
-        ...(data.stock !== undefined ? { stock: Number(data.stock) } : {}),
-        ...(data.stockMin !== undefined ? { stockMin: Number(data.stockMin) } : {}),
-      },
-      include: {
-        category: { select: { id: true, name: true } },
-        supplier: { select: { id: true, name: true } },
-      },
-    });
+    try {
+      return await prisma.$transaction(async (tx) => {
+        const product = await withProductUniqueness(() => tx.product.update({
+          where: { id, deletedAt: null },
+          data: {
+            ...(cleanName !== undefined ? { name: cleanName } : {}),
+            ...(cleanSku !== undefined ? { sku: cleanSku } : {}),
+            ...(cleanBarcode !== undefined ? { barcode: cleanBarcode } : {}),
+            ...(data.description !== undefined ? { description: data.description } : {}),
+            ...(data.cost !== undefined ? { cost: Number(data.cost) } : {}),
+            ...(data.price !== undefined ? { price: Number(data.price) } : {}),
+            ...(data.categoryId !== undefined ? { categoryId: data.categoryId || null } : {}),
+            ...(data.supplierId !== undefined ? { supplierId: data.supplierId || null } : {}),
+            ...(data.stock !== undefined ? { stock: Number(data.stock) } : {}),
+            ...(data.stockMin !== undefined ? { stockMin: Number(data.stockMin) } : {}),
+          },
+          include: {
+            category: { select: { id: true, name: true } },
+            supplier: { select: { id: true, name: true } },
+          },
+        }));
 
-    // Si cambió el precio, registrar en PriceHistory (prepara HU-016 y HU-029)
-    if (
-      existing &&
-      data.price !== undefined &&
-      Number(existing.price) !== Number(data.price) &&
-      prisma.priceHistory &&
-      typeof prisma.priceHistory.create === 'function'
-    ) {
-      await prisma.priceHistory.create({
-        data: {
-          productId: id,
-          previousPrice: existing.price,
-          newPrice: Number(data.price),
-          userId: userId ?? null,
-        },
+        // Si cambió el precio, registrar en PriceHistory (prepara HU-016 y HU-029)
+        if (
+          existing &&
+          data.price !== undefined &&
+          Number(existing.price) !== Number(data.price) &&
+          tx.priceHistory &&
+          typeof tx.priceHistory.create === 'function'
+        ) {
+          await tx.priceHistory.create({
+            data: {
+              productId: id,
+              previousPrice: existing.price,
+              newPrice: Number(data.price),
+              userId: userId ?? null,
+            },
+          });
+        }
+
+        // Si mandan una nueva URL, reemplaza la imagen principal (upsert simple).
+        if (data.imageUrl && data.imageUrl.trim() !== '') {
+          const primary = await tx.productImage.findFirst({
+            where: { productId: id, isPrimary: true },
+          });
+          if (primary) {
+            await tx.productImage.update({
+              where: { id: primary.id },
+              data: { url: data.imageUrl.trim() },
+            });
+          } else {
+            await tx.productImage.create({
+              data: { productId: id, url: data.imageUrl.trim(), isPrimary: true, sortOrder: 1 },
+            });
+          }
+        }
+
+        return product;
       });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') throw badRequest(DUPLICATE_RULE_ALERT);
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2003') throw badRequest('La categoría o el proveedor seleccionado ya no existe.');
+      throw error;
     }
-
-    // Si mandan una nueva URL, reemplaza la imagen principal (upsert simple).
-    if (data.imageUrl && data.imageUrl.trim() !== '') {
-      const primary = await prisma.productImage.findFirst({
-        where: { productId: id, isPrimary: true },
-      });
-      if (primary) {
-        await prisma.productImage.update({
-          where: { id: primary.id },
-          data: { url: data.imageUrl.trim() },
-        });
-      } else {
-        await prisma.productImage.create({
-          data: { productId: id, url: data.imageUrl.trim(), isPrimary: true, sortOrder: 1 },
-        });
-      }
-    }
-
-    return product;
   },
 
   // C-05: borrado lógico. Se marca deletedAt en lugar de destruir el producto

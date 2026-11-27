@@ -1,15 +1,17 @@
+import AccountNav from '../../components/layout/AccountNav';
+import { shortReference } from '../../lib/reference';
 import {
   useEffect,
   useState,
 } from 'react';
 import {
-  employeeApi as api,
+  clientApi as api,
   money,
   date,
   labels,
-} from './employeeApi';
-import type { Job } from './employeeApi';
-import './Employee.css';
+} from '../Employee/employeeApi';
+import type { Job } from '../Employee/employeeApi';
+import '../Employee/Employee.css';
 
 export default function CustomerPickups() {
   const [orders, setOrders] = useState<Job[]>([]);
@@ -76,6 +78,7 @@ export default function CustomerPickups() {
 
   return (
     <main className="emp-shell">
+      <AccountNav />
       <h1>Mis retiros en tienda</h1>
 
       <p>
@@ -112,7 +115,7 @@ export default function CustomerPickups() {
           key={order.id}
         >
           <h2>
-            Pedido {order.id.slice(-6).toUpperCase()}
+            Pedido {shortReference(order.id)}
           </h2>
 
           <p>

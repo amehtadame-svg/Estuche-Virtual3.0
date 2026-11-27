@@ -10,8 +10,8 @@ import {
   assertStaff,
 } from './employee.domain';
 import { employeeService as service } from './employee.service';
-import { payoutService } from '../payout/payout.service';
 import * as schema from './employee.schema';
+import { registerStorePayment } from './store-payment.service';
 
 const router = Router();
 
@@ -37,39 +37,6 @@ router.use((_req, res, next) => {
   res.setHeader('Cache-Control', 'no-store');
   next();
 });
-
-router.get(
-  '/my-pickups',
-  asyncHandler(async (req, res) => {
-    res.setHeader('Cache-Control', 'no-store');
-
-    res.json(
-      await service.customerPickups(actor(req))
-    );
-  })
-);
-
-router.post(
-  '/orders/:id/pickup-code',
-  rateLimit({
-    windowMs: 60000,
-    limit: 10,
-  }),
-  validate({
-    params: uuidParam,
-  }),
-  asyncHandler(async (req, res) => {
-    empty.parse(req.body);
-    res.setHeader('Cache-Control', 'no-store');
-
-    res.json(
-      await service.issuePickupCode(
-        req.params.id,
-        actor(req)
-      )
-    );
-  })
-);
 
 router.use((req, _res, next) => {
   try {
@@ -120,29 +87,7 @@ for (
   );
 }
 
-router.get(
-  '/drivers',
-  asyncHandler(async (req, res) => {
-    res.json(
-      await service.people(
-        actor(req),
-        'delivery'
-      )
-    );
-  })
-);
 
-router.get(
-  '/employees',
-  asyncHandler(async (req, res) => {
-    res.json(
-      await service.people(
-        actor(req),
-        'employee'
-      )
-    );
-  })
-);
 
 router.get(
   '/orders',
@@ -153,6 +98,8 @@ router.get(
     if (!query.success) {
       throw badRequest('Consulta inválida.');
     }
+
+    if (query.data.scope === 'supervision') throw badRequest('Usa el módulo de supervisión.');
 
     res.json(
       await service.list(
@@ -211,6 +158,15 @@ router.post(
   })
 );
 
+router.post(
+  '/orders/:id/undo-preparation',
+  validate({ params: uuidParam }),
+  asyncHandler(async (req, res) => {
+    empty.parse(req.body);
+    res.json(await service.undoPreparation(req.params.id, actor(req)));
+  })
+);
+
 router.patch(
   '/orders/:id/picking',
   validate({
@@ -262,57 +218,7 @@ router.post(
   })
 );
 
-router.post(
-  '/orders/:id/resolve',
-  validate({
-    params: uuidParam,
-    body: schema.noteSchema,
-  }),
-  asyncHandler(async (req, res) => {
-    res.json(
-      await service.resolve(
-        req.params.id,
-        req.body.note,
-        actor(req)
-      )
-    );
-  })
-);
 
-router.post(
-  '/orders/:id/reassign',
-  validate({
-    params: uuidParam,
-    body: schema.reassignSchema,
-  }),
-  asyncHandler(async (req, res) => {
-    res.json(
-      await service.reassign(
-        req.params.id,
-        req.body.assigneeId,
-        req.body.note,
-        actor(req)
-      )
-    );
-  })
-);
-
-router.post(
-  '/orders/:id/dispatch',
-  validate({
-    params: uuidParam,
-    body: schema.dispatchSchema,
-  }),
-  asyncHandler(async (req, res) => {
-    res.json(
-      await service.dispatch(
-        req.params.id,
-        req.body.driverId,
-        actor(req)
-      )
-    );
-  })
-);
 
 router.post(
   '/orders/:id/pickup',
@@ -336,40 +242,9 @@ router.post(
   })
 );
 
-router.post(
-  '/orders/:id/cancel',
-  validate({
-    params: uuidParam,
-    body: schema.noteSchema,
-  }),
-  asyncHandler(async (req, res) => {
-    res.json(
-      await service.cancel(
-        req.params.id,
-        req.body.note,
-        actor(req)
-      )
-    );
-  })
-);
-
-router.post(
-  '/orders/:id/simulate-payment',
-  validate({
-    params: uuidParam,
-    body: schema.simulationSchema,
-  }),
-  asyncHandler(async (req, res) => {
-    res.json(
-      await payoutService.simulate(
-        req.params.id,
-        req.body.requestKey,
-        req.body.result,
-        actor(req)
-      )
-    );
-  })
-);
+router.post('/orders/:id/store-payment', validate({ params: uuidParam, body: schema.storePaymentSchema }), asyncHandler(async (req, res) => {
+  res.json(await registerStorePayment(req.params.id, req.body.requestKey, req.body.method, actor(req)));
+}));
 
 router.post(
   '/inventory',

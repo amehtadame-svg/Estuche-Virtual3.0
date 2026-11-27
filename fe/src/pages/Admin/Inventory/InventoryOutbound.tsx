@@ -1,7 +1,11 @@
-import { useState, useEffect, useMemo, type FormEvent } from 'react';
+import { referenceText } from '../../../lib/reference';
+import { useState, useEffect, useMemo, useRef, type FormEvent } from 'react';
 import { AlertTriangle, CheckCircle2, Package } from 'lucide-react';
-import { API, authHeaders } from '../../../api/api';
+import { useAuth } from '../../../hooks/useAuth';
+import Modal from '../../../components/ui/Modal';
 import { notify } from '../../../lib/notifications';
+import { API, authHeaders } from '../../../api/api';
+// Reutiliza el shell visual del módulo de inventario (tarjetas, tabla, inputs)
 import './InventoryInbound.css';
 import './InventoryOutbound.css';
 
@@ -48,23 +52,30 @@ const QUANTITY_ERROR_MSG = 'La cantidad a retirar debe ser un número entero may
 const REASON_ERROR_MSG = 'La justificación del retiro es obligatoria (mínimo 3 caracteres)';
 
 export default function InventoryOutbound() {
+  const { user } = useAuth();
+  const esSuperadmin = user?.role === 'superadmin';
+  const avisoAdministracion = user?.role === 'admin' || esSuperadmin;
   const [products, setProducts] = useState<ProductItem[]>([]);
   const [movements, setMovements] = useState<MovementRecord[]>([]);
   const [reasons, setReasons] = useState<string[]>(FALLBACK_REASONS);
   const [loading, setLoading] = useState(true);
 
+  // CA-003.1 · búsqueda y selección de producto
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProductId, setSelectedProductId] = useState('');
 
+  // CA-003.1 · datos del retiro
   const [quantity, setQuantity] = useState('');
   const [reasonType, setReasonType] = useState('');
   const [reasonDetail, setReasonDetail] = useState('');
 
+  // CA-003.4 · modal de confirmación previa
   const [showConfirm, setShowConfirm] = useState(false);
 
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const submittingRef = useRef(false);
 
   const loadData = async () => {
     setLoading(true);
@@ -103,13 +114,11 @@ export default function InventoryOutbound() {
   useEffect(() => {
     if (!showConfirm) return;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && !submitting) {
-        setShowConfirm(false);
-      }
+      if (event.key === 'Escape' && !submittingRef.current) setShowConfirm(false);
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [showConfirm, submitting]);
+  }, [showConfirm]);
 
   const filteredProducts = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -129,6 +138,8 @@ export default function InventoryOutbound() {
 
   const parsedQty = Number(quantity);
   const isQuantityValid = quantity.trim() !== '' && Number.isInteger(parsedQty) && parsedQty > 0;
+
+  // CA-003.3 · aviso preventivo cuando la cantidad excede el stock
   const exceedsStock = Boolean(selectedProduct) && isQuantityValid && parsedQty > selectedProduct!.stock;
   const isReasonValid = reasonType !== '' && reasonDetail.trim().length >= 3;
   const canSubmit = Boolean(selectedProduct) && isQuantityValid && !exceedsStock && isReasonValid;
@@ -136,6 +147,7 @@ export default function InventoryOutbound() {
   const handleSelectProduct = (prod: ProductItem) => {
     setSelectedProductId(prod.id);
     setError('');
+    setSuccessMsg('');
     setShowConfirm(false);
   };
 
@@ -144,13 +156,10 @@ export default function InventoryOutbound() {
     setShowConfirm(false);
   };
 
-  const closeConfirm = () => {
-    if (submitting) return;
-    setShowConfirm(false);
-  };
-
+  // CA-003.4 · el submit abre el modal, no llama al backend todavía
   const handlePreSubmit = (e: FormEvent) => {
     e.preventDefault();
+    setSuccessMsg('');
 
     if (!selectedProduct) {
       const msg = 'Selecciona primero un producto del catálogo para registrar la salida.';
@@ -176,13 +185,13 @@ export default function InventoryOutbound() {
     }
 
     setError('');
-    setSuccessMsg('');
     setShowConfirm(true);
   };
 
   const handleConfirm = async () => {
-    if (!selectedProduct) return;
+    if (!selectedProduct || submittingRef.current) return;
 
+    submittingRef.current = true;
     setSubmitting(true);
     setError('');
 
@@ -200,28 +209,40 @@ export default function InventoryOutbound() {
 
       if (!res.ok) {
         const errData = await res.json().catch(() => null);
-        const msg = errData?.message || 'No se pudo registrar la salida de mercancía.';
-        setError(msg);
-        notify.error(msg);
+        const labels: Record<string, string> = {
+          productId: 'Producto', quantity: 'Cantidad', reasonType: 'Motivo', reason: 'Justificación',
+        };
+        const details = Array.isArray(errData?.errors)
+          ? errData.errors
+              .filter((issue: { message?: unknown }) => typeof issue?.message === 'string')
+              .map((issue: { path?: (string | number)[]; message: string }) => {
+                const field = String(issue.path?.[0] ?? '');
+                return labels[field] ? `${labels[field]}: ${issue.message}` : issue.message;
+              })
+              .join(' · ')
+          : '';
+        setError(details || errData?.message || 'No se pudo registrar la salida de mercancía.');
         setShowConfirm(false);
         return;
       }
 
-      const data = await res.json();
+      const data = await res.json().catch(() => null);
+      const hasStocks = Number.isFinite(data?.previousStock) && Number.isFinite(data?.newStock);
       setShowConfirm(false);
-      const successText = `Salida confirmada: "${selectedProduct.name}" pasó de ${data.previousStock} a ${data.newStock} unidades (−${parsedQty}).`;
-      setSuccessMsg(successText);
-      notify.success(successText, 'Salida exitosa');
+      const successMessage = hasStocks
+        ? `Salida confirmada: "${selectedProduct.name}" pasó de ${data.previousStock} a ${data.newStock} unidades (−${parsedQty}).`
+        : `La salida de "${selectedProduct.name}" se registró correctamente.`;
+      if (avisoAdministracion) notify.success(successMessage, 'Salida registrada');
+      else setSuccessMsg(successMessage);
       setQuantity('');
       setReasonType('');
       setReasonDetail('');
       await loadData();
     } catch {
-      const msg = 'Error de conexión al registrar la salida de mercancía.';
-      setError(msg);
-      notify.error(msg);
+      setError('No se pudo confirmar la salida. Revisa el stock y los movimientos antes de intentarlo de nuevo.');
       setShowConfirm(false);
     } finally {
+      submittingRef.current = false;
       setSubmitting(false);
     }
   };
@@ -230,7 +251,7 @@ export default function InventoryOutbound() {
     selectedProduct?.images?.find((i) => i.isPrimary)?.url ?? selectedProduct?.images?.[0]?.url ?? '';
 
   return (
-    <div className="inbound-page">
+    <div className={`inbound-page ${esSuperadmin ? 'outbound-superadmin' : ''}`}>
       <div className="inbound-header">
         <div>
           <h1 className="inbound-title">Salida manual de productos</h1>
@@ -241,7 +262,7 @@ export default function InventoryOutbound() {
         </div>
       </div>
 
-      {successMsg && (
+      {successMsg && !avisoAdministracion && (
         <div className="inbound-alert-success" role="status">
           <CheckCircle2 size={16} aria-hidden="true" /> {successMsg}
         </div>
@@ -254,12 +275,14 @@ export default function InventoryOutbound() {
       )}
 
       <div className="inbound-grid">
+        {/* CA-003.1 · selección del producto a retirar */}
         <div className="inbound-card">
           <h2 className="inbound-card-title">1. Buscar y seleccionar producto</h2>
           <input
             type="text"
             className="inbound-input"
             placeholder="Escribe nombre, código SKU (ej. EV-001) o código de barras..."
+            maxLength={150}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -334,6 +357,7 @@ export default function InventoryOutbound() {
           )}
         </div>
 
+        {/* CA-003.1 · datos del retiro */}
         <form className="inbound-card" onSubmit={handlePreSubmit}>
           <h2 className="inbound-card-title">2. Datos de la salida</h2>
 
@@ -376,6 +400,7 @@ export default function InventoryOutbound() {
             className="inbound-input"
             rows={3}
             placeholder="Ej. Traslado de 10 cuadernos a la sede norte para reposición de vitrina"
+            maxLength={500}
             value={reasonDetail}
             onChange={(e) => {
               setReasonDetail(e.target.value);
@@ -383,7 +408,7 @@ export default function InventoryOutbound() {
             }}
           />
 
-          <button type="submit" className="inbound-submit-btn" disabled={!canSubmit || submitting}>
+          <button type="submit" className="outbound-submit-btn" disabled={!canSubmit || submitting}>
             {submitting ? 'Procesando salida...' : 'Procesar Salida'}
           </button>
 
@@ -395,8 +420,10 @@ export default function InventoryOutbound() {
         </form>
       </div>
 
+      {/* Bitácora de salidas manuales */}
       <div className="inbound-card inbound-history-card">
-        <h2 className="inbound-card-title">Salidas recientes</h2>
+        <h2 className="inbound-card-title">Historial de salidas</h2>
+        <p className="inbound-muted">Cada fila es un movimiento registrado, no un producto nuevo. Un mismo producto puede aparecer varias veces.</p>
         {movements.length === 0 ? (
           <p className="inbound-muted">Aún no se han registrado salidas de mercancía.</p>
         ) : (
@@ -424,7 +451,7 @@ export default function InventoryOutbound() {
                   <td>
                     <span className="outbound-qty-badge">−{m.quantity} uds.</span>
                   </td>
-                  <td>{m.reason || 'Salida manual'}</td>
+                  <td>{referenceText(m.reason) || 'Salida manual'}</td>
                   <td>{m.user?.fullName || 'Administrador'}</td>
                 </tr>
               ))}
@@ -433,15 +460,28 @@ export default function InventoryOutbound() {
         )}
       </div>
 
-      {showConfirm && selectedProduct && (
-        <div className="outbound-modal-backdrop" role="dialog" aria-modal="true">
-          <div className="outbound-modal">
-            <h3 className="outbound-modal-title">Confirmar salida de mercancía</h3>
+      {/* CA-003.4 · modal de confirmación previa */}
+      {showConfirm && selectedProduct && (avisoAdministracion ? (
+        <div className={`outbound-dialog ${submitting ? 'outbound-dialog-saving' : ''}`}>
+          <Modal
+            titulo="Confirmar salida de mercancía"
+            onClose={() => { if (!submittingRef.current) setShowConfirm(false); }}
+            footer={
+              <>
+                <button type="button" className="outbound-btn-cancel" onClick={() => setShowConfirm(false)} disabled={submitting}>
+                  Cancelar
+                </button>
+                <button type="button" className="outbound-btn-confirm" onClick={handleConfirm} disabled={submitting}>
+                  {submitting ? 'Procesando...' : 'Confirmar salida'}
+                </button>
+              </>
+            }
+          >
             <p className="outbound-modal-text">
               Esta acción descontará existencias de forma permanente. Revisa el resumen antes de continuar.
             </p>
 
-            <dl className="outbound-modal-list">
+            <dl className="outbound-modal-list outbound-confirm-summary">
               <div>
                 <dt>Producto</dt>
                 <dd>{selectedProduct.name}</dd>
@@ -472,27 +512,68 @@ export default function InventoryOutbound() {
               </div>
             </dl>
 
-            <footer className="confirm-delete-footer">
+          </Modal>
+        </div>
+      ) : (
+        <div className="outbound-modal-backdrop" role="dialog" aria-modal="true">
+          <div className="outbound-modal">
+            <h3 className="outbound-modal-title">Confirmar salida de mercancía</h3>
+            <p className="outbound-modal-text">
+              Esta acción descontará existencias de forma permanente. Revisa el resumen antes de continuar.
+            </p>
+
+            <dl className="outbound-modal-list outbound-confirm-summary">
+              <div>
+                <dt>Producto</dt>
+                <dd>{selectedProduct.name}</dd>
+              </div>
+              <div>
+                <dt>SKU</dt>
+                <dd>{selectedProduct.sku || '—'}</dd>
+              </div>
+              <div>
+                <dt>Cantidad a retirar</dt>
+                <dd>
+                  <strong>{parsedQty} uds.</strong>
+                </dd>
+              </div>
+              <div>
+                <dt>Motivo</dt>
+                <dd>{reasonType}</dd>
+              </div>
+              <div>
+                <dt>Justificación</dt>
+                <dd>{reasonDetail.trim()}</dd>
+              </div>
+              <div>
+                <dt>Stock resultante</dt>
+                <dd>
+                  {selectedProduct.stock} → <strong>{selectedProduct.stock - parsedQty} uds.</strong>
+                </dd>
+              </div>
+            </dl>
+
+            <div className="outbound-modal-actions" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <button
                 type="button"
-                className="confirm-delete-cancel"
-                onClick={closeConfirm}
+                className="outbound-btn-cancel"
+                onClick={() => setShowConfirm(false)}
                 disabled={submitting}
               >
                 Cancelar
               </button>
               <button
                 type="button"
-                className="outbound-confirm-submit"
+                className="outbound-btn-confirm"
                 onClick={handleConfirm}
                 disabled={submitting}
               >
                 {submitting ? 'Procesando...' : 'Confirmar salida'}
               </button>
-            </footer>
+            </div>
           </div>
         </div>
-      )}
+      ))}
     </div>
   );
 }

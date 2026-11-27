@@ -1,0 +1,738 @@
+Commit: 6af297a4651f204eeb6166b2b50279e24c90549f
+Node: v20.20.2
+pnpm: 10.12.4
+Comando: pnpm test
+
+> be@1.0.0 test /home/user/Estuche-Virtual3.0/be
+> node --test --require ts-node/register src/modules/*/*.test.ts src/lib/*.test.ts
+
+TAP version 13
+# Subtest: Teléfonos locales o con indicativo: 10 dígitos nacionales sin letras
+ok 1 - Teléfonos locales o con indicativo: 10 dígitos nacionales sin letras
+  ---
+  duration_ms: 19.652057
+  ...
+# Subtest: Motivo de devolución tiene un máximo de 50 caracteres
+ok 2 - Motivo de devolución tiene un máximo de 50 caracteres
+  ---
+  duration_ms: 1.564182
+  ...
+# Subtest: Reportes respetan el día calendario de Bogotá
+ok 3 - Reportes respetan el día calendario de Bogotá
+  ---
+  duration_ms: 7.994142
+  ...
+# Subtest: Productos rechazan importes o cantidades que exceden los límites de PostgreSQL
+ok 4 - Productos rechazan importes o cantidades que exceden los límites de PostgreSQL
+  ---
+  duration_ms: 2.911723
+  ...
+# Subtest: config: sin variables obligatorias lanza ConfigError con ambos mensajes
+ok 5 - config: sin variables obligatorias lanza ConfigError con ambos mensajes
+  ---
+  duration_ms: 3.963332
+  ...
+# Subtest: config: DATABASE_URL con esquema distinto a postgres es rechazada
+ok 6 - config: DATABASE_URL con esquema distinto a postgres es rechazada
+  ---
+  duration_ms: 0.274971
+  ...
+# Subtest: config: JWT_SECRET con menos de 32 caracteres es rechazado
+ok 7 - config: JWT_SECRET con menos de 32 caracteres es rechazado
+  ---
+  duration_ms: 0.315405
+  ...
+# Subtest: config: PORT inválido es rechazado
+ok 8 - config: PORT inválido es rechazado
+  ---
+  duration_ms: 0.158385
+  ...
+# Subtest: config: valores válidos producen la configuración esperada
+ok 9 - config: valores válidos producen la configuración esperada
+  ---
+  duration_ms: 0.734235
+  ...
+# Subtest: health: GET /api/health responde 200 con status ok (sin auth)
+ok 10 - health: GET /api/health responde 200 con status ok (sin auth)
+  ---
+  duration_ms: 11161.969057
+  ...
+# Subtest: IDs históricos de PostgreSQL son válidos en carrito, pago y rutas de recursos
+ok 11 - IDs históricos de PostgreSQL son válidos en carrito, pago y rutas de recursos
+  ---
+  duration_ms: 4.682227
+  ...
+# Subtest: Formato hexadecimal estricto: rechaza IDs incompletos, texto, SQL y tipos incorrectos
+ok 12 - Formato hexadecimal estricto: rechaza IDs incompletos, texto, SQL y tipos incorrectos
+  ---
+  duration_ms: 24.474233
+  ...
+# Subtest: La referencia de idempotencia sigue exigiendo UUID RFC, independiente del ID de producto
+ok 13 - La referencia de idempotencia sigue exigiendo UUID RFC, independiente del ID de producto
+  ---
+  duration_ms: 0.663393
+  ...
+# Subtest: Normaliza mayúsculas y detecta el mismo producto duplicado con distinta capitalización
+ok 14 - Normaliza mayúsculas y detecta el mismo producto duplicado con distinta capitalización
+  ---
+  duration_ms: 0.300237
+  ...
+# Subtest: Formularios administrativos aceptan identificadores históricos sin admitir texto arbitrario
+ok 15 - Formularios administrativos aceptan identificadores históricos sin admitir texto arbitrario
+  ---
+  duration_ms: 31.994444
+  ...
+# Subtest: Domicilio de 10000 COP, gratis desde 120000; carrito vacío y retiro no pagan envío
+ok 16 - Domicilio de 10000 COP, gratis desde 120000; carrito vacío y retiro no pagan envío
+  ---
+  duration_ms: 1.187812
+  ...
+# Subtest: C-06/RNF-001.4: un origen de la lista blanca recibe Access-Control-Allow-Origin
+ok 17 - C-06/RNF-001.4: un origen de la lista blanca recibe Access-Control-Allow-Origin
+  ---
+  duration_ms: 85.779544
+  ...
+# Subtest: C-06/RNF-001.4: un origen ajeno NO recibe Access-Control-Allow-Origin (nada de comodín)
+ok 18 - C-06/RNF-001.4: un origen ajeno NO recibe Access-Control-Allow-Origin (nada de comodín)
+  ---
+  duration_ms: 7.1676
+  ...
+# Subtest: C-06: helmet añade cabeceras de seguridad HTTP
+ok 19 - C-06: helmet añade cabeceras de seguridad HTTP
+  ---
+  duration_ms: 20.363629
+  ...
+# Subtest: C-06/RNF-001.3: /api/auth limita peticiones por IP y responde 429 al superar el límite
+ok 20 - C-06/RNF-001.3: /api/auth limita peticiones por IP y responde 429 al superar el límite
+  ---
+  duration_ms: 119.241044
+  ...
+# Subtest: C-06: el .env-example documenta CORS_ORIGINS
+ok 21 - C-06: el .env-example documenta CORS_ORIGINS
+  ---
+  duration_ms: 6.182321
+  ...
+# Subtest: C-04: el .env-example publica JWT_SECRET y no JWT_ACCESS_SECRET
+ok 22 - C-04: el .env-example publica JWT_SECRET y no JWT_ACCESS_SECRET
+  ---
+  duration_ms: 1.39605
+  ...
+# Subtest: C-04: el código no referencia JWT_ACCESS_SECRET (firma y verificación usan la misma variable)
+ok 23 - C-04: el código no referencia JWT_ACCESS_SECRET (firma y verificación usan la misma variable)
+  ---
+  duration_ms: 0.259948
+  ...
+# Subtest: C-04: un token firmado con el secreto del .env-example pasa verifyToken
+ok 24 - C-04: un token firmado con el secreto del .env-example pasa verifyToken
+  ---
+  duration_ms: 2187.230625
+  ...
+# Subtest: C-04: un usuario inactivo recibe 401 aunque el token esté bien firmado (C-10)
+ok 25 - C-04: un usuario inactivo recibe 401 aunque el token esté bien firmado (C-10)
+  ---
+  duration_ms: 1.855461
+  ...
+# Subtest: Pedidos pendientes solo muestran información mínima de órdenes pagadas
+ok 26 - Pedidos pendientes solo muestran información mínima de órdenes pagadas
+  ---
+  duration_ms: 2.968544
+  ...
+# Subtest: Repartidor toma pedido empacado una vez; otro repartidor no puede tomarlo
+ok 27 - Repartidor toma pedido empacado una vez; otro repartidor no puede tomarlo
+  ---
+  duration_ms: 0.900883
+  ...
+# Subtest: No admite empleados, pedidos no empacados, retiros ni pagos sin evidencia
+ok 28 - No admite empleados, pedidos no empacados, retiros ni pagos sin evidencia
+  ---
+  duration_ms: 0.627354
+  ...
+# Subtest: Confirmar entrega exige repartidor asignado, pago y estado operativo; reintentar es idempotente
+ok 29 - Confirmar entrega exige repartidor asignado, pago y estado operativo; reintentar es idempotente
+  ---
+  duration_ms: 78.886595
+  ...
+# Subtest: Pedido y despacho aceptan direcciones de 255, 256 y 500 caracteres sin recortarlas
+ok 30 - Pedido y despacho aceptan direcciones de 255, 256 y 500 caracteres sin recortarlas
+  ---
+  duration_ms: 4.995948
+  ...
+# Subtest: Pedido, creación y edición de despacho rechazan direcciones de 501 caracteres
+ok 31 - Pedido, creación y edición de despacho rechazan direcciones de 501 caracteres
+  ---
+  duration_ms: 1.088326
+  ...
+# Subtest: El nuevo límite no hace obligatoria la dirección en los despachos generales
+ok 32 - El nuevo límite no hace obligatoria la dirección en los despachos generales
+  ---
+  duration_ms: 0.161413
+  ...
+# Subtest: Empleado no hereda permisos de supervisión y cliente no es personal
+ok 33 - Empleado no hereda permisos de supervisión y cliente no es personal
+  ---
+  duration_ms: 1.462432
+  ...
+# Subtest: La simulación está cerrada por defecto y también en producción con bandera activa
+ok 34 - La simulación está cerrada por defecto y también en producción con bandera activa
+  ---
+  duration_ms: 0.30263
+  ...
+# Subtest: Recibo pagado sin evidencia no habilita; pago incompleto o reembolsado tampoco
+ok 35 - Recibo pagado sin evidencia no habilita; pago incompleto o reembolsado tampoco
+  ---
+  duration_ms: 0.645424
+  ...
+# Subtest: Esquemas de empleado no aceptan precios, costos, ni cantidades inválidas
+ok 36 - Esquemas de empleado no aceptan precios, costos, ni cantidades inválidas
+  ---
+  duration_ms: 3.363899
+  ...
+# Subtest: Las referencias de idempotencia comparan huellas de los datos
+ok 37 - Las referencias de idempotencia comparan huellas de los datos
+  ---
+  duration_ms: 0.359404
+  ...
+# Subtest: Empleado acepta identificadores históricos de PostgreSQL sin debilitar la clave de operación
+ok 38 - Empleado acepta identificadores históricos de PostgreSQL sin debilitar la clave de operación
+  ---
+  duration_ms: 1.692812
+  ...
+# Subtest: Fronteras HTTP separan cliente, supervisión, empleado y repartidor
+ok 39 - Fronteras HTTP separan cliente, supervisión, empleado y repartidor
+  ---
+  duration_ms: 294.828279
+  ...
+# Subtest: Pago en tienda valida referencia y medio; no acepta importes externos
+ok 40 - Pago en tienda valida referencia y medio; no acepta importes externos
+  ---
+  duration_ms: 3.36719
+  ...
+# Subtest: Pago en tienda crea evidencia y sincroniza recibo y pedido una sola vez
+ok 41 - Pago en tienda crea evidencia y sincroniza recibo y pedido una sola vez
+  ---
+  duration_ms: 2.520143
+  ...
+# Subtest: Solo personal autorizado puede registrar; supervisor puede registrar ajeno
+ok 42 - Solo personal autorizado puede registrar; supervisor puede registrar ajeno
+  ---
+  duration_ms: 0.676569
+  ...
+# Subtest: Rechaza reservas vencidas, pagos pendientes y recibos inconsistentes
+ok 43 - Rechaza reservas vencidas, pagos pendientes y recibos inconsistentes
+  ---
+  duration_ms: 0.564864
+  ...
+# Subtest: HU-003 (CA-003.1): rechaza cantidad inválida (0, negativa o decimal)
+ok 44 - HU-003 (CA-003.1): rechaza cantidad inválida (0, negativa o decimal)
+  ---
+  duration_ms: 1.832423
+  ...
+# Subtest: HU-003 (CA-003.1): exige el motivo del retiro y la justificación
+ok 45 - HU-003 (CA-003.1): exige el motivo del retiro y la justificación
+  ---
+  duration_ms: 0.295218
+  ...
+# Subtest: HU-003 (CA-003.2 y auditoría): descuenta stock 50 → 40 y crea movimiento type out
+ok 46 - HU-003 (CA-003.2 y auditoría): descuenta stock 50 → 40 y crea movimiento type out
+  ---
+  duration_ms: 1.144702
+  ...
+# Subtest: HU-003 (CA-003.3): bloquea la salida si excede el stock disponible
+ok 47 - HU-003 (CA-003.3): bloquea la salida si excede el stock disponible
+  ---
+  duration_ms: 0.294773
+  ...
+# Subtest: HU-003 (CA-003.3): permite retirar exactamente todo el stock (5 de 5 → 0)
+ok 48 - HU-003 (CA-003.3): permite retirar exactamente todo el stock (5 de 5 → 0)
+  ---
+  duration_ms: 0.250753
+  ...
+# Subtest: HU-003: rechaza producto inexistente o eliminado
+ok 49 - HU-003: rechaza producto inexistente o eliminado
+  ---
+  duration_ms: 0.240929
+  ...
+# Subtest: HU-002 (CA-002.3): rechaza cantidad menor o igual a cero o decimal
+ok 50 - HU-002 (CA-002.3): rechaza cantidad menor o igual a cero o decimal
+  ---
+  duration_ms: 1.801479
+  ...
+# Subtest: HU-002 (CA-002.2 y CA-002.4): suma stock atómicamente (15 + 25 = 40) y crea movimiento in
+ok 51 - HU-002 (CA-002.2 y CA-002.4): suma stock atómicamente (15 + 25 = 40) y crea movimiento in
+  ---
+  duration_ms: 14.504062
+  ...
+# Subtest: C-02: el total se calcula en el servidor (ignora total: 0 y unitPrice del cliente)
+ok 52 - C-02: el total se calcula en el servidor (ignora total: 0 y unitPrice del cliente)
+  ---
+  duration_ms: 2.463172
+  ...
+# Subtest: C-02: descuento porcentual se aplica sobre el total calculado por el servidor
+ok 53 - C-02: descuento porcentual se aplica sobre el total calculado por el servidor
+  ---
+  duration_ms: 0.416754
+  ...
+# Subtest: C-02: descuento fijo se aplica sobre el total calculado por el servidor
+ok 54 - C-02: descuento fijo se aplica sobre el total calculado por el servidor
+  ---
+  duration_ms: 0.259335
+  ...
+# Subtest: C-02: valida stock contra la BD antes de crear el pedido
+ok 55 - C-02: valida stock contra la BD antes de crear el pedido
+  ---
+  duration_ms: 0.621961
+  ...
+# Subtest: C-02: pedido sin detalles queda en cero (ningún precio del cliente)
+ok 56 - C-02: pedido sin detalles queda en cero (ningún precio del cliente)
+  ---
+  duration_ms: 0.179773
+  ...
+# Subtest: C-03: tras un pedido de 3 unidades el stock baja 3 (criterio HECHO CUANDO)
+ok 57 - C-03: tras un pedido de 3 unidades el stock baja 3 (criterio HECHO CUANDO)
+  ---
+  duration_ms: 0.246876
+  ...
+# Subtest: C-03: se registra un InventoryMovement por producto vendido (RF-016)
+ok 58 - C-03: se registra un InventoryMovement por producto vendido (RF-016)
+  ---
+  duration_ms: 0.302631
+  ...
+# Subtest: C-03: si el stock ya no alcanza al descontar (carrera), el pedido falla
+ok 59 - C-03: si el stock ya no alcanza al descontar (carrera), el pedido falla
+  ---
+  duration_ms: 0.271022
+  ...
+# Subtest: C-03: un pedido sin detalles no descuenta stock ni registra movimientos
+ok 60 - C-03: un pedido sin detalles no descuenta stock ni registra movimientos
+  ---
+  duration_ms: 0.32341
+  ...
+# Subtest: Las rutas de pedidos y recibos rechazan peticiones sin token
+ok 61 - Las rutas de pedidos y recibos rechazan peticiones sin token
+  ---
+  duration_ms: 73.449656
+  ...
+# Subtest: Un cliente autenticado no puede editar ni eliminar pedidos o recibos
+ok 62 - Un cliente autenticado no puede editar ni eliminar pedidos o recibos
+  ---
+  duration_ms: 23.663294
+  ...
+# Subtest: El listado de cliente se filtra por propietario
+ok 63 - El listado de cliente se filtra por propietario
+  ---
+  duration_ms: 1.278562
+  ...
+# Subtest: No se puede consultar un pedido ajeno
+ok 64 - No se puede consultar un pedido ajeno
+  ---
+  duration_ms: 0.749048
+  ...
+# Subtest: Empleado no hereda permisos de pedidos
+ok 65 - Empleado no hereda permisos de pedidos
+  ---
+  duration_ms: 0.317084
+  ...
+# Subtest: No se puede crear ni marcar un pedido pagado mediante el CRUD
+ok 66 - No se puede crear ni marcar un pedido pagado mediante el CRUD
+  ---
+  duration_ms: 0.480713
+  ...
+# Subtest: El rol vigente de BD prevalece sobre el rol antiguo del token
+ok 67 - El rol vigente de BD prevalece sobre el rol antiguo del token
+  ---
+  duration_ms: 2.31819
+  ...
+# Subtest: El detalle de pedido incluye productos y recibo sin exponer tokens de pago
+ok 68 - El detalle de pedido incluye productos y recibo sin exponer tokens de pago
+  ---
+  duration_ms: 0.361482
+  ...
+# Subtest: HTTP: consultar estado devuelve el pedido propio y rechaza pedidos ajenos o inexistentes
+ok 69 - HTTP: consultar estado devuelve el pedido propio y rechaza pedidos ajenos o inexistentes
+  ---
+  duration_ms: 34.70113
+  ...
+# Subtest: El esquema admite solo PSE, tarjeta y Nequi; rechaza precios, datos bancarios y carrito vacío
+ok 70 - El esquema admite solo PSE, tarjeta y Nequi; rechaza precios, datos bancarios y carrito vacío
+  ---
+  duration_ms: 6.646737
+  ...
+# Subtest: Simulación deshabilitada por defecto y siempre bloqueada en producción
+ok 71 - Simulación deshabilitada por defecto y siempre bloqueada en producción
+  ---
+  duration_ms: 1.127394
+  ...
+# Subtest: El empleado no puede usar el checkout de cliente
+ok 72 - El empleado no puede usar el checkout de cliente
+  ---
+  duration_ms: 0.284245
+  ...
+# Subtest: Calcula COP desde BD, envío de $10.000 y reserva pendiente sin marcar recibo pagado
+ok 73 - Calcula COP desde BD, envío de $10.000 y reserva pendiente sin marcar recibo pagado
+  ---
+  duration_ms: 2.154742
+  ...
+# Subtest: Aprobación pse: confirma pago, recibo y pedido de forma consistente
+ok 74 - Aprobación pse: confirma pago, recibo y pedido de forma consistente
+  ---
+  duration_ms: 1.12132
+  ...
+# Subtest: Aprobación tarjeta: confirma pago, recibo y pedido de forma consistente
+ok 75 - Aprobación tarjeta: confirma pago, recibo y pedido de forma consistente
+  ---
+  duration_ms: 0.626148
+  ...
+# Subtest: Aprobación nequi: confirma pago, recibo y pedido de forma consistente
+ok 76 - Aprobación nequi: confirma pago, recibo y pedido de forma consistente
+  ---
+  duration_ms: 0.61719
+  ...
+# Subtest: Rechazo: cancela pedido y libera inventario una sola vez
+ok 77 - Rechazo: cancela pedido y libera inventario una sola vez
+  ---
+  duration_ms: 1.207038
+  ...
+# Subtest: Una referencia repetida no crea otro pedido ni descuenta stock otra vez
+ok 78 - Una referencia repetida no crea otro pedido ni descuenta stock otra vez
+  ---
+  duration_ms: 1.454327
+  ...
+# Subtest: Solo el propietario puede recuperar, reutilizar o resolver el pago
+ok 79 - Solo el propietario puede recuperar, reutilizar o resolver el pago
+  ---
+  duration_ms: 1.316275
+  ...
+# Subtest: Un pendiente puede aprobarse; una segunda confirmación no duplica movimientos
+ok 80 - Un pendiente puede aprobarse; una segunda confirmación no duplica movimientos
+  ---
+  duration_ms: 1.064049
+  ...
+# Subtest: Bloquea reservas vencidas o canceladas y pagos de importe inconsistente
+ok 81 - Bloquea reservas vencidas o canceladas y pagos de importe inconsistente
+  ---
+  duration_ms: 1.907317
+  ...
+# Subtest: Stock insuficiente o carrera de inventario abortan la compra
+ok 82 - Stock insuficiente o carrera de inventario abortan la compra
+  ---
+  duration_ms: 0.493254
+  ...
+# Subtest: Un fallo del recibo revierte el pedido, stock y movimientos de la transacción
+ok 83 - Un fallo del recibo revierte el pedido, stock y movimientos de la transacción
+  ---
+  duration_ms: 0.609031
+  ...
+# Subtest: Valida descuento vigente y mínimo en servidor; consume un solo uso por referencia
+ok 84 - Valida descuento vigente y mínimo en servidor; consume un solo uso por referencia
+  ---
+  duration_ms: 1.49386
+  ...
+# Subtest: Rutas HTTP: exigen sesión, validan entradas y permiten al cliente completar una demo
+ok 85 - Rutas HTTP: exigen sesión, validan entradas y permiten al cliente completar una demo
+  ---
+  duration_ms: 104.599722
+  ...
+# Subtest: HTTP: un producto con UUID histórico puede agregarse al carrito, editarse y pagarse sin migrar su ID
+ok 86 - HTTP: un producto con UUID histórico puede agregarse al carrito, editarse y pagarse sin migrar su ID
+  ---
+  duration_ms: 25.687284
+  ...
+# Subtest: Rechazar un pendiente restaura carrito y stock una sola vez; consultar no cambia el resultado
+ok 87 - Rechazar un pendiente restaura carrito y stock una sola vez; consultar no cambia el resultado
+  ---
+  duration_ms: 0.745935
+  ...
+# Subtest: Después de un rechazo puede comprarse con otra referencia sin reutilizar el resultado anterior
+ok 88 - Después de un rechazo puede comprarse con otra referencia sin reutilizar el resultado anterior
+  ---
+  duration_ms: 0.641823
+  ...
+# Subtest: Un fallo restaurando carrito revierte el rechazo completo y permite confirmarlo después
+ok 89 - Un fallo restaurando carrito revierte el rechazo completo y permite confirmarlo después
+  ---
+  duration_ms: 0.563357
+  ...
+# Subtest: Envío del checkout para subtotal 119999: 10000 COP
+ok 90 - Envío del checkout para subtotal 119999: 10000 COP
+  ---
+  duration_ms: 0.655925
+  ...
+# Subtest: Envío del checkout para subtotal 120000: 0 COP
+ok 91 - Envío del checkout para subtotal 120000: 0 COP
+  ---
+  duration_ms: 0.255825
+  ...
+# Subtest: Envío del checkout para subtotal 120001: 0 COP
+ok 92 - Envío del checkout para subtotal 120001: 0 COP
+  ---
+  duration_ms: 0.194737
+  ...
+# Subtest: El cupón no descuenta el domicilio ni elimina el beneficio de envío gratis
+ok 93 - El cupón no descuenta el domicilio ni elimina el beneficio de envío gratis
+  ---
+  duration_ms: 0.432227
+  ...
+# Subtest: Un descuento fijo mayor al subtotal nunca produce un envío negativo
+ok 94 - Un descuento fijo mayor al subtotal nunca produce un envío negativo
+  ---
+  duration_ms: 0.334979
+  ...
+# Subtest: Dos solicitudes simultáneas del mismo PQR crean una sola fila bajo bloqueo por cliente
+ok 95 - Dos solicitudes simultáneas del mismo PQR crean una sola fila bajo bloqueo por cliente
+  ---
+  duration_ms: 3.38982
+  ...
+# Subtest: Bloquea el mismo contenido aunque cambien espacios/mayúsculas y haya pasado el minuto
+ok 96 - Bloquea el mismo contenido aunque cambien espacios/mayúsculas y haya pasado el minuto
+  ---
+  duration_ms: 0.991643
+  ...
+# Subtest: Un PQR diferente exige un minuto; después del minuto se permite sin afectar a otro cliente
+ok 97 - Un PQR diferente exige un minuto; después del minuto se permite sin afectar a otro cliente
+  ---
+  duration_ms: 0.801219
+  ...
+# Subtest: HTTP: el límite persiste en servidor, informa Retry-After y mantiene duplicados en 409
+ok 98 - HTTP: el límite persiste en servidor, informa Retry-After y mantiene duplicados en 409
+  ---
+  duration_ms: 238.575789
+  ...
+# Subtest: C-01: las rutas protegidas responden 401 sin token
+ok 99 - C-01: las rutas protegidas responden 401 sin token
+  ---
+  duration_ms: 82.51316
+  ...
+# Subtest: C-01: las rutas protegidas responden 401 con token inválido
+ok 100 - C-01: las rutas protegidas responden 401 con token inválido
+  ---
+  duration_ms: 41.111295
+  ...
+# Subtest: C-01: GET /api/products sigue siendo público (catálogo sin sesión)
+ok 101 - C-01: GET /api/products sigue siendo público (catálogo sin sesión)
+  ---
+  duration_ms: 4.811415
+  ...
+# Subtest: HU-001 (CA-001.2): rechaza precio <= 0, costo <= 0 o stock < 0
+ok 102 - HU-001 (CA-001.2): rechaza precio <= 0, costo <= 0 o stock < 0
+  ---
+  duration_ms: 1.011413
+  ...
+# Subtest: HU-001 (CA-001.3): rechaza producto duplicado por SKU, código de barras o nombre
+ok 103 - HU-001 (CA-001.3): rechaza producto duplicado por SKU, código de barras o nombre
+  ---
+  duration_ms: 0.51201
+  ...
+# Subtest: HU-001 (CA-001.4): crea producto con SKU, código de barras, costo, categoría y movimiento inicial
+ok 104 - HU-001 (CA-001.4): crea producto con SKU, código de barras, costo, categoría y movimiento inicial
+  ---
+  duration_ms: 0.572548
+  ...
+# Subtest: Un fallo en el movimiento inicial revierte la creación del producto
+ok 105 - Un fallo en el movimiento inicial revierte la creación del producto
+  ---
+  duration_ms: 0.448732
+  ...
+# Subtest: La búsqueda de SKU y código de barras incluye productos eliminados
+ok 106 - La búsqueda de SKU y código de barras incluye productos eliminados
+  ---
+  duration_ms: 0.810148
+  ...
+# Subtest: Valida cupón ignorando espacios y mayúsculas, sin consumir usos
+ok 107 - Valida cupón ignorando espacios y mayúsculas, sin consumir usos
+  ---
+  duration_ms: 2.584095
+  ...
+# Subtest: Un cupón inexistente es un error de negocio 400, no un endpoint 404
+ok 108 - Un cupón inexistente es un error de negocio 400, no un endpoint 404
+  ---
+  duration_ms: 0.704601
+  ...
+# Subtest: El último día del cupón sigue siendo válido durante todo el día UTC
+ok 109 - El último día del cupón sigue siendo válido durante todo el día UTC
+  ---
+  duration_ms: 0.23487
+  ...
+# Subtest: Rechaza cupón que incumple active
+ok 110 - Rechaza cupón que incumple active
+  ---
+  duration_ms: 0.341446
+  ...
+# Subtest: Rechaza cupón que incumple minPurchase
+ok 111 - Rechaza cupón que incumple minPurchase
+  ---
+  duration_ms: 3.64044
+  ...
+# Subtest: Rechaza cupón que incumple currentUses
+ok 112 - Rechaza cupón que incumple currentUses
+  ---
+  duration_ms: 0.263928
+  ...
+# Subtest: Rechaza cupón que incumple endDate
+ok 113 - Rechaza cupón que incumple endDate
+  ---
+  duration_ms: 0.312969
+  ...
+# Subtest: Rechaza cupón que incumple startDate
+ok 114 - Rechaza cupón que incumple startDate
+  ---
+  duration_ms: 0.236441
+  ...
+# Subtest: POST /api/promotional-codes/validate responde a un cliente autenticado
+ok 115 - POST /api/promotional-codes/validate responde a un cliente autenticado
+  ---
+  duration_ms: 254.318668
+  ...
+# Subtest: La cotización usa precios de BD, devuelve ahorro y envío; validar no consume usos
+ok 116 - La cotización usa precios de BD, devuelve ahorro y envío; validar no consume usos
+  ---
+  duration_ms: 1.778767
+  ...
+# Subtest: Un descuento no afecta el umbral de envío gratis ni excede el subtotal
+ok 117 - Un descuento no afecta el umbral de envío gratis ni excede el subtotal
+  ---
+  duration_ms: 0.559313
+  ...
+# Subtest: No cotiza productos eliminados ni cantidades sin stock
+ok 118 - No cotiza productos eliminados ni cantidades sin stock
+  ---
+  duration_ms: 0.261169
+  ...
+# Subtest: El recibo propio toma cliente, total y estado del servidor
+ok 119 - El recibo propio toma cliente, total y estado del servidor
+  ---
+  duration_ms: 1.785057
+  ...
+# Subtest: Un cliente no puede crear recibos de pedidos ajenos
+ok 120 - Un cliente no puede crear recibos de pedidos ajenos
+  ---
+  duration_ms: 0.563797
+  ...
+# Subtest: Un cliente no puede crear recibos sin pedido
+ok 121 - Un cliente no puede crear recibos sin pedido
+  ---
+  duration_ms: 0.269383
+  ...
+# Subtest: No se puede crear un recibo pagado desde la petición
+ok 122 - No se puede crear un recibo pagado desde la petición
+  ---
+  duration_ms: 0.161054
+  ...
+# Subtest: Pedido inexistente devuelve 404 al crear recibo
+ok 123 - Pedido inexistente devuelve 404 al crear recibo
+  ---
+  duration_ms: 0.276811
+  ...
+# Subtest: Editar un recibo ligado a pedido conserva el total del servidor
+ok 124 - Editar un recibo ligado a pedido conserva el total del servidor
+  ---
+  duration_ms: 0.475017
+  ...
+# Subtest: No se puede marcar un recibo pagado mediante edición
+ok 125 - No se puede marcar un recibo pagado mediante edición
+  ---
+  duration_ms: 0.189632
+  ...
+# Subtest: Un recibo con pagos no es editable
+ok 126 - Un recibo con pagos no es editable
+  ---
+  duration_ms: 0.283653
+  ...
+# Subtest: No se permite eliminar recibos
+ok 127 - No se permite eliminar recibos
+  ---
+  duration_ms: 0.351775
+  ...
+# Subtest: La devolución de cliente usa el propietario del pedido, no un customerId del navegador
+ok 128 - La devolución de cliente usa el propietario del pedido, no un customerId del navegador
+  ---
+  duration_ms: 2.169845
+  ...
+# Subtest: Rechaza pedidos ajenos, no entregados o cantidades ya solicitadas
+ok 129 - Rechaza pedidos ajenos, no entregados o cantidades ya solicitadas
+  ---
+  duration_ms: 0.866567
+  ...
+# Subtest: El listado y el detalle no revelan devoluciones de otros clientes
+ok 130 - El listado y el detalle no revelan devoluciones de otros clientes
+  ---
+  duration_ms: 0.892722
+  ...
+# Subtest: HTTP: solo superadmin puede resolver una devolución, el cliente no puede aprobar la suya
+ok 131 - HTTP: solo superadmin puede resolver una devolución, el cliente no puede aprobar la suya
+  ---
+  duration_ms: 60.451685
+  ...
+# Subtest: Esquemas de ayuda validan campos y evitan destinatarios arbitrarios
+ok 132 - Esquemas de ayuda validan campos y evitan destinatarios arbitrarios
+  ---
+  duration_ms: 3.493329
+  ...
+# Subtest: Empleado y administradores conversan; otros empleados y roles no ven la solicitud
+ok 133 - Empleado y administradores conversan; otros empleados y roles no ven la solicitud
+  ---
+  duration_ms: 1.403882
+  ...
+# Subtest: HU-018: GET /api/users exige token y rol administrador
+ok 134 - HU-018: GET /api/users exige token y rol administrador
+  ---
+  duration_ms: 1.318388
+  ...
+# Subtest: HU-018: crear usuario exige token (antes era público)
+ok 135 - HU-018: crear usuario exige token (antes era público)
+  ---
+  duration_ms: 0.143966
+  ...
+# Subtest: HU-018: cambiar rol exige token (antes era público)
+ok 136 - HU-018: cambiar rol exige token (antes era público)
+  ---
+  duration_ms: 0.110534
+  ...
+# Subtest: HU-018: editar usuario exige token (antes era público)
+ok 137 - HU-018: editar usuario exige token (antes era público)
+  ---
+  duration_ms: 0.129891
+  ...
+# Subtest: HU-018: eliminar usuario exige token y ser superadmin
+ok 138 - HU-018: eliminar usuario exige token y ser superadmin
+  ---
+  duration_ms: 0.110242
+  ...
+# Subtest: HU-018: preview-delete exige token y ser superadmin
+ok 139 - HU-018: preview-delete exige token y ser superadmin
+  ---
+  duration_ms: 0.1289
+  ...
+# Subtest: HU-018: activar/desactivar cuenta exige token y rol administrador
+ok 140 - HU-018: activar/desactivar cuenta exige token y rol administrador
+  ---
+  duration_ms: 0.149661
+  ...
+# Subtest: HU-018: ninguna ruta de usuarios queda sin verifyToken
+ok 141 - HU-018: ninguna ruta de usuarios queda sin verifyToken
+  ---
+  duration_ms: 0.644184
+  ...
+# Subtest: HU-018: el router expone las 9 rutas documentadas
+ok 142 - HU-018: el router expone las 9 rutas documentadas
+  ---
+  duration_ms: 0.396822
+  ...
+# Subtest: HU-018: verifyToken rechaza petición sin cabecera Authorization
+ok 143 - HU-018: verifyToken rechaza petición sin cabecera Authorization
+  ---
+  duration_ms: 0.348184
+  ...
+# Subtest: HU-018: verifyAdmin rechaza a un usuario con rol client
+ok 144 - HU-018: verifyAdmin rechaza a un usuario con rol client
+  ---
+  duration_ms: 0.274852
+  ...
+1..144
+# tests 144
+# suites 0
+# pass 144
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 132612.791377

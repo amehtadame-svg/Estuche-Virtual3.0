@@ -11,7 +11,8 @@ export default function Footer() {
   const isStaff =
     user?.role === "admin" ||
     user?.role === "superadmin" ||
-    user?.role === "employee";
+    user?.role === "employee" ||
+    user?.role === "delivery";
 
   const onSubmit = (event: FormEvent) => {
     event.preventDefault();
@@ -85,7 +86,7 @@ export default function Footer() {
             <Link to="/">Inicio</Link>
             <Link to="/Nosotros">Nosotros</Link>
             <Link to="/Contacto">Contáctanos</Link>
-            <Link to="/cliente">Seguimiento de envíos</Link>
+            <Link to="/mis-pedidos">Seguimiento de envíos</Link>
             <Link to="/Contacto">Devoluciones</Link>
             <Link to="/Contacto">Preguntas frecuentes</Link>
           </nav>

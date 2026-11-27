@@ -10,7 +10,7 @@
 
 ## Descripción
 
-El sistema debe permitir que los administradores y los proveedores inactiven productos del catálogo cuando ya no estén disponibles. La información permanecerá almacenada para mantener la integridad del historial de pedidos.
+El sistema debe permitir que los administradores inactiven productos del catálogo cuando ya no estén disponibles. La información permanecerá almacenada para mantener la integridad del historial de pedidos.
 
 ---
 
@@ -32,7 +32,7 @@ El sistema debe permitir que los administradores y los proveedores inactiven pro
 
 | ID | Regla |
 |----|--------|
-| RN-001 | Solo el proveedor propietario o un administrador podrán inactivar un producto. |
+| RN-001 | Solo un administrador autorizado podrá inactivar un producto. |
 | RN-002 | Los productos asociados a pedidos anteriores no serán eliminados físicamente de la base de datos. |
 | RN-003 | El sistema utilizará eliminación lógica (estado inactivo). |
 | RN-004 | Los productos inactivos no aparecerán en el catálogo público. |
