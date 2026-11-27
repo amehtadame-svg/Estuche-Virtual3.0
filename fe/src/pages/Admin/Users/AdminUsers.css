@@ -344,3 +344,45 @@
   background: rgba(107, 114, 128, 0.18);
   color: var(--muted);
 }
+/* Usuarios: títulos y datos alineados en seis columnas equilibradas. */
+@media (min-width: 601px) {
+  .usuarios-page { width: calc(100% - 48px); }
+  .usuarios-page .usuarios-table {
+    width: 100%;
+    min-width: 960px;
+    table-layout: fixed;
+  }
+  .usuarios-page .usuarios-table th { width: 16.666667%; }
+  .usuarios-page .usuarios-table th,
+  .usuarios-page .usuarios-table td {
+    box-sizing: border-box;
+    padding: 12px 8px;
+    text-align: center;
+    vertical-align: middle;
+  }
+  .usuarios-page .usr-acciones { justify-content: center; }
+}
+
+/* Los nombres y correos largos se conservan completos en varios renglones. */
+.usuarios-page .usuarios-table td:nth-child(2),
+.usuarios-page .usuarios-table td:nth-child(3) {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.usuarios-page .usuarios-table td:first-child { white-space: nowrap; }
+
+/* Botón superior más compacto y centrado con la columna Acciones. */
+@media (min-width: 601px) {
+  .usuarios-page .usr-btn-nuevo {
+    width: 144px;
+    height: 40px;
+    box-sizing: border-box;
+    padding: 8px 10px;
+    white-space: nowrap;
+  }
+}
+@media (min-width: 1008px) {
+  .usuarios-page .usr-btn-nuevo {
+    margin-right: calc((100% / 6 - 144px) / 2);
+  }
+}

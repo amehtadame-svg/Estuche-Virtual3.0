@@ -15,6 +15,7 @@ import {
 } from '../promotional-code/promotional-code.domain';
 import {
   badRequest,
+  conflict,
   forbidden,
   notFound,
 } from '../../lib/errors';
@@ -93,24 +94,53 @@ interface PricedLine {
 const ACTIVE_PRODUCT = { deletedAt: null } as const;
 
 export const orderService = {
-  list(requester: Requester) {
+  async list(requester: Requester, archived?: boolean) {
     assertOrderAccess(requester);
-
-    return prisma.order.findMany({
+    if (archived !== undefined && !isAdmin(requester)) throw forbidden();
+    const orders = await prisma.order.findMany({
       where: {
         deletedAt: null,
-        ...(
-          !isAdmin(requester)
-            ? {
-                customerId: requester.id,
-              }
-            : {}
-        ),
+        ...(!isAdmin(requester) ? { customerId: requester.id } : {}),
       },
-      include: LIST_INCLUDE,
-      orderBy: {
-        orderDate: 'desc',
+      include: {
+        ...LIST_INCLUDE,
+        events: {
+          where: { action: { in: ['admin_archived', 'admin_unarchived'] } },
+          select: { action: true },
+          orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+          take: 1,
+        },
       },
+      orderBy: { orderDate: 'desc' },
+    });
+    return orders
+      .filter((order) => archived === undefined || (order.events[0]?.action === 'admin_archived') === archived)
+      .map(({ events: _archiveEvents, ...order }) => order);
+  },
+
+  async setArchive(id: string, requester: Requester, archive: boolean) {
+    if (!isAdmin(requester)) throw forbidden();
+    return atomic(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM orders WHERE id = ${id}::uuid FOR UPDATE`;
+      const order = await tx.order.findUnique({ where: { id, deletedAt: null }, select: { id: true } });
+      if (!order) throw notFound('Pedido no encontrado.');
+      const previous = await tx.orderEvent.findFirst({
+        where: { orderId: id, action: { in: ['admin_archived', 'admin_unarchived'] } },
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        select: { action: true, createdAt: true },
+      });
+      const currentlyArchived = previous?.action === 'admin_archived';
+      if (currentlyArchived !== archive) {
+        // El bloqueo por pedido ordena las transiciones incluso entre usuarios concurrentes.
+        const nextTime = new Date(Math.max(Date.now(), previous ? previous.createdAt.getTime() + 1 : 0));
+        await tx.orderEvent.create({ data: {
+          orderId: id, actorId: requester.id,
+          action: archive ? 'admin_archived' : 'admin_unarchived',
+          note: archive ? 'Ocultado de la lista administrativa. Pedido y pagos conservados.' : 'Restaurado a la lista administrativa.',
+          createdAt: nextTime,
+        } });
+      }
+      return { archived: archive, sinCambios: currentlyArchived === archive };
     });
   },
 
@@ -423,36 +453,70 @@ export const orderService = {
       ...rest
     } = data;
 
-    if (status === 'paid') {
-      throw badRequest(
-        'El estado pagado solo puede establecerse desde el flujo de pagos.'
-      );
-    }
-
     return atomic(async (tx) => {
+      // Bloqueamos el pedido antes de comparar para no confirmar datos obsoletos.
+      await tx.$queryRaw`
+        SELECT id FROM orders WHERE id = ${id}::uuid FOR UPDATE
+      `;
+      const actual = await tx.order.findUnique({
+        where: { id, deletedAt: null },
+      });
+      if (!actual) throw notFound('Pedido no encontrado.');
+
+      const campos = [
+        'customerId', 'driverId', 'promotionalCodeId',
+        'deliveryAddressId', 'total', 'status',
+      ] as const;
+      const esCampoPermitido = (campo: string) =>
+        (campos as readonly string[]).includes(campo);
+      const sinCambios = Object.keys(data).every((campo) => {
+        if (!esCampoPermitido(campo)) return false;
+        const valor = data[campo];
+        if (valor === undefined) return true;
+        if (campo === 'total') {
+          return actual.total !== null &&
+            new Prisma.Decimal(valor).equals(actual.total);
+        }
+        return valor === actual[campo as Exclude<(typeof campos)[number], 'total'>];
+      });
+
+      if (sinCambios) {
+        // Confirmar una lectura idéntica no modifica historial, pagos ni stock.
+        return { ...actual, sinCambios: true };
+      }
+
+      if (actual.status === 'paid') {
+        throw conflict(
+          'Este pedido está pagado. Sus cambios requieren revisión en el flujo de pagos.'
+        );
+      }
+      if (status === 'paid') {
+        throw badRequest(
+          'El estado pagado solo puede establecerse desde el flujo de pagos.'
+        );
+      }
+
+      // Se mantiene la protección de los pedidos operativos si hay cambios reales.
       await assertUnmanaged(tx, id);
 
-      // A-05: cambiar el cupón desde la edición NO puede saltarse la
-      // validación (vigencia, estado, compra mínima, usos). Antes se guardaba
-      // cualquier `promotionalCodeId` que llegara en el cuerpo.
+      // ── A-05 (Franck): cambiar el cupón desde la edición NO puede saltarse
+      // la validación (vigencia, estado, compra mínima, usos). Se coloca
+      // después de las protecciones de Paula para no debilitar ninguna:
+      //  - si no hay cambios reales se devuelve `sinCambios` sin consumir nada;
+      //  - un pedido pagado o un pedido operativo se rechaza antes de llegar aquí.
+      // El `FOR UPDATE` de arriba ya bloquea el pedido.
       if (rest.promotionalCodeId) {
-        const order = await tx.order.findUnique({
-          where: { id, deletedAt: null },
-          include: {
-            details: { select: { unitPrice: true, quantity: true } },
-          },
-        });
-
-        if (!order) {
-          throw notFound('Pedido no encontrado.');
-        }
-
         // No se puede poner el mismo cupón dos veces (ni consumirlo de nuevo).
-        if (order.promotionalCodeId === rest.promotionalCodeId) {
+        if (actual.promotionalCodeId === rest.promotionalCodeId) {
           throw badRequest('Este pedido ya tiene ese cupón aplicado.');
         }
 
-        const subtotal = order.details.reduce(
+        const detalles = await tx.orderDetail.findMany({
+          where: { orderId: id },
+          select: { unitPrice: true, quantity: true },
+        });
+
+        const subtotal = detalles.reduce(
           (sum, line) =>
             sum.plus(new Prisma.Decimal(line.unitPrice).mul(line.quantity)),
           new Prisma.Decimal(0)
@@ -471,10 +535,9 @@ export const orderService = {
           0,
           subtotal.minus(couponDiscount(subtotal, promo))
         )
-          .plus(new Prisma.Decimal(order.shippingCost))
+          .plus(new Prisma.Decimal(actual.shippingCost))
           .toDecimalPlaces(2);
       }
-
       return tx.order.update({
         where: {
           id,

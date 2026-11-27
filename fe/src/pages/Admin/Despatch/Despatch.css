@@ -322,3 +322,192 @@
     margin-right: 6px;
   }
 }
+.envio-vistas { display: flex; justify-content: flex-end; margin: 0 0 12px; }
+.envio-vistas-boton { border: 1px solid var(--accent-border); border-radius: 10px; background: var(--accent-bg); color: var(--accent); padding: 9px 15px; font-weight: 600; cursor: pointer; }
+.envio-vista-ayuda { color: var(--text); font-size: 13px; margin: 0 0 16px; }
+.envio-acciones { display: inline-flex; gap: 8px; align-items: center; white-space: nowrap; }
+.envio-acciones .btn-editar-envio { margin-right: 0; }
+.envio-acciones .btn-eliminar-envio:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-bg); }
+.envio-vistas-boton:disabled, .envio-acciones button:disabled { opacity: .65; cursor: not-allowed; }
+@media (max-width: 600px) { .envio-vistas { justify-content: center; } }
+
+/* Cabecera y controles de archivo en una sección compacta. */
+.envios-page {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 18px;
+  row-gap: 16px;
+  align-items: center;
+}
+.envios-page > .envios-topbar {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  margin-bottom: 2px;
+  padding-top: 0;
+}
+.envios-page > .envio-vistas {
+  grid-column: 2;
+  grid-row: 2;
+  justify-content: flex-end;
+  margin: 0;
+}
+.envios-page > .envio-vista-ayuda {
+  grid-column: 1;
+  grid-row: 2;
+  min-width: 0;
+  margin: 0;
+  line-height: 1.5;
+}
+.envios-page > :not(.envios-topbar):not(.envio-vistas):not(.envio-vista-ayuda) {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+.envios-page > .mensaje-envios { margin: 0; }
+@media (max-width: 600px) {
+  .envios-page { grid-template-columns: minmax(0, 1fr); row-gap: 14px; }
+  .envios-page > .envios-topbar,
+  .envios-page > .envio-vistas,
+  .envios-page > .envio-vista-ayuda { grid-column: 1; grid-row: auto; }
+  .envios-page > .envio-vistas { justify-content: flex-start; }
+}
+.envios-page > .table-wrapper { width: 100%; overflow-x: auto; }
+.envios-page { align-content: start; }
+
+/* Controles alineados y estilo de archivados como en Pedidos. */
+.envios-page .btn-nuevo-envio,
+.envios-page .envio-vistas-boton {
+  width: 166px;
+  height: 42px;
+  box-sizing: border-box;
+}
+.envios-page .envio-vistas-boton {
+  padding: 6px 14px;
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius-sm);
+  background: var(--accent-bg);
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s;
+}
+.envios-page .envio-vistas-boton:hover:not(:disabled) { opacity: 0.8; }
+.envios-page .envio-vistas-boton:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+@media (max-width: 600px) {
+  .envios-page .btn-nuevo-envio,
+  .envios-page .envio-vistas-boton { width: 100%; }
+  .envios-page > .envio-vistas { width: 100%; }
+}
+
+/* Envíos: ocho columnas parejas y títulos alineados con sus datos. */
+@media (min-width: 601px) {
+  .envios-page .tabla-envios {
+    width: 100%;
+    min-width: 1200px;
+    table-layout: fixed;
+  }
+
+  .envios-page .tabla-envios thead th {
+    width: 12.5%;
+  }
+
+  .envios-page .tabla-envios th,
+  .envios-page .tabla-envios td {
+    box-sizing: border-box;
+    padding: 12px 8px;
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  .envios-page .tabla-envios td:nth-child(3),
+  .envios-page .tabla-envios td:nth-child(4) {
+    max-width: none;
+    white-space: normal;
+    overflow: visible;
+    overflow-wrap: anywhere;
+    line-height: 1.4;
+  }
+
+  .envios-page .tabla-envios td:nth-child(5),
+  .envios-page .tabla-envios td:nth-child(6) {
+    white-space: nowrap;
+  }
+
+  .envios-page .estado-select { max-width: 100%; }
+  .envios-page .envio-acciones { justify-content: center; gap: 6px; }
+  .envios-page .envio-acciones button { padding: 6px 8px; white-space: nowrap; }
+}
+
+@media (max-width: 600px) {
+  .envios-page .tabla-envios td:nth-child(4) {
+    max-width: none;
+    white-space: normal;
+    overflow: visible;
+    overflow-wrap: anywhere;
+  }
+}
+
+/* Botones superiores con el tamaño de «Ver archivados» de Pedidos. */
+@media (min-width: 601px) {
+  .envios-page .btn-nuevo-envio,
+  .envios-page .envio-vistas-boton {
+    width: max-content;
+    min-width: 138px;
+    height: 29px;
+    padding: 6px 10px;
+    box-sizing: border-box;
+    white-space: nowrap;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: normal;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+@media (min-width: 1248px) {
+  .envios-page > .envios-topbar {
+    display: grid;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 1fr);
+  }
+  .envios-page .btn-nuevo-envio { justify-self: center; }
+  .envios-page > .envio-vistas {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    display: grid;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 1fr);
+    pointer-events: none;
+    z-index: 1;
+  }
+  .envios-page .envio-vistas-boton { grid-column: 2; justify-self: center; pointer-events: auto; }
+}
+
+@media (min-width: 601px) {
+  .envios-page .tabla-envios td:last-child { padding-left: 2px; padding-right: 2px; }
+}
+
+/* Nuevo envío con el estilo de Nuevo proveedor; archivados más arriba. */
+.envios-page .btn-nuevo-envio {
+  height: auto;
+  min-height: 36px;
+  padding: 10px 20px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 600;
+}
+@media (min-width: 601px) {
+  .envios-page { row-gap: 8px; }
+}
+@media (min-width: 601px) and (max-width: 1247px) {
+  .envios-page { grid-template-columns: minmax(0, 1fr) 180px; }
+  .envios-page > .envios-topbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 180px;
+    column-gap: 0;
+  }
+  .envios-page .btn-nuevo-envio { justify-self: center; }
+  .envios-page > .envio-vistas { justify-content: center; }
+}
+@media (min-width: 1248px) {
+  .envios-page > .envios-topbar { column-gap: 0; }
+}

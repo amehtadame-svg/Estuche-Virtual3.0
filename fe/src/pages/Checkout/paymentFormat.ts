@@ -20,4 +20,3 @@ export function paymentErrorMessage(data: unknown): string {
   }
   return typeof body.message === 'string' ? body.message : 'No se pudo registrar el pago.';
 }
-

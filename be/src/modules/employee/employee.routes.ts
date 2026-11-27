@@ -158,6 +158,15 @@ router.post(
   })
 );
 
+router.post(
+  '/orders/:id/undo-preparation',
+  validate({ params: uuidParam }),
+  asyncHandler(async (req, res) => {
+    empty.parse(req.body);
+    res.json(await service.undoPreparation(req.params.id, actor(req)));
+  })
+);
+
 router.patch(
   '/orders/:id/picking',
   validate({

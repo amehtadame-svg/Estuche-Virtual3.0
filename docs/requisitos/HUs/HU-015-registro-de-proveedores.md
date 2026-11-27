@@ -1,0 +1,64 @@
+<!--
+  ¿Qué? Historia de usuario que describe el registro de proveedores del negocio.
+  ¿Para qué? Formalizar el directorio de proveedores utilizado para las compras de mercancía.
+  ¿Impacto? Es la base para vincular productos y compras con su origen comercial.
+-->
+
+# HU-015 — Registro de proveedores
+
+## Identificación
+
+| Campo | Valor |
+|-------|-------|
+| **ID** | HU-015 |
+| **Título** | Registro de proveedores |
+| **Módulo** | Proveedores |
+| **Prioridad** | Media |
+| **Estado** | Por Implementar |
+| **RF asociados** | RF-015|
+
+---
+
+## Historia
+
+**Como** administrador del negocio, encargado del departamento de compras o coordinador de la cadena de suministro, responsable del mantenimiento del directorio de socios comerciales,  
+**quiero** disponer de una sección administrativa de gestión de proveedores para dar de alta, editar y organizar fichas comerciales completas que capturen Razón Social, Identificación Fiscal única (RUC/NIT), persona de contacto principal, dirección física, números telefónicos, correo electrónico para facturación y condiciones comerciales acordadas,  
+**para** construir y centralizar un directorio formal de la cadena de abastecimiento del negocio, vincular cada recepción e ingreso de mercancía en almacén a su distribuidor de origen, facilitar la emisión de órdenes de compra, agilizar reclamos por garantías o devoluciones y tener trazabilidad total sobre las relaciones comerciales de la empresa.
+
+---
+
+## Criterios de Aceptación
+
+### CA-015.1 — Formulario de alta de nuevo proveedor
+- **Dado que** accedo al formulario de creación de proveedores (`/suppliers/new`),
+- **cuando** completo Razón Social, Identificación Fiscal (RUC/NIT), Persona de Contacto, Teléfono, Correo y Dirección Comercial,
+- **entonces** el sistema habilita el botón para guardar el registro.
+
+### CA-015.2 — Control de unicidad de la Identificación Fiscal
+- **Dado que** escribo una Identificación Fiscal (RUC/NIT) que ya pertenece a un proveedor previamente registrado,
+- **cuando** intento guardar el registro,
+- **entonces** el sistema detiene la operación informando: "Error: La identificación fiscal ingresada ya pertenece a un proveedor activo en la plataforma".
+
+### CA-015.3 — Validación de sintaxis en el correo electrónico
+- **Dado que** completo el campo de correo electrónico del proveedor,
+- **cuando** introduzco una cadena con formato inválido (ej. "correo_invalido"),
+- **entonces** el formulario resalta el campo indicando: "Debe ingresar una dirección de correo electrónico válida".
+
+### CA-015.4 — Confirmación de persistencia de proveedor
+- **Dado que** he completado todos los campos obligatorios con valores correctos,
+- **cuando** hago clic en "Guardar Proveedor",
+- **entonces** el registro se almacena en la base de datos y se muestra un mensaje confirmando el éxito de la operación.
+
+---
+
+## Endpoints
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| POST | `/api/v1/suppliers` | Guarda la información del nuevo proveedor |
+
+---
+
+## Notas técnicas
+
+- Entidad `Supplier` con campos únicos indexados en el número de identificación fiscal (`tax_id` o `RUC`/`NIT`).

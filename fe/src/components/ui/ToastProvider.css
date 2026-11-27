@@ -321,3 +321,45 @@
     width: 100%;
   }
 }
+
+/* Avisos y confirmaciones con la misma identidad visual de Gestión de Usuarios. */
+.notificaciones-superadmin .confirm-delete-dialog {
+  width: min(500px, 100%);
+  background: var(--bg, #fff);
+  border: 1px solid var(--accent-border, rgba(176, 38, 234, 0.28));
+  border-radius: 20px;
+}
+.notificaciones-superadmin .success-notice-dialog { border-top: 1px solid var(--accent-border, rgba(176, 38, 234, 0.28)); }
+.notificaciones-superadmin .confirm-delete-header { padding: 22px 24px; border-bottom-color: var(--accent-border); }
+.notificaciones-superadmin .confirm-delete-icon, .notificaciones-superadmin .success-notice-icon {
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--accent-border);
+  border-radius: 13px;
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+.notificaciones-superadmin .confirm-delete-header h2 { color: var(--text-h); font-size: 18px; }
+.notificaciones-superadmin .confirm-delete-body, .notificaciones-superadmin .success-notice-body { padding: 24px; }
+.notificaciones-superadmin .confirm-delete-message, .notificaciones-superadmin .success-notice-message {
+  color: var(--text-h);
+  font-size: 16px;
+  line-height: 1.55;
+}
+.notificaciones-superadmin .confirm-delete-note {
+  margin-top: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--accent-border);
+  border-radius: 14px;
+  background: var(--accent-bg);
+}
+.notificaciones-superadmin .confirm-delete-footer { padding: 0 24px 24px; border: 0; }
+.notificaciones-superadmin .confirm-delete-footer button { min-height: 44px; border-radius: 12px; }
+.notificaciones-superadmin .confirm-delete-submit {
+  border: 1px solid var(--accent-border);
+  background: var(--gradient-accent);
+  color: var(--on-accent, #fff);
+}
+.notificaciones-superadmin .confirm-delete-submit:hover { background: var(--gradient-accent); border-color: var(--accent); opacity: 0.88; }
+.notificaciones-superadmin .confirm-delete-dialog button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
