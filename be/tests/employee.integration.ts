@@ -425,16 +425,16 @@ test(
       await t.test(
         'La edición general no altera un pedido operativo ni sus detalles o recibo',
         async () => {
+          const edit = await request(
+            'admin',
+            `/orders/${pickupOrder.id}`,
+            { total: 1 },
+            'PUT'
+          );
           assert.equal(
-            (
-              await request(
-                'admin',
-                `/orders/${pickupOrder.id}`,
-                { total: 1 },
-                'PUT'
-              )
-            ).status,
-            409
+            edit.status,
+            409,
+            `esperaba 409 (pedido operativo), recibí ${edit.status}: ${JSON.stringify(edit.body)}`
           );
 
           assert.equal(
