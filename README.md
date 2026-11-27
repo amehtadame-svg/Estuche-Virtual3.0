@@ -104,10 +104,10 @@ Consulta el [índice documental](docs/README.md).
 
 ### Evidencias y límites de la entrega
 
-- [Matriz de criterios](docs/matriz-evidencias.md): transcripción de 14 puntos; la foto original no está disponible para cotejo.
+- [Matriz de criterios](docs/matriz-evidencias.md) y [plan de cierre](docs/PLAN_CIERRE_CRITERIOS.md): evidencias verificadas y trabajo pendiente para los 14 puntos.
 - [Modelos y revisión pendiente](docs/MODELOS_Y_VALIDACION.md) y [API de operaciones principales](docs/API.md).
 - [Guía de instalación y despliegue](docs/INSTALACION_Y_DESPLIEGUE.md): Compose es de desarrollo y ejecuta migraciones sobre la base configurada. Verificar destino y respaldo antes de arrancar.
-- [Plan de pruebas](docs/PLAN_PRUEBAS.md), [resultados reales de `6af297a`](docs/evidencias/pruebas/README.md) y [hallazgos locales](docs/REGISTRO_DEFECTOS.md). Backend 144/144, frontend 42/42 e integración aislada 40/40; lint con 5 advertencias. No equivalen a aceptación del equipo.
+- [Plan de pruebas](docs/PLAN_PRUEBAS.md), [25 casos unitarios aislados](docs/evidencias/pruebas/unitarias-rubrica-2026-11-27.md), [resultados históricos de `6af297a`](docs/evidencias/pruebas/README.md) y [hallazgos locales](docs/REGISTRO_DEFECTOS.md). Las ejecuciones identifican su versión y no equivalen a aceptación del equipo.
 - [Scrum: propuestas y evidencia pendiente](docs/scrum/README.md); [guion de 15 minutos](docs/GUION_PRESENTACION.md).
 
 El checkout es una **simulación académica** sin cobro bancario; el pago en tienda es un registro separado. Los diagramas de datos son parciales. Franck, Paula y Cristian aún deben validar sus respectivas áreas; no se ha acreditado un despliegue ni recorrido completo de interfaz.
@@ -131,6 +131,24 @@ Guía técnica de desarrollo, variables, pruebas y precauciones de despliegue (v
 - Informe histórico de pruebas (102 pruebas, otro commit): **[docs/INFORME_PRUEBAS.md](./docs/INFORME_PRUEBAS.md)**
 - Auditoría de seguridad y rotación de credenciales: **[docs/SEGURIDAD_ENTORNO.md](./docs/SEGURIDAD_ENTORNO.md)**
 - Reglas del equipo (RT/RH): **[docs/restricciones.md](./docs/restricciones.md)**
+
+---
+
+## Pruebas
+
+Con dependencias instaladas, ejecuta desde cada carpeta:
+
+```bash
+cd be
+pnpm exec prisma generate    # necesita el motor de Prisma disponible
+pnpm test                    # suite backend, incluidos los 25 casos unitarios aislados
+cd ../fe
+pnpm lint
+pnpm build
+pnpm test                    # Node 22
+```
+
+Para integración, usa exclusivamente una base PostgreSQL de pruebas separada y revisa sus variables antes de aplicar migraciones: consulta el [plan de pruebas](docs/PLAN_PRUEBAS.md) y la [guía](docs/INSTALACION_Y_DESPLIEGUE.md). La [evidencia de los 25 casos](docs/evidencias/pruebas/unitarias-rubrica-2026-11-27.md) identifica exactamente los cambios ejecutados; el [plan de cierre](docs/PLAN_CIERRE_CRITERIOS.md) describe los resultados y límites de esta revisión.
 
 ---
 
