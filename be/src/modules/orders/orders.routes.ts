@@ -13,6 +13,8 @@ import {
   createOrder,
   updateOrder,
   deleteOrder,
+  archiveOrder,
+  unarchiveOrder,
   applyPromotionalCode,
 } from './orders.controller';
 
@@ -40,6 +42,10 @@ router.put(
   validate({ params: uuidParam, body: updateOrderSchema }),
   updateOrder
 );
+
+// Archivar solo cambia la visibilidad administrativa; no cancela ni borra el pedido.
+router.post('/:id/archive', verifyAdmin, validate({ params: uuidParam }), archiveOrder);
+router.post('/:id/unarchive', verifyAdmin, validate({ params: uuidParam }), unarchiveOrder);
 
 router.delete(
   '/:id',

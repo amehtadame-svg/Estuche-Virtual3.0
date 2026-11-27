@@ -68,24 +68,53 @@ const LIST_INCLUDE = {
 } as const;
 
 export const orderService = {
-  list(requester: Requester) {
+  async list(requester: Requester, archived?: boolean) {
     assertOrderAccess(requester);
-
-    return prisma.order.findMany({
+    if (archived !== undefined && !isAdmin(requester)) throw forbidden();
+    const orders = await prisma.order.findMany({
       where: {
         deletedAt: null,
-        ...(
-          !isAdmin(requester)
-            ? {
-                customerId: requester.id,
-              }
-            : {}
-        ),
+        ...(!isAdmin(requester) ? { customerId: requester.id } : {}),
       },
-      include: LIST_INCLUDE,
-      orderBy: {
-        orderDate: 'desc',
+      include: {
+        ...LIST_INCLUDE,
+        events: {
+          where: { action: { in: ['admin_archived', 'admin_unarchived'] } },
+          select: { action: true },
+          orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+          take: 1,
+        },
       },
+      orderBy: { orderDate: 'desc' },
+    });
+    return orders
+      .filter((order) => archived === undefined || (order.events[0]?.action === 'admin_archived') === archived)
+      .map(({ events: _archiveEvents, ...order }) => order);
+  },
+
+  async setArchive(id: string, requester: Requester, archive: boolean) {
+    if (!isAdmin(requester)) throw forbidden();
+    return atomic(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM orders WHERE id = ${id}::uuid FOR UPDATE`;
+      const order = await tx.order.findUnique({ where: { id, deletedAt: null }, select: { id: true } });
+      if (!order) throw notFound('Pedido no encontrado.');
+      const previous = await tx.orderEvent.findFirst({
+        where: { orderId: id, action: { in: ['admin_archived', 'admin_unarchived'] } },
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        select: { action: true, createdAt: true },
+      });
+      const currentlyArchived = previous?.action === 'admin_archived';
+      if (currentlyArchived !== archive) {
+        // El bloqueo por pedido ordena las transiciones incluso entre usuarios concurrentes.
+        const nextTime = new Date(Math.max(Date.now(), previous ? previous.createdAt.getTime() + 1 : 0));
+        await tx.orderEvent.create({ data: {
+          orderId: id, actorId: requester.id,
+          action: archive ? 'admin_archived' : 'admin_unarchived',
+          note: archive ? 'Ocultado de la lista administrativa. Pedido y pagos conservados.' : 'Restaurado a la lista administrativa.',
+          createdAt: nextTime,
+        } });
+      }
+      return { archived: archive, sinCambios: currentlyArchived === archive };
     });
   },
 

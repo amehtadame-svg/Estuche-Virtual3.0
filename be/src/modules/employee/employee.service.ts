@@ -693,6 +693,31 @@ export const employeeService = {
     });
   },
 
+  // Devuelve un pedido a Pagado sin modificar sus pagos ni inventario.
+  async undoPreparation(id: string, actor: Actor) {
+    assertSupervisor(actor);
+    return atomic(async (tx) => {
+      const order = await lockOrder(tx, id);
+      if (order.status !== 'preparing' || !order.work || order.work.status !== 'picking' ||
+          order.work.packedAt || order.work.completedAt || order.work.pickupCodeHash || order.work.incident) {
+        throw conflict('Solo se puede deshacer una preparación activa que aún no esté empacada.');
+      }
+      if (order.stockReleasedAt || !financiallyPaid(order) || !order.details.length) {
+        throw conflict('El pago o la reserva requieren revisión antes de deshacer la preparación.');
+      }
+      if (order.details.some((item) => item.pickedQuantity !== 0)) {
+        throw conflict('La recogida ya comenzó. Revisa el pedido en Operaciones antes de deshacer la preparación.');
+      }
+      if (await tx.despatch.count({ where: { orderId: id } })) {
+        throw conflict('El pedido tiene un envío registrado. No se puede deshacer la preparación.');
+      }
+      await tx.orderWork.delete({ where: { orderId: id } });
+      await tx.order.update({ where: { id }, data: { status: 'paid' } });
+      await event(tx, id, actor.id, 'preparation_undone', `Preparación deshecha; responsable anterior: ${order.work.assigneeId}. Pago e inventario conservados.`);
+      return { message: 'Preparación deshecha. El pedido vuelve a Pagado.' };
+    });
+  },
+
   async picking(
     id: string,
     items: {

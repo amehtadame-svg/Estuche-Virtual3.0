@@ -1,9 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import Modal from '../../../components/ui/Modal';
-import { API, authHeaders } from '../../../api/api';
-import { runDeleteAction } from '../../../lib/deleteAction';
+import { API, BASE, authHeaders } from '../../../api/api';
 import { runApiAction } from '../../../lib/apiAction';
-import { notify } from '../../../lib/notifications';
+import { notify, requestConfirmation } from '../../../lib/notifications';
 import { useAuth } from '../../../hooks/useAuth';
 import '../../../components/ui/ToastProvider.css';
 import './Orders.css';
@@ -13,6 +12,16 @@ const statusTone: Record<string, string> = {
   shipped: 'tone-warning',
   delivered: 'tone-success',
   canceled: 'tone-danger',
+};
+
+const orderStatusText: Record<string, string> = {
+  pending: 'pendiente',
+  paid: 'pagado',
+  preparing: 'en preparación',
+  shipped: 'en camino',
+  delivered: 'entregado',
+  canceled: 'cancelado',
+  returned: 'devuelto',
 };
 
 const emptyForm = {
@@ -49,9 +58,16 @@ export default function Orders() {
   const [message, setMessage] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [saveErrorNotice, setSaveErrorNotice] = useState<string | null>(null);
+  const [claimOrder, setClaimOrder] = useState<{ id: string; fromForm: boolean; action: 'claim' | 'undo' } | null>(null);
+  const [claiming, setClaiming] = useState(false);
+  const claimingRef = useRef(false);
+  const [saveErrorNotice, setSaveErrorNotice] = useState<{ title: string; message: string } | null>(null);
   const savingRef = useRef(false);
   const [loading, setLoading] = useState(true);
+  const [showArchived, setShowArchived] = useState(false);
+  const showArchivedRef = useRef(false);
+  const archiveRequests = useRef(new Set<string>());
+  const listRequest = useRef(0);
   const [discountCode, setDiscountCode] = useState('');
   const [discountApplied, setDiscountApplied] = useState<string | null>(null);
   const editingOrder = editingId === null
@@ -59,16 +75,24 @@ export default function Orders() {
     : orders.find((order) => order.id === editingId);
   const isPaidOrder = editingOrder?.status === 'paid';
 
-  const loadOrders = () => {
-    fetch(API.orders, { headers: authHeaders() })
-      .then((r) => r.json())
-      .then((data) => {
-        setOrders(data);
-        setLoading(false);
+  const loadOrders = (archived = showArchived) => {
+    const request = ++listRequest.current;
+    setLoading(true);
+    fetch(`${API.orders}?archived=${archived ? 'true' : 'false'}`, { headers: authHeaders() })
+      .then(async (response) => {
+        if (!response.ok) throw new Error('No se pudo cargar la lista.');
+        const data = await response.json();
+        if (!Array.isArray(data)) throw new Error('Respuesta inválida.');
+        if (request === listRequest.current) setOrders(data);
       })
       .catch(() => {
-        showMessage('Error al cargar pedidos.');
-        setLoading(false);
+        if (request === listRequest.current) {
+          setOrders([]);
+          showMessage('No se pudo cargar la lista de pedidos.');
+        }
+      })
+      .finally(() => {
+        if (request === listRequest.current) setLoading(false);
       });
   };
 
@@ -131,11 +155,107 @@ export default function Orders() {
     setDiscountApplied(null);
   };
 
-  const showSaveError = (text: string) => {
+  const showSaveError = (text: string, title = 'No se guardaron los cambios') => {
     if (user?.role === 'superadmin') {
-      setSaveErrorNotice(text);
+      setSaveErrorNotice({ title, message: text });
     } else {
-      notify.error(text, 'No se guardaron los cambios');
+      notify.error(text, title);
+    }
+  };
+
+  const isOrderRestriction = (status: number, message: string) => {
+    const text = message.toLowerCase();
+    return (status === 400 || status === 409) && (
+      text.includes('pedido operativo') ||
+      text.includes('este pedido está pagado') ||
+      text.includes('estado pagado solo puede establecerse')
+    );
+  };
+
+  const showEditRejection = (status: number, message: string, total: number) => {
+    if (!editingOrder || !isOrderRestriction(status, message)) {
+      showSaveError(message);
+      return;
+    }
+
+    const changes = [
+      form.customerId !== (editingOrder.customerId ?? '') ? 'cliente' : null,
+      editingOrder.total !== null && total !== Number(editingOrder.total) ? 'total' : null,
+      form.status !== (editingOrder.status ?? 'pending') ? 'estado' : null,
+    ].filter((field): field is string => field !== null);
+    const state = orderStatusText[editingOrder.status ?? ''] ?? 'en un estado que requiere revisión';
+
+    if (changes.length === 1 && changes[0] === 'total') {
+      showSaveError(
+        `El pedido figura ${state}. El servidor no permitió cambiar su total desde este formulario; revisa si tiene recibos o pagos asociados. No se modificó el total.`,
+        'No se actualizó el total'
+      );
+    } else if (changes.length === 1 && changes[0] === 'cliente') {
+      showSaveError(
+        `El pedido figura ${state}. El servidor no permitió cambiar el cliente desde este formulario; revisa si tiene pagos asociados. No se modificó el cliente.`,
+        'No se actualizó el cliente'
+      );
+    } else if (changes.length === 1 && changes[0] === 'estado') {
+      showSaveError(
+        `El pedido figura ${state}. El servidor no permitió cambiar su estado desde este formulario. No se modificó el estado.`,
+        'No se actualizó el estado'
+      );
+    } else if (changes.length > 0) {
+      showSaveError(
+        `El pedido figura ${state}. El servidor rechazó los cambios solicitados; revisa el pedido y si tiene pagos asociados. No se modificaron los datos.`
+      );
+    } else {
+      showSaveError('El servidor no confirmó el pedido. Cierra el formulario y vuelve a abrirlo para consultar su estado.');
+    }
+  };
+
+  const statusGuidance = (current: string, requested: string) => {
+    if (requested === 'pending' && current === 'preparing') return 'El pedido tiene una preparación activa. Si deseas deshacerla sin alterar el pago, selecciona Pagado y confirma la acción.';
+    if (requested === 'paid') return 'El estado Pagado se actualiza cuando se confirma el pago en Pagos.';
+    if (requested === 'delivered' && current === 'shipped') return 'Confirma la entrega real desde Operaciones, en el detalle del pedido y su envío.';
+    if (requested === 'shipped') return 'El despacho se registra desde Operaciones después de preparar y empacar el pedido.';
+    if (requested === 'canceled') return 'La cancelación se gestiona desde Operaciones, donde se revisan el pago y la reserva de inventario.';
+    if (requested === 'returned') return 'La devolución requiere su proceso correspondiente y revisión de pagos.';
+    return 'Este cambio requiere revisión en Operaciones para mantener el historial, los pagos y el inventario coherentes.';
+  };
+
+  const requestStatusChange = (order: Order, newStatus: string, fromForm: boolean) => {
+    if ((order.status === 'paid' && newStatus === 'preparing') || (order.status === 'preparing' && newStatus === 'paid')) {
+      if (fromForm) setModalOpen(false);
+      setClaimOrder({ id: order.id, fromForm, action: newStatus === 'preparing' ? 'claim' : 'undo' });
+      return;
+    }
+    showSaveError(statusGuidance(order.status ?? 'pending', newStatus), 'Cómo cambiar el estado');
+  };
+
+  const closeClaim = () => {
+    if (claimingRef.current) return;
+    if (claimOrder?.fromForm) setModalOpen(true);
+    setClaimOrder(null);
+  };
+
+  const confirmClaim = async () => {
+    if (!claimOrder || claimingRef.current) return;
+    claimingRef.current = true;
+    setClaiming(true);
+    try {
+      const response = await fetch(`${BASE}/api/employee/orders/${claimOrder.id}/${claimOrder.action === 'claim' ? 'claim' : 'undo-preparation'}`, {
+        method: 'POST', headers: authHeaders(), body: JSON.stringify({}),
+      });
+      const data = await response.json().catch(() => null);
+      if (!response.ok) {
+        showSaveError(data?.message || 'No se pudo cambiar la preparación. Revisa el pedido en Operaciones.', 'No se actualizó el estado');
+        return;
+      }
+      setClaimOrder(null);
+      if (claimOrder.fromForm) closeModal();
+      notify.success(claimOrder.action === 'claim' ? 'El pedido quedó asignado a tu cuenta para su preparación.' : 'La preparación se deshizo y el pedido volvió a Pagado. El pago no cambió.', 'Cambios guardados');
+      loadOrders();
+    } catch {
+      showSaveError('No se pudo confirmar la operación. Revisa el pedido en Operaciones antes de intentarlo de nuevo.', 'No se pudo confirmar el estado');
+    } finally {
+      claimingRef.current = false;
+      setClaiming(false);
     }
   };
 
@@ -152,11 +272,28 @@ export default function Orders() {
     }
 
     if (isPaidOrder && editingOrder?.total != null && newTotal !== Number(editingOrder.total)) {
+      const otherChanges = form.customerId !== (editingOrder.customerId ?? '') || form.status !== editingOrder.status;
       showSaveError(
         newTotal > Number(editingOrder.total)
-          ? 'El pedido ya está pagado. Aumentar el total puede requerir un cobro adicional. No se hizo ningún cobro ni se cambió el pedido.'
-          : 'El pedido ya está pagado. Reducir el total puede requerir una devolución. No se hizo ningún reembolso ni se cambió el pedido.'
+          ? 'El pedido figura pagado. Aumentar el total puede requerir un cobro adicional. Esta acción no realizó cobros ni guardó los cambios.'
+          : 'El pedido figura pagado. Reducir el total puede requerir una devolución. Esta acción no realizó reembolsos ni guardó los cambios.',
+        otherChanges ? 'No se guardaron los cambios' : 'No se actualizó el total'
       );
+      return;
+    }
+
+    if (editingOrder && form.status !== (editingOrder.status ?? 'pending')) {
+      const otherChanges = form.customerId !== (editingOrder.customerId ?? '') ||
+        editingOrder.total === null || newTotal !== Number(editingOrder.total) || !!form.promotionalCodeId;
+      if (otherChanges) {
+        showSaveError('Para cambiar el estado, primero deja los demás datos sin cambios. Ningún cambio fue guardado.', 'No se guardaron los cambios');
+      } else {
+        requestStatusChange(editingOrder, form.status, true);
+      }
+      return;
+    }
+    if (!editingOrder && form.status !== 'pending') {
+      showSaveError('Los pedidos nuevos deben quedar pendientes. El pago y la preparación se registran después.', 'No se creó el pedido');
       return;
     }
 
@@ -186,7 +323,10 @@ export default function Orders() {
       );
       const result = await response.json().catch(() => null);
       if (!response.ok) {
-        showSaveError(result?.message || 'No se pudo guardar el pedido.');
+        const errorMessage = typeof result?.message === 'string' && result.message.trim()
+          ? result.message
+          : 'No se pudo guardar el pedido.';
+        showEditRejection(response.status, errorMessage, newTotal);
         return;
       }
 
@@ -222,48 +362,41 @@ export default function Orders() {
     setModalOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
-    const deleted = await runDeleteAction({
-      url: `${API.orders}/${id}`,
-      headers: authHeaders(),
-      confirmMessage:
-        '¿Eliminar este pedido? El historial se conservará.',
-      successMessage: 'Pedido eliminado exitosamente.',
-    });
-
-    if (!deleted) return;
-
-    setOrders((current) =>
-      current.filter((order) => order.id !== id)
-    );
+  const handleArchive = async (id: string, archive: boolean) => {
+    if (archiveRequests.current.has(id)) return;
+    archiveRequests.current.add(id);
+    try {
+      if (archive && !(await requestConfirmation(
+        '¿Quitar este pedido de la lista? Podrás restaurarlo. No se cancela ni se borran sus pagos o historial.'
+      ))) return;
+      const response = await fetch(`${API.orders}/${id}/${archive ? 'archive' : 'unarchive'}`, {
+        method: 'POST', headers: authHeaders(),
+      });
+      const data = await response.json().catch(() => null);
+      if (!response.ok) {
+        showSaveError(typeof data?.message === 'string' ? data.message : 'No se pudo actualizar la lista.', archive ? 'No se quitó el pedido' : 'No se restauró el pedido');
+        return;
+      }
+      if (data?.archived !== archive) {
+        showSaveError('No se pudo confirmar el resultado. Revisa la lista antes de intentarlo nuevamente.', 'No se pudo confirmar');
+        loadOrders(showArchivedRef.current);
+        return;
+      }
+      loadOrders(showArchivedRef.current);
+      notify.success(archive
+        ? 'Se quitó de esta lista. El pedido continúa y conserva sus pagos e historial.'
+        : 'El pedido volvió a la lista administrativa.',
+        archive ? 'Pedido archivado' : 'Pedido restaurado');
+    } catch {
+      showSaveError('No se pudo confirmar la operación. Actualiza la lista antes de intentarlo nuevamente.', 'No se pudo confirmar');
+    } finally {
+      archiveRequests.current.delete(id);
+    }
   };
 
-  const changeStatus = async (
-    id: string,
-    newStatus: string
-  ) => {
-    const response = await runApiAction({
-      url: `${API.orders}/${id}`,
-      init: {
-        method: 'PUT',
-        headers: authHeaders(),
-        body: JSON.stringify({ status: newStatus }),
-      },
-      successMessage:
-        'Estado del pedido actualizado exitosamente.',
-      errorMessage:
-        'No se pudo actualizar el estado del pedido.',
-    });
-
-    if (!response) return;
-
-    setOrders((current) =>
-      current.map((order) =>
-        order.id === id
-          ? { ...order, status: newStatus }
-          : order
-      )
-    );
+  const changeStatus = (id: string, newStatus: string) => {
+    const order = orders.find((item) => item.id === id);
+    if (order && newStatus !== order.status) requestStatusChange(order, newStatus, false);
   };
 
   const handleApplyDiscount = async (id: string) => {
@@ -323,6 +456,14 @@ export default function Orders() {
               Administra los pedidos registrados
             </p>
           </div>
+          <button className="btn-editar-pedido" onClick={() => {
+            const next = !showArchived;
+            showArchivedRef.current = next;
+            setShowArchived(next);
+            loadOrders(next);
+          }}>
+            {showArchived ? 'Ver pedidos' : 'Ver archivados'}
+          </button>
         </div>
 
         {message && (
@@ -355,7 +496,7 @@ export default function Orders() {
             </thead>
 
             <tbody>
-              {orders.length === 0 && (<tr><td colSpan={7} className="table-empty">Todavía no hay pedidos registrados.</td></tr>)}
+              {orders.length === 0 && (<tr><td colSpan={7} className="table-empty">{showArchived ? 'No hay pedidos archivados.' : 'No hay pedidos en esta lista.'}</td></tr>)}
               {orders.map((order) => (
                 <tr key={order.id}>
                   <td className="numero-pedido">
@@ -386,6 +527,7 @@ export default function Orders() {
                   <td>
                     <select
                       value={order.status ?? 'pending'}
+                      disabled={showArchived}
                       onChange={(e) =>
                         changeStatus(order.id, e.target.value)
                       }
@@ -397,8 +539,8 @@ export default function Orders() {
                         Pendiente
                       </option>
 
-                      <option value="paid" disabled>Pagado</option>
-                      <option value="preparing" disabled>En preparación</option>
+                      <option value="paid" disabled={order.status !== 'paid' && order.status !== 'preparing'}>Pagado</option>
+                      <option value="preparing" disabled={order.status !== 'paid' && order.status !== 'preparing'}>En preparación</option>
                       <option value="returned" disabled>Devuelto</option>
 
                       <option
@@ -422,19 +564,14 @@ export default function Orders() {
                   </td>
 
                   <td>
-                    <button
-                      className="btn-editar-pedido"
-                      onClick={() => handleEdit(order)}
-                    >
-                      Editar
-                    </button>
-
-                    <button
-                      className="btn-eliminar-pedido"
-                      onClick={() => handleDelete(order.id)}
-                    >
-                      Eliminar
-                    </button>
+                    {showArchived ? (
+                      <button className="btn-editar-pedido" onClick={() => handleArchive(order.id, false)}>Restaurar</button>
+                    ) : (
+                      <>
+                        <button className="btn-editar-pedido" onClick={() => handleEdit(order)}>Editar</button>
+                        <button className="btn-eliminar-pedido" onClick={() => handleArchive(order.id, true)}>Eliminar</button>
+                      </>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -532,8 +669,8 @@ export default function Orders() {
             <option value="pending">
               Pendiente
             </option>
-            <option value="paid" disabled>Pagado</option>
-            <option value="preparing" disabled>En preparación</option>
+            <option value="paid" disabled={editingOrder?.status !== 'paid' && editingOrder?.status !== 'preparing'}>Pagado</option>
+            <option value="preparing" disabled={!isPaidOrder && form.status !== 'preparing'}>En preparación</option>
             <option value="returned" disabled>Devuelto</option>
             <option value="shipped">
               En camino
@@ -596,6 +733,25 @@ export default function Orders() {
         </Modal>
       )}
 
+      {claimOrder && (
+        <Modal
+          titulo={claimOrder.action === 'claim' ? 'Iniciar preparación' : 'Deshacer preparación'}
+          onClose={closeClaim}
+          footer={
+            <>
+              <button className="btn-cancelar-pedido" onClick={closeClaim} disabled={claiming}>Cancelar</button>
+              <button className="btn-guardar-pedido" onClick={confirmClaim} disabled={claiming}>
+                {claiming ? 'Confirmando...' : claimOrder.action === 'claim' ? 'Iniciar preparación' : 'Deshacer preparación'}
+              </button>
+            </>
+          }
+        >
+          <p>{claimOrder.action === 'claim'
+            ? 'El pedido se asignará a tu cuenta y pasará a preparación si el pago y los productos cumplen las validaciones. Continúa solo si vas a gestionarlo.'
+            : 'El pedido volverá a Pagado y quedará sin responsable. El pago y la reserva no se modificarán. Solo se permitirá si la recogida aún no ha comenzado y no hay envío.'}</p>
+        </Modal>
+      )}
+
       {saveErrorNotice && (
         <div className="success-notice-overlay notificaciones-superadmin">
           <section
@@ -605,7 +761,7 @@ export default function Orders() {
           >
             <header className="confirm-delete-header">
               <span className="success-notice-icon" aria-hidden="true">!</span>
-              <h2>No se guardaron los cambios</h2>
+              <h2>{saveErrorNotice.title}</h2>
               <button
                 type="button"
                 className="confirm-delete-close"
@@ -616,7 +772,7 @@ export default function Orders() {
               </button>
             </header>
             <div className="confirm-delete-body success-notice-body">
-              <p className="success-notice-message">{saveErrorNotice}</p>
+              <p className="success-notice-message">{saveErrorNotice.message}</p>
             </div>
           </section>
         </div>

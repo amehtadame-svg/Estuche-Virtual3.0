@@ -53,6 +53,7 @@ const REASON_ERROR_MSG = 'La justificación del retiro es obligatoria (mínimo 3
 export default function InventoryOutbound() {
   const { user } = useAuth();
   const esSuperadmin = user?.role === 'superadmin';
+  const avisoAdministracion = user?.role === 'admin' || esSuperadmin;
   const [products, setProducts] = useState<ProductItem[]>([]);
   const [movements, setMovements] = useState<MovementRecord[]>([]);
   const [reasons, setReasons] = useState<string[]>(FALLBACK_REASONS);
@@ -215,7 +216,7 @@ export default function InventoryOutbound() {
       const successMessage = hasStocks
         ? `Salida confirmada: "${selectedProduct.name}" pasó de ${data.previousStock} a ${data.newStock} unidades (−${parsedQty}).`
         : `La salida de "${selectedProduct.name}" se registró correctamente.`;
-      if (esSuperadmin) notify.success(successMessage, 'Salida registrada');
+      if (avisoAdministracion) notify.success(successMessage, 'Salida registrada');
       else setSuccessMsg(successMessage);
       setQuantity('');
       setReasonType('');
@@ -245,7 +246,7 @@ export default function InventoryOutbound() {
         </div>
       </div>
 
-      {successMsg && !esSuperadmin && (
+      {successMsg && !avisoAdministracion && (
         <div className="inbound-alert-success" role="status">
           <CheckCircle2 size={16} aria-hidden="true" /> {successMsg}
         </div>
@@ -441,7 +442,7 @@ export default function InventoryOutbound() {
       </div>
 
       {/* CA-003.4 · modal de confirmación previa */}
-      {showConfirm && selectedProduct && (esSuperadmin ? (
+      {showConfirm && selectedProduct && (avisoAdministracion ? (
         <div className={`outbound-dialog ${submitting ? 'outbound-dialog-saving' : ''}`}>
           <Modal
             titulo="Confirmar salida de mercancía"

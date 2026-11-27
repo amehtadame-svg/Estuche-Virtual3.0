@@ -36,3 +36,77 @@
   font-size: 13px;
   color: var(--text);
 }
+
+/* Tabla de combos: el contenido completo determina la altura de cada fila. */
+.productos-page.combos-page .tabla-productos.tabla-combos tbody tr {
+  height: auto;
+}
+
+.productos-page.combos-page .tabla-productos.tabla-combos tbody td {
+  vertical-align: middle;
+}
+
+.productos-page.combos-page .tabla-productos.tabla-combos tbody td .desc-producto {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 6px auto 0;
+  line-height: 1.45;
+  white-space: normal;
+  overflow: visible;
+  overflow-wrap: anywhere;
+  text-overflow: clip;
+  -webkit-line-clamp: unset;
+}
+
+/* Las acciones permanecen juntas y centradas, sin cambiar los botones de Productos. */
+.productos-page.combos-page .tabla-productos.tabla-combos tbody td:last-child {
+  white-space: nowrap;
+  text-align: center;
+}
+
+.productos-page.combos-page .tabla-productos.tabla-combos tbody td:last-child button {
+  display: inline-block;
+  width: auto;
+  margin: 0 4px;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+@media (min-width: 601px) {
+  /* En pantallas intermedias la tabla se desplaza, sin encimar columnas. */
+  .productos-page.combos-page {
+    overflow-x: auto;
+  }
+
+  .productos-page.combos-page .tabla-productos.tabla-combos {
+    min-width: 1050px;
+  }
+
+  .productos-page.combos-page .tabla-productos.tabla-combos tbody td {
+    padding: 16px 8px;
+  }
+
+  .productos-page.combos-page .tabla-productos.tabla-combos thead th:nth-child(1) { width: 10%; }
+  .productos-page.combos-page .tabla-productos.tabla-combos thead th:nth-child(2) { width: 24%; }
+  .productos-page.combos-page .tabla-productos.tabla-combos thead th:nth-child(3) { width: 10%; }
+  .productos-page.combos-page .tabla-productos.tabla-combos thead th:nth-child(4) { width: 12%; }
+  .productos-page.combos-page .tabla-productos.tabla-combos thead th:nth-child(5) { width: 10%; }
+  .productos-page.combos-page .tabla-productos.tabla-combos thead th:nth-child(6) { width: 10%; }
+  .productos-page.combos-page .tabla-productos.tabla-combos thead th:nth-child(7) { width: 8%; }
+  .productos-page.combos-page .tabla-productos.tabla-combos thead th:nth-child(8) { width: 16%; }
+}
+
+@media (max-width: 600px) {
+  .productos-page.combos-page .tabla-productos.tabla-combos tbody tr {
+    padding: 16px 0;
+  }
+
+  .productos-page.combos-page .tabla-productos.tabla-combos tbody td:last-child {
+    text-align: left;
+  }
+
+  .productos-page.combos-page .tabla-productos.tabla-combos tbody td:last-child button:first-child {
+    margin-left: 0;
+  }
+}

@@ -91,10 +91,10 @@
 
 .tabla-descuentos th {
   text-align: left;
-  color: var(--muted);
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  color: var(--text);
+  font-size: 14px;
+  text-transform: none;
+  letter-spacing: normal;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -390,4 +390,41 @@
     flex-wrap: wrap;
     gap: 6px;
   }
+}
+/* Mantiene las acciones alineadas tanto si el descuento está activo como inactivo. */
+.descuentos-page .tabla-descuentos .acciones-descuento .btn-toggle-descuento,
+.descuentos-page .tabla-descuentos .acciones-descuento .btn-editar-descuento {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  vertical-align: middle;
+}
+
+.descuentos-page .tabla-descuentos .acciones-descuento .btn-toggle-descuento {
+  width: 92px;
+}
+
+.descuentos-page .tabla-descuentos .acciones-descuento .btn-editar-descuento {
+  width: 76px;
+}
+
+@media (max-width: 600px) {
+  .descuentos-page .tabla-descuentos .acciones-descuento > button + button {
+    margin-left: 0;
+  }
+}
+
+
+/* Aviso de validación dentro del formulario de descuentos. */
+.error-formulario-descuento {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius-sm, 8px);
+  background: var(--accent-bg);
+  color: var(--text-h);
+  font-size: 13px;
+  line-height: 1.45;
 }

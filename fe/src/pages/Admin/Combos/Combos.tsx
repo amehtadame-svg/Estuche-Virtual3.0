@@ -94,7 +94,7 @@ const computeComboMetrics = (combo: Combo) => {
 
 export default function Combos() {
   const { user } = useAuth();
-  const esSuperadmin = user?.role === 'superadmin';
+  const esAdministracion = user?.role === 'superadmin' || user?.role === 'admin';
   const [combos, setCombos] = useState<Combo[]>([]);
   const [products, setProducts] = useState<ProductOption[]>([]);
   const [loading, setLoading] = useState(true);
@@ -356,7 +356,7 @@ export default function Combos() {
       const savedName = typeof saved?.name === 'string' ? saved.name : name.trim();
       const wasEditing = editingId !== null;
       closeModal();
-      if (esSuperadmin) {
+      if (esAdministracion) {
         notify.success(
           wasEditing
             ? `El combo "${savedName}" se actualizó correctamente.`

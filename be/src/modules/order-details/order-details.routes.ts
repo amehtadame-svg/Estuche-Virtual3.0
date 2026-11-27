@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { verifyToken, verifyAdmin } from '../../middlewares/auth.middleware';
 import { validate } from '../../middlewares/validate';
 import { uuidParam } from '../../lib/schemas';
-import { createOrderDetailSchema, updateOrderDetailSchema } from './order-details.schema';
+import { createOrderDetailSchema, updateOrderDetailSchema, deleteOrderDetailSchema } from './order-details.schema';
 import {
   listOrderDetails,
   createOrderDetail,
@@ -17,6 +17,6 @@ const router = Router();
 router.get('/',       verifyToken, verifyAdmin, listOrderDetails);
 router.post('/',      verifyToken, verifyAdmin, validate({ body: createOrderDetailSchema }), createOrderDetail);
 router.put('/:id',    verifyToken, verifyAdmin, validate({ params: uuidParam, body: updateOrderDetailSchema }), updateOrderDetail);
-router.delete('/:id', verifyToken, verifyAdmin, validate({ params: uuidParam }), deleteOrderDetail);
+router.delete('/:id', verifyToken, verifyAdmin, validate({ params: uuidParam, body: deleteOrderDetailSchema }), deleteOrderDetail);
 
 export default router;

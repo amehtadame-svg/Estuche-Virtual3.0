@@ -33,17 +33,17 @@
   padding: 12px 18px;
   border: none;
   border-radius: var(--radius-md, 8px);
-  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  background: var(--gradient-accent, linear-gradient(135deg, #7c1fc5, #b026ea));
   color: var(--on-accent);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 6px 18px rgba(200, 30, 30, 0.25);
+  box-shadow: 0 6px 18px rgba(124, 31, 197, 0.22);
   transition: opacity 0.2s;
 }
 
 .outbound-submit-btn:disabled {
-  opacity: 0.45;
+  opacity: 0.65;
   cursor: not-allowed;
   box-shadow: none;
 }
@@ -162,7 +162,7 @@
   padding: 11px 16px;
   border: none;
   border-radius: 8px;
-  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  background: var(--gradient-accent, linear-gradient(135deg, #7c1fc5, #b026ea));
   color: var(--on-accent);
   font-size: 14px;
   font-weight: 600;
@@ -241,9 +241,38 @@
   .outbound-dialog .outbound-modal-list > div { gap: 10px; }
 }
 
-/* El botón principal morado se aplica al superadministrador. */
-.outbound-superadmin .outbound-submit-btn {
-  background: var(--gradient-accent, linear-gradient(135deg, #7c1fc5, #b026ea));
-  box-shadow: 0 6px 18px rgba(124, 31, 197, 0.22);
+/* En Salidas, la fecha y el SKU permanecen completos en una sola línea. */
+.inbound-page:has(.outbound-submit-btn) .inbound-history-card .inbound-table th:first-child,
+.inbound-page:has(.outbound-submit-btn) .inbound-history-card .inbound-table td:first-child,
+.inbound-page:has(.outbound-submit-btn) .inbound-history-card .inbound-table th:nth-child(2),
+.inbound-page:has(.outbound-submit-btn) .inbound-history-card .inbound-table td:nth-child(2),
+.inbound-page:has(.outbound-submit-btn) .inbound-history-card .inbound-sku {
+  white-space: nowrap;
 }
-.outbound-superadmin .outbound-submit-btn:disabled { box-shadow: none; }
+
+/* Distribución equilibrada para la tabla de salidas, sin afectar Ingresos. */
+.inbound-page:has(.outbound-submit-btn) .inbound-history-card .inbound-table {
+  min-width: 1100px;
+  table-layout: auto;
+}
+
+.inbound-page:has(.outbound-submit-btn) .inbound-history-card .inbound-table th,
+.inbound-page:has(.outbound-submit-btn) .inbound-history-card .inbound-table td {
+  box-sizing: border-box;
+  padding: 13px 12px;
+  vertical-align: middle;
+  text-align: left;
+}
+
+.inbound-page:has(.outbound-submit-btn) .inbound-history-card .inbound-table th:nth-child(1) { width: 16%; }
+.inbound-page:has(.outbound-submit-btn) .inbound-history-card .inbound-table th:nth-child(2) { width: 8%; }
+.inbound-page:has(.outbound-submit-btn) .inbound-history-card .inbound-table th:nth-child(3) { width: 20%; }
+.inbound-page:has(.outbound-submit-btn) .inbound-history-card .inbound-table th:nth-child(4) { width: 11%; }
+.inbound-page:has(.outbound-submit-btn) .inbound-history-card .inbound-table th:nth-child(5) { width: 32%; }
+.inbound-page:has(.outbound-submit-btn) .inbound-history-card .inbound-table th:nth-child(6) { width: 13%; }
+
+.inbound-page:has(.outbound-submit-btn) .inbound-history-card .inbound-table td:nth-child(3),
+.inbound-page:has(.outbound-submit-btn) .inbound-history-card .inbound-table td:nth-child(5),
+.inbound-page:has(.outbound-submit-btn) .inbound-history-card .inbound-table td:nth-child(6) {
+  overflow-wrap: anywhere;
+}

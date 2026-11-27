@@ -49,7 +49,7 @@ const formatDate = (value: string) =>
 
 export default function AdminPqr() {
   const { user } = useAuth();
-  const esSuperadmin = user?.role === 'superadmin';
+  const esAdministracion = user?.role === 'superadmin' || user?.role === 'admin';
   const [requests, setRequests] = useState<PqrRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -104,7 +104,21 @@ export default function AdminPqr() {
     if (!selected || savingRef.current) return;
     savingRef.current = true;
     setSaving(true);
-    const hasResponse = responseText.trim().length > 0;
+    const respuestaActual = responseText.trim();
+    const cambioRespuesta = respuestaActual !== (selected.response ?? '').trim();
+    const cambioEstado = status !== selected.status;
+    const tituloAviso = cambioRespuesta && cambioEstado ? 'Solicitud actualizada'
+      : cambioRespuesta ? 'Respuesta actualizada'
+      : cambioEstado ? 'Estado actualizado' : 'Solicitud guardada';
+    const mensajeAviso = cambioRespuesta && cambioEstado
+      ? respuestaActual
+        ? `Se guardaron la respuesta y el estado seleccionado: ${statusLabels[status]}.`
+        : `Se eliminó la respuesta y se guardó el estado seleccionado: ${statusLabels[status]}.`
+      : cambioRespuesta
+        ? respuestaActual ? 'La respuesta de la solicitud se guardó correctamente.' : 'La respuesta de la solicitud se eliminó.'
+        : cambioEstado
+          ? `El estado seleccionado se guardó como ${statusLabels[status]}.`
+          : 'Guardaste el formulario sin modificar los datos mostrados.';
     try {
       const apiResponse = await runApiAction({
         url: `${API.pqr}/${selected.id}`,
@@ -113,12 +127,8 @@ export default function AdminPqr() {
           headers: authHeaders(),
           body: JSON.stringify({ status, response: responseText }),
         },
-        successMessage: esSuperadmin
-          ? hasResponse
-            ? 'La respuesta de la solicitud se guardó correctamente.'
-            : 'El estado de la solicitud se actualizó correctamente.'
-          : 'PQR actualizado correctamente.',
-        successTitle: esSuperadmin ? (hasResponse ? 'Respuesta guardada' : 'Cambios guardados') : undefined,
+        successMessage: esAdministracion ? mensajeAviso : 'PQR actualizado correctamente.',
+        successTitle: esAdministracion ? tituloAviso : undefined,
         errorMessage: 'No se pudo actualizar la solicitud.',
       });
       if (!apiResponse) return;

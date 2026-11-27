@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { API, authHeaders } from '../../../api/api';
-import { runApiAction } from '../../../lib/apiAction';
+import { notify } from '../../../lib/notifications';
+import '../../../components/ui/ToastProvider.css';
 import { paymentStatusLabel } from '../../../lib/statusLabels';
 import './Payout.css';
 
@@ -37,27 +38,66 @@ const filters: { value: string; label: string }[] = [
 export default function Payout() {
   const [payouts, setPayouts] = useState<Payout[]>([]);
   const [filter, setFilter] = useState('all');
+  const [notice, setNotice] = useState<{ title: string; message: string } | null>(null);
+  const pending = useRef(new Set<string>());
   const headers = authHeaders();
 
   const load = async () => {
     const res = await fetch(API.payouts, { headers });
-    if (res.ok) setPayouts(await res.json());
+    if (!res.ok) throw new Error('No se pudo cargar la lista de pagos.');
+    setPayouts(await res.json());
   };
 
   useEffect(() => {
-    load();
+    load().catch(() => setNotice({ title: 'No se cargaron los pagos', message: 'Revisa la conexión y vuelve a abrir la sección.' }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleStatus = async (id: string, status: string) => {
-    const response = await runApiAction({
-      url: `${API.payouts}/${id}/status`,
-      init: { method: 'PATCH', headers, body: JSON.stringify({ status }) },
-      successMessage: 'El estado del pago se actualizó correctamente.',
-      successTitle: 'Cambios guardados',
-      errorMessage: 'No se pudo actualizar el estado del pago.',
-    });
-    if (response) await load();
+  useEffect(() => {
+    if (!notice) return;
+    const timer = window.setTimeout(() => setNotice(null), 5000);
+    return () => window.clearTimeout(timer);
+  }, [notice]);
+
+  const handleStatus = async (payment: Payout, status: string) => {
+    if (pending.current.has(payment.id) || status === payment.status) return;
+    if (payment.status !== 'pending' || !['approved', 'rejected'].includes(status)) {
+      const message = status === 'refunded'
+        ? 'Este sistema aún no procesa reembolsos. No se devolvió dinero ni se modificó el pago.'
+        : payment.status === 'approved'
+          ? 'El pago ya está aprobado. No se puede volver a pendiente o rechazado desde este selector; cambiar la etiqueta no revierte el dinero ni el pedido.'
+          : 'Solo los pagos pendientes se pueden aprobar o rechazar desde este selector. Los demás cambios requieren revisión financiera.';
+      setNotice({ title: 'No se cambió el pago', message });
+      return;
+    }
+    pending.current.add(payment.id);
+    try {
+      const response = await fetch(`${API.payouts}/${payment.id}/status`, {
+        method: 'PATCH', headers, body: JSON.stringify({ status }),
+      });
+      const result = await response.json().catch(() => null);
+      if (!response.ok) {
+        const raw = typeof result?.message === 'string' ? result.message : '';
+        setNotice({
+          title: 'No se cambió el pago',
+          message: raw.toLowerCase().includes('transición financiera no permitida')
+            ? 'El pago cambió o ya no permite esta transición. Actualiza la lista y revisa su estado.'
+            : raw || 'No se pudo actualizar el pago. Revisa su estado antes de volver a intentarlo.',
+        });
+        return;
+      }
+      notify.success(
+        status === 'approved'
+          ? 'El pago se registró como aprobado. Si completa el total, el pedido se actualiza a Pagado.'
+          : 'El pago se registró como rechazado. No se confirmó este pago.',
+        'Cambios guardados'
+      );
+      await load().catch(() => setNotice({ title: 'Pago guardado', message: 'El servidor confirmó el cambio, pero no se pudo actualizar la lista. Vuelve a abrir Pagos para revisarla.' }));
+    } catch {
+      setNotice({ title: 'No se pudo confirmar el pago', message: 'Revisa el estado del pago y del pedido antes de intentarlo de nuevo.' });
+    } finally {
+      pending.current.delete(payment.id);
+    }
   };
 
   const filteredPayouts = filter === 'all' ? payouts : payouts.filter((p) => p.status === filter);
@@ -65,6 +105,7 @@ export default function Payout() {
   const filteredTotal = filteredPayouts.reduce((acc, p) => acc + Number(p.amount), 0);
 
   return (
+    <>
     <div className="pagos-page">
       <div className="pagos-topbar">
         <h2 className="titulo-pagos">Gestión de Pagos</h2>
@@ -127,7 +168,7 @@ export default function Payout() {
                   <select
                     className="select-estado-pago"
                     value={p.status}
-                    onChange={(e) => handleStatus(p.id, e.target.value)}
+                    onChange={(e) => handleStatus(p, e.target.value)}
                   >
                     <option value="pending">Pendiente</option>
                     <option value="approved">Aprobado</option>
@@ -141,5 +182,18 @@ export default function Payout() {
         </table>
       </div>
     </div>
+    {notice && (
+      <div className="success-notice-overlay notificaciones-superadmin">
+        <section className="confirm-delete-dialog success-notice-dialog" role="alert" aria-live="assertive">
+          <header className="confirm-delete-header">
+            <span className="success-notice-icon" aria-hidden="true">!</span>
+            <h2>{notice.title}</h2>
+            <button type="button" className="confirm-delete-close" aria-label="Cerrar notificación" onClick={() => setNotice(null)}>×</button>
+          </header>
+          <div className="confirm-delete-body success-notice-body"><p className="success-notice-message">{notice.message}</p></div>
+        </section>
+      </div>
+    )}
+    </>
   );
 }

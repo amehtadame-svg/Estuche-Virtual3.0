@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import './AdminUsers.css';
 import { API, authHeaders } from '../../../api/api';
+import { notify } from '../../../lib/notifications';
 import { roleLabel } from '../../../lib/statusLabels';
 
 interface User {
@@ -25,6 +26,8 @@ export default function AdminUsers() {
   const [form, setForm] = useState({ ...EMPTY });
   const [editId, setEditId] = useState<string | null>(null);
   const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
+  const savingRef = useRef(false);
 
   const load = () => {
     setLoading(true);
@@ -57,12 +60,14 @@ export default function AdminUsers() {
   };
 
   const closeModal = () => {
+    if (savingRef.current) return;
     setModal(null);
     setEditId(null);
     setError('');
   };
 
   const handleSave = async () => {
+    if (savingRef.current) return;
     setError('');
     if (!form.fullName || !form.email) {
       setError('Nombre y email son obligatorios.');
@@ -80,20 +85,27 @@ export default function AdminUsers() {
         ? { fullName: form.fullName, email: form.email, password: form.password, role: form.role }
         : { fullName: form.fullName, email: form.email, role: form.role };
 
-    const res = await fetch(url, {
-      method,
-      headers: authHeaders(),
-      body: JSON.stringify(body),
-    });
-
-    if (!res.ok) {
-      const data = await res.json();
-      setError(data.message || 'Error al guardar.');
-      return;
+    savingRef.current = true;
+    setSaving(true);
+    try {
+      const res = await fetch(url, { method, headers: authHeaders(), body: JSON.stringify(body) });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        setError(data?.message || 'No se pudo guardar el usuario.');
+        return;
+      }
+      const editing = modal === 'editar';
+      const name = form.fullName;
+      savingRef.current = false;
+      closeModal();
+      load();
+      notify.success(editing ? `La información de ${name} se actualizó correctamente.` : `El usuario ${name} se creó correctamente.`, editing ? 'Cambios guardados' : 'Usuario creado');
+    } catch {
+      setError('No se pudo confirmar el guardado. Verifica el estado antes de intentarlo de nuevo.');
+    } finally {
+      savingRef.current = false;
+      setSaving(false);
     }
-
-    closeModal();
-    load();
   };
 
   return (
@@ -198,15 +210,15 @@ export default function AdminUsers() {
                 <option value="employee">Empleado</option>
               </select>
 
-              {error && <p className="usr-error">{error}</p>}
+              {error && <p className="usr-error" role="alert">{error}</p>}
             </div>
 
             <div className="usr-modal-footer">
               <button className="usr-btn-cancelar" onClick={closeModal}>
                 Cancelar
               </button>
-              <button className="usr-btn-guardar" onClick={handleSave}>
-                Guardar
+              <button className="usr-btn-guardar" onClick={handleSave} disabled={saving}>
+                {saving ? 'Guardando...' : 'Guardar'}
               </button>
             </div>
           </div>
