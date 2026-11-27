@@ -105,7 +105,7 @@ Consulta el [índice documental](docs/README.md).
 ### Evidencias y límites de la entrega
 
 - [Matriz de criterios](docs/matriz-evidencias.md) y [plan de cierre](docs/PLAN_CIERRE_CRITERIOS.md): evidencias verificadas y trabajo pendiente para los 14 puntos.
-- [Modelos y revisión pendiente](docs/MODELOS_Y_VALIDACION.md) y [API de operaciones principales](docs/API.md).
+- [Modelos y revisión pendiente](docs/MODELOS_Y_VALIDACION.md), [API de operaciones principales](docs/API.md) y [comunicación de API y servicios](docs/COMUNICACION_API_SERVICIOS.md): arquitectura, cuatro áreas funcionales, versiones y deuda propuesta.
 - [Guía de instalación y despliegue](docs/INSTALACION_Y_DESPLIEGUE.md): Compose es de desarrollo y ejecuta migraciones sobre la base configurada. Verificar destino y respaldo antes de arrancar.
 - [Plan de pruebas](docs/PLAN_PRUEBAS.md), [25 casos unitarios aislados](docs/evidencias/pruebas/unitarias-rubrica-2026-11-27.md), [resultados históricos de `6af297a`](docs/evidencias/pruebas/README.md) y [hallazgos locales](docs/REGISTRO_DEFECTOS.md). Las ejecuciones identifican su versión y no equivalen a aceptación del equipo.
 - [Scrum: propuestas y evidencia pendiente](docs/scrum/README.md); [guion de 15 minutos](docs/GUION_PRESENTACION.md).

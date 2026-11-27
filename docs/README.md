@@ -110,7 +110,7 @@ Punto de entrada a la documentación del proyecto.
 | Modelos de datos, UML y arquitectura | [Modelos, secuencias y despliegue](MODELOS_Y_VALIDACION.md) | Diagramas disponibles, datos parciales y revisión de Franck, Paula y Cristian pendiente. |
 | Scrum | [Índice y plantillas](scrum/README.md) | Propuestas; tablero, estimaciones y actas reales no recibidos. |
 | Pruebas y defectos | [Plan](PLAN_PRUEBAS.md), [resultados del commit probado](evidencias/pruebas/README.md), [hallazgos locales](REGISTRO_DEFECTOS.md) | Ejecuciones locales reales; aceptación UI y tickets externos pendientes. |
-| Instalación y API | [Guía técnica](INSTALACION_Y_DESPLIEGUE.md), [API parcial](API.md) | Revisión técnica y despliegue real pendientes. |
+| Instalación y API | [Guía técnica](INSTALACION_Y_DESPLIEGUE.md), [API parcial](API.md), [comunicación de API y servicios](COMUNICACION_API_SERVICIOS.md) | Revisión técnica y despliegue real pendientes; la comparación cubre cuatro áreas de una misma aplicación. |
 | Exposición | [Guion de 15 minutos](GUION_PRESENTACION.md) | Propuesto, falta validación y ensayo. |
 | Estado y restricciones | [Auditoría funcional](AUDITORIA_REQUISITOS_FUNCIONALES.md), [contradicciones](requisitos/contradicciones.md) | Identificación estática; decisiones del equipo pendientes. |
 
