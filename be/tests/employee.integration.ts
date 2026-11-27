@@ -442,17 +442,22 @@ test(
           // actual para que la petición llegue al servicio y sea él quien
           // rechace con 409 el pedido operativo.
           const linea = pickupOrder.details[0];
+          // El JSON del pedido no expone `orderId`/`productId` del detalle, así
+          // que el snapshot se toma de la base (que es lo que compara el servicio).
+          const lineaDb = await db.orderDetail.findUnique({
+            where: { id: linea.id },
+          });
           const editDetail = await request(
             'admin',
             `/order-details/${linea.id}`,
             {
               quantity: 1,
-              unitPrice: Number(linea.unitPrice),
+              unitPrice: Number(lineaDb!.unitPrice),
               expected: {
-                orderId: pickupOrder.id,
-                productId: linea.productId,
-                quantity: linea.quantity,
-                unitPrice: Number(linea.unitPrice),
+                orderId: lineaDb!.orderId,
+                productId: lineaDb!.productId,
+                quantity: lineaDb!.quantity,
+                unitPrice: Number(lineaDb!.unitPrice),
               },
             },
             'PUT'
