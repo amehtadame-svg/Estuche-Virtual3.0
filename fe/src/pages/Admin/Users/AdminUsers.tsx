@@ -4,6 +4,7 @@ import './AdminUsers.css';
 import { API, authHeaders } from '../../../api/api';
 import { notify } from '../../../lib/notifications';
 import { roleLabel } from '../../../lib/statusLabels';
+import Modal from '../../../components/ui/Modal';
 
 interface User {
   id: string;
@@ -23,6 +24,9 @@ const EMPTY: Omit<User, 'id' | 'isActive'> & { password: string } = {
 export default function AdminUsers() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [search, setSearch] = useState('');
+  const [roleFilter, setRoleFilter] = useState('all');
   const [modal, setModal] = useState<'crear' | 'editar' | null>(null);
   const [form, setForm] = useState({ ...EMPTY });
   const [editId, setEditId] = useState<string | null>(null);
@@ -30,21 +34,24 @@ export default function AdminUsers() {
   const [saving, setSaving] = useState(false);
   const savingRef = useRef(false);
 
-  const load = () => {
+  const load = async () => {
     setLoading(true);
-    fetch(API.users, { headers: authHeaders() })
-      .then((r) => r.json())
-      .then((data) => {
-        const filtered = data.filter((u: User) => u.role === 'client' || u.role === 'employee');
-        setUsers(filtered);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+    try {
+      const response = await fetch(API.users, { headers: authHeaders() });
+      if (!response.ok) throw new Error();
+      const data: unknown = await response.json();
+      if (!Array.isArray(data)) throw new Error();
+      setUsers(data.filter((u: User) => u.role === 'client' || u.role === 'employee'));
+      setLoadError(false);
+    } catch {
+      setLoadError(true);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const openCreate = () => {
@@ -109,6 +116,10 @@ export default function AdminUsers() {
     }
   };
 
+  const query = search.trim().toLocaleLowerCase();
+  const filteredUsers = users.filter(u => (roleFilter === 'all' || u.role === roleFilter) &&
+    [u.fullName, u.email].some(value => value.toLocaleLowerCase().includes(query)));
+
   return (
     <>
       <div className="usuarios-page">
@@ -122,8 +133,18 @@ export default function AdminUsers() {
           </button>
         </div>
 
+        <div className="staff-controls">
+          <input type="search" className="staff-search" aria-label="Buscar usuarios" placeholder="Buscar por nombre o email..." maxLength={150} value={search} onChange={e => setSearch(e.target.value)} />
+          <div className="staff-filters" aria-label="Filtrar usuarios por rol">
+            {[{ value: 'all', label: 'Todos' }, { value: 'employee', label: 'Empleado' }, { value: 'client', label: 'Cliente' }].map(option => (
+              <button type="button" key={option.value} className={`staff-filter ${roleFilter === option.value ? 'is-active' : ''}`} aria-pressed={roleFilter === option.value} onClick={() => setRoleFilter(option.value)}>{option.label}</button>
+            ))}
+          </div>
+        </div>
         {loading ? (
-          <p className="usuarios-loading">Cargando usuarios...</p>
+          <p className="usuarios-loading" role="status">Cargando usuarios...</p>
+        ) : loadError ? (
+          <p role="alert">No se pudo cargar la lista de usuarios. <button type="button" onClick={load}>Reintentar</button></p>
         ) : (
           <div className="usuarios-table-wrap">
             <table className="usuarios-table">
@@ -138,8 +159,8 @@ export default function AdminUsers() {
                 </tr>
               </thead>
               <tbody>
-                {users.length === 0 && (<tr><td colSpan={6} className="table-empty">No se encontraron usuarios.</td></tr>)}
-                {users.map((u) => (
+                {filteredUsers.length === 0 && (<tr><td colSpan={6} className="table-empty">No se encontraron usuarios.</td></tr>)}
+                {filteredUsers.map((u) => (
                   <tr key={u.id}>
                     <td>#{shortReference(u.id)}</td>
                     <td>{u.fullName}</td>
@@ -168,27 +189,22 @@ export default function AdminUsers() {
       </div>
 
       {modal && (
-        <div className="usr-overlay" onClick={closeModal}>
-          <div className="usr-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="usr-modal-header">
-              <h2 className="usr-modal-titulo">{modal === 'crear' ? 'Nuevo usuario' : 'Editar usuario'}</h2>
-              <button className="usr-modal-cerrar" onClick={closeModal}>
-                ✕
-              </button>
-            </div>
-
-            <div className="usr-modal-body">
-              <label>Nombre</label>
+        <Modal titulo={modal === 'crear' ? 'Nuevo usuario' : 'Editar usuario'} onClose={closeModal} footer={<>
+          <button className="usr-btn-cancelar" disabled={saving} onClick={closeModal}>Cancelar</button>
+          <button className="usr-btn-guardar" onClick={handleSave} disabled={saving}>{saving ? 'Guardando...' : 'Guardar'}</button>
+        </>}>
+              <label htmlFor="admin-user-name">Nombre</label>
               <input
+                id="admin-user-name"
                 maxLength={150}
                 value={form.fullName}
                 onChange={(e) => setForm({ ...form, fullName: e.target.value })}
                 placeholder="Nombre completo"
               />
 
-              <label>Email</label>
+              <label htmlFor="admin-user-email">Email</label>
               <input
-                type="email"
+                id="admin-user-email" type="email"
                 maxLength={255}
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
@@ -197,9 +213,9 @@ export default function AdminUsers() {
 
               {modal === 'crear' && (
                 <>
-                  <label>Contraseña</label>
+                  <label htmlFor="admin-user-password">Contraseña</label>
                   <input
-                    type="password"
+                    id="admin-user-password" type="password"
                     maxLength={72}
                     value={form.password}
                     onChange={(e) => setForm({ ...form, password: e.target.value })}
@@ -208,25 +224,14 @@ export default function AdminUsers() {
                 </>
               )}
 
-              <label>Rol</label>
-              <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
+              <label htmlFor="admin-user-role">Rol</label>
+              <select id="admin-user-role" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
                 <option value="client">Cliente</option>
                 <option value="employee">Empleado</option>
               </select>
 
               {error && <p className="usr-error" role="alert">{error}</p>}
-            </div>
-
-            <div className="usr-modal-footer">
-              <button className="usr-btn-cancelar" onClick={closeModal}>
-                Cancelar
-              </button>
-              <button className="usr-btn-guardar" onClick={handleSave} disabled={saving}>
-                {saving ? 'Guardando...' : 'Guardar'}
-              </button>
-            </div>
-          </div>
-        </div>
+        </Modal>
       )}
     </>
   );

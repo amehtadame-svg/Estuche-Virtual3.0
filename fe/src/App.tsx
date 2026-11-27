@@ -52,6 +52,7 @@ import Devoluciones from './pages/SuperAdmin/Returns/Returns';
 import Reportes from './pages/SuperAdmin/Reports/Reports';
 import UsuariosSA from './pages/SuperAdmin/UsuariosSA/SuperAdminUsers';
 import './pages/SuperAdmin/SuperAdminShared.css';
+import './pages/Staff/StaffShared.css';
 
 function App() {
   return (

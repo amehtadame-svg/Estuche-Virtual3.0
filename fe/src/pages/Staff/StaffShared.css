@@ -1,0 +1,160 @@
+/* Plantilla común para administración, operaciones y reparto. */
+:is(.admin-container, .usuarios-page, .envios-page, .facturas-page, .detalle-pedidos-page, .staff-workspace) {
+  width: min(1320px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 32px 0 56px;
+  color: var(--text);
+  font-family: var(--sans);
+}
+:is(.admin-topbar, .usuarios-topbar, .envios-topbar, .facturas-topbar, .detalle-pedidos-topbar, .staff-workspace .emp-heading) {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding-top: 10px;
+}
+:is(.admin-title, .titulo-usuarios, .titulo-envios, .titulo-facturas, .titulo-detalle-pedidos, .staff-workspace .emp-heading h1) {
+  margin: 0;
+  color: var(--text-h);
+  font: 700 28px var(--heading);
+  line-height: 1.16;
+}
+:is(.admin-subtitle, .usuarios-topbar .subtitulo-usuarios, .envios-topbar .subtitulo-usuarios, .facturas-topbar .subtitulo-usuarios, .subtitulo-detalle-pedidos, .staff-workspace .emp-heading p) {
+  margin: 6px 0 0;
+  color: var(--text);
+  font-size: 14px;
+}
+:is(.usr-btn-nuevo, .btn-nuevo-envio, .btn-nuevo-factura, .btn-nuevo-detalle-pedido, .staff-workspace button.emp-primary) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 9px 20px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: var(--gradient-accent);
+  color: var(--on-accent);
+  font: 600 14px var(--sans);
+  box-shadow: var(--shadow-accent);
+  cursor: pointer;
+}
+.staff-controls { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; margin: 0 0 24px; }
+:is(.staff-search, .detalle-pedidos-page .detalle-pedidos-busqueda) {
+  width: min(100%, 360px);
+  min-height: 38px;
+  padding: 9px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg);
+  color: var(--text-h);
+  font: 400 14px var(--sans);
+}
+.staff-search::placeholder { color: var(--muted); opacity: 1; }
+.staff-filters { display: flex; flex-wrap: wrap; gap: 8px; }
+:is(.staff-filter, .staff-workspace .emp-tabs a) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 7px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font: 600 13px var(--sans);
+  cursor: pointer;
+}
+:is(.staff-filter.is-active, .staff-workspace .emp-tabs a[aria-current="page"]) { border-color: var(--accent); background: var(--accent); color: var(--on-accent); }
+:is(.staff-filter, .staff-workspace .emp-tabs a):hover:not(.is-active):not([aria-current="page"]) { border-color: var(--accent); color: var(--accent-text); }
+:is(.usuarios-page .usuarios-table-wrap, .envios-page .table-wrapper, .facturas-page .table-wrapper, .detalle-pedidos-page .table-wrapper, .admin-container .table-wrapper, .staff-workspace .emp-table-scroll) {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+:is(.usuarios-page .usuarios-table, .envios-page .tabla-envios, .facturas-page .tabla-facturas, .detalle-pedidos-page .tabla-detalle-pedidos, .admin-container .tabla-resumen, .staff-workspace .emp-table-scroll table) {
+  display: table;
+  width: 100%;
+  min-width: 700px;
+  table-layout: auto;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+:is(.usuarios-page .usuarios-table, .envios-page .tabla-envios, .facturas-page .tabla-facturas, .detalle-pedidos-page .tabla-detalle-pedidos, .admin-container .tabla-resumen, .staff-workspace .emp-table-scroll table) thead th:nth-child(n) { width: auto; }
+:is(.usuarios-page .usuarios-table, .envios-page .tabla-envios, .facturas-page .tabla-facturas, .detalle-pedidos-page .tabla-detalle-pedidos, .admin-container .tabla-resumen, .staff-workspace .emp-table-scroll table) :is(th, td) {
+  padding: 12px 14px;
+  text-align: left;
+  vertical-align: middle;
+}
+:is(.usuarios-page .usuarios-table, .envios-page .tabla-envios, .facturas-page .tabla-facturas, .detalle-pedidos-page .tabla-detalle-pedidos, .admin-container .tabla-resumen, .staff-workspace .emp-table-scroll table) th {
+  background: var(--bg-subtle);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
+}
+:is(.usuarios-page .usuarios-table, .envios-page .tabla-envios, .facturas-page .tabla-facturas, .detalle-pedidos-page .tabla-detalle-pedidos, .admin-container .tabla-resumen, .staff-workspace .emp-table-scroll table) tbody tr:last-child { border-bottom: 0; }
+:is(.usuarios-page, .envios-page, .facturas-page, .detalle-pedidos-page) table :is(.usr-btn-editar, .btn-editar-envio, .btn-eliminar-envio, .btn-editar-factura, .btn-eliminar-factura, .btn-editar-detalle-pedido, .btn-eliminar-detalle-pedido),
+.staff-workspace .emp-table-scroll button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 6px 12px;
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius-sm);
+  background: var(--accent-bg);
+  color: var(--accent-text);
+  font: 600 13px var(--sans);
+  white-space: nowrap;
+}
+:is(.envios-page, .facturas-page, .detalle-pedidos-page) table :is(.btn-eliminar-envio, .btn-eliminar-factura, .btn-eliminar-detalle-pedido) { background: transparent; }
+:is(.usuarios-page, .envios-page, .facturas-page, .detalle-pedidos-page, .staff-workspace) button:disabled { opacity: .55; cursor: not-allowed; }
+:is(.admin-container .chart-section, .admin-container .activity-section, .admin-container .ultimos-pedidos-section, .admin-container .stat-card, .staff-workspace .emp-panel, .staff-workspace .emp-cards article) {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+.staff-workspace .emp-tabs { gap: 8px; padding: 0; border: 0; margin-bottom: 24px; }
+.staff-workspace button:not(.emp-primary) { min-height: 36px; border-radius: var(--radius-sm); font-family: var(--sans); font-weight: 600; }
+.staff-workspace .emp-heading-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.staff-workspace :is(input, select, textarea) { border-color: var(--border); border-radius: var(--radius-sm); }
+:is(.admin-container, .usuarios-page, .envios-page, .facturas-page, .detalle-pedidos-page, .staff-workspace) :is(button, a, input, select, textarea):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.usr-btn-guardar { background: var(--gradient-accent); border: 1px solid transparent; color: var(--on-accent); font-weight: 600; }
+.usr-btn-cancelar { background: var(--surface); border: 1px solid var(--accent-border); color: var(--accent-text); font-weight: 600; }
+
+/* Reparto conserva dos listas diferenciadas y sus acciones originales. */
+.delivery-workspace .delivery-sections { display: grid; gap: 20px; }
+.delivery-section { min-width: 0; padding: 22px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); }
+.delivery-section-heading { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
+.delivery-section-heading h2 { margin: 0; color: var(--text-h); font-size: 18px; }
+.delivery-section-heading p { margin: 6px 0 0; color: var(--text); font-size: 14px; }
+.delivery-count { padding: 5px 10px; border-radius: 99px; background: var(--accent-bg); color: var(--accent-text); font-size: 12px; font-weight: 600; white-space: nowrap; }
+.delivery-card-list { display: grid; gap: 10px; }
+.delivery-card { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; padding: 16px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); }
+.delivery-card h3 { margin: 0 0 6px; font-size: 15px; }
+.delivery-card p { margin: 3px 0; color: var(--text); font-size: 14px; overflow-wrap: anywhere; }
+.delivery-section > small { display: block; margin-top: 14px; }
+.delivery-empty { padding: 16px; margin: 0; border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--muted); }
+.delivery-notice { padding: 12px 14px; border: 1px solid var(--accent-border); border-radius: var(--radius-sm); background: var(--accent-bg); color: var(--text-h); }
+@media (max-width: 900px) {
+  :is(.admin-container, .usuarios-page, .envios-page, .facturas-page, .detalle-pedidos-page, .staff-workspace) { width: calc(100% - 28px); padding: 20px 0 40px; }
+}
+@media (max-width: 600px) {
+  :is(.usuarios-topbar, .envios-topbar, .facturas-topbar, .detalle-pedidos-topbar) > :is(.usr-btn-nuevo, .btn-nuevo-envio, .btn-nuevo-factura, .btn-nuevo-detalle-pedido) { width: 100%; }
+  .staff-controls { align-items: stretch; }
+  .staff-search { width: 100%; }
+  :is(.usuarios-page .usuarios-table, .envios-page .tabla-envios, .facturas-page .tabla-facturas, .detalle-pedidos-page .tabla-detalle-pedidos, .admin-container .tabla-resumen) { display: table; overflow: visible; }
+  :is(.usuarios-page .usuarios-table, .envios-page .tabla-envios, .facturas-page .tabla-facturas, .detalle-pedidos-page .tabla-detalle-pedidos, .admin-container .tabla-resumen) thead { display: table-header-group; }
+  :is(.usuarios-page .usuarios-table, .envios-page .tabla-envios, .facturas-page .tabla-facturas, .detalle-pedidos-page .tabla-detalle-pedidos, .admin-container .tabla-resumen) tbody { display: table-row-group; }
+  :is(.usuarios-page .usuarios-table, .envios-page .tabla-envios, .facturas-page .tabla-facturas, .detalle-pedidos-page .tabla-detalle-pedidos, .admin-container .tabla-resumen) tbody tr { display: table-row; padding: 0; }
+  :is(.usuarios-page .usuarios-table, .envios-page .tabla-envios, .facturas-page .tabla-facturas, .detalle-pedidos-page .tabla-detalle-pedidos, .admin-container .tabla-resumen) tbody td { display: table-cell; padding: 12px 14px; }
+  .delivery-section { padding: 16px; }
+  .delivery-card button { width: 100%; }
+}
+.staff-workspace .emp-table-scroll button.emp-primary { border-color: transparent; background: var(--gradient-accent); color: var(--on-accent); }

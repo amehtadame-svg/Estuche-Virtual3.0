@@ -23,6 +23,7 @@ test('Experiencia de empleado y repartidor', async t => {
   const { default: Delivery } = await server.ssrLoadModule('/src/pages/Delivery/DeliveryWorkspace.tsx');
   const { default: EmployeeWorkspace } = await server.ssrLoadModule('/src/pages/Employee/EmployeeWorkspace.tsx');
   const { default: SupportPanel } = await server.ssrLoadModule('/src/pages/Support/SupportPanel.tsx');
+  const { default: AdminUsers } = await server.ssrLoadModule('/src/pages/Admin/Users/AdminUsers.tsx');
   const root = createRoot(document.getElementById('root')!);
   const mount = async (component: ReactElement, role: string | null = 'employee', path = '/') => {
     const user = role ? { id: role, role, name: 'Prueba', email: 'demo@example.test' } : null;
@@ -62,12 +63,14 @@ test('Experiencia de empleado y repartidor', async t => {
     });
     await t.test('Repartidor toma un pendiente y ve los datos en sus entregas', async () => {
       let assigned = false;
+      let confirmed = false;
       dom.window.confirm = () => true;
       globalThis.fetch = async (url, options) => {
         const path = String(url);
         if (path.includes('/pending-orders/') && options?.method === 'POST') { assigned = true; return json({ id: 'shipment' }); }
+        if (path.endsWith('/despatches/shipment/confirm') && options?.method === 'POST') { confirmed = true; return json({}); }
         if (path.endsWith('/pending-orders')) return json(assigned ? [] : [{ id: '11111111-1111-4111-8111-1234abcd5678', orderDate: '2026-11-26', itemCount: 1 }]);
-        if (path.endsWith('/despatches')) return json(assigned ? [{ id: 'shipment', address: 'Calle 123', order: { id: '11111111-1111-4111-8111-1234abcd5678', customer: { fullName: 'Cliente Prueba', phone: '300' } } }] : []);
+        if (path.endsWith('/despatches')) return json(assigned && !confirmed ? [{ id: 'shipment', address: 'Calle 123', order: { id: '11111111-1111-4111-8111-1234abcd5678', customer: { fullName: 'Cliente Prueba', phone: '300' } } }] : []);
         return json({}, 404);
       };
       await mount(h(Delivery), 'delivery');
@@ -77,8 +80,48 @@ test('Experiencia de empleado y repartidor', async t => {
       assert.match(document.body.textContent!, /Mis entregas/);
       assert.match(document.body.textContent!, /Calle 123/);
       assert.ok([...document.querySelectorAll('button')].some(b => b.textContent === 'Confirmar entrega'));
+      await act(async () => { [...document.querySelectorAll('button')].find(b => b.textContent === 'Confirmar entrega')!.click(); });
+      assert.equal(confirmed, true);
+      assert.match(document.body.textContent!, /Entrega confirmada/);
     });
 
+    await t.test('Repartidor distingue fallo de carga y permite volver a consultar', async () => {
+      let fail = true;
+      globalThis.fetch = async () => fail ? json({ message: 'Error de conexión' }, 500) : json([]);
+      await mount(h(Delivery), 'delivery');
+      assert.ok(document.querySelector('[role="alert"]'));
+      assert.doesNotMatch(document.body.textContent!, /No hay pedidos disponibles/);
+      fail = false;
+      await act(async () => { [...document.querySelectorAll('button')].find(b => b.textContent === 'Actualizar')!.click(); });
+      assert.match(document.body.textContent!, /No hay pedidos disponibles/);
+      assert.match(document.body.textContent!, /No tienes entregas asignadas/);
+    });
+    await t.test('Usuarios de administración filtran sin exponer roles adicionales y usan diálogo accesible', async () => {
+      let fail = true;
+      globalThis.fetch = async () => fail ? json({}, 500) : json([
+        { id: '1', fullName: 'Ana Cliente', email: 'ana@test.co', role: 'client', isActive: true },
+        { id: '2', fullName: 'Mario Empleado', email: 'mario@test.co', role: 'employee', isActive: true },
+        { id: '3', fullName: 'Cuenta privada', email: 'privado@test.co', role: 'superadmin', isActive: true },
+      ]);
+      await mount(h(AdminUsers), 'admin');
+      assert.match(document.body.textContent!, /No se pudo cargar la lista de usuarios/);
+      fail = false;
+      await act(async () => { [...document.querySelectorAll('button')].find(b => b.textContent === 'Reintentar')!.click(); });
+      assert.match(document.querySelector('.usuarios-table')!.textContent!, /Ana Cliente/);
+      assert.doesNotMatch(document.querySelector('.usuarios-table')!.textContent!, /Cuenta privada/);
+      await act(async () => { [...document.querySelectorAll('button')].find(b => b.textContent === 'Empleado')!.click(); });
+      assert.match(document.querySelector('.usuarios-table')!.textContent!, /Mario Empleado/);
+      assert.doesNotMatch(document.querySelector('.usuarios-table')!.textContent!, /Ana Cliente/);
+      const search = document.querySelector('input[aria-label="Buscar usuarios"]')!;
+      const key = Object.keys(search).find(k => k.startsWith('__reactProps$'))!;
+      await act(async () => { (search as unknown as Record<string, { onChange: (event: { target: { value: string } }) => void }>)[key].onChange({ target: { value: 'nadie' } }); });
+      assert.match(document.querySelector('.usuarios-table')!.textContent!, /No se encontraron usuarios/);
+      await act(async () => { [...document.querySelectorAll('button')].find(b => b.textContent?.includes('Nuevo usuario'))!.click(); });
+      assert.ok(document.querySelector('[role="dialog"]'));
+      assert.deepEqual([...document.querySelectorAll('#admin-user-role option')].map(option => (option as HTMLOptionElement).value), ['client', 'employee']);
+      await act(async () => { (document.querySelector('[aria-label="Cerrar ventana"]') as HTMLButtonElement).click(); });
+      assert.equal(document.querySelector('[role="dialog"]'), null);
+    });
     await t.test('Empacar muestra imagen, confirma el producto y finaliza solo al completar', async () => {
       let picked = 0;
       let packed = false;
