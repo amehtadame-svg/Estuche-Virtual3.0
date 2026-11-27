@@ -134,6 +134,7 @@ export default function Reports() {
             Métricas consolidadas en tiempo real a partir de pedidos, pagos, devoluciones y clientes
           </p>
         </div>
+      </div>
 
         <form className="reportes-filtro-fechas" onSubmit={handleFilterSubmit}>
           <label className="reportes-fecha-campo">
@@ -163,7 +164,6 @@ export default function Reports() {
             </button>
           )}
         </form>
-      </div>
 
       {/* Stats en tiempo real */}
       {summary && (

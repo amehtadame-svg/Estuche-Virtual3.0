@@ -275,6 +275,8 @@ export default function SuperAdminUsers() {
       <div className="usuariossa-controles">
         <input
           className="busqueda-usuariossa"
+          type="search"
+          aria-label="Buscar usuarios"
           placeholder="Buscar por nombre o email..."
           maxLength={150}
           value={search}
@@ -285,6 +287,7 @@ export default function SuperAdminUsers() {
             <button
               key={r}
               className={`btn-filtro-rol ${roleFilter === r ? 'btn-filtro-rol-activo' : ''}`}
+              aria-pressed={roleFilter === r}
               onClick={() => setRoleFilter(r)}
             >
               {r === 'todos' ? 'Todos' : roleLabel[r] ?? r}

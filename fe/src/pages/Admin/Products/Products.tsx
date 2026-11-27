@@ -383,6 +383,7 @@ export default function Products() {
         {loading ? (
           <p style={{ color: 'var(--text)', padding: '20px 0' }}>Cargando productos...</p>
         ) : (
+          <div className="table-wrapper">
           <table className="tabla-productos">
             <thead>
               <tr>
@@ -465,6 +466,7 @@ export default function Products() {
               })}
             </tbody>
           </table>
+          </div>
         )}
 
         {filtered.length === 0 && !loading && (

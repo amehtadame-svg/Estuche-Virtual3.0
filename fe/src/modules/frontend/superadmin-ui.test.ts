@@ -15,7 +15,15 @@ test('Pagos y devoluciones del superadministrador', async t => {
   const server = await createServer({ server: { middlewareMode: true }, appType: 'custom', optimizeDeps: { noDiscovery: true, include: [] }, legacy: { proxySsrExternalModules: true } });
   const { default: Payout } = await server.ssrLoadModule('/src/pages/SuperAdmin/Payout/Payout.tsx');
   const { default: Returns } = await server.ssrLoadModule('/src/pages/SuperAdmin/Returns/Returns.tsx');
+  const { default: PromotionalCode } = await server.ssrLoadModule('/src/pages/SuperAdmin/PromotionalCode/PromotionalCode.tsx');
   const root = createRoot(document.getElementById('root')!);
+  const search = async (label: string, value: string) => {
+    const input = document.querySelector<HTMLInputElement>(`[aria-label="${label}"]`)!;
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(dom.window.HTMLInputElement.prototype, 'value')!.set!.call(input, value);
+      input.dispatchEvent(new dom.window.Event('input', { bubbles: true }));
+    });
+  };
   try {
     await t.test('pagos no muestra columna ni selector de acciones', async () => {
       globalThis.fetch = async () => json([{ id: 'p1', transactionId: 't1', user: { fullName: 'Ana', email: 'ana@example.com' }, status: 'pending', gateway: 'demo', amount: 100, currency: 'COP' }]);
@@ -24,6 +32,38 @@ test('Pagos y devoluciones del superadministrador', async t => {
       assert.doesNotMatch(document.querySelector('.tabla-pagos')!.textContent!, /Acciones/);
       assert.equal(document.querySelector('.tabla-pagos select'), null);
       assert.match(document.querySelector('.tabla-pagos')!.textContent!, /Pendiente/);
+      await act(async () => { [...document.querySelectorAll('button')].find(b => b.textContent === 'Aprobado')!.click(); });
+      assert.match(document.querySelector('.tabla-pagos')!.textContent!, /No se encontraron pagos/);
+      await act(async () => { [...document.querySelectorAll('button')].find(b => b.textContent === 'Todos')!.click(); });
+      assert.match(document.querySelector('.tabla-pagos')!.textContent!, /Ana/);
+      await search('Buscar pagos', 'sin coincidencia');
+      assert.match(document.querySelector('.tabla-pagos')!.textContent!, /No se encontraron pagos/);
+      await search('Buscar pagos', 'ana');
+      assert.match(document.querySelector('.tabla-pagos')!.textContent!, /Ana/);
+    });
+    await t.test('descuentos mantiene filtros y acciones editables con el mismo diálogo', async () => {
+      const codes = [
+        { id: '1', code: 'UNO', description: 'Primer descuento', type: 'percentage', value: 10, minPurchase: 0, startDate: '2026-01-01', endDate: '2026-12-31', currentUses: 0, active: true },
+        { id: '2', code: 'DOS', description: 'Segundo descuento', type: 'fixed', value: 500, minPurchase: 0, startDate: '2026-01-01', endDate: '2026-12-31', currentUses: 0, active: false },
+      ];
+      globalThis.fetch = async () => json(codes);
+      await act(async () => root.render(h(PromotionalCode)));
+      assert.equal(document.querySelectorAll('.tabla-descuentos tbody tr').length, 2);
+      await search('Buscar descuentos', 'segundo');
+      assert.match(document.querySelector('.tabla-descuentos')!.textContent!, /DOS/);
+      assert.doesNotMatch(document.querySelector('.tabla-descuentos')!.textContent!, /UNO/);
+      await search('Buscar descuentos', '');
+      await act(async () => { [...document.querySelectorAll('button')].find(b => b.textContent === 'Inactivos')!.click(); });
+      assert.match(document.querySelector('.tabla-descuentos')!.textContent!, /DOS/);
+      assert.doesNotMatch(document.querySelector('.tabla-descuentos')!.textContent!, /UNO/);
+      assert.equal(document.querySelector('[aria-pressed="true"]')?.textContent, 'Inactivos');
+      const buttons = document.querySelectorAll('.acciones-descuento button');
+      assert.equal(buttons[0].textContent, 'Editar');
+      assert.equal(buttons[1].textContent, 'Activar');
+      await act(async () => { (buttons[0] as HTMLButtonElement).click(); });
+      assert.equal((document.querySelector('[role="dialog"] input[name="code"]') as HTMLInputElement).value, 'DOS');
+      await act(async () => { (document.querySelector('[aria-label="Cerrar ventana"]') as HTMLButtonElement).click(); });
+      assert.equal(document.querySelector('[role="dialog"]'), null);
     });
     await t.test('devoluciones distingue error y permite reintentar y resolver', async () => {
       let fail = true;
@@ -40,6 +80,14 @@ test('Pagos y devoluciones del superadministrador', async t => {
       fail = false;
       await act(async () => { [...document.querySelectorAll('button')].find(b => b.textContent === 'Reintentar')!.click(); });
       assert.match(document.querySelector('.tabla-devoluciones')!.textContent!, /Dañado/);
+      await search('Buscar devoluciones', 'cuaderno');
+      assert.match(document.querySelector('.tabla-devoluciones')!.textContent!, /Ana/);
+      await search('Buscar devoluciones', 'sin coincidencia');
+      assert.match(document.querySelector('.tabla-devoluciones')!.textContent!, /No se encontraron devoluciones/);
+      await search('Buscar devoluciones', '');
+      await act(async () => { [...document.querySelectorAll('button')].find(b => b.textContent === 'Aprobada')!.click(); });
+      assert.match(document.querySelector('.tabla-devoluciones')!.textContent!, /No se encontraron devoluciones/);
+      await act(async () => { [...document.querySelectorAll('button')].find(b => b.textContent === 'Todos')!.click(); });
       await act(async () => { [...document.querySelectorAll('button')].find(b => b.textContent === 'Resolver')!.click(); });
       assert.ok(document.querySelector('[role="dialog"]'));
       assert.match(document.querySelector('[role="dialog"]')!.textContent!, /no ejecuta un reembolso/);
