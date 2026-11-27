@@ -142,4 +142,16 @@ jobs:
         run: pnpm prisma migrate deploy
 
       - name: Suites de integración
-        run: pnpm test:integration
+        run: |
+          set +e
+          pnpm test:integration > /tmp/integration.log 2>&1
+          code=$?
+          cat /tmp/integration.log
+          exit $code
+
+      - name: Publicar fallos como anotaciones
+        if: failure()
+        run: |
+          grep -vE "^ok |^# " /tmp/integration.log | head -60 | while IFS= read -r line; do
+            echo "::error::$line"
+          done
