@@ -42,3 +42,5 @@ Los casos de aceptación UI son un plan, **no se afirma que se ejecutaron manual
 ## Resultados reales disponibles
 
 [Registro de ejecución 26-11-2026](evidencias/pruebas/README.md): backend, frontend y PostgreSQL aislado del commit `6af297a`. Son resultados de ese commit y ese ambiente, no CI de un commit posterior ni aceptación del equipo. [Informe anterior](INFORME_PRUEBAS.md) es histórico y corresponde a otro commit.
+
+En la revisión del 27-11-2026 se ejecutaron [25 casos unitarios aislados](evidencias/pruebas/unitarias-rubrica-2026-11-27.md) sobre la base `177fb71` más un archivo de prueba nuevo. El [plan de cierre](PLAN_CIERRE_CRITERIOS.md) documenta también el resultado de frontend, la CI de la base y las limitaciones locales de Prisma.
