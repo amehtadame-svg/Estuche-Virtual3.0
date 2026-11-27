@@ -65,6 +65,7 @@ export default function Returns() {
   const [selected, setSelected] = useState<OrderReturn | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [filter, setFilter] = useState('all');
+  const [search, setSearch] = useState('');
   const headers = authHeaders();
 
   const load = async () => {
@@ -165,7 +166,11 @@ export default function Returns() {
   };
   const selectedOrder = orders.find(order => order.id === newReturn.orderId);
 
-  const filteredReturns = filter === 'all' ? returns : returns.filter((d) => d.status === filter);
+  const query = search.trim().toLocaleLowerCase();
+  const filteredReturns = returns.filter(d =>
+    (filter === 'all' || d.status === filter) &&
+    [d.id, shortReference(d.id), d.orderId, shortReference(d.orderId), d.customer.fullName, d.customer.email, d.product.name].some(value => (value ?? '').toLocaleLowerCase().includes(query))
+  );
 
   return (
     <>
@@ -174,17 +179,21 @@ export default function Returns() {
           <h2 className="titulo-devoluciones">Gestión de Devoluciones</h2>
           <button className="btn-guardar-dev" onClick={() => setCreating(true)}>+ Nueva devolución</button>
         </div>
-          <div className="devoluciones-filtros">
+        <div className="sa-controles">
+          <input className="sa-busqueda" type="search" aria-label="Buscar devoluciones" placeholder="Buscar por cliente, producto o referencia..." value={search} onChange={e => setSearch(e.target.value)} />
+          <div className="devoluciones-filtros" aria-label="Filtrar devoluciones por estado">
             {filters.map((f) => (
               <button
                 key={f.value}
                 className={`btn-filtro-dev ${filter === f.value ? 'btn-filtro-dev-activo' : ''}`}
+                aria-pressed={filter === f.value}
                 onClick={() => setFilter(f.value)}
               >
                 {f.label}
               </button>
             ))}
           </div>
+        </div>
 
         {loading && <p role="status">Cargando devoluciones...</p>}
         {loadError && <p role="alert">No se pudieron cargar las devoluciones. <button type="button" onClick={load}>Reintentar</button></p>}
@@ -205,7 +214,7 @@ export default function Returns() {
               </tr>
             </thead>
             <tbody>
-              {filteredReturns.length === 0 && (<tr><td colSpan={10} className="table-empty">No hay devoluciones para mostrar.</td></tr>)}
+              {filteredReturns.length === 0 && (<tr><td colSpan={10} className="table-empty">{returns.length ? 'No se encontraron devoluciones con esos filtros.' : 'No hay devoluciones para mostrar.'}</td></tr>)}
               {filteredReturns.map((d) => (
                 <tr key={d.id}>
                   <td className="id-devolucion">#{shortReference(d.id)}</td>

@@ -38,6 +38,7 @@ const filters: { value: string; label: string }[] = [
 export default function Payout() {
   const [payouts, setPayouts] = useState<Payout[]>([]);
   const [filter, setFilter] = useState('all');
+  const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [notice, setNotice] = useState<{ title: string; message: string } | null>(null);
@@ -71,7 +72,11 @@ export default function Payout() {
     return () => window.clearTimeout(timer);
   }, [notice]);
 
-  const filteredPayouts = filter === 'all' ? payouts : payouts.filter((p) => p.status === filter);
+  const query = search.trim().toLocaleLowerCase();
+  const filteredPayouts = payouts.filter(p =>
+    (filter === 'all' || p.status === filter) &&
+    [p.id, shortReference(p.id), p.transactionId ?? '', shortReference(p.transactionId), p.user.fullName, p.user.email].some(value => value.toLocaleLowerCase().includes(query))
+  );
 
   const filteredTotal = filteredPayouts.reduce((acc, p) => acc + Number(p.amount), 0);
   const currencies = new Set(filteredPayouts.map((p) => p.currency));
@@ -81,11 +86,15 @@ export default function Payout() {
     <div className="pagos-page">
       <div className="pagos-topbar">
         <h2 className="titulo-pagos">Gestión de Pagos</h2>
-        <div className="pagos-filtros">
+      </div>
+      <div className="sa-controles">
+        <input className="sa-busqueda" type="search" aria-label="Buscar pagos" placeholder="Buscar por cliente o referencia..." value={search} onChange={e => setSearch(e.target.value)} />
+        <div className="pagos-filtros" aria-label="Filtrar pagos por estado">
           {filters.map((f) => (
             <button
               key={f.value}
               className={`btn-filtro-pago ${filter === f.value ? 'btn-filtro-activo' : ''}`}
+              aria-pressed={filter === f.value}
               onClick={() => setFilter(f.value)}
             >
               {f.label}
@@ -123,7 +132,7 @@ export default function Payout() {
             </tr>
           </thead>
           <tbody>
-            {filteredPayouts.length === 0 && (<tr><td colSpan={8} className="table-empty">No hay pagos para mostrar.</td></tr>)}
+            {filteredPayouts.length === 0 && (<tr><td colSpan={8} className="table-empty">{payouts.length ? 'No se encontraron pagos con esos filtros.' : 'No hay pagos para mostrar.'}</td></tr>)}
             {filteredPayouts.map((p) => (
               <tr key={p.id}>
                 <td className="id-pago">#{shortReference(p.id)}</td>

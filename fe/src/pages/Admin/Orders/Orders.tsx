@@ -555,6 +555,7 @@ export default function Orders() {
             Cargando pedidos...
           </p>
         ) : (
+          <div className="table-wrapper">
           <table className="tabla-pedidos">
             <thead>
               <tr>
@@ -654,6 +655,7 @@ export default function Orders() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
 

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { API, authHeaders } from '../../../api/api';
 import { runApiAction } from '../../../lib/apiAction';
-import { notify } from '../../../lib/notifications';
+import Modal from '../../../components/ui/Modal';
 import './PromotionalCode.css';
 
 interface PromotionalCode {
@@ -30,17 +30,28 @@ const emptyForm = {
 export default function PromotionalCode() {
   const [codes, setCodes] = useState<PromotionalCode[]>([]);
   const [form, setForm] = useState(emptyForm);
+  const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState('all');
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [formError, setFormError] = useState('');
   const headers = authHeaders();
 
   const load = async () => {
-    const response = await fetch(API.promotionalCodes, { headers });
-    if (response.ok) {
-      setCodes(await response.json());
-    } else {
-      notify.error('No se pudieron cargar los descuentos.');
+    setLoading(true);
+    try {
+      const response = await fetch(API.promotionalCodes, { headers });
+      if (!response.ok) throw new Error();
+      const data: unknown = await response.json();
+      if (!Array.isArray(data)) throw new Error();
+      setCodes(data);
+      setLoadError(false);
+    } catch {
+      setLoadError(true);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -154,6 +165,12 @@ export default function PromotionalCode() {
     await load();
   };
 
+  const query = search.trim().toLocaleLowerCase();
+  const filteredCodes = codes.filter(discount =>
+    (filter === 'all' || discount.active === (filter === 'active')) &&
+    [discount.code, discount.description ?? ''].some(value => value.toLocaleLowerCase().includes(query))
+  );
+
   return (
     <>
       <div className="descuentos-page">
@@ -168,7 +185,17 @@ export default function PromotionalCode() {
           </button>
         </div>
 
-        <div className="table-wrapper">
+        <div className="sa-controles">
+          <input className="sa-busqueda" type="search" aria-label="Buscar descuentos" placeholder="Buscar por código o descripción..." value={search} onChange={e => setSearch(e.target.value)} />
+          <div className="sa-filtros" aria-label="Filtrar descuentos por estado">
+            {[{ value: 'all', label: 'Todos' }, { value: 'active', label: 'Activos' }, { value: 'inactive', label: 'Inactivos' }].map(option => (
+              <button type="button" key={option.value} className={`sa-filtro ${filter === option.value ? 'sa-filtro-activo' : ''}`} aria-pressed={filter === option.value} onClick={() => setFilter(option.value)}>{option.label}</button>
+            ))}
+          </div>
+        </div>
+        {loading && <p role="status">Cargando descuentos...</p>}
+        {loadError && <p role="alert">No se pudieron cargar los descuentos. <button type="button" onClick={load}>Reintentar</button></p>}
+        {!loading && !loadError && <div className="table-wrapper">
           <table className="tabla-descuentos">
             <thead>
               <tr>
@@ -184,8 +211,8 @@ export default function PromotionalCode() {
             </thead>
 
             <tbody>
-              {codes.length === 0 && (<tr><td colSpan={8} className="table-empty">Todavía no hay códigos de descuento.</td></tr>)}
-              {codes.map((discount) => (
+              {filteredCodes.length === 0 && (<tr><td colSpan={8} className="table-empty">{codes.length === 0 ? 'Todavía no hay códigos de descuento.' : 'No se encontraron descuentos con esos filtros.'}</td></tr>)}
+              {filteredCodes.map((discount) => (
                 <tr key={discount.id}>
                   <td className="codigo-descuento">{discount.code}</td>
                   <td>
@@ -216,79 +243,51 @@ export default function PromotionalCode() {
                     </span>
                   </td>
                   <td className="acciones-descuento">
-                    <button
-                      className="btn-toggle-descuento"
-                      onClick={() => handleToggle(discount)}
-                    >
+                    <button className="btn-editar-descuento" onClick={() => handleEdit(discount)}>Editar</button>
+                    <button className={`btn-toggle-descuento ${discount.active ? '' : 'is-reactivate'}`} onClick={() => handleToggle(discount)}>
                       {discount.active ? 'Desactivar' : 'Activar'}
-                    </button>
-
-                    <button
-                      className="btn-editar-descuento"
-                      onClick={() => handleEdit(discount)}
-                    >
-                      Editar
                     </button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-        </div>
+        </div>}
 
         {modalOpen && (
-          <div
-            className="modal-overlay-descuento"
-            onClick={closeModal}
-          >
-            <div
-              className="modal-descuentos"
-              onClick={(event) => event.stopPropagation()}
-            >
-              <div className="modal-header-descuento">
-                <h3 className="modal-titulo-descuento">
-                  {editingId ? 'Editar descuento' : 'Nuevo descuento'}
-                </h3>
-
-                <button
-                  className="modal-cerrar-descuento"
-                  onClick={closeModal}
-                  aria-label="Cerrar"
-                >
-                  ✕
-                </button>
-              </div>
-
-              <div className="modal-body-descuento">
+          <Modal titulo={editingId ? 'Editar descuento' : 'Nuevo descuento'} onClose={closeModal} footer={<>
+            <button className="btn-cancelar-descuento" onClick={closeModal}>Cancelar</button>
+            <button className="btn-guardar-descuento" onClick={handleSave}>{editingId ? 'Guardar cambios' : 'Crear descuento'}</button>
+          </>}>
                 {formError && (
                   <p className="error-formulario-descuento" role="alert">{formError}</p>
                 )}
-                <p className="label-descuento">
+                <label className="label-descuento" htmlFor="discount-code">
                   Código <span className="required">*</span>
-                </p>
+                </label>
                 <input
                   className="input-descuento"
-                  name="code" maxLength={50}
+                  id="discount-code" name="code" maxLength={50}
                   value={form.code}
                   onChange={handleChange}
                   placeholder="Ej: REGRESO10"
                 />
 
-                <p className="label-descuento">Descripción</p>
+                <label className="label-descuento" htmlFor="discount-description">Descripción</label>
                 <input
                   className="input-descuento"
-                  name="description" maxLength={500}
+                  id="discount-description" name="description" maxLength={500}
                   value={form.description}
                   onChange={handleChange}
                   placeholder="Descripción opcional"
                 />
 
-                <p className="label-descuento">
+                <label className="label-descuento" htmlFor="discount-type">
                   Tipo <span className="required">*</span>
-                </p>
+                </label>
                 <select
                   className="input-descuento"
-                  name="type"
+                  id="discount-type" name="type"
                   value={form.type}
                   onChange={handleChange}
                 >
@@ -296,12 +295,12 @@ export default function PromotionalCode() {
                   <option value="fixed">Valor fijo</option>
                 </select>
 
-                <p className="label-descuento">
+                <label className="label-descuento" htmlFor="discount-value">
                   Valor <span className="required">*</span>
-                </p>
+                </label>
                 <input
                   className="input-descuento"
-                  name="value"
+                  id="discount-value" name="value"
                   type="number"
                   min="0"
                   value={form.value}
@@ -311,10 +310,10 @@ export default function PromotionalCode() {
                   }
                 />
 
-                <p className="label-descuento">Compra mínima</p>
+                <label className="label-descuento" htmlFor="discount-minPurchase">Compra mínima</label>
                 <input
                   className="input-descuento"
-                  name="minPurchase"
+                  id="discount-minPurchase" name="minPurchase"
                   type="number"
                   min="0"
                   value={form.minPurchase}
@@ -322,46 +321,28 @@ export default function PromotionalCode() {
                   placeholder="0"
                 />
 
-                <p className="label-descuento">
+                <label className="label-descuento" htmlFor="discount-startDate">
                   Fecha inicio <span className="required">*</span>
-                </p>
+                </label>
                 <input
                   className="input-descuento"
-                  name="startDate"
+                  id="discount-startDate" name="startDate"
                   type="date"
                   value={form.startDate}
                   onChange={handleChange}
                 />
 
-                <p className="label-descuento">
+                <label className="label-descuento" htmlFor="discount-endDate">
                   Fecha fin <span className="required">*</span>
-                </p>
+                </label>
                 <input
                   className="input-descuento"
-                  name="endDate"
+                  id="discount-endDate" name="endDate"
                   type="date"
                   value={form.endDate}
                   onChange={handleChange}
                 />
-              </div>
-
-              <div className="modal-footer-descuento">
-                <button
-                  className="btn-cancelar-descuento"
-                  onClick={closeModal}
-                >
-                  Cancelar
-                </button>
-
-                <button
-                  className="btn-guardar-descuento"
-                  onClick={handleSave}
-                >
-                  {editingId ? 'Guardar cambios' : 'Crear descuento'}
-                </button>
-              </div>
-            </div>
-          </div>
+          </Modal>
         )}
       </div>
     </>

@@ -433,6 +433,7 @@ export default function Combos() {
         {loading ? (
           <p style={{ color: 'var(--text)', padding: '20px 0' }}>Cargando combos...</p>
         ) : (
+          <div className="table-wrapper">
           <table className="tabla-productos tabla-combos">
             <thead>
               <tr>
@@ -504,6 +505,7 @@ export default function Combos() {
               })}
             </tbody>
           </table>
+          </div>
         )}
 
         {combos.length === 0 && !loading && (
