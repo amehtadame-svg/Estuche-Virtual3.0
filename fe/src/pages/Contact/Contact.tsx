@@ -1,9 +1,10 @@
 import { useRef, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
-import { AlertCircle, Clock, MailCheck, MapPin, Phone } from 'lucide-react';
+import { AlertCircle, Clock, Mail, MailCheck, MapPin, Phone } from 'lucide-react';
 import { API, authHeaders } from '../../api/api';
 import { useAuth } from '../../hooks/useAuth';
 import AccountNav from '../../components/layout/AccountNav';
+import { CONTACT_EMAIL, CONTACT_PHONE } from '../../lib/contact';
 import './Contact.css';
 
 export default function Contact() {
@@ -72,7 +73,8 @@ export default function Contact() {
 
   const contactInfo = [
     { icon: MapPin, title: 'Dirección', data: 'Calle 45 #12-30, Bogotá, Colombia' },
-    { icon: Phone, title: 'Teléfono', data: '+57 300 123 4567' },
+    { icon: Phone, title: 'Teléfono', data: CONTACT_PHONE },
+    { icon: Mail, title: 'Correo', data: CONTACT_EMAIL, href: `mailto:${CONTACT_EMAIL}` },
     { icon: Clock, title: 'Horario', data: 'Lun – Vie: 8:00 a. m. – 6:00 p. m.' },
   ];
 
@@ -165,7 +167,7 @@ export default function Contact() {
               <span className="contacto-info-icono" aria-hidden="true"><Icon size={20} /></span>
               <div>
                 <p className="contacto-info-titulo">{info.title}</p>
-                <p className="contacto-info-dato">{info.data}</p>
+                <p className="contacto-info-dato">{info.href ? <a href={info.href}>{info.data}</a> : info.data}</p>
               </div>
             </div>
           ))}

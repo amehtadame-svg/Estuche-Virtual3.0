@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Menu, Moon, Search, ShoppingBag, Sun, UserRound, X } from "lucide-react";
+import { Menu, Moon, ShoppingBag, Sun, UserRound, X } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { useCanShop } from "../../hooks/useCanShop";
 import { useCart } from "../../hooks/useCart";
@@ -113,20 +113,6 @@ export default function Header() {
         </nav>
 
         <div className={`header-actions ${menuOpen ? "open" : ""}`}>
-          {!isStaff && (
-            <button
-              type="button"
-              className="header-icon-btn"
-              onClick={() => {
-                navigate("/catalogo");
-                closeMenu();
-              }}
-              aria-label="Buscar productos"
-            >
-              <Search size={18} />
-            </button>
-          )}
-
           <button
             type="button"
             className="header-icon-btn theme-toggle"

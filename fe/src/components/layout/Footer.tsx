@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { Mail, Phone, Send, MapPin, Clock, Truck } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
+import { CONTACT_EMAIL, CONTACT_PHONE, INSTAGRAM_URL, WHATSAPP_URL } from "../../lib/contact";
 import "./Footer.css";
 
 export default function Footer() {
@@ -27,7 +28,7 @@ export default function Footer() {
       <footer className="footer footer--compact">
         <div className="footer-bottom">
           <span>© 2026 Estuche Virtual · Panel interno</span>
-          <span>¿Necesitas ayuda? hola@estuchevirtual.co</span>
+          <span>¿Necesitas ayuda? {CONTACT_EMAIL}</span>
         </div>
       </footer>
     );
@@ -51,14 +52,15 @@ export default function Footer() {
             <Truck size={15} aria-hidden="true" /> Envíos a toda Colombia
           </div>
           <div className="footer-socials">
-            <a href="https://instagram.com" target="_blank" rel="noreferrer">
+            <a href={INSTAGRAM_URL} target="_blank" rel="noreferrer" aria-label="Instagram de Estuche Virtual">
               Ig
             </a>
             <a href="https://facebook.com" target="_blank" rel="noreferrer">
               Fb
             </a>
             <a
-              href="https://wa.me/576017458890"
+              href={WHATSAPP_URL}
+              aria-label="WhatsApp de Estuche Virtual"
               target="_blank"
               rel="noreferrer"
             >
@@ -114,13 +116,13 @@ export default function Footer() {
               <MapPin size={14} /> Bogotá, Colombia
             </li>
             <li>
-              <Phone size={14} /> +57 300 123 4567
+              <Phone size={14} /> {CONTACT_PHONE}
             </li>
             <li>
               <Clock size={14} /> Lun – Vie, 8:00–18:00
             </li>
             <li>
-              <Mail size={14} /> hola@estuchevirtual.co
+              <Mail size={14} /> <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
             </li>
           </ul>
         </div>
