@@ -187,11 +187,29 @@ que se saltaran las validaciones.
 | `be/src/modules/orders/orders.test.ts` | 3 (cupón inválido por edición, cupón válido recalcula total, no repetir cupón) |
 | `be/tests/orders-regression.integration.ts` | 1 bloque real (cupón inactivo no entra por `PUT`) |
 
-### 8.4 Resultado
+### 8.4 Integración con la rama de Paula (`develop`)
+
+El merge se resolvió **conservando ambos lados**; ningún trabajo se descartó.
+
+| Archivo | Qué se conservó |
+| --- | --- |
+| `orders.service.ts` | Todas las guardas de Paula (`FOR UPDATE`, `sinCambios`, 409 si está pagado, `assertUnmanaged`) y **después** la validación de cupón (A-05) |
+| `permissions.test.ts` | Ambas pruebas, unidas |
+| `Admin/Orders/Orders.tsx` | A-01/A-02 para crear pedido + alertas de total pagado de Paula al editar |
+| `Contact/Contact.tsx` | Versión de Paula (endpoint real `POST /api/pqr`, distingue 401/403 y evita doble envío) |
+| `order-details` | Se adoptó el esquema de Paula (`.strict()` + snapshot `expected`) |
+
+Una sola prueba de integración quedó desactualizada respecto al esquema nuevo de
+`order-details`: enviaba `{ quantity: 1 }` y el validador —correctamente— respondía
+400 antes de llegar al servicio. Se ajustó la **petición de la prueba** (no el
+código ni el esquema) para enviar el snapshot `expected`, de modo que el 409 de
+pedido operativo se sigue comprobando de verdad. No se borró ninguna prueba.
+
+### 8.5 Resultado
 
 | Suite | Resultado |
 | --- | --- |
-| Backend | **166/166** |
-| Frontend | **48/48**, lint 0 errores, build ✅ |
-| Integración PostgreSQL | ✅ |
+| Backend | **167/167** |
+| Frontend | **48/48**, lint 0 errores (5 avisos), build ✅ |
+| Integración PostgreSQL | **✅ (6/6 suites, PostgreSQL 16 real)** |
 | CI PR #95 | Backend ✅ · Frontend ✅ · Integración ✅ · GitGuardian ✅ |
