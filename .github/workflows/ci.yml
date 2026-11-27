@@ -162,6 +162,7 @@ jobs:
           tail -40 /tmp/integration.log
           # Se emiten como anotacion las lineas de error mas informativas
           # Subtests anidados: node los indenta, por eso se busca "not ok" en cualquier columna
-          awk '/not ok/{f=1;c=0} f&&c<18{print;c++}' /tmp/integration.log | tail -60 | while IFS= read -r line; do
-            echo "::error::${line:0:900}"
+          # La anotacion de gitHub trunca el final, por eso el mensaje va AL INICIO
+          awk '/not ok/{f=1;c=0} f&&c<18{print;c++}' /tmp/integration.log | grep -E "esperaba|error:|expected|actual" | tail -8 | while IFS= read -r line; do
+            echo "::error::${line:0:800}"
           done
