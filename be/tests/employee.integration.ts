@@ -437,28 +437,30 @@ test(
             `esperaba 409 (pedido operativo), recibí ${edit.status}: ${JSON.stringify(edit.body)}`
           );
 
-          assert.equal(
-            (
-              await request(
-                'admin',
-                `/order-details/${pickupOrder.details[0].id}`,
-                { quantity: 1 },
-                'PUT'
-              )
-            ).status,
-            409
+          // `updateOrderDetailSchema` es `.strict()` y exige el snapshot
+          // `expected` del artículo (control de concurrencia). Se envía el
+          // actual para que la petición llegue al servicio y sea él quien
+          // rechace con 409 el pedido operativo.
+          const linea = pickupOrder.details[0];
+          const editDetail = await request(
+            'admin',
+            `/order-details/${linea.id}`,
+            {
+              quantity: 1,
+              unitPrice: Number(linea.unitPrice),
+              expected: {
+                orderId: pickupOrder.id,
+                productId: linea.productId,
+                quantity: linea.quantity,
+                unitPrice: Number(linea.unitPrice),
+              },
+            },
+            'PUT'
           );
-
           assert.equal(
-            (
-              await request(
-                'admin',
-                `/receipts/${pickupOrder.receipt.id}`,
-                { total: 1 },
-                'PUT'
-              )
-            ).status,
-            409
+            editDetail.status,
+            409,
+            `esperaba 409 (pedido operativo), recibí ${editDetail.status}: ${JSON.stringify(editDetail.body)}`
           );
 
           assert.equal(
