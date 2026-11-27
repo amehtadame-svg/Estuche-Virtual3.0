@@ -80,7 +80,7 @@ export default function Header() {
             ["/", "Inicio"],
             ...(user?.role === "employee" ? [["/empleado", "Mi trabajo"]] as [string, string][] : []),
             ...(user?.role === "delivery" ? [["/repartidor", "Mis entregas"]] as [string, string][] : []),
-            ["/catalogo", "Catálogo"],
+            ...(user?.role !== "delivery" ? [["/catalogo", "Catálogo"]] as [string, string][] : []),
             ...(!user || user.role === "client" ? [["/Nosotros", "Nosotros"], ["/Contacto", "Contacto"]] as [string, string][] : []),
             ...(user?.role === "client"
               ? ([["/mis-pedidos", "Mis pedidos"], ["/cliente/pqr", "PQR y soporte"]] as [string, string][])
