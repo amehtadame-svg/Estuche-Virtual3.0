@@ -30,7 +30,7 @@ Todavía no hay constancia de que estas comprobaciones se hayan realizado. El Co
 |---|---|---|
 | Tablero y Scrum | Exportación o capturas autorizadas con sprint, fechas, historias, puntos, tareas, responsables, estados y evidencia de planning poker real. | 2, 13 |
 | Reunión y feedback | Acta real con participantes, fecha, retroalimentación, acuerdos y responsables aceptados. | 13 |
-| Cuatro backends | Repositorios o commits exactos de cada versión; criterios de comparación acordados y función del cuarto backend. | 11, 14 |
+| API y servicios | Revisar la [comparación de cuatro áreas](COMUNICACION_API_SERVICIOS.md) y confirmar con el docente si satisface «cuatro backends» y qué se entiende por «cuarto backend». | 11, 14 |
 | Modelos | Revisión de MER/MR frente a `be/prisma/schema.prisma`, casos de uso, clases y diagrama de arquitectura, con validación de responsables. | 1, 5 |
 | Defectos | Reproducir los hallazgos en la versión actual y registrar tickets reales con pasos, evidencia, severidad, estado y vínculo a prueba de regresión. | 9 |
 | IoT, si se busca bonificación | Código del prototipo, dispositivo, protocolo, demostración del envío y recepción de datos. | 6 |
@@ -39,7 +39,7 @@ Las [issues de GitHub](https://github.com/amehtadame-svg/Estuche-Virtual3.0/issu
 
 ## 4. Orden sugerido
 
-1. Obtener las referencias de los cuatro backends y los documentos reales de Scrum.
+1. Confirmar el alcance de la comparación de API y servicios con el docente y obtener los documentos reales de Scrum.
 2. Reproducir defectos y abrir o vincular tickets acordados; no asumir que los hallazgos históricos siguen vigentes.
 3. Validar diagramas y API contra la entrega final, y actualizar las referencias obsoletas.
 4. Verificar despliegue y recorridos en un ambiente aislado, y volver a ejecutar CI para el commit final.
