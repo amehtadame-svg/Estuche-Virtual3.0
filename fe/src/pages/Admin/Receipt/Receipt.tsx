@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { z } from 'zod';
+import ReferenceSelect from '../../../components/ui/ReferenceSelect';
+import { shortReference } from '../../../lib/reference';
 import Modal from '../../../components/ui/Modal';
 import { API, authHeaders } from '../../../api/api';
 import { runApiAction } from '../../../lib/apiAction';
@@ -164,8 +166,8 @@ export default function Receipt() {
     }
 
     const customerId = form.customerId.trim();
-    if (!z.string().uuid().safeParse(customerId).success) {
-      setFormError('El ID del cliente no es válido. Ingresa el identificador completo del cliente registrado.');
+    if (!z.guid().safeParse(customerId).success) {
+      setFormError('Selecciona un cliente válido de la lista.');
       return;
     }
     const total = Number(form.total);
@@ -324,7 +326,7 @@ export default function Receipt() {
 
                   <td>
                     {receipt.order
-                      ? `PED-${receipt.order.id.slice(-6).toUpperCase()}`
+                      ? `PED-${shortReference(receipt.order.id)}`
                       : '—'}
                   </td>
 
@@ -454,16 +456,15 @@ export default function Receipt() {
             </div>
           )}
           <label className="label-factura">
-            ID Cliente
+            Cliente
           </label>
 
-          <input
+          <ReferenceSelect endpoint={API.users} kind="customer"
             className="input-factura"
             name="customerId"
             disabled={!!editingId && (form.paymentStatus !== 'pending' || !!receipts.find((r) => r.id === editingId)?.order)}
             value={form.customerId}
             onChange={handleChange}
-            placeholder="UUID del cliente"
           />
 
           <label className="label-factura">

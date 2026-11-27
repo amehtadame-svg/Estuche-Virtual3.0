@@ -1,7 +1,7 @@
 <!--
   ¿Qué? Historia de usuario que describe la visualización de productos con existencias bajas.
   ¿Para qué? Formalizar la identificación anticipada de productos próximos a agotarse.
-  ¿Impacto? Permite planear compras a proveedores antes de que ocurra un quiebre de stock.
+  ¿Impacto? Permite planear el reabastecimiento antes de que ocurra un quiebre de stock.
 -->
 
 # HU-007 — Visualización de productos con bajo stock

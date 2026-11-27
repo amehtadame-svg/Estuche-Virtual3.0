@@ -1,3 +1,5 @@
+import ReferenceSelect from '../../../components/ui/ReferenceSelect';
+import { shortReference } from '../../../lib/reference';
 import { useState, useEffect, useRef } from 'react';
 import { z } from 'zod';
 import Modal from '../../../components/ui/Modal';
@@ -124,11 +126,11 @@ export default function Despatch() {
     });
   };
 
-  const handleOrderChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleOrderChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
     const id = e.target.value;
     const request = ++orderLookupRef.current;
     setForm((prev) => ({ ...prev, orderId: id, address: '' }));
-    if (!z.string().uuid().safeParse(id.trim()).success) return;
+    if (!z.guid().safeParse(id.trim()).success) return;
 
     try {
       const res = await fetch(`${API.orders}/${id.trim()}`, { headers: authHeaders() });
@@ -136,7 +138,7 @@ export default function Despatch() {
       const order = await res.json();
       if (request !== orderLookupRef.current) return;
       setForm((prev) => prev.orderId === id && !prev.address
-        ? { ...prev, address: order.deliveryAddress?.address ?? '' }
+        ? { ...prev, address: order.deliveryAddress?.address ?? order.deliverySnapshot ?? '' }
         : prev);
     } catch {
       // Si no se puede cargar, se conserva la dirección que escriba la persona.
@@ -165,18 +167,18 @@ export default function Despatch() {
     const orderId = form.orderId.trim();
     const address = form.address.trim();
     if (!orderId || !address) {
-      setFormError('Completa el ID del pedido y la dirección antes de guardar.');
+      setFormError('Selecciona el pedido y completa la dirección antes de guardar.');
       return;
     }
-    if (!editingId && !z.string().uuid().safeParse(orderId).success) {
-      setFormError('El ID del pedido no es válido. Ingresa el identificador completo de un pedido registrado.');
+    if (!editingId && !z.guid().safeParse(orderId).success) {
+      setFormError('Selecciona un pedido válido de la lista.');
       return;
     }
     if (address.length > 500) {
       setFormError('La dirección no puede superar los 500 caracteres.');
       return;
     }
-    if (form.driverId && !z.string().uuid().safeParse(form.driverId).success) {
+    if (form.driverId && !z.guid().safeParse(form.driverId).success) {
       setFormError('El repartidor seleccionado no tiene un identificador válido.');
       return;
     }
@@ -225,8 +227,8 @@ export default function Despatch() {
         }
         return;
       }
-      if (!result || (editing && result.id !== editingId) || result.orderId !== orderId || result.address !== address ||
-          (result.driverId ?? null) !== body.driverId || result.status !== form.status) {
+      if (!result || (editing && result.id !== editingId) || String(result.orderId).toLowerCase() !== orderId.toLowerCase() || result.address !== address ||
+          (typeof result.driverId === 'string' ? result.driverId.toLowerCase() : null) !== (body.driverId?.toLowerCase() ?? null) || result.status !== form.status) {
         setFormError('El servidor respondió, pero no se pudo confirmar que los datos coincidan. Revisa el envío antes de volver a guardar.');
         loadDespatches();
         return;
@@ -373,12 +375,12 @@ export default function Despatch() {
                 {despatches.filter((item) => archivedIds.includes(item.id) === archivedView).map((despatch) => (
                   <tr key={despatch.id}>
                     <td className="numero-envio">
-                      ENV-{despatch.id.slice(-6).toUpperCase()}
+                      ENV-{shortReference(despatch.id)}
                     </td>
 
                     <td>
                       {despatch.order
-                        ? `PED-${despatch.order.id.slice(-6).toUpperCase()}`
+                        ? `PED-${shortReference(despatch.order.id)}`
                         : '—'}
                     </td>
 
@@ -478,12 +480,11 @@ export default function Despatch() {
               N° Pedido (ID)
             </p>
 
-            <input
+            <ReferenceSelect endpoint={API.orders} kind="order"
               className="input-envio"
               name="orderId"
               value={form.orderId}
               onChange={handleOrderChange}
-              placeholder="UUID del pedido"
               disabled={editingId !== null}
             />
 
@@ -493,7 +494,7 @@ export default function Despatch() {
 
             <input
               className="input-envio"
-              name="address"
+              name="address" maxLength={500}
               value={form.address}
               onChange={handleChange}
               placeholder="Se carga automáticamente o escribe manualmente"

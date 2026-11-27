@@ -268,7 +268,7 @@ export default function PromotionalCode() {
                 </p>
                 <input
                   className="input-descuento"
-                  name="code"
+                  name="code" maxLength={50}
                   value={form.code}
                   onChange={handleChange}
                   placeholder="Ej: REGRESO10"
@@ -277,7 +277,7 @@ export default function PromotionalCode() {
                 <p className="label-descuento">Descripción</p>
                 <input
                   className="input-descuento"
-                  name="description"
+                  name="description" maxLength={500}
                   value={form.description}
                   onChange={handleChange}
                   placeholder="Descripción opcional"

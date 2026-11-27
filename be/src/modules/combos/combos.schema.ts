@@ -1,9 +1,8 @@
 import { z } from 'zod';
+import { databaseUuidSchema } from '../../lib/schemas';
 
 const comboItemSchema = z.object({
-  // Algunos productos existentes usan identificadores con formato UUID que
-  // PostgreSQL acepta, aunque no cumplen los bits de versión/variante RFC.
-  productId: z.guid('El identificador del producto no es válido'),
+  productId: databaseUuidSchema,
   quantity: z.coerce.number().int('La cantidad debe ser un número entero').min(1, 'La cantidad mínima por producto es 1'),
 });
 

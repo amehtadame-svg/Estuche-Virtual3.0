@@ -63,17 +63,8 @@
   color: var(--danger);
 }
 
-/* CA-003.4 · modal de confirmación */
-.outbound-modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.55);
-  backdrop-filter: blur(2px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  z-index: 1000;
+.outbound-confirm-dialog {
+  width: min(500px, 100%);
 }
 
 .outbound-modal {
@@ -107,20 +98,21 @@
   gap: 10px;
 }
 
-.outbound-modal-list > div {
+.outbound-confirm-summary > div {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   gap: 16px;
   padding-bottom: 8px;
   border-bottom: 1px dashed var(--border);
 }
 
-.outbound-modal-list > div:last-child {
+.outbound-confirm-summary > div:last-child {
   border-bottom: none;
   padding-bottom: 0;
 }
 
-.outbound-modal-list dt {
+.outbound-confirm-summary dt {
   font-size: 12px;
   font-weight: 600;
   color: var(--text);
@@ -129,18 +121,19 @@
   flex-shrink: 0;
 }
 
-.outbound-modal-list dd {
+.outbound-confirm-summary dd {
   margin: 0;
   font-size: 13px;
+  font-weight: 500;
   text-align: right;
   color: var(--text-h);
   word-break: break-word;
 }
 
-.outbound-modal-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
+.outbound-confirm-stock-row dd {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .outbound-btn-cancel {
@@ -154,8 +147,9 @@
   cursor: pointer;
 }
 
-.outbound-btn-cancel:hover:not(:disabled) {
-  background: rgba(0, 0, 0, 0.04);
+.outbound-confirm-stock-final {
+  color: var(--accent, #aa3bff);
+  font-weight: 700;
 }
 
 .outbound-btn-confirm {
@@ -275,4 +269,21 @@
 .inbound-page:has(.outbound-submit-btn) .inbound-history-card .inbound-table td:nth-child(5),
 .inbound-page:has(.outbound-submit-btn) .inbound-history-card .inbound-table td:nth-child(6) {
   overflow-wrap: anywhere;
+}
+
+.outbound-confirm-submit:hover:not(:disabled) {
+  filter: brightness(1.05);
+  transform: translateY(-1px);
+}
+
+.outbound-modal-backdrop {
+  position: fixed;
+  z-index: 6000;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(8, 6, 13, 0.68);
+  backdrop-filter: blur(5px);
 }

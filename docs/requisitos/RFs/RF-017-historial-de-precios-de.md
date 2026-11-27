@@ -18,7 +18,7 @@ El sistema debe registrar automáticamente cada modificación al precio de un pr
 
 | Paso | Descripción |
 |------|-------------|
-| 1 | Un administrador o proveedor actualiza el precio de un producto. |
+| 1 | Un administrador actualiza el precio de un producto. |
 | 2 | El sistema compara el precio nuevo con el precio actualmente almacenado. |
 | 3 | Si el valor cambió, se inserta un registro en `historial_precios` con el precio anterior y el nuevo. |
 | 4 | El precio del producto se actualiza en `productos.precio`. |

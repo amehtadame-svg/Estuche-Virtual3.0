@@ -537,6 +537,7 @@ export default function Combos() {
           </label>
           <input
             className="input-producto"
+            maxLength={150}
             value={name}
             onChange={(e) => {
               setName(e.target.value);
@@ -548,6 +549,7 @@ export default function Combos() {
           <label className="label-producto">Descripción</label>
           <textarea
             className="input-producto"
+            maxLength={500}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={2}

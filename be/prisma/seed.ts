@@ -203,37 +203,32 @@ const productsData = [
 ];
 
 const usersData = [
-  // 👑 TUS CUENTAS PERSONALIZADAS
+  // 👑 CUENTAS SINTÉTICAS DE PRUEBA (desarrollo local / CI)
+  // Ningún dato real de personas ni contraseñas reales: los correos usan el
+  // dominio reservado .test (RFC 2606) y las contraseñas son de demostración.
+  // Nunca usar estas cuentas en producción.
   {
-    email: 'alvaradocristian1027@gmail.com',
-    fullName: 'Cristian Alvarado',
-    password: 'Polonio@384',
+    email: 'superadmin@estuche.test',
+    fullName: 'Super Admin Demo',
+    password: 'SuperAdmin123!',
     role: Role.superadmin,
-    phone: '+57 300 123 4567',
+    phone: '+57 300 000 0001',
     address: 'Sede Principal',
   },
   {
-    email: 'pgarces328@gmail.com',
-    fullName: 'P. Garcés',
+    email: 'admin@estuche.test',
+    fullName: 'Admin Demo',
     password: 'Admin123!',
     role: Role.admin,
-    phone: '+57 300 234 5678',
+    phone: '+57 300 000 0002',
     address: 'Oficina Central',
   },
   {
-    email: 'francksalamanca54526@gmail.com',
-    fullName: 'Franck Salamanca',
+    email: 'superadmin2@estuche.test',
+    fullName: 'Super Admin Demo 2',
     password: 'SuperAdmin123!',
     role: Role.superadmin,
-    phone: '+57 300 345 6789',
-    address: 'Sede Principal',
-  },
-  {
-    email: 'amethadame@gmail.com',
-    fullName: 'Ameth Adame',
-    password: 'SuperAdmin123!',
-    role: Role.superadmin,
-    phone: '+57 300 456 7890',
+    phone: '+57 300 000 0006',
     address: 'Sede Principal',
   },
 

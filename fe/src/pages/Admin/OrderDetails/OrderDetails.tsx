@@ -1,8 +1,9 @@
+import ReferenceSelect from '../../../components/ui/ReferenceSelect';
+import { shortReference } from '../../../lib/reference';
 import { useState, useEffect, useRef } from 'react';
 import Modal from '../../../components/ui/Modal';
 import './OrderDetails.css';
 import { API, authHeaders } from '../../../api/api';
-import { runApiAction } from '../../../lib/apiAction';
 import { notify, requestConfirmation } from '../../../lib/notifications';
 
 const emptyForm = { orderId: '', productId: '', quantity: '', unitPrice: '' };
@@ -34,8 +35,9 @@ export default function OrderDetails() {
 
   const loadDetails = () => {
     fetch(API.orderDetails, { headers: authHeaders() })
-      .then((r) => r.json())
+      .then((r) => { if (!r.ok) throw new Error('load'); return r.json(); })
       .then((data) => {
+        if (!Array.isArray(data)) throw new Error('format');
         setDetails(data);
         setFiltered(data);
         setLoading(false);
@@ -70,7 +72,7 @@ export default function OrderDetails() {
     setTimeout(() => setMessage(''), 2500);
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
@@ -112,8 +114,18 @@ export default function OrderDetails() {
     if (!editingId) {
       savingRef.current = true; setSaving(true);
       try {
-        const response = await runApiAction({ url: API.orderDetails, init: { method: 'POST', headers: authHeaders(), body: JSON.stringify(body) }, successMessage: 'El artículo se agregó correctamente al pedido.', successTitle: 'Artículo agregado', errorMessage: 'No se pudo guardar el artículo del pedido.' });
-        if (response) { savingRef.current = false; closeModal(); loadDetails(); }
+        const response = await fetch(API.orderDetails, { method: 'POST', headers: authHeaders(), body: JSON.stringify(body) });
+        if (!response.ok) {
+          const payload = await response.json().catch(() => null);
+          setFormError(payload?.message || 'No se pudo guardar el artículo del pedido.');
+          return;
+        }
+        savingRef.current = false;
+        closeModal();
+        loadDetails();
+        notify.success('El artículo se agregó correctamente al pedido.', 'Artículo agregado');
+      } catch {
+        setFormError('No se pudo confirmar el registro. Actualiza la lista y verifica el pedido antes de intentarlo de nuevo.');
       } finally { savingRef.current = false; setSaving(false); }
       return;
     }
@@ -176,6 +188,7 @@ export default function OrderDetails() {
             type="search"
             aria-label="Buscar artículos de pedidos"
             placeholder="Buscar por N° pedido o producto..."
+            maxLength={150}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -210,8 +223,8 @@ export default function OrderDetails() {
                   const subtotal = d.subtotal ?? d.quantity * d.unitPrice;
                   return (
                     <tr key={d.id}>
-                      <td className="numero-detalle-pedido">PED-{d.orderId.slice(-6).toUpperCase()}</td>
-                      <td className="producto-detalle-pedido">{d.product?.name ?? `Producto #${d.productId.slice(-6).toUpperCase()}`}</td>
+                      <td className="numero-detalle-pedido">PED-{shortReference(d.orderId)}</td>
+                      <td className="producto-detalle-pedido">{d.product?.name ?? `Producto #${shortReference(d.productId)}`}</td>
                       <td>{d.quantity}</td>
                       <td>${Number(d.unitPrice).toLocaleString()}</td>
                       <td className="subtotal-detalle-pedido">${Number(subtotal).toLocaleString()}</td>
@@ -251,11 +264,11 @@ export default function OrderDetails() {
           }
         >
           {formError && <div className="mensaje-detalle-pedidos" role="alert">{formError}</div>}
-          <label className="label-detalle-pedido">ID Pedido</label>
-          <input className="input-detalle-pedido" name="orderId" readOnly={editingId !== null} value={form.orderId} onChange={handleChange} placeholder="UUID de la orden" />
+          <label className="label-detalle-pedido">Pedido</label>
+          <ReferenceSelect endpoint={API.orders} kind="order" className="input-detalle-pedido" name="orderId" value={form.orderId} onChange={handleChange} disabled={editingId !== null} />
 
-          <label className="label-detalle-pedido">ID Producto</label>
-          <input className="input-detalle-pedido" name="productId" value={form.productId} onChange={handleChange} placeholder="UUID del producto" />
+          <label className="label-detalle-pedido">Producto</label>
+          <ReferenceSelect endpoint={API.products} kind="product" className="input-detalle-pedido" name="productId" value={form.productId} onChange={handleChange} />
 
           <label className="label-detalle-pedido">Cantidad</label>
           <input className="input-detalle-pedido" type="number" name="quantity" value={form.quantity} onChange={handleChange} placeholder="Unidades" />

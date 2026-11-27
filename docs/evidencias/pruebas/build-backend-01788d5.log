@@ -1,0 +1,5 @@
+Commit probado: 01788d5
+Comando: pnpm build
+
+> be@1.0.0 build /home/user/Estuche-Virtual3.0/be
+> tsc

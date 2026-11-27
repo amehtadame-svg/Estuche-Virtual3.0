@@ -1,0 +1,20 @@
+Commit probado: 01788d5
+Comando: pnpm build
+
+> estuche@0.0.0 build /home/user/Estuche-Virtual3.0/fe
+> tsc -b && vite build
+
+vite v5.3.5 building for production...
+transforming...
+✓ 2703 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   1.67 kB │ gzip:   0.81 kB
+dist/assets/index-Bjewe6l2.css  202.23 kB │ gzip:  31.61 kB
+dist/assets/index-CYTV4kUc.js   941.51 kB │ gzip: 262.04 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 6.06s

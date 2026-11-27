@@ -8,6 +8,11 @@ import { getShopping, addItem, updateQuantity, removeItem, clearShopping } from 
 const router = Router();
 
 router.use(verifyToken); // todas las rutas del carrito requieren login
+router.use((req, res, next) => {
+  const role = (req as any).user.role;
+  if (role === 'employee' || role === 'delivery') return res.status(403).json({ message: 'El carrito no está disponible para este rol.' });
+  next();
+});
 
 router.get('/',              getShopping);
 router.post('/',             validate({ body: addItemSchema }), addItem);

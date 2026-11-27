@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { databaseUuidSchema } from '../../lib/schemas';
 
 const quantity = z
   .number()
@@ -9,7 +10,7 @@ const quantity = z
 export const newEmployeeOrder = z
   .object({
     requestKey: z.string().uuid(),
-    customerId: z.string().uuid(),
+    customerId: databaseUuidSchema,
     fulfillmentMethod: z.enum([
       'delivery',
       'pickup',
@@ -24,7 +25,7 @@ export const newEmployeeOrder = z
       .array(
         z
           .object({
-            productId: z.string().uuid(),
+            productId: databaseUuidSchema,
             quantity,
           })
           .strict()
@@ -49,7 +50,7 @@ export const pickingSchema = z
       .array(
         z
           .object({
-            detailId: z.string().uuid(),
+            detailId: databaseUuidSchema,
             pickedQuantity: z
               .number()
               .int()
@@ -75,13 +76,13 @@ export const noteSchema = z
 
 export const reassignSchema = noteSchema
   .extend({
-    assigneeId: z.string().uuid(),
+    assigneeId: databaseUuidSchema,
   })
   .strict();
 
 export const dispatchSchema = z
   .object({
-    driverId: z.string().uuid(),
+    driverId: databaseUuidSchema,
   })
   .strict();
 
@@ -102,7 +103,7 @@ export const pickupSchema = z
 export const inventorySchema = z
   .object({
     requestKey: z.string().uuid(),
-    productId: z.string().uuid(),
+    productId: databaseUuidSchema,
     type: z.enum([
       'in',
       'out',
@@ -163,3 +164,4 @@ export type NewEmployeeOrder = z.infer<
 export type InventoryInput = z.infer<
   typeof inventorySchema
 >;
+export const storePaymentSchema = z.object({ requestKey: z.string().uuid(), method: z.enum(['cash', 'card']) }).strict();

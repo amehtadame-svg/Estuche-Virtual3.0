@@ -22,7 +22,7 @@
 ## Historia
 
 **Como** encargado de recepción de mercancía o jefe de almacén central, responsable de la recepción física, verificación contra órdenes de compra y resguardo de existencias,  
-**quiero** contar con un módulo especializado que me permita registrar formalmente los ingresos de nuevos lotes de productos adquiridos a proveedores o provenientes de redistribuciones, capturando las cantidades recibidas, costo unitario de compra, número de factura y proveedor emisor,  
+**quiero** contar con un módulo especializado que me permita registrar formalmente los ingresos de mercancía, capturando las cantidades recibidas, costo unitario de compra y número de factura,
 **para** incrementar de forma matemática y atómica el stock disponible en tiempo real, reflejar la disponibilidad real de mercancía en el punto de venta, actualizar el costo promedio ponderado de los productos y alimentar la bitácora inmutable de auditoría de entradas de almacén.
 
 ---
@@ -55,7 +55,7 @@
 
 | Método | Ruta | Descripción |
 |--------|------|-------------|
-| POST | `/api/v1/inventory/inbound` | Registra el ingreso y actualiza el stock |
+| POST | `/api/inventory/inbound` | Registra el ingreso y actualiza el stock |
 
 ---
 

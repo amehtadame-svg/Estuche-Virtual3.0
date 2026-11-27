@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { shortReference } from '../../../lib/reference';
 import './AdminUsers.css';
 import { API, authHeaders } from '../../../api/api';
 import { notify } from '../../../lib/notifications';
@@ -140,7 +141,7 @@ export default function AdminUsers() {
                 {users.length === 0 && (<tr><td colSpan={6} className="table-empty">No se encontraron usuarios.</td></tr>)}
                 {users.map((u) => (
                   <tr key={u.id}>
-                    <td title={u.id}>#{u.id.slice(-6).toUpperCase()}</td>
+                    <td>#{shortReference(u.id)}</td>
                     <td>{u.fullName}</td>
                     <td>{u.email}</td>
                     <td>
@@ -179,6 +180,7 @@ export default function AdminUsers() {
             <div className="usr-modal-body">
               <label>Nombre</label>
               <input
+                maxLength={150}
                 value={form.fullName}
                 onChange={(e) => setForm({ ...form, fullName: e.target.value })}
                 placeholder="Nombre completo"
@@ -187,6 +189,7 @@ export default function AdminUsers() {
               <label>Email</label>
               <input
                 type="email"
+                maxLength={255}
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
                 placeholder="correo@ejemplo.com"
@@ -197,6 +200,7 @@ export default function AdminUsers() {
                   <label>Contraseña</label>
                   <input
                     type="password"
+                    maxLength={72}
                     value={form.password}
                     onChange={(e) => setForm({ ...form, password: e.target.value })}
                     placeholder="Mínimo 6 caracteres"

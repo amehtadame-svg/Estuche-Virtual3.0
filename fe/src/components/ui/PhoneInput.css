@@ -1,0 +1,8 @@
+.phone-field { margin-bottom: 14px; }
+.phone-field label { display: block; font-size: 13px; margin-bottom: 5px; }
+.phone-field-row { display: flex; align-items: center; gap: 6px; }
+.phone-field-row .phone-prefix { color: var(--text); font-weight: 700; }
+.phone-field-row input:first-of-type { flex: 0 0 74px; width: 74px; }
+.phone-field-row input:last-of-type { flex: 1; min-width: 0; }
+.phone-field-row input { margin-bottom: 0; }
+.phone-field small { display: block; color: var(--text); margin-top: 5px; font-size: 12px; }

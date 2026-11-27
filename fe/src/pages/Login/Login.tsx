@@ -92,8 +92,10 @@ const Login = () => {
 
     if (role === 'employee') {
       navigate('/empleado');
+    } else if (role === 'delivery') {
+      navigate('/repartidor');
     } else if (role === 'client') {
-      navigate('/cliente');
+      navigate('/', { replace: true });
     } else if (role === 'superadmin') {
       navigate('/superadmin');
     } else if (role === 'admin') {

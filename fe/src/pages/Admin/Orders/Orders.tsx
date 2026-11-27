@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
+import { shortReference } from '../../../lib/reference';
+import { orderStatusLabel } from '../../../lib/statusLabels';
 import Modal from '../../../components/ui/Modal';
 import { API, BASE, authHeaders } from '../../../api/api';
-import { runApiAction } from '../../../lib/apiAction';
 import { notify, requestConfirmation } from '../../../lib/notifications';
 import { useAuth } from '../../../hooks/useAuth';
 import '../../../components/ui/ToastProvider.css';
@@ -41,6 +43,8 @@ interface Customer {
 interface Order {
   id: string;
   customerId: string | null;
+  createdById: string | null;
+  work: { id: string } | null;
   total: number | null;
   status: string | null;
   orderDate: string | null;
@@ -63,6 +67,8 @@ export default function Orders() {
   const claimingRef = useRef(false);
   const [saveErrorNotice, setSaveErrorNotice] = useState<{ title: string; message: string } | null>(null);
   const savingRef = useRef(false);
+  const discountRef = useRef(false);
+  const [applyingDiscount, setApplyingDiscount] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showArchived, setShowArchived] = useState(false);
   const showArchivedRef = useRef(false);
@@ -156,7 +162,7 @@ export default function Orders() {
   };
 
   const showSaveError = (text: string, title = 'No se guardaron los cambios') => {
-    if (user?.role === 'superadmin') {
+    if (user?.role === 'superadmin' || user?.role === 'admin') {
       setSaveErrorNotice({ title, message: text });
     } else {
       notify.error(text, title);
@@ -406,42 +412,36 @@ export default function Orders() {
       return;
     }
 
-    const response = await runApiAction({
-      url: `${API.orders}/${id}/apply-code`,
-      init: {
+    if (discountRef.current) return;
+    discountRef.current = true;
+    setApplyingDiscount(true);
+    try {
+      const response = await fetch(`${API.orders}/${id}/apply-code`, {
         method: 'PATCH',
         headers: authHeaders(),
-        body: JSON.stringify({
-          code: discountCode.trim(),
-        }),
-      },
-      successMessage:
-        'Descuento aplicado exitosamente al pedido.',
-      errorMessage: 'No se pudo aplicar el descuento.',
-    });
-
-    if (!response) return;
-
-    const data = await response.json().catch(() => null);
-
-    if (!data) {
-      notify.error(
-        'El servidor no devolvió los datos actualizados del pedido.'
-      );
-      return;
+        body: JSON.stringify({ code: discountCode.trim() }),
+      });
+      const data = await response.json().catch(() => null);
+      if (!response.ok) {
+        notify.error(typeof data?.message === 'string' ? data.message : 'No se pudo aplicar el código.');
+        return;
+      }
+      if (!data || data.id !== id || !data.promotionalCode || data.total == null || !Number.isFinite(Number(data.total))) {
+        notify.error('El servidor respondió, pero no se pudieron confirmar los datos. Actualiza el pedido antes de volver a intentarlo.');
+        loadOrders(showArchivedRef.current);
+        return;
+      }
+      setForm((prev) => ({ ...prev, total: String(data.total) }));
+      setDiscountApplied(`Código asociado. Total informado por el servidor: $${Number(data.total).toLocaleString()}`);
+      setDiscountCode('');
+      notify.success('El servidor confirmó el código asociado al pedido. Revisa el total informado.', 'Código registrado');
+      loadOrders(showArchivedRef.current);
+    } catch {
+      notify.error('No se pudo confirmar la operación. Actualiza el pedido antes de volver a intentarlo.');
+    } finally {
+      discountRef.current = false;
+      setApplyingDiscount(false);
     }
-
-    setForm((prev) => ({
-      ...prev,
-      total: String(data.total),
-    }));
-
-    setDiscountApplied(
-      `Descuento aplicado. Nuevo total: $${Number(data.total).toLocaleString()}`
-    );
-
-    setDiscountCode('');
-    await loadOrders();
   };
 
   return (
@@ -466,6 +466,10 @@ export default function Orders() {
           </button>
         </div>
 
+        <div style={{ margin: '12px 0' }}>
+          <Link className="btn-guardar-pedido" to="/empleado/nuevo">+ Crear pedido</Link>{' '}
+          <Link className="btn-editar-pedido" to="/empleado/supervision">Supervisar pedidos operativos</Link>
+        </div>
         {message && (
           <div className="mensaje-pedidos">
             {message}
@@ -500,12 +504,12 @@ export default function Orders() {
               {orders.map((order) => (
                 <tr key={order.id}>
                   <td className="numero-pedido">
-                    PED-{order.id.slice(-6).toUpperCase()}
+                    PED-{shortReference(order.id)}
                   </td>
 
                   <td className="cliente-pedido">
                     {order.customer?.fullName ??
-                      `Cliente #${order.customerId?.slice(-6).toUpperCase() ?? '-'}`}
+                      `Cliente #${shortReference(order.customerId)}`}
                   </td>
 
                   <td>
@@ -525,7 +529,7 @@ export default function Orders() {
                   </td>
 
                   <td>
-                    <select
+                    {order.createdById || order.work ? <span>{orderStatusLabel[order.status ?? ''] ?? order.status}</span> : <select
                       value={order.status ?? 'pending'}
                       disabled={showArchived}
                       onChange={(e) =>
@@ -560,7 +564,7 @@ export default function Orders() {
                       >
                         Cancelado
                       </option>
-                    </select>
+                    </select>}
                   </td>
 
                   <td>
@@ -568,7 +572,11 @@ export default function Orders() {
                       <button className="btn-editar-pedido" onClick={() => handleArchive(order.id, false)}>Restaurar</button>
                     ) : (
                       <>
-                        <button className="btn-editar-pedido" onClick={() => handleEdit(order)}>Editar</button>
+                        {order.createdById || order.work ? (
+                          <Link className="btn-editar-pedido" to={`/empleado/supervision?pedido=${encodeURIComponent(order.id)}`}>Gestionar</Link>
+                        ) : (
+                          <button className="btn-editar-pedido" onClick={() => handleEdit(order)}>Editar</button>
+                        )}
                         <button className="btn-eliminar-pedido" onClick={() => handleArchive(order.id, true)}>Eliminar</button>
                       </>
                     )}
@@ -710,9 +718,10 @@ export default function Orders() {
                   onClick={() =>
                     handleApplyDiscount(editingId)
                   }
+                  disabled={applyingDiscount}
                   style={{ whiteSpace: 'nowrap' }}
                 >
-                  Aplicar
+                  {applyingDiscount ? 'Aplicando...' : 'Aplicar'}
                 </button>
               </div>
 

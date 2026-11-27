@@ -1,0 +1,258 @@
+Commit probado: 01788d5
+Comando: node --test --test-concurrency=1 --require ts-node/register tests/*.integration.ts
+Entorno: PostgreSQL 17.12 aislado, base local estuche_docs_test
+TAP version 13
+# Subtest: Cliente: UUID sin pgcrypto en search_path, carrito concurrente y PQR sin duplicados
+    # Subtest: Genera UUID v7 únicos con search_path restringido al de Prisma
+    ok 1 - Genera UUID v7 únicos con search_path restringido al de Prisma
+      ---
+      duration_ms: 6.435111
+      ...
+    # Subtest: Diez altas simultáneas crean una fila y suman las diez unidades
+    ok 2 - Diez altas simultáneas crean una fila y suman las diez unidades
+      ---
+      duration_ms: 69.480133
+      ...
+    # Subtest: Doble envío y pestañas simultáneas crean solo un PQR
+    ok 3 - Doble envío y pestañas simultáneas crean solo un PQR
+      ---
+      duration_ms: 45.629978
+      ...
+    1..3
+ok 1 - Cliente: UUID sin pgcrypto en search_path, carrito concurrente y PQR sin duplicados
+  ---
+  duration_ms: 388.975438
+  ...
+# Subtest: Direcciones de despacho: validación HTTP y persistencia real
+    # Subtest: 500 caracteres: crear, pagar, recoger, empacar y despachar sin truncar ni duplicar
+    ok 1 - 500 caracteres: crear, pagar, recoger, empacar y despachar sin truncar ni duplicar
+      ---
+      duration_ms: 255.835406
+      ...
+    # Subtest: 501 caracteres: el pedido se rechaza sin reservar stock
+    ok 2 - 501 caracteres: el pedido se rechaza sin reservar stock
+      ---
+      duration_ms: 9.84282
+      ...
+    # Subtest: 501 caracteres: crear o editar un despacho general devuelve 400
+    ok 3 - 501 caracteres: crear o editar un despacho general devuelve 400
+      ---
+      duration_ms: 14.1746
+      ...
+    1..3
+ok 2 - Direcciones de despacho: validación HTTP y persistencia real
+  ---
+  duration_ms: 457.419948
+  ...
+# Subtest: Empleado: integración HTTP y transacciones reales en PostgreSQL
+    # Subtest: Sin sesión y cliente no obtienen funciones de empleado
+    ok 1 - Sin sesión y cliente no obtienen funciones de empleado
+      ---
+      duration_ms: 48.010501
+      ...
+    # Subtest: Campos de precio, costo, responsable o estado arbitrarios son rechazados
+    ok 2 - Campos de precio, costo, responsable o estado arbitrarios son rechazados
+      ---
+      duration_ms: 37.886778
+      ...
+    # Subtest: Crear pedido y recibo juntos conserva comprador, creador, precios y una sola reserva
+    ok 3 - Crear pedido y recibo juntos conserva comprador, creador, precios y una sola reserva
+      ---
+      duration_ms: 28.960476
+      ...
+    # Subtest: Reintento con la misma referencia no duplica y datos diferentes devuelven conflicto
+    ok 4 - Reintento con la misma referencia no duplica y datos diferentes devuelven conflicto
+      ---
+      duration_ms: 21.646488
+      ...
+    # Subtest: Pedido sin pago no aparece en cola y no puede tomarse
+    ok 5 - Pedido sin pago no aparece en cola y no puede tomarse
+      ---
+      duration_ms: 21.515561
+      ...
+    # Subtest: La edición general no altera un pedido operativo ni sus detalles o recibo
+    ok 6 - La edición general no altera un pedido operativo ni sus detalles o recibo
+      ---
+      duration_ms: 37.670211
+      ...
+    # Subtest: Simulación requiere SuperAdmin y bandera explícita
+    ok 7 - Simulación requiere SuperAdmin y bandera explícita
+      ---
+      duration_ms: 10.765064
+      ...
+    # Subtest: Pago simulado aprobado coordina pedido y recibo sin duplicar
+    ok 8 - Pago simulado aprobado coordina pedido y recibo sin duplicar
+      ---
+      duration_ms: 38.01574
+      ...
+    # Subtest: Dos empleados compiten por el mismo pedido: solo uno gana
+    ok 9 - Dos empleados compiten por el mismo pedido: solo uno gana
+      ---
+      duration_ms: 34.10673
+      ...
+    # Subtest: No se prepara un pedido ajeno ni se exceden cantidades; no se empaca incompleto
+    ok 10 - No se prepara un pedido ajeno ni se exceden cantidades; no se empaca incompleto
+      ---
+      duration_ms: 41.292504
+      ...
+    # Subtest: Incidencia bloquea y solo administración la resuelve con trazabilidad
+    ok 11 - Incidencia bloquea y solo administración la resuelve con trazabilidad
+      ---
+      duration_ms: 45.57519
+      ...
+    # Subtest: Recogida y empaque no vuelven a descontar existencias ni exponen el hash
+    ok 12 - Recogida y empaque no vuelven a descontar existencias ni exponen el hash
+      ---
+      duration_ms: 24.935157
+      ...
+    # Subtest: Código de retiro solo para comprador; código incorrecto no entrega
+    ok 13 - Código de retiro solo para comprador; código incorrecto no entrega
+      ---
+      duration_ms: 50.852557
+      ...
+    # Subtest: Domicilio exige dirección; rechazo de pago no habilita preparación
+    ok 14 - Domicilio exige dirección; rechazo de pago no habilita preparación
+      ---
+      duration_ms: 42.39403
+      ...
+    # Subtest: Despacho validado crea un solo envío y entrega final coordina estados
+    ok 15 - Despacho validado crea un solo envío y entrega final coordina estados
+      ---
+      duration_ms: 123.235248
+      ...
+    # Subtest: Cancelación pendiente libera reserva exactamente una vez
+    ok 16 - Cancelación pendiente libera reserva exactamente una vez
+      ---
+      duration_ms: 38.418261
+      ...
+    # Subtest: Reservas vencidas no admiten pagos y se liberan por tarea del servidor
+    ok 17 - Reservas vencidas no admiten pagos y se liberan por tarea del servidor
+      ---
+      duration_ms: 35.469741
+      ...
+    # Subtest: Movimientos idempotentes y retiros concurrentes nunca dejan stock negativo
+    ok 18 - Movimientos idempotentes y retiros concurrentes nunca dejan stock negativo
+      ---
+      duration_ms: 32.966499
+      ...
+    # Subtest: Pedidos nuevos del checkout conservan snapshot y se protegen contra cancelación sin liberar stock
+    ok 19 - Pedidos nuevos del checkout conservan snapshot y se protegen contra cancelación sin liberar stock
+      ---
+      duration_ms: 47.683751
+      ...
+    # Subtest: Cuenta desactivada pierde acceso aunque conserve token
+    ok 20 - Cuenta desactivada pierde acceso aunque conserve token
+      ---
+      duration_ms: 5.192476
+      ...
+    # Subtest: Resumen, actividad, buscadores y supervisión consultan datos reales
+    ok 21 - Resumen, actividad, buscadores y supervisión consultan datos reales
+      ---
+      duration_ms: 62.38284
+      ...
+    # Subtest: Pago en tienda: permisos, idempotencia y exclusión de duplicados
+    ok 22 - Pago en tienda: permisos, idempotencia y exclusión de duplicados
+      ---
+      duration_ms: 87.991218
+      ...
+    # Subtest: Dos referencias distintas no duplican el pago en tienda
+    ok 23 - Dos referencias distintas no duplican el pago en tienda
+      ---
+      duration_ms: 35.555314
+      ...
+    # Subtest: Ayuda interna: acceso privado y respuestas de administración
+    ok 24 - Ayuda interna: acceso privado y respuestas de administración
+      ---
+      duration_ms: 35.032606
+      ...
+    1..24
+ok 3 - Empleado: integración HTTP y transacciones reales en PostgreSQL
+  ---
+  duration_ms: 1079.243089
+  ...
+# Subtest: Pagos académicos: idempotencia y carreras con transacciones reales
+    # Subtest: Dos peticiones con la misma clave crean un solo pedido y pago
+    ok 1 - Dos peticiones con la misma clave crean un solo pedido y pago
+      ---
+      duration_ms: 85.962431
+      ...
+    # Subtest: Dos rechazos simultáneos devuelven inventario una sola vez
+    ok 2 - Dos rechazos simultáneos devuelven inventario una sola vez
+      ---
+      duration_ms: 44.987147
+      ...
+    # Subtest: Aprobar y rechazar simultáneamente solo permite un resultado definitivo
+    ok 3 - Aprobar y rechazar simultáneamente solo permite un resultado definitivo
+      ---
+      duration_ms: 37.025057
+      ...
+    # Subtest: Dos compras compitiendo por una unidad no generan stock negativo ni pedidos huérfanos
+    ok 4 - Dos compras compitiendo por una unidad no generan stock negativo ni pedidos huérfanos
+      ---
+      duration_ms: 27.553837
+      ...
+    # Subtest: Una reserva vencida se libera con el flujo existente y no puede pagarse después
+    ok 5 - Una reserva vencida se libera con el flujo existente y no puede pagarse después
+      ---
+      duration_ms: 32.297837
+      ...
+    # Subtest: Rechazo y nueva compra recuperan carrito sin dejar bloqueado el pedido siguiente
+    ok 6 - Rechazo y nueva compra recuperan carrito sin dejar bloqueado el pedido siguiente
+      ---
+      duration_ms: 50.301375
+      ...
+    1..6
+ok 4 - Pagos académicos: idempotencia y carreras con transacciones reales
+  ---
+  duration_ms: 391.75211
+  ...
+# Subtest: RF-025: lista privada y persistente con HTTP y PostgreSQL aislado
+    # Subtest: Exige sesión y rol cliente en lectura y escritura
+    ok 1 - Exige sesión y rol cliente en lectura y escritura
+      ---
+      duration_ms: 106.724897
+      ...
+    # Subtest: Valida UUID y no acepta usuario externo ni producto inexistente
+    ok 2 - Valida UUID y no acepta usuario externo ni producto inexistente
+      ---
+      duration_ms: 21.213543
+      ...
+    # Subtest: Altas concurrentes: una fila y conflicto 409 sin tocar el carrito
+    ok 3 - Altas concurrentes: una fila y conflicto 409 sin tocar el carrito
+      ---
+      duration_ms: 70.548058
+      ...
+    # Subtest: Listas separadas y eliminación limitada a la cuenta
+    ok 4 - Listas separadas y eliminación limitada a la cuenta
+      ---
+      duration_ms: 101.113733
+      ...
+    # Subtest: Agregar al carrito conserva el favorito
+    ok 5 - Agregar al carrito conserva el favorito
+      ---
+      duration_ms: 54.821507
+      ...
+    # Subtest: Producto inactivado sigue visible para quitarlo y no permite nuevas altas
+    ok 6 - Producto inactivado sigue visible para quitarlo y no permite nuevas altas
+      ---
+      duration_ms: 99.218961
+      ...
+    # Subtest: El estado en base persiste entre consultas y no comparte productos
+    ok 7 - El estado en base persiste entre consultas y no comparte productos
+      ---
+      duration_ms: 25.074617
+      ...
+    1..7
+ok 5 - RF-025: lista privada y persistente con HTTP y PostgreSQL aislado
+  ---
+  duration_ms: 556.090682
+  ...
+1..5
+# tests 48
+# suites 0
+# pass 48
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 31461.085936

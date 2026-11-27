@@ -1,10 +1,11 @@
+import FavoriteButton from '../../components/wishlist/FavoriteButton';
+import { useCanShop } from '../../hooks/useCanShop';
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
   ArrowUpRight,
   Check,
-  Heart,
   RotateCcw,
   Send,
   ShieldCheck,
@@ -145,12 +146,14 @@ const apiImage = (product?: ApiProduct | null) =>
   null;
 
 export default function Home() {
+  const canShop = useCanShop();
   const { add } = useCart();
+  const [categories, setCategories] = useState<{ id: string; name: string; _count: { products: number } }[]>([]);
+  const [categoriesError, setCategoriesError] = useState(false);
   const [products, setProducts] = useState<ApiProduct[]>([]);
   const [tab, setTab] = useState<"destacados" | "ofertas" | "nuevos">(
     "destacados",
   );
-  const [loved, setLoved] = useState<string[]>([]);
   const [toast, setToast] = useState<{ id: string; name: string } | null>(null);
   const [email, setEmail] = useState("");
   const [joined, setJoined] = useState(false);
@@ -191,14 +194,13 @@ export default function Home() {
     return () => observer.disconnect();
   }, []);
 
-  const counts = useMemo(() => {
-    const map: Record<string, number> = {};
-    products.forEach((product) => {
-      const name = product.category?.name ?? "";
-      map[name] = (map[name] ?? 0) + 1;
-    });
-    return map;
-  }, [products]);
+  useEffect(() => {
+    fetch(API.categories).then(response => {
+      if (!response.ok) throw new Error('No se pudieron cargar las categorías');
+      return response.json();
+    }).then(data => { if (!Array.isArray(data)) throw new Error(); setCategories(data); })
+      .catch(() => setCategoriesError(true));
+  }, []);
 
   const featured = useMemo(() => {
     const notebook = products.find((product) =>
@@ -227,15 +229,16 @@ export default function Home() {
     }).filter((item) => item.product);
   }, [products, tab]);
 
-  const addProduct = (product: ApiProduct) => {
-    add({
+  const addProduct = async (product: ApiProduct) => {
+    const saved = await add({
       id: product.id,
       name: product.name,
       price: Number(product.price),
       category: product.category?.name ?? "Otros",
       icon: "📦",
+      imageUrl: apiImage(product),
     });
-    setToast({ id: product.id, name: product.name });
+    if (saved) setToast({ id: product.id, name: product.name });
   };
 
   return (
@@ -331,7 +334,7 @@ export default function Home() {
               Compra por <em>categoría</em>
             </h2>
             <p>
-              Seis universos organizados para que encuentres exactamente lo que
+              Productos organizados para que encuentres exactamente lo que
               buscas.
             </p>
           </div>
@@ -340,8 +343,12 @@ export default function Home() {
           </Link>
         </div>
         <div className="category-grid">
-          {CATEGORY_CARDS.map((category) => {
-            const total = counts[category.dbName] ?? 0;
+          {categoriesError && <p role="alert">No pudimos cargar las categorías. <Link to="/catalogo">Ver catálogo</Link></p>}
+          {categories.map((entry) => {
+            const normalize = (name: string) => name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+            const guide = CATEGORY_CARDS.find(card => normalize(card.dbName) === normalize(entry.name));
+            const category = { label: entry.name, dbName: entry.name, image: guide?.image ?? IMG.writing };
+            const total = entry._count.products;
             return (
               <Link
                 key={category.label}
@@ -410,7 +417,6 @@ export default function Home() {
               const oldPrice = guide.discount
                 ? Math.round(Number(product.price) / (1 - guide.discount))
                 : null;
-              const isLoved = loved.includes(product.id);
               return (
                 <article className="arena-product" key={product.id}>
                   <div className="product-media">
@@ -424,20 +430,8 @@ export default function Home() {
                       />
                     </Link>
                     <span className="product-badge">{guide.badge}</span>
-                    <button
-                      type="button"
-                      className={`product-heart ${isLoved ? "on" : ""}`}
-                      aria-label="Guardar"
-                      onClick={() =>
-                        setLoved((prev) =>
-                          prev.includes(product.id)
-                            ? prev.filter((id) => id !== product.id)
-                            : [...prev, product.id],
-                        )
-                      }
-                    >
-                      <Heart size={15} fill={isLoved ? "var(--accent)" : "none"} />
-                    </button>
+                    <FavoriteButton productId={product.id} productName={product.name} className="product-heart" />
+                    {canShop && (
                     <button
                       type="button"
                       className="product-add"
@@ -445,6 +439,7 @@ export default function Home() {
                     >
                       <ShoppingBag size={15} /> Agregar al carrito
                     </button>
+                    )}
                   </div>
                   <div className="product-content">
                     <p>
@@ -501,7 +496,7 @@ export default function Home() {
         </div>
         <div className="school-visual">
           <img src={IMG.school} alt="Colección escolar pastel" />
-          <span className="school-badge">Envío gratis</span>
+          <span className="school-badge">Envío gratis desde $120.000</span>
         </div>
       </section>
 
@@ -654,7 +649,7 @@ export default function Home() {
         )}
       </section>
 
-      {toast && (
+      {canShop && toast && (
         <div className="cart-toast" role="status">
           <span className="cart-toast-check">
             <Check size={16} />

@@ -28,7 +28,9 @@ export const deletePromotionalCode = asyncHandler(async (req: Request, res: Resp
 });
 
 export const validatePromotionalCode = asyncHandler(async (req: Request, res: Response) => {
-  const code = await promotionalCodeService.validate(req.body.code, req.body.total);
+  const code = req.body.items
+    ? await promotionalCodeService.quote(req.body.code, req.body.items, (req as any).user)
+    : await promotionalCodeService.validate(req.body.code, req.body.total);
   return res.json(code);
 });
 

@@ -1,7 +1,19 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { CreditCard, ShoppingCart, Tag, Undo2, UserPlus, Wallet, type LucideIcon } from 'lucide-react';
 import { API, authHeaders } from '../../../api/api';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
+import { notify } from '../../../lib/notifications';
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  Legend,
+} from 'recharts';
 import './Reports.css';
 
 const chartTooltip = {
@@ -31,25 +43,75 @@ interface Summary {
   active_promotional_codes: number;
   orders_today: number;
   new_customers_today: number;
+  total_orders?: number;
+  products_sold?: number;
+  average_ticket?: number;
 }
+
+const INVALID_RANGE_MSG =
+  'Rango no válido: La fecha de inicio no puede ser posterior a la fecha final';
 
 export default function Reports() {
   const [reports, setReports] = useState<Report[]>([]);
+  const [todayReports, setTodayReports] = useState<Report[]>([]);
   const [summary, setSummary] = useState<Summary | null>(null);
-  const headers = authHeaders();
+  const [loading, setLoading] = useState(true);
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
+
+  const loadReports = async (from = '', to = '') => {
+    setLoading(true);
+    const headers = authHeaders();
+    const params = new URLSearchParams();
+    if (from) params.set('from', from);
+    if (to) params.set('to', to);
+    const qs = params.toString() ? `?${params.toString()}` : '';
+
+    try {
+      const today = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'America/Bogota', year: 'numeric', month: '2-digit', day: '2-digit',
+      }).format(new Date());
+      const [r1, r2, r3] = await Promise.all([
+        fetch(`${API.reports}${qs}`, { headers }),
+        fetch(`${API.reports}/summary${qs}`, { headers }),
+        fetch(`${API.reports}?from=${today}&to=${today}`, { headers }),
+      ]);
+
+      if (!r1.ok || !r2.ok || !r3.ok) {
+        const err = await (!r1.ok ? r1 : !r2.ok ? r2 : r3).json().catch(() => null);
+        notify.error(err?.message ?? 'No se pudieron cargar los reportes.');
+        return;
+      }
+
+      const [rowsData, summaryData, todayData] = await Promise.all([r1.json(), r2.json(), r3.json()]);
+      setReports(Array.isArray(rowsData) ? rowsData : []);
+      setTodayReports(Array.isArray(todayData) ? todayData.filter((row: Report) => row.date.slice(0, 10) === today) : []);
+      setSummary(summaryData);
+    } catch {
+      notify.error('Error de conexión al cargar los reportes.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const load = async () => {
-      const [r1, r2] = await Promise.all([
-        fetch(API.reports, { headers }),
-        fetch(`${API.reports}/summary`, { headers }),
-      ]);
-      if (r1.ok) setReports(await r1.json());
-      if (r2.ok) setSummary(await r2.json());
-    };
-    load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    loadReports();
   }, []);
+
+  const handleFilterSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    if (fromDate && toDate && fromDate > toDate) {
+      notify.error(INVALID_RANGE_MSG);
+      return;
+    }
+    loadReports(fromDate, toDate);
+  };
+
+  const handleClearFilter = () => {
+    setFromDate('');
+    setToDate('');
+    loadReports();
+  };
 
   const last6 = [...reports].slice(0, 6).reverse();
   const stats: { label: string; value: string; icon: LucideIcon; color: string }[] = summary
@@ -66,7 +128,41 @@ export default function Reports() {
   return (
     <div className="reportes-page">
       <div className="reportes-topbar">
-        <h2 className="titulo-reportes">Reportes Financieros</h2>
+        <div>
+          <h2 className="titulo-reportes">Reportes Financieros</h2>
+          <p className="subtitulo-usuarios">
+            Métricas consolidadas en tiempo real a partir de pedidos, pagos, devoluciones y clientes
+          </p>
+        </div>
+
+        <form className="reportes-filtro-fechas" onSubmit={handleFilterSubmit}>
+          <label className="reportes-fecha-campo">
+            <span>Desde</span>
+            <input
+              type="date"
+              value={fromDate}
+              onChange={(e) => setFromDate(e.target.value)}
+              aria-label="Fecha inicial"
+            />
+          </label>
+          <label className="reportes-fecha-campo">
+            <span>Hasta</span>
+            <input
+              type="date"
+              value={toDate}
+              onChange={(e) => setToDate(e.target.value)}
+              aria-label="Fecha final"
+            />
+          </label>
+          <button type="submit" className="reportes-btn-filtrar">
+            Generar reporte
+          </button>
+          {(fromDate || toDate) && (
+            <button type="button" className="reportes-btn-limpiar" onClick={handleClearFilter}>
+              Limpiar
+            </button>
+          )}
+        </form>
       </div>
 
       {/* Stats en tiempo real */}
@@ -143,41 +239,47 @@ export default function Reports() {
         </div>
       </div>
 
-      {/* Tabla detallada */}
       <div className="reportes-tabla-section">
-        <h2 className="section-heading">Detalle diario</h2>
-        <div className="table-wrapper">
-          <table className="tabla-reportes">
-            <thead>
-              <tr>
-                <th>Fecha</th>
-                <th>Pedidos</th>
-                <th>Entregados</th>
-                <th>Cancelados</th>
-                <th>Vendido</th>
-                <th>Pagado</th>
-                <th>Reembolsado</th>
-                <th>Productos vendidos</th>
-                <th>Clientes nuevos</th>
-              </tr>
-            </thead>
-            <tbody>
-              {reports.map((r) => (
-                <tr key={r.id}>
-                  <td className="fecha-reporte">{r.date.slice(0, 10)}</td>
-                  <td>{r.totalOrders}</td>
-                  <td className="entregados-reporte">{r.deliveredOrders}</td>
-                  <td className="cancelados-reporte">{r.canceledOrders}</td>
-                  <td className="vendido-reporte">${Number(r.totalSold).toLocaleString()}</td>
-                  <td>${Number(r.totalPaid).toLocaleString()}</td>
-                  <td className="reembolsado-reporte">${Number(r.totalRefunded).toLocaleString()}</td>
-                  <td>{r.productsSold}</td>
-                  <td>{r.newCustomers}</td>
+        <h2 className="section-heading">Detalle de hoy</h2>
+        <p>Esta tabla muestra únicamente los registros del día en Colombia; los filtros afectan las gráficas y el resumen.</p>
+        {loading ? (
+          <p style={{ color: 'var(--text)', margin: 0 }}>Calculando reportes…</p>
+        ) : todayReports.length === 0 ? (
+          <p style={{ color: 'var(--text)', margin: 0 }}>No hay registros para el día de hoy.</p>
+        ) : (
+          <div className="table-wrapper">
+            <table className="tabla-reportes">
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Pedidos</th>
+                  <th>Entregados</th>
+                  <th>Cancelados</th>
+                  <th>Vendido</th>
+                  <th>Pagado</th>
+                  <th>Reembolsado</th>
+                  <th>Productos vendidos</th>
+                  <th>Clientes nuevos</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {todayReports.map((r) => (
+                  <tr key={r.id}>
+                    <td className="fecha-reporte">{r.date.slice(0, 10)}</td>
+                    <td>{r.totalOrders}</td>
+                    <td className="entregados-reporte">{r.deliveredOrders}</td>
+                    <td className="cancelados-reporte">{r.canceledOrders}</td>
+                    <td className="vendido-reporte">${Number(r.totalSold).toLocaleString('es-CO')}</td>
+                    <td>${Number(r.totalPaid).toLocaleString('es-CO')}</td>
+                    <td className="reembolsado-reporte">${Number(r.totalRefunded).toLocaleString('es-CO')}</td>
+                    <td>{r.productsSold}</td>
+                    <td>{r.newCustomers}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -224,3 +224,18 @@ test(
     );
   }
 );
+test('Empleado acepta identificadores históricos de PostgreSQL sin debilitar la clave de operación', () => {
+  const { pickingSchema, reassignSchema, dispatchSchema } = require('./employee.schema');
+  const legacy = '10000000-0000-0000-0000-000000000001';
+  const key = '11111111-1111-4111-8111-111111111111';
+  const input = { requestKey: key, customerId: legacy, fulfillmentMethod: 'pickup', details: [{ productId: legacy, quantity: 1 }] };
+  assert.equal(newEmployeeOrder.safeParse(input).success, true);
+  assert.equal(newEmployeeOrder.safeParse({ ...input, requestKey: legacy }).success, false);
+  assert.equal(newEmployeeOrder.safeParse({ ...input, customerId: 'invalid' }).success, false);
+  assert.equal(newEmployeeOrder.safeParse({ ...input, details: [{ productId: 'invalid', quantity: 1 }] }).success, false);
+  assert.equal(inventorySchema.safeParse({ requestKey: key, productId: legacy, type: 'in', quantity: 1, reason: 'Compra' }).success, true);
+  assert.equal(pickingSchema.safeParse({ items: [{ detailId: legacy, pickedQuantity: 1 }] }).success, true);
+  assert.equal(dispatchSchema.safeParse({ driverId: legacy }).success, true);
+  assert.equal(reassignSchema.safeParse({ assigneeId: legacy, note: 'Cambio de turno' }).success, true);
+  assert.equal(newEmployeeOrder.parse({ ...input, customerId: legacy.toUpperCase() }).customerId, legacy);
+});

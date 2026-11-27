@@ -14,6 +14,16 @@ const order = {
 const hasStatus = (status: number) => (error: unknown) =>
   error instanceof HttpError && error.status === status;
 
+// receiptService.update corre dentro de atomic() → prisma.$transaction.
+// En unit tests no hay BD: se reemplaza por una ejecución directa con el
+// mismo cliente prisma (mismo patrón que inventory.test / orders.test).
+// assertUnmanaged() hace SELECT ... FOR UPDATE con $queryRaw; se stubbea
+// para que no toque el motor de la base de datos.
+const stubTransaction = () => {
+  db.$transaction = async (fn: any) => fn(db);
+  db.$queryRaw = async () => [];
+};
+
 test('El recibo propio toma cliente, total y estado del servidor', async () => {
   db.order.findUnique = async () => order;
   db.receipt.create = async ({ data }: any) => ({ id: 'r-1', ...data });
@@ -52,6 +62,7 @@ test('Pedido inexistente devuelve 404 al crear recibo', async () => {
 });
 
 test('Editar un recibo ligado a pedido conserva el total del servidor', async () => {
+  stubTransaction();
   db.receipt.findUnique = async () => ({
     id: 'r-1', orderId: order.id, customerId: client.id,
     paymentStatus: 'pending', employeeId: null, _count: { payouts: 0 },
@@ -63,6 +74,7 @@ test('Editar un recibo ligado a pedido conserva el total del servidor', async ()
 });
 
 test('No se puede marcar un recibo pagado mediante edición', async () => {
+  stubTransaction();
   db.receipt.findUnique = async () => ({
     id: 'r-1', paymentStatus: 'pending', _count: { payouts: 0 },
   });
@@ -72,6 +84,7 @@ test('No se puede marcar un recibo pagado mediante edición', async () => {
 });
 
 test('Un recibo con pagos no es editable', async () => {
+  stubTransaction();
   db.receipt.findUnique = async () => ({
     id: 'r-1', paymentStatus: 'pending', _count: { payouts: 1 },
   });

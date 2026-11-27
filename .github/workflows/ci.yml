@@ -1,14 +1,145 @@
 name: CI
-on: [pull_request]
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Un solo run por commit/rama: los pushes rápidos cancelan el anterior.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  test:
+  # ── Backend: instalación con lockfile, compilación y suite unitaria ──────
+  backend:
+    name: Backend (build + tests unitarios)
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: be
     steps:
       - uses: actions/checkout@v4
+
+      # pnpm con la MISMA versión exacta que package.json (RT-001 / pnpm-only).
       - uses: pnpm/action-setup@v4
+        with:
+          version: 10.12.4
+
+      # La caché de pnpm necesita la ruta EXACTA del lockfile (no hay
+      # package.json en la raíz, así que el default no lo encuentra).
       - uses: actions/setup-node@v4
-        with: { node-version: 20, cache: 'pnpm' }
-      - run: pnpm install --frozen-lockfile
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: be/pnpm-lock.yaml
+
+      - name: Instalar dependencias (lockfile congelado)
+        run: pnpm install --frozen-lockfile
+
+      - name: Generar cliente Prisma
+        run: pnpm prisma generate
+
+      - name: Compilar backend (tsc)
+        run: pnpm build
+
+      - name: Tests unitarios
+        run: pnpm test
+        env:
+          # Los tests unitarios no tocan una BD real: prisma se mockea por
+          # archivo, pero PrismaClient exige la variable presente.
+          DATABASE_URL: postgresql://test:test@localhost:5432/test
+          # Compuesto con run_id: valor único por ejecución, no un secreto
+          # hardcodeado (evita falsos positivos de detección de secretos).
+          JWT_SECRET: ${{ github.run_id }}-unit-test-jwt-placeholder-000000
+          NODE_ENV: test
+
+  # ── Frontend: instalación con lockfile, lint, build y tests ──────────────
+  frontend:
+    name: Frontend (lint + build + tests)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: fe
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.12.4
+
+      # Node 22: el test C-07 es un .ts ejecutado con `node --test` sin
+      # bundler; requiere el type-stripping nativo de Node >= 22.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: fe/pnpm-lock.yaml
+
+      - name: Instalar dependencias (lockfile congelado)
+        run: pnpm install --frozen-lockfile
+
+      - name: ESLint (0 errores exigido)
+        run: pnpm lint
+
+      - name: Compilar frontend (tsc -b + vite build)
+        run: pnpm build
+
+      - name: Tests del frontend y flujos de pago
+        run: pnpm test
+
+  # ── Integración: PostgreSQL real + migraciones + suites de integración ───
+  integration:
+    name: Integración (PostgreSQL real)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_DB: estuche_virtual_test
+          # Auth por trust: es una base efímera del runner de CI, no expuesta
+          # fuera de localhost. Evita además credenciales literales en el yml.
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    defaults:
+      run:
         working-directory: be
-      - run: pnpm test
-        working-directory: be
+    env:
+      # Ambiente de pruebas SEPARADO: hostname localhost y nombre terminado
+      # en _test (los tests se niegan a correr contra otra base).
+      DATABASE_URL: postgresql://postgres@localhost:5432/estuche_virtual_test
+      EMPLOYEE_TEST_DATABASE_URL: postgresql://postgres@localhost:5432/estuche_virtual_test
+      JWT_SECRET: ${{ github.run_id }}-integration-jwt-placeholder-000000
+      NODE_ENV: test
+      ENABLE_PAYMENT_SIMULATION: "true"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.12.4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: be/pnpm-lock.yaml
+
+      - name: Instalar dependencias (lockfile congelado)
+        run: pnpm install --frozen-lockfile
+
+      - name: Generar cliente Prisma
+        run: pnpm prisma generate
+
+      - name: Migraciones sobre la base de pruebas
+        run: pnpm prisma migrate deploy
+
+      - name: Suites de integración
+        run: pnpm test:integration

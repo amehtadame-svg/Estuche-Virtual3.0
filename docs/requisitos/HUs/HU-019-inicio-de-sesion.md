@@ -56,7 +56,7 @@
 
 | Método | Ruta | Descripción |
 |--------|------|-------------|
-| POST | `/api/v1/auth/login` | Autentica al usuario e inicia la sesión |
+| POST | `/api/auth/login` | Autentica al usuario e inicia la sesión |
 
 ---
 

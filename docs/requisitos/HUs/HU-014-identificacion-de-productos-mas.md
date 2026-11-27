@@ -23,7 +23,7 @@
 
 **Como** gerente de compras, analista de inteligencia comercial o administrador general del negocio, responsable del análisis de demanda, rotación de mercancía e inversión en inventario,  
 **quiero** disponer de un módulo de analítica que procese y presente un ranking interactivo (Top 10 / Top 20) de los productos que registran la mayor cantidad de unidades comercializadas en un período de tiempo seleccionable, ordenados descendentemente y respaldados por gráficos comparativos e indicadores de volumen e ingresos,  
-**para** identificar con absoluta precisión los artículos de alta rotación comercial (productos estrella), asegurar su reabastecimiento prioritario antes de llegar a situaciones de bajo stock, optimizar la disposición física de mercancías en estanterías o vitrinas de alto impacto, planificar campañas publicitarias focalizadas y negociar mejores precios y condiciones de crédito con proveedores clave.
+**para** identificar con absoluta precisión los artículos de alta rotación comercial (productos estrella), asegurar su reabastecimiento prioritario antes de llegar a situaciones de bajo stock, optimizar la disposición física de mercancías en estanterías o vitrinas de alto impacto, planificar campañas publicitarias focalizadas y planificar el abastecimiento.
 
 ---
 

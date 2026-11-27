@@ -1,16 +1,18 @@
 <!--
-  ¿Qué? Requisito funcional que describe el registro de nuevos usuarios (Cliente o Proveedor).
+  ¿Qué? Requisito funcional que describe el registro de nuevos clientes.
   ¿Para qué? Definir la lógica exacta que debe implementar el endpoint de registro.
   ¿Impacto? Es la base de todo el sistema de autenticación — sin usuarios no hay pedidos ni catálogo administrado.
 -->
 
 # RF-001 — Registro de Usuarios
 
+> La verificación de correo indicada aquí sigue pendiente: actualmente el registro de cliente inicia sesión sin activación previa.
+
 **Historia de usuario relacionada**: HU-031
 
 ## Descripción
 
-El sistema debe permitir el registro de nuevos usuarios con los roles **Cliente** y **Proveedor** mediante un formulario de registro. Una vez completado el registro, el usuario recibirá un correo electrónico de verificación para activar su cuenta. Hasta que el correo sea verificado, el usuario no podrá iniciar sesión en la plataforma.
+El sistema debe permitir el registro de nuevos usuarios con el rol **Cliente** mediante un formulario de registro. Una vez completado el registro, el usuario recibirá un correo electrónico de verificación para activar su cuenta. Hasta que el correo sea verificado, el usuario no podrá iniciar sesión en la plataforma.
 
 ---
 
@@ -19,7 +21,7 @@ El sistema debe permitir el registro de nuevos usuarios con los roles **Cliente*
 | Paso | Descripción |
 |------|-------------|
 | 1 | El usuario accede al formulario de registro desde la página principal. |
-| 2 | El usuario selecciona el tipo de cuenta (Cliente o Proveedor). |
+| 2 | El usuario abre el formulario para crear una cuenta de cliente. |
 | 3 | El usuario diligencia el formulario con sus datos personales. |
 | 4 | El sistema valida que todos los campos obligatorios estén completos y tengan un formato válido. |
 | 5 | El sistema verifica que el correo electrónico no se encuentre registrado previamente. |
@@ -47,7 +49,7 @@ El sistema debe permitir el registro de nuevos usuarios con los roles **Cliente*
 | RN-008 | La contraseña debe almacenarse utilizando un algoritmo de cifrado seguro (bcrypt). |
 | RN-009 | Solo los usuarios con correo verificado podrán iniciar sesión en el sistema. |
 | RN-010 | El enlace de verificación tendrá una vigencia máxima de 24 horas. |
-| RN-011 | Los únicos roles permitidos para el registro son **Cliente** y **Proveedor**. El rol **Administrador** únicamente podrá ser creado por otro administrador autorizado. |
+| RN-011 | El registro público crea cuentas con rol **Cliente**. El rol **Administrador** únicamente podrá ser creado por otro administrador autorizado. |
 
 ---
 
@@ -61,7 +63,7 @@ El sistema debe permitir el registro de nuevos usuarios con los roles **Cliente*
   "correo": "string",
   "telefono": "string",
   "password": "string",
-  "rol": "Cliente | Proveedor"
+  "rol": "Cliente"
 }
 ```
 
@@ -100,5 +102,5 @@ El sistema debe permitir el registro de nuevos usuarios con los roles **Cliente*
 
 | Método | Ruta | Auth requerida | Descripción |
 |---------|------|----------------|-------------|
-| POST | `/api/auth/register` | No | Registra un nuevo usuario con rol Cliente o Proveedor. |
-| POST | `/api/auth/verify-email` | No | Verifica la cuenta mediante el enlace enviado al correo electrónico. |
+| POST | `/api/auth/register` | No | Registra un nuevo usuario con rol Cliente. |
+| POST | `/api/auth/verify-email` | No | Ruta deseada; no implementada actualmente. |

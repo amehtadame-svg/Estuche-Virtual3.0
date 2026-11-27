@@ -1,3 +1,4 @@
+import { databaseUuidSchema } from '../../lib/schemas';
 import { z } from 'zod';
 
 export const promotionalCodeTypeEnum = ['percentage', 'fixed'] as const;
@@ -18,7 +19,8 @@ export const updatePromotionalCodeSchema = createPromotionalCodeSchema.partial()
 
 export const validatePromotionalCodeSchema = z.object({
   code: z.string().min(1),
-  total: z.coerce.number().optional(),
+  total: z.coerce.number().nonnegative().optional(),
+  items: z.array(z.object({ productId: databaseUuidSchema, quantity: z.number().int().min(1).max(999) }).strict()).min(1).max(100).refine(items => new Set(items.map(item => item.productId)).size === items.length, 'No se permiten productos repetidos.').optional(),
 });
 
 export const applyPromotionalCodeSchema = z.object({

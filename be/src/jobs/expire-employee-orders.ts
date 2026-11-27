@@ -1,8 +1,16 @@
 import 'dotenv/config';
 import { prisma } from '../lib/prisma';
-import { employeeService } from '../modules/employee/employee.service';
+import { supervisionService } from '../modules/supervision/supervision.service';
 
-async function run() {
+/**
+ * Libera las reservas de empleados vencidas (pending sin pago y con
+ * expiresAt pasado), devolviendo el stock al inventario.
+ *
+ * Es la lógica compartida entre:
+ *  - el script manual:  pnpm employee:expire
+ *  - el scheduler automático del servidor (src/index.ts)
+ */
+export async function expireEmployeeOrders(): Promise<number> {
   const orders = await prisma.order.findMany({
     where: {
       createdById: {
@@ -21,9 +29,11 @@ async function run() {
     take: 200,
   });
 
+  let released = 0;
+
   for (const order of orders) {
     try {
-      await employeeService.cancel(
+      await supervisionService.cancel(
         order.id,
         'Reserva vencida sin pago.',
         null,
@@ -31,23 +41,28 @@ async function run() {
       );
 
       console.log('Reserva liberada:', order.id);
+      released += 1;
     } catch (error) {
       console.error(
         'Revisar reserva:',
         order.id,
-        error instanceof Error
-          ? error.message
-          : 'Error'
+        error instanceof Error ? error.message : 'Error'
       );
 
       process.exitCode = 1;
     }
   }
+
+  return released;
 }
 
-run()
-  .catch((error) => {
-    console.error(error);
-    process.exitCode = 1;
-  })
-  .finally(() => prisma.$disconnect());
+// Ejecución directa (pnpm employee:expire): solo corre si se invoca como
+// script, no al importar el módulo desde el scheduler.
+if (require.main === module) {
+  expireEmployeeOrders()
+    .catch((error) => {
+      console.error(error);
+      process.exitCode = 1;
+    })
+    .finally(() => prisma.$disconnect());
+}

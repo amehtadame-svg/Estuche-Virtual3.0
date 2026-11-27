@@ -1,3 +1,4 @@
+import { referenceText } from '../../../lib/reference';
 import { useState, useEffect, useMemo, useRef, type FormEvent } from 'react';
 import { AlertTriangle, CheckCircle2, Package } from 'lucide-react';
 import { useAuth } from '../../../hooks/useAuth';
@@ -98,7 +99,9 @@ export default function InventoryOutbound() {
         if (Array.isArray(data) && data.length > 0) setReasons(data);
       }
     } catch {
-      setError('No se pudo cargar la información del inventario.');
+      const msg = 'No se pudo cargar la información del inventario.';
+      setError(msg);
+      notify.error(msg);
     } finally {
       setLoading(false);
     }
@@ -107,6 +110,15 @@ export default function InventoryOutbound() {
   useEffect(() => {
     loadData();
   }, []);
+
+  useEffect(() => {
+    if (!showConfirm) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && !submittingRef.current) setShowConfirm(false);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [showConfirm]);
 
   const filteredProducts = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -150,21 +162,25 @@ export default function InventoryOutbound() {
     setSuccessMsg('');
 
     if (!selectedProduct) {
-      setError('Selecciona primero un producto del catálogo para registrar la salida.');
+      const msg = 'Selecciona primero un producto del catálogo para registrar la salida.';
+      setError(msg);
+      notify.error(msg);
       return;
     }
     if (!isQuantityValid) {
       setError(QUANTITY_ERROR_MSG);
+      notify.error(QUANTITY_ERROR_MSG);
       return;
     }
     if (exceedsStock) {
-      setError(
-        `No se puede procesar la salida: La cantidad solicitada excede el stock actual disponible en el almacén (Disponible: ${selectedProduct.stock} unidades)`
-      );
+      const msg = `No se puede procesar la salida: La cantidad solicitada excede el stock actual disponible en el almacén (Disponible: ${selectedProduct.stock} unidades)`;
+      setError(msg);
+      notify.error(msg);
       return;
     }
     if (!isReasonValid) {
       setError(REASON_ERROR_MSG);
+      notify.error(REASON_ERROR_MSG);
       return;
     }
 
@@ -266,6 +282,7 @@ export default function InventoryOutbound() {
             type="text"
             className="inbound-input"
             placeholder="Escribe nombre, código SKU (ej. EV-001) o código de barras..."
+            maxLength={150}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -383,6 +400,7 @@ export default function InventoryOutbound() {
             className="inbound-input"
             rows={3}
             placeholder="Ej. Traslado de 10 cuadernos a la sede norte para reposición de vitrina"
+            maxLength={500}
             value={reasonDetail}
             onChange={(e) => {
               setReasonDetail(e.target.value);
@@ -404,7 +422,8 @@ export default function InventoryOutbound() {
 
       {/* Bitácora de salidas manuales */}
       <div className="inbound-card inbound-history-card">
-        <h2 className="inbound-card-title">Salidas recientes</h2>
+        <h2 className="inbound-card-title">Historial de salidas</h2>
+        <p className="inbound-muted">Cada fila es un movimiento registrado, no un producto nuevo. Un mismo producto puede aparecer varias veces.</p>
         {movements.length === 0 ? (
           <p className="inbound-muted">Aún no se han registrado salidas de mercancía.</p>
         ) : (
@@ -432,7 +451,7 @@ export default function InventoryOutbound() {
                   <td>
                     <span className="outbound-qty-badge">−{m.quantity} uds.</span>
                   </td>
-                  <td>{m.reason || 'Salida manual'}</td>
+                  <td>{referenceText(m.reason) || 'Salida manual'}</td>
                   <td>{m.user?.fullName || 'Administrador'}</td>
                 </tr>
               ))}
@@ -462,7 +481,7 @@ export default function InventoryOutbound() {
               Esta acción descontará existencias de forma permanente. Revisa el resumen antes de continuar.
             </p>
 
-            <dl className="outbound-modal-list">
+            <dl className="outbound-modal-list outbound-confirm-summary">
               <div>
                 <dt>Producto</dt>
                 <dd>{selectedProduct.name}</dd>
@@ -503,7 +522,7 @@ export default function InventoryOutbound() {
               Esta acción descontará existencias de forma permanente. Revisa el resumen antes de continuar.
             </p>
 
-            <dl className="outbound-modal-list">
+            <dl className="outbound-modal-list outbound-confirm-summary">
               <div>
                 <dt>Producto</dt>
                 <dd>{selectedProduct.name}</dd>
@@ -534,7 +553,7 @@ export default function InventoryOutbound() {
               </div>
             </dl>
 
-            <div className="outbound-modal-actions">
+            <div className="outbound-modal-actions" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <button
                 type="button"
                 className="outbound-btn-cancel"
