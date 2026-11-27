@@ -5,11 +5,20 @@ import {
   type ConfirmationRequest,
   type ToastMessage,
 } from '../../lib/notifications';
+import { useAuth } from '../../hooks/useAuth';
 import './ToastProvider.css';
 
 export default function ToastProvider({ children }: { children: ReactNode }) {
+  const { user } = useAuth();
+  // Administración y clientes comparten el diseño, conservando el mensaje de cada aviso.
+  const estiloMorado = ['superadmin', 'admin', 'client'].includes(user?.role ?? '')
+    ? ' notificaciones-superadmin'
+    : '';
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   const [successNotice, setSuccessNotice] = useState<ToastMessage | null>(null);
+  const successTitle = estiloMorado && successNotice?.title === 'Operación exitosa' && /eliminad[oa]|eliminó/i.test(successNotice.message)
+    ? 'Eliminación confirmada'
+    : successNotice?.title;
   const [confirmations, setConfirmations] = useState<ConfirmationRequest[]>([]);
   const activeConfirmation = confirmations[0] ?? null;
   const confirmationQuestionEnd = activeConfirmation?.message.indexOf('?') ?? -1;
@@ -21,6 +30,10 @@ export default function ToastProvider({ children }: { children: ReactNode }) {
   const confirmationDetail = activeConfirmation && confirmationQuestionEnd >= 0
     ? activeConfirmation.message.slice(confirmationQuestionEnd + 1).trim()
     : '';
+  const confirmaArchivo = /archivar|quitar.+lista/i.test(confirmationQuestion);
+  const confirmaEliminacion = /eliminar|borrar/i.test(confirmationQuestion) && !confirmaArchivo;
+  const confirmationTitle = confirmaArchivo ? 'Quitar de la lista' : confirmaEliminacion ? 'Confirmar eliminación' : 'Confirmar acción';
+  const confirmationButton = confirmaArchivo ? 'Sí, quitar' : confirmaEliminacion ? 'Sí, eliminar' : 'Sí, continuar';
   const inboundSuccessParts = successNotice?.message.match(
     /^((?:Ingreso confirmado|Salida confirmada):)\s*"([^"]+)"\s*(.+)$/,
   );
@@ -91,11 +104,18 @@ export default function ToastProvider({ children }: { children: ReactNode }) {
       </div>
 
       {successNotice && !activeConfirmation && (
-        <div className="success-notice-overlay">
+        <div className={`success-notice-overlay${estiloMorado}`}>
           <section className="confirm-delete-dialog success-notice-dialog" role="status" aria-live="polite">
             <header className="confirm-delete-header">
-              <span className="success-notice-icon" aria-hidden="true">✓</span>
-              <h2>{successNotice.title}</h2>
+              <span className="success-notice-icon" aria-hidden="true">
+                {estiloMorado ? (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="9" />
+                    <path d="m8 12 3 3 5-6" />
+                  </svg>
+                ) : '✓'}
+              </span>
+              <h2>{successTitle}</h2>
               <button
                 type="button"
                 className="confirm-delete-close"
@@ -125,7 +145,7 @@ export default function ToastProvider({ children }: { children: ReactNode }) {
       )}
 
       {activeConfirmation && (
-        <div className="confirm-delete-overlay" onClick={() => finishConfirmation(false)}>
+        <div className={`confirm-delete-overlay${estiloMorado}`} onClick={() => finishConfirmation(false)}>
           <section
             className="confirm-delete-dialog"
             role="alertdialog"
@@ -135,7 +155,7 @@ export default function ToastProvider({ children }: { children: ReactNode }) {
           >
             <header className="confirm-delete-header">
               <span className="confirm-delete-icon" aria-hidden="true">!</span>
-              <h2 id="confirm-delete-title">Confirmar eliminación</h2>
+              <h2 id="confirm-delete-title">{confirmationTitle}</h2>
               <button
                 type="button"
                 className="confirm-delete-close"
@@ -149,7 +169,7 @@ export default function ToastProvider({ children }: { children: ReactNode }) {
             <div className="confirm-delete-body">
               <p className="confirm-delete-message">{confirmationQuestion}</p>
               <p className="confirm-delete-note">
-                {confirmationDetail || 'Confirma solo si deseas continuar con la eliminación.'}
+                {confirmationDetail || (confirmaEliminacion ? 'Confirma solo si deseas continuar con la eliminación.' : 'Confirma solo si deseas continuar.')}
               </p>
             </div>
 
@@ -166,7 +186,7 @@ export default function ToastProvider({ children }: { children: ReactNode }) {
                 className="confirm-delete-submit"
                 onClick={() => finishConfirmation(true)}
               >
-                Sí, eliminar
+                {confirmationButton}
               </button>
             </footer>
           </section>

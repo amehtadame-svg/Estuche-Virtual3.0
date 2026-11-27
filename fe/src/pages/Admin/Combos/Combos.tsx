@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Modal from '../../../components/ui/Modal';
 import { API, authHeaders } from '../../../api/api';
 import { runDeleteAction } from '../../../lib/deleteAction';
 import { notify } from '../../../lib/notifications';
+import { useAuth } from '../../../hooks/useAuth';
 import '../Products/Products.css';
 import './Combos.css';
 
@@ -92,11 +93,14 @@ const computeComboMetrics = (combo: Combo) => {
 };
 
 export default function Combos() {
+  const { user } = useAuth();
+  const esAdministracion = user?.role === 'superadmin' || user?.role === 'admin';
   const [combos, setCombos] = useState<Combo[]>([]);
   const [products, setProducts] = useState<ProductOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const savingRef = useRef(false);
   const [formError, setFormError] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isActive, setIsActive] = useState(true);
@@ -302,6 +306,7 @@ export default function Combos() {
   };
 
   const handleSave = async () => {
+    if (savingRef.current) return;
     const items = rows
       .filter((row) => row.productId)
       .map((row) => ({ productId: row.productId, quantity: Number(row.quantity) }));
@@ -322,6 +327,7 @@ export default function Combos() {
     }
     if (!Number.isFinite(priceNum) || priceNum <= 0) return reportValidationError(PRICE_ALERT);
 
+    savingRef.current = true;
     setSaving(true);
     try {
       const res = await fetch(editingId ? `${API.combos}/${editingId}` : API.combos, {
@@ -346,21 +352,32 @@ export default function Combos() {
         return;
       }
 
-      const saved = await res.json();
+      const saved = await res.json().catch(() => null);
+      const savedName = typeof saved?.name === 'string' ? saved.name : name.trim();
       const wasEditing = editingId !== null;
-      await loadCombos();
       closeModal();
-      notify.success(
-        wasEditing
-          ? `Combo "${saved.name}" actualizado exitosamente.`
-          : `Combo "${saved.name}" registrado exitosamente con el código ${saved.sku}.`,
-        wasEditing ? 'Cambios guardados' : 'Registro exitoso'
-      );
+      if (esAdministracion) {
+        notify.success(
+          wasEditing
+            ? `El combo "${savedName}" se actualizó correctamente.`
+            : `El combo "${savedName}" se agregó correctamente.`,
+          wasEditing ? 'Cambios guardados' : 'Combo agregado',
+        );
+      } else {
+        notify.success(
+          wasEditing
+            ? `Combo "${savedName}" actualizado exitosamente.`
+            : `Combo "${savedName}" registrado exitosamente${saved?.sku ? ` con el código ${saved.sku}` : ''}.`,
+          wasEditing ? 'Cambios guardados' : 'Registro exitoso',
+        );
+      }
+      await loadCombos();
     } catch {
-      const msg = 'Error de conexión al guardar el combo.';
+      const msg = 'No se pudo confirmar el guardado. Revisa la lista de combos antes de volver a intentarlo.';
       setFormError(msg);
       notify.error(msg);
     } finally {
+      savingRef.current = false;
       setSaving(false);
     }
   };
@@ -497,10 +514,10 @@ export default function Combos() {
       {modalOpen && (
         <Modal
           titulo={editingId ? 'Editar combo escolar' : 'Crear combo escolar'}
-          onClose={closeModal}
+          onClose={() => { if (!savingRef.current) closeModal(); }}
           footer={
             <>
-              <button className="btn-cancelar-producto" onClick={closeModal}>
+              <button className="btn-cancelar-producto" onClick={closeModal} disabled={saving}>
                 Cancelar
               </button>
               <button className="btn-guardar-producto" onClick={handleSave} disabled={saving}>

@@ -307,6 +307,45 @@
   color: var(--text);
   font-size: 13px;
 }
+/* Solo en Ingresos: conserva la fecha y la hora completas en una misma línea. */
+.inbound-page:has(.inbound-submit-btn) .inbound-history-card .inbound-table th:first-child,
+.inbound-page:has(.inbound-submit-btn) .inbound-history-card .inbound-table td:first-child {
+  white-space: nowrap;
+}
+
+/* Ingresos recientes: columnas organizadas y SKU completo, igual que en Salidas. */
+.inbound-page:has(.inbound-submit-btn) .inbound-history-card .inbound-table {
+  min-width: 1100px;
+  table-layout: auto;
+}
+
+.inbound-page:has(.inbound-submit-btn) .inbound-history-card .inbound-table th,
+.inbound-page:has(.inbound-submit-btn) .inbound-history-card .inbound-table td {
+  box-sizing: border-box;
+  padding: 13px 12px;
+  vertical-align: middle;
+  text-align: left;
+}
+
+.inbound-page:has(.inbound-submit-btn) .inbound-history-card .inbound-table th:nth-child(1) { width: 16%; }
+.inbound-page:has(.inbound-submit-btn) .inbound-history-card .inbound-table th:nth-child(2) { width: 8%; }
+.inbound-page:has(.inbound-submit-btn) .inbound-history-card .inbound-table th:nth-child(3) { width: 20%; }
+.inbound-page:has(.inbound-submit-btn) .inbound-history-card .inbound-table th:nth-child(4) { width: 11%; }
+.inbound-page:has(.inbound-submit-btn) .inbound-history-card .inbound-table th:nth-child(5) { width: 32%; }
+.inbound-page:has(.inbound-submit-btn) .inbound-history-card .inbound-table th:nth-child(6) { width: 13%; }
+
+.inbound-page:has(.inbound-submit-btn) .inbound-history-card .inbound-table th:nth-child(2),
+.inbound-page:has(.inbound-submit-btn) .inbound-history-card .inbound-table td:nth-child(2),
+.inbound-page:has(.inbound-submit-btn) .inbound-history-card .inbound-sku {
+  white-space: nowrap;
+}
+
+.inbound-page:has(.inbound-submit-btn) .inbound-history-card .inbound-table td:nth-child(3),
+.inbound-page:has(.inbound-submit-btn) .inbound-history-card .inbound-table td:nth-child(5),
+.inbound-page:has(.inbound-submit-btn) .inbound-history-card .inbound-table td:nth-child(6) {
+  overflow-wrap: anywhere;
+}
+
 /* Resumen compartido de confirmación de movimientos */
 .inventory-confirm-intro { color: var(--text); line-height: 1.5; margin: 0 0 16px; }
 .inventory-confirm-list { margin: 0; border: 1px solid var(--border); border-radius: var(--radius-md, 8px); overflow: hidden; }
@@ -317,4 +356,5 @@
 .inventory-confirm-cancel, .inventory-confirm-primary { border-radius: var(--radius-md, 8px); padding: 10px 16px; cursor: pointer; }
 .inventory-confirm-cancel { border: 1px solid var(--border); background: transparent; color: var(--text-h); }
 .inventory-confirm-primary { border: 0; background: var(--accent); color: var(--on-accent); }
-.inventory-confirm-danger { background: var(--danger); }
+/* La confirmación de Salidas conserva el color morado solicitado. */
+.inventory-confirm-danger { background: var(--accent); }

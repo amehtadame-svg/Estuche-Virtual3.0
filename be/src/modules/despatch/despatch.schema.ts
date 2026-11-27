@@ -15,13 +15,18 @@ const addressSchema = z.string().max(
 
 export const createDespatchSchema = z.object({
   orderId: databaseUuidSchema,
-  driverId: databaseUuidSchema.optional(),
+  driverId: databaseUuidSchema.nullable().optional(),
   address: addressSchema.optional(),
   status: z.enum(despatchStatusEnum).optional(),
 });
 
 export const updateDespatchSchema = z.object({
-  driverId: databaseUuidSchema.optional(),
+  expected: z.object({
+    driverId: databaseUuidSchema.nullable(),
+    address: z.string().nullable(),
+    status: z.enum(despatchStatusEnum),
+  }).optional(),
+  driverId: databaseUuidSchema.nullable().optional(),
   address: addressSchema.optional(),
   status: z.enum(despatchStatusEnum).optional(),
   deliveredAt: z.coerce.date().optional(),

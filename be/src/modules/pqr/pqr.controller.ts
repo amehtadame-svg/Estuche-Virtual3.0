@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { asyncHandler } from '../../middlewares/asyncHandler';
-import { pqrService, PqrActor } from './pqr.service';
+import { contactService, pqrService, PqrActor } from './pqr.service';
 
 const actorFrom = (req: Request) => (req as any).user as PqrActor;
 
@@ -22,4 +22,8 @@ export const createPqr = asyncHandler(async (req: Request, res: Response) => {
 export const updatePqr = asyncHandler(async (req: Request, res: Response) => {
   const request = await pqrService.update(req.params.id, req.body, actorFrom(req));
   return res.json(request);
+});
+export const createContactMessage = asyncHandler(async (req: Request, res: Response) => {
+  const message = await contactService.submit(req.body, actorFrom(req));
+  return res.status(201).json(message);
 });

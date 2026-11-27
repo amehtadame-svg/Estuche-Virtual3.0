@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Modal from '../../../components/ui/Modal';
 import { API, authHeaders } from '../../../api/api';
 import { runDeleteAction } from '../../../lib/deleteAction';
@@ -64,6 +64,7 @@ export default function Products() {
   const [modalOpen, setModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const savingRef = useRef(false);
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
 
@@ -194,6 +195,7 @@ export default function Products() {
   };
 
   const closeModal = () => {
+    if (savingRef.current) return;
     setModalOpen(false);
     setEditingId(null);
     setInvalidFields({});
@@ -202,7 +204,7 @@ export default function Products() {
   };
 
   const handleSave = async () => {
-    if (saving) return;
+    if (savingRef.current) return;
     const nextInvalid: Record<string, boolean> = {};
     if (!form.name.trim()) nextInvalid.name = true;
     if (!form.sku.trim()) nextInvalid.sku = true;
@@ -249,6 +251,7 @@ export default function Products() {
       ...(form.imageUrl.trim() ? { imageUrl: form.imageUrl.trim() } : {}),
     };
 
+    savingRef.current = true;
     setSaving(true);
     try {
       const url = editingId !== null ? `${API.products}/${editingId}` : API.products;
@@ -262,19 +265,38 @@ export default function Products() {
 
       if (!res.ok) {
         const errData = await res.json().catch(() => null);
-        const message = errData?.message || 'No se pudo guardar el producto. Revisa los datos e inténtalo de nuevo.';
+        const details = Array.isArray(errData?.errors)
+          ? errData.errors
+              .map((item: { path?: (string | number)[]; message?: string }) => {
+                const field = item.path?.join('.') || 'Campo';
+                const fieldNames: Record<string, string> = {
+                  categoryId: 'Categoría', supplierId: 'Proveedor', imageUrl: 'URL de imagen',
+                  stock: 'Stock', stockMin: 'Stock mínimo', price: 'Precio', cost: 'Costo',
+                  name: 'Nombre', sku: 'SKU', barcode: 'Código de barras', description: 'Descripción',
+                };
+                return `${fieldNames[field] || field}: ${item.message || 'valor inválido'}`;
+              })
+              .join(' | ')
+          : '';
+
+        const message = details
+          ? `Revisa estos datos: ${details}`
+          : errData?.message || 'No se pudo guardar el producto. Revisa los datos e inténtalo de nuevo.';
         setFormError(message);
-        notify.error(message);
         return;
       }
 
       loadProducts();
+      savingRef.current = false;
       closeModal();
-      notify.success(editingId !== null ? 'Producto actualizado exitosamente.' : 'Producto registrado exitosamente en el catálogo.');
+      notify.success(
+        editingId !== null ? 'El producto se actualizó correctamente.' : 'El producto se registró correctamente en el catálogo.',
+        editingId !== null ? 'Cambios guardados' : 'Producto registrado',
+      );
     } catch {
-      setFormError('Error de conexión al guardar el producto.');
-      notify.error('Error de conexión al guardar el producto.');
+      setFormError('No se pudo confirmar el guardado. Revisa la información antes de intentarlo de nuevo.');
     } finally {
+      savingRef.current = false;
       setSaving(false);
     }
   };
@@ -456,7 +478,7 @@ export default function Products() {
           onClose={closeModal}
           footer={
             <>
-              <button className="btn-cancelar-producto" onClick={closeModal}>
+              <button className="btn-cancelar-producto" onClick={closeModal} disabled={saving}>
                 Cancelar
               </button>
               <button className="btn-guardar-producto" onClick={handleSave} disabled={saving}>

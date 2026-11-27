@@ -425,40 +425,51 @@ test(
       await t.test(
         'La edición general no altera un pedido operativo ni sus detalles o recibo',
         async () => {
+          const edit = await request(
+            'admin',
+            `/orders/${pickupOrder.id}`,
+            { total: 1 },
+            'PUT'
+          );
           assert.equal(
-            (
-              await request(
-                'admin',
-                `/orders/${pickupOrder.id}`,
-                { total: 1 },
-                'PUT'
-              )
-            ).status,
-            409
+            edit.status,
+            409,
+            `esperaba 409 (pedido operativo), recibí ${edit.status}: ${JSON.stringify(edit.body)}`
           );
 
-          assert.equal(
-            (
-              await request(
-                'admin',
-                `/order-details/${pickupOrder.details[0].id}`,
-                { quantity: 1 },
-                'PUT'
-              )
-            ).status,
-            409
+          // `updateOrderDetailSchema` es `.strict()` y exige el snapshot
+          // `expected` del artículo (control de concurrencia). Se envía el
+          // actual para que la petición llegue al servicio y sea él quien
+          // rechace con 409 el pedido operativo.
+          const linea = pickupOrder.details[0];
+          // El JSON del pedido no expone `orderId`/`productId` del detalle, así
+          // que el snapshot se toma de la base (que es lo que compara el servicio).
+          const lineaDb = await db.orderDetail.findUnique({
+            where: { id: linea.id },
+          });
+          const editDetail = await request(
+            'admin',
+            `/order-details/${linea.id}`,
+            {
+              // `updateOrderDetailSchema` extiende el `create`, así que exige
+              // las claves del artículo arriba Y el snapshot en `expected`.
+              orderId: lineaDb!.orderId,
+              productId: lineaDb!.productId,
+              quantity: 1,
+              unitPrice: Number(lineaDb!.unitPrice),
+              expected: {
+                orderId: lineaDb!.orderId,
+                productId: lineaDb!.productId,
+                quantity: lineaDb!.quantity,
+                unitPrice: Number(lineaDb!.unitPrice),
+              },
+            },
+            'PUT'
           );
-
           assert.equal(
-            (
-              await request(
-                'admin',
-                `/receipts/${pickupOrder.receipt.id}`,
-                { total: 1 },
-                'PUT'
-              )
-            ).status,
-            409
+            editDetail.status,
+            409,
+            `esperaba 409 (pedido operativo), recibí ${editDetail.status}: ${JSON.stringify(editDetail.body)}`
           );
 
           assert.equal(

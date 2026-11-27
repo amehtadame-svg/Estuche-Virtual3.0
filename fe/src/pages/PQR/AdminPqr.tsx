@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
 import { API, authHeaders } from '../../api/api';
 import { runApiAction } from '../../lib/apiAction';
+import { useAuth } from '../../hooks/useAuth';
 import './PQR.css';
 
 type PqrType = 'petition' | 'complaint' | 'claim';
@@ -47,6 +48,8 @@ const formatDate = (value: string) =>
   }).format(new Date(value));
 
 export default function AdminPqr() {
+  const { user } = useAuth();
+  const esAdministracion = user?.role === 'superadmin' || user?.role === 'admin';
   const [requests, setRequests] = useState<PqrRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -54,6 +57,8 @@ export default function AdminPqr() {
   const [selected, setSelected] = useState<PqrRequest | null>(null);
   const [status, setStatus] = useState<PqrStatus>('received');
   const [responseText, setResponseText] = useState('');
+  const [saving, setSaving] = useState(false);
+  const savingRef = useRef(false);
 
   const loadRequests = useCallback(async () => {
     setLoading(true);
@@ -89,29 +94,51 @@ export default function AdminPqr() {
   };
 
   const closeRequest = () => {
+    if (savingRef.current) return;
     setSelected(null);
     setResponseText('');
   };
 
   const saveResponse = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!selected) return;
-
-    const apiResponse = await runApiAction({
-      url: `${API.pqr}/${selected.id}`,
-      init: {
-        method: 'PATCH',
-        headers: authHeaders(),
-        body: JSON.stringify({ status, response: responseText }),
-      },
-      successMessage: 'PQR actualizado correctamente.',
-      errorMessage: 'No se pudo actualizar el PQR.',
-    });
-
-    if (!apiResponse) return;
-
-    closeRequest();
-    await loadRequests();
+    if (!selected || savingRef.current) return;
+    savingRef.current = true;
+    setSaving(true);
+    const respuestaActual = responseText.trim();
+    const cambioRespuesta = respuestaActual !== (selected.response ?? '').trim();
+    const cambioEstado = status !== selected.status;
+    const tituloAviso = cambioRespuesta && cambioEstado ? 'Solicitud actualizada'
+      : cambioRespuesta ? 'Respuesta actualizada'
+      : cambioEstado ? 'Estado actualizado' : 'Solicitud guardada';
+    const mensajeAviso = cambioRespuesta && cambioEstado
+      ? respuestaActual
+        ? `Se guardaron la respuesta y el estado seleccionado: ${statusLabels[status]}.`
+        : `Se eliminó la respuesta y se guardó el estado seleccionado: ${statusLabels[status]}.`
+      : cambioRespuesta
+        ? respuestaActual ? 'La respuesta de la solicitud se guardó correctamente.' : 'La respuesta de la solicitud se eliminó.'
+        : cambioEstado
+          ? `El estado seleccionado se guardó como ${statusLabels[status]}.`
+          : 'Guardaste el formulario sin modificar los datos mostrados.';
+    try {
+      const apiResponse = await runApiAction({
+        url: `${API.pqr}/${selected.id}`,
+        init: {
+          method: 'PATCH',
+          headers: authHeaders(),
+          body: JSON.stringify({ status, response: responseText }),
+        },
+        successMessage: esAdministracion ? mensajeAviso : 'PQR actualizado correctamente.',
+        successTitle: esAdministracion ? tituloAviso : undefined,
+        errorMessage: 'No se pudo actualizar la solicitud.',
+      });
+      if (!apiResponse) return;
+      setSelected(null);
+      setResponseText('');
+      await loadRequests();
+    } finally {
+      savingRef.current = false;
+      setSaving(false);
+    }
   };
 
   const filteredRequests =
@@ -223,6 +250,7 @@ export default function AdminPqr() {
                 className="pqr-close-btn"
                 type="button"
                 aria-label="Cerrar"
+                disabled={saving}
                 onClick={closeRequest}
               >
                 ×
@@ -245,6 +273,7 @@ export default function AdminPqr() {
               <label htmlFor="pqr-admin-status">Estado</label>
               <select
                 id="pqr-admin-status"
+                disabled={saving}
                 value={status}
                 onChange={(event) =>
                   setStatus(event.target.value as PqrStatus)
@@ -261,6 +290,7 @@ export default function AdminPqr() {
               </label>
               <textarea
                 id="pqr-admin-response"
+                disabled={saving}
                 value={responseText}
                 onChange={(event) => setResponseText(event.target.value)}
                 maxLength={5000}
@@ -272,12 +302,13 @@ export default function AdminPqr() {
                 <button
                   className="pqr-secondary-btn"
                   type="button"
+                  disabled={saving}
                   onClick={closeRequest}
                 >
                   Cancelar
                 </button>
-                <button className="pqr-primary-btn" type="submit">
-                  Guardar respuesta
+                <button className="pqr-primary-btn" type="submit" disabled={saving}>
+                  {saving ? 'Guardando…' : 'Guardar respuesta'}
                 </button>
               </div>
             </form>

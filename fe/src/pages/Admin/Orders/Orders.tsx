@@ -1,12 +1,12 @@
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { shortReference } from '../../../lib/reference';
-import { useState, useEffect } from 'react';
-import Modal from '../../../components/ui/Modal';
-import { API, authHeaders } from '../../../api/api';
-import { runDeleteAction } from '../../../lib/deleteAction';
-import { runApiAction } from '../../../lib/apiAction';
-import { notify } from '../../../lib/notifications';
 import { orderStatusLabel } from '../../../lib/statusLabels';
+import Modal from '../../../components/ui/Modal';
+import { API, BASE, authHeaders } from '../../../api/api';
+import { notify, requestConfirmation } from '../../../lib/notifications';
+import { useAuth } from '../../../hooks/useAuth';
+import '../../../components/ui/ToastProvider.css';
 import './Orders.css';
 
 const statusTone: Record<string, string> = {
@@ -16,12 +16,33 @@ const statusTone: Record<string, string> = {
   canceled: 'tone-danger',
 };
 
+const orderStatusText: Record<string, string> = {
+  pending: 'pendiente',
+  paid: 'pagado',
+  preparing: 'en preparación',
+  shipped: 'en camino',
+  delivered: 'entregado',
+  canceled: 'cancelado',
+  returned: 'devuelto',
+};
+
 const emptyForm = {
   customerId: '',
+  productId: '',
+  quantity: '1',
+  deliveryAddress: '',
+  fulfillmentMethod: 'delivery',
   total: '',
   status: 'pending',
   promotionalCodeId: '',
 };
+
+interface ProductOption {
+  id: string;
+  name: string;
+  price: number | null;
+  stock: number | null;
+}
 
 interface Customer {
   id: string;
@@ -44,26 +65,52 @@ interface Order {
 }
 
 export default function Orders() {
+  const { user } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [message, setMessage] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [claimOrder, setClaimOrder] = useState<{ id: string; fromForm: boolean; action: 'claim' | 'undo' } | null>(null);
+  const [claiming, setClaiming] = useState(false);
+  const claimingRef = useRef(false);
+  const [saveErrorNotice, setSaveErrorNotice] = useState<{ title: string; message: string } | null>(null);
+  const savingRef = useRef(false);
+  const discountRef = useRef(false);
+  const [applyingDiscount, setApplyingDiscount] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [showArchived, setShowArchived] = useState(false);
+  const showArchivedRef = useRef(false);
+  const archiveRequests = useRef(new Set<string>());
+  const listRequest = useRef(0);
   const [discountCode, setDiscountCode] = useState('');
   const [discountApplied, setDiscountApplied] = useState<string | null>(null);
+  const [products, setProducts] = useState<ProductOption[]>([]);
+  const editingOrder = editingId === null
+    ? undefined
+    : orders.find((order) => order.id === editingId);
+  const isPaidOrder = editingOrder?.status === 'paid';
 
-  const loadOrders = () => {
-    fetch(API.orders, { headers: authHeaders() })
-      .then((r) => { if (!r.ok) throw new Error('No se pudieron cargar los pedidos.'); return r.json(); })
-      .then((data) => {
-        setOrders(Array.isArray(data) ? data : []);
-        setLoading(false);
+  const loadOrders = (archived = showArchived) => {
+    const request = ++listRequest.current;
+    setLoading(true);
+    fetch(`${API.orders}?archived=${archived ? 'true' : 'false'}`, { headers: authHeaders() })
+      .then(async (response) => {
+        if (!response.ok) throw new Error('No se pudo cargar la lista.');
+        const data = await response.json();
+        if (!Array.isArray(data)) throw new Error('Respuesta inválida.');
+        if (request === listRequest.current) setOrders(data);
       })
       .catch(() => {
-        showMessage('Error al cargar pedidos.');
-        setLoading(false);
+        if (request === listRequest.current) {
+          setOrders([]);
+          showMessage('No se pudo cargar la lista de pedidos.');
+        }
+      })
+      .finally(() => {
+        if (request === listRequest.current) setLoading(false);
       });
   };
 
@@ -93,10 +140,28 @@ export default function Orders() {
     }
   };
 
+  const loadProducts = async () => {
+    try {
+      const response = await fetch(API.products, { headers: authHeaders() });
+      const data = await response.json().catch(() => null);
+      if (!response.ok) throw new Error();
+      setProducts(Array.isArray(data) ? data : []);
+    } catch {
+      notify.error('No se pudieron cargar los productos para el pedido.');
+    }
+  };
+
   useEffect(() => {
     loadOrders();
     loadCustomers();
+    loadProducts();
   }, []);
+
+  useEffect(() => {
+    if (!saveErrorNotice) return;
+    const timer = window.setTimeout(() => setSaveErrorNotice(null), 4200);
+    return () => window.clearTimeout(timer);
+  }, [saveErrorNotice]);
 
   const showMessage = (text: string) => {
     setMessage(text);
@@ -120,50 +185,251 @@ export default function Orders() {
     setDiscountApplied(null);
   };
 
-  const handleSave = async () => {
-    if (!form.customerId || !form.total) {
-      showMessage('Por favor completa todos los campos.');
+  const showSaveError = (text: string, title = 'No se guardaron los cambios') => {
+    if (user?.role === 'superadmin' || user?.role === 'admin') {
+      setSaveErrorNotice({ title, message: text });
+    } else {
+      notify.error(text, title);
+    }
+  };
+
+  const isOrderRestriction = (status: number, message: string) => {
+    const text = message.toLowerCase();
+    return (status === 400 || status === 409) && (
+      text.includes('pedido operativo') ||
+      text.includes('este pedido está pagado') ||
+      text.includes('estado pagado solo puede establecerse')
+    );
+  };
+
+  const showEditRejection = (status: number, message: string, total: number) => {
+    if (!editingOrder || !isOrderRestriction(status, message)) {
+      showSaveError(message);
       return;
     }
 
-    const body = {
-      customerId: form.customerId,
-      total: Number(form.total),
-      status: form.status,
-      ...(form.promotionalCodeId
-        ? { promotionalCodeId: form.promotionalCodeId }
-        : {}),
-    };
+    const changes = [
+      form.customerId !== (editingOrder.customerId ?? '') ? 'cliente' : null,
+      editingOrder.total !== null && total !== Number(editingOrder.total) ? 'total' : null,
+      form.status !== (editingOrder.status ?? 'pending') ? 'estado' : null,
+    ].filter((field): field is string => field !== null);
+    const state = orderStatusText[editingOrder.status ?? ''] ?? 'en un estado que requiere revisión';
+
+    if (changes.length === 1 && changes[0] === 'total') {
+      showSaveError(
+        `El pedido figura ${state}. El servidor no permitió cambiar su total desde este formulario; revisa si tiene recibos o pagos asociados. No se modificó el total.`,
+        'No se actualizó el total'
+      );
+    } else if (changes.length === 1 && changes[0] === 'cliente') {
+      showSaveError(
+        `El pedido figura ${state}. El servidor no permitió cambiar el cliente desde este formulario; revisa si tiene pagos asociados. No se modificó el cliente.`,
+        'No se actualizó el cliente'
+      );
+    } else if (changes.length === 1 && changes[0] === 'estado') {
+      showSaveError(
+        `El pedido figura ${state}. El servidor no permitió cambiar su estado desde este formulario. No se modificó el estado.`,
+        'No se actualizó el estado'
+      );
+    } else if (changes.length > 0) {
+      showSaveError(
+        `El pedido figura ${state}. El servidor rechazó los cambios solicitados; revisa el pedido y si tiene pagos asociados. No se modificaron los datos.`
+      );
+    } else {
+      showSaveError('El servidor no confirmó el pedido. Cierra el formulario y vuelve a abrirlo para consultar su estado.');
+    }
+  };
+
+  const statusGuidance = (current: string, requested: string) => {
+    if (requested === 'pending' && current === 'preparing') return 'El pedido tiene una preparación activa. Si deseas deshacerla sin alterar el pago, selecciona Pagado y confirma la acción.';
+    if (requested === 'paid') return 'El estado Pagado se actualiza cuando se confirma el pago en Pagos.';
+    if (requested === 'delivered' && current === 'shipped') return 'Confirma la entrega real desde Operaciones, en el detalle del pedido y su envío.';
+    if (requested === 'shipped') return 'El despacho se registra desde Operaciones después de preparar y empacar el pedido.';
+    if (requested === 'canceled') return 'La cancelación se gestiona desde Operaciones, donde se revisan el pago y la reserva de inventario.';
+    if (requested === 'returned') return 'La devolución requiere su proceso correspondiente y revisión de pagos.';
+    return 'Este cambio requiere revisión en Operaciones para mantener el historial, los pagos y el inventario coherentes.';
+  };
+
+  const requestStatusChange = (order: Order, newStatus: string, fromForm: boolean) => {
+    if ((order.status === 'paid' && newStatus === 'preparing') || (order.status === 'preparing' && newStatus === 'paid')) {
+      if (fromForm) setModalOpen(false);
+      setClaimOrder({ id: order.id, fromForm, action: newStatus === 'preparing' ? 'claim' : 'undo' });
+      return;
+    }
+    showSaveError(statusGuidance(order.status ?? 'pending', newStatus), 'Cómo cambiar el estado');
+  };
+
+  const closeClaim = () => {
+    if (claimingRef.current) return;
+    if (claimOrder?.fromForm) setModalOpen(true);
+    setClaimOrder(null);
+  };
+
+  const confirmClaim = async () => {
+    if (!claimOrder || claimingRef.current) return;
+    claimingRef.current = true;
+    setClaiming(true);
+    try {
+      const response = await fetch(`${BASE}/api/employee/orders/${claimOrder.id}/${claimOrder.action === 'claim' ? 'claim' : 'undo-preparation'}`, {
+        method: 'POST', headers: authHeaders(), body: JSON.stringify({}),
+      });
+      const data = await response.json().catch(() => null);
+      if (!response.ok) {
+        showSaveError(data?.message || 'No se pudo cambiar la preparación. Revisa el pedido en Operaciones.', 'No se actualizó el estado');
+        return;
+      }
+      setClaimOrder(null);
+      if (claimOrder.fromForm) closeModal();
+      notify.success(claimOrder.action === 'claim' ? 'El pedido quedó asignado a tu cuenta para su preparación.' : 'La preparación se deshizo y el pedido volvió a Pagado. El pago no cambió.', 'Cambios guardados');
+      loadOrders();
+    } catch {
+      showSaveError('No se pudo confirmar la operación. Revisa el pedido en Operaciones antes de intentarlo de nuevo.', 'No se pudo confirmar el estado');
+    } finally {
+      claimingRef.current = false;
+      setClaiming(false);
+    }
+  };
+
+  const handleSave = async () => {
+    // ── A-01/A-02 (Franck): el backend exige líneas y dirección en domicilio ──
+    if (!form.customerId) {
+      showSaveError('Selecciona un cliente.');
+      return;
+    }
+
+    if (editingId === null) {
+      if (!form.productId) {
+        showSaveError('Selecciona al menos un producto.');
+        return;
+      }
+
+      const quantity = Number(form.quantity);
+
+      if (!Number.isInteger(quantity) || quantity < 1) {
+        showSaveError('La cantidad debe ser un número entero mayor que cero.');
+        return;
+      }
+
+      if (form.fulfillmentMethod === 'delivery' && !form.deliveryAddress.trim()) {
+        showSaveError('Indica la dirección de entrega para el domicilio.');
+        return;
+      }
+
+      if (form.status !== 'pending') {
+        showSaveError('Los pedidos nuevos deben quedar pendientes. El pago y la preparación se registran después.', 'No se creó el pedido');
+        return;
+      }
+    }
+
+    if (!form.customerId || !form.total) {
+      showSaveError('Completa el cliente y el total antes de guardar.');
+      return;
+    }
+
+    const newTotal = Number(form.total);
+    if (!Number.isFinite(newTotal) || newTotal < 0) {
+      showSaveError('El total debe ser un número válido mayor o igual a cero.');
+      return;
+    }
+
+    if (isPaidOrder && editingOrder?.total != null && newTotal !== Number(editingOrder.total)) {
+      const otherChanges = form.customerId !== (editingOrder.customerId ?? '') || form.status !== editingOrder.status;
+      showSaveError(
+        newTotal > Number(editingOrder.total)
+          ? 'El pedido figura pagado. Aumentar el total puede requerir un cobro adicional. Esta acción no realizó cobros ni guardó los cambios.'
+          : 'El pedido figura pagado. Reducir el total puede requerir una devolución. Esta acción no realizó reembolsos ni guardó los cambios.',
+        otherChanges ? 'No se guardaron los cambios' : 'No se actualizó el total'
+      );
+      return;
+    }
+
+    if (editingOrder && form.status !== (editingOrder.status ?? 'pending')) {
+      const otherChanges = form.customerId !== (editingOrder.customerId ?? '') ||
+        editingOrder.total === null || newTotal !== Number(editingOrder.total) || !!form.promotionalCodeId;
+      if (otherChanges) {
+        showSaveError('Para cambiar el estado, primero deja los demás datos sin cambios. Ningún cambio fue guardado.', 'No se guardaron los cambios');
+      } else {
+        requestStatusChange(editingOrder, form.status, true);
+      }
+      return;
+    }
+    if (!editingOrder && form.status !== 'pending') {
+      showSaveError('Los pedidos nuevos deben quedar pendientes. El pago y la preparación se registran después.', 'No se creó el pedido');
+      return;
+    }
+
+    // Crear exige líneas y dirección (A-01/A-02); editar solo manda lo
+    // permitido (el total lo recalcula el servidor cuando hay cupón).
+    const body = editingId === null
+      ? {
+          customerId: form.customerId,
+          fulfillmentMethod: form.fulfillmentMethod,
+          ...(form.fulfillmentMethod === 'delivery'
+            ? { deliveryAddress: form.deliveryAddress.trim() }
+            : {}),
+          details: [
+            { productId: form.productId, quantity: Number(form.quantity) },
+          ],
+          ...(form.promotionalCodeId
+            ? { promotionalCodeId: form.promotionalCodeId }
+            : {}),
+        }
+      : {
+          customerId: form.customerId,
+          total: newTotal,
+          status: form.status,
+          ...(form.promotionalCodeId
+            ? { promotionalCodeId: form.promotionalCodeId }
+            : {}),
+        };
 
     const editing = editingId !== null;
 
-    const response = await runApiAction({
-      url: editing
-        ? `${API.orders}/${editingId}`
-        : API.orders,
-      init: {
-        method: editing ? 'PUT' : 'POST',
-        headers: authHeaders(),
-        body: JSON.stringify(body),
-      },
-      successMessage: editing
-        ? 'Pedido actualizado exitosamente.'
-        : 'Pedido creado exitosamente.',
-      errorMessage: 'No se pudo guardar el pedido.',
-    });
+    if (savingRef.current) return;
+    savingRef.current = true;
+    setSaving(true);
 
-    if (!response) return;
+    try {
+      const response = await fetch(
+        editing ? `${API.orders}/${editingId}` : API.orders,
+        {
+          method: editing ? 'PUT' : 'POST',
+          headers: authHeaders(),
+          body: JSON.stringify(body),
+        }
+      );
+      const result = await response.json().catch(() => null);
+      if (!response.ok) {
+        const errorMessage = typeof result?.message === 'string' && result.message.trim()
+          ? result.message
+          : 'No se pudo guardar el pedido.';
+        showEditRejection(response.status, errorMessage, newTotal);
+        return;
+      }
 
-    await loadOrders();
-    closeModal();
+      closeModal();
+      if (editing && result?.sinCambios === true) {
+        notify.success('El pedido está actualizado. No se realizaron cambios.', 'Pedido verificado');
+      } else {
+        notify.success(
+          editing ? 'El pedido se actualizó exitosamente.' : 'El pedido se creó exitosamente.',
+          editing ? 'Cambios guardados' : 'Registro exitoso'
+        );
+      }
+      loadOrders();
+    } catch {
+      showSaveError('No se pudo confirmar la operación. Verifica el pedido antes de intentarlo de nuevo.');
+    } finally {
+      savingRef.current = false;
+      setSaving(false);
+    }
   };
 
   const handleEdit = (order: Order) => {
     setForm({
+      ...emptyForm,
       customerId: String(order.customerId ?? ''),
       total: String(order.total ?? ''),
       status: order.status ?? 'pending',
-      promotionalCodeId: '',
     });
 
     setEditingId(order.id);
@@ -172,48 +438,41 @@ export default function Orders() {
     setModalOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
-    const deleted = await runDeleteAction({
-      url: `${API.orders}/${id}`,
-      headers: authHeaders(),
-      confirmMessage:
-        '¿Eliminar este pedido? El historial se conservará.',
-      successMessage: 'Pedido eliminado exitosamente.',
-    });
-
-    if (!deleted) return;
-
-    setOrders((current) =>
-      current.filter((order) => order.id !== id)
-    );
+  const handleArchive = async (id: string, archive: boolean) => {
+    if (archiveRequests.current.has(id)) return;
+    archiveRequests.current.add(id);
+    try {
+      if (archive && !(await requestConfirmation(
+        '¿Quitar este pedido de la lista? Podrás restaurarlo. No se cancela ni se borran sus pagos o historial.'
+      ))) return;
+      const response = await fetch(`${API.orders}/${id}/${archive ? 'archive' : 'unarchive'}`, {
+        method: 'POST', headers: authHeaders(),
+      });
+      const data = await response.json().catch(() => null);
+      if (!response.ok) {
+        showSaveError(typeof data?.message === 'string' ? data.message : 'No se pudo actualizar la lista.', archive ? 'No se quitó el pedido' : 'No se restauró el pedido');
+        return;
+      }
+      if (data?.archived !== archive) {
+        showSaveError('No se pudo confirmar el resultado. Revisa la lista antes de intentarlo nuevamente.', 'No se pudo confirmar');
+        loadOrders(showArchivedRef.current);
+        return;
+      }
+      loadOrders(showArchivedRef.current);
+      notify.success(archive
+        ? 'Se quitó de esta lista. El pedido continúa y conserva sus pagos e historial.'
+        : 'El pedido volvió a la lista administrativa.',
+        archive ? 'Pedido archivado' : 'Pedido restaurado');
+    } catch {
+      showSaveError('No se pudo confirmar la operación. Actualiza la lista antes de intentarlo nuevamente.', 'No se pudo confirmar');
+    } finally {
+      archiveRequests.current.delete(id);
+    }
   };
 
-  const changeStatus = async (
-    id: string,
-    newStatus: string
-  ) => {
-    const response = await runApiAction({
-      url: `${API.orders}/${id}`,
-      init: {
-        method: 'PUT',
-        headers: authHeaders(),
-        body: JSON.stringify({ status: newStatus }),
-      },
-      successMessage:
-        'Estado del pedido actualizado exitosamente.',
-      errorMessage:
-        'No se pudo actualizar el estado del pedido.',
-    });
-
-    if (!response) return;
-
-    setOrders((current) =>
-      current.map((order) =>
-        order.id === id
-          ? { ...order, status: newStatus }
-          : order
-      )
-    );
+  const changeStatus = (id: string, newStatus: string) => {
+    const order = orders.find((item) => item.id === id);
+    if (order && newStatus !== order.status) requestStatusChange(order, newStatus, false);
   };
 
   const handleApplyDiscount = async (id: string) => {
@@ -223,42 +482,36 @@ export default function Orders() {
       return;
     }
 
-    const response = await runApiAction({
-      url: `${API.orders}/${id}/apply-code`,
-      init: {
+    if (discountRef.current) return;
+    discountRef.current = true;
+    setApplyingDiscount(true);
+    try {
+      const response = await fetch(`${API.orders}/${id}/apply-code`, {
         method: 'PATCH',
         headers: authHeaders(),
-        body: JSON.stringify({
-          code: discountCode.trim(),
-        }),
-      },
-      successMessage:
-        'Descuento aplicado exitosamente al pedido.',
-      errorMessage: 'No se pudo aplicar el descuento.',
-    });
-
-    if (!response) return;
-
-    const data = await response.json().catch(() => null);
-
-    if (!data) {
-      notify.error(
-        'El servidor no devolvió los datos actualizados del pedido.'
-      );
-      return;
+        body: JSON.stringify({ code: discountCode.trim() }),
+      });
+      const data = await response.json().catch(() => null);
+      if (!response.ok) {
+        notify.error(typeof data?.message === 'string' ? data.message : 'No se pudo aplicar el código.');
+        return;
+      }
+      if (!data || data.id !== id || !data.promotionalCode || data.total == null || !Number.isFinite(Number(data.total))) {
+        notify.error('El servidor respondió, pero no se pudieron confirmar los datos. Actualiza el pedido antes de volver a intentarlo.');
+        loadOrders(showArchivedRef.current);
+        return;
+      }
+      setForm((prev) => ({ ...prev, total: String(data.total) }));
+      setDiscountApplied(`Código asociado. Total informado por el servidor: $${Number(data.total).toLocaleString()}`);
+      setDiscountCode('');
+      notify.success('El servidor confirmó el código asociado al pedido. Revisa el total informado.', 'Código registrado');
+      loadOrders(showArchivedRef.current);
+    } catch {
+      notify.error('No se pudo confirmar la operación. Actualiza el pedido antes de volver a intentarlo.');
+    } finally {
+      discountRef.current = false;
+      setApplyingDiscount(false);
     }
-
-    setForm((prev) => ({
-      ...prev,
-      total: String(data.total),
-    }));
-
-    setDiscountApplied(
-      `Descuento aplicado. Nuevo total: $${Number(data.total).toLocaleString()}`
-    );
-
-    setDiscountCode('');
-    await loadOrders();
   };
 
   return (
@@ -273,6 +526,14 @@ export default function Orders() {
               Administra los pedidos registrados
             </p>
           </div>
+          <button className="btn-editar-pedido" onClick={() => {
+            const next = !showArchived;
+            showArchivedRef.current = next;
+            setShowArchived(next);
+            loadOrders(next);
+          }}>
+            {showArchived ? 'Ver pedidos' : 'Ver archivados'}
+          </button>
         </div>
 
         <div style={{ margin: '12px 0' }}>
@@ -309,7 +570,7 @@ export default function Orders() {
             </thead>
 
             <tbody>
-              {orders.length === 0 && (<tr><td colSpan={7} className="table-empty">Todavía no hay pedidos registrados.</td></tr>)}
+              {orders.length === 0 && (<tr><td colSpan={7} className="table-empty">{showArchived ? 'No hay pedidos archivados.' : 'No hay pedidos en esta lista.'}</td></tr>)}
               {orders.map((order) => (
                 <tr key={order.id}>
                   <td className="numero-pedido">
@@ -340,6 +601,7 @@ export default function Orders() {
                   <td>
                     {order.createdById || order.work ? <span>{orderStatusLabel[order.status ?? ''] ?? order.status}</span> : <select
                       value={order.status ?? 'pending'}
+                      disabled={showArchived}
                       onChange={(e) =>
                         changeStatus(order.id, e.target.value)
                       }
@@ -350,6 +612,10 @@ export default function Orders() {
                       >
                         Pendiente
                       </option>
+
+                      <option value="paid" disabled={order.status !== 'paid' && order.status !== 'preparing'}>Pagado</option>
+                      <option value="preparing" disabled={order.status !== 'paid' && order.status !== 'preparing'}>En preparación</option>
+                      <option value="returned" disabled>Devuelto</option>
 
                       <option
                         value="shipped"
@@ -372,21 +638,18 @@ export default function Orders() {
                   </td>
 
                   <td>
-                    {order.createdById || order.work ? <Link className="btn-editar-pedido" to={`/empleado/supervision?pedido=${encodeURIComponent(order.id)}`}>Gestionar</Link> : <>
-                    <button
-                      className="btn-editar-pedido"
-                      onClick={() => handleEdit(order)}
-                    >
-                      Editar
-                    </button>
-
-                    <button
-                      className="btn-eliminar-pedido"
-                      onClick={() => handleDelete(order.id)}
-                    >
-                      Eliminar
-                    </button>
-                    </>}
+                    {showArchived ? (
+                      <button className="btn-editar-pedido" onClick={() => handleArchive(order.id, false)}>Restaurar</button>
+                    ) : (
+                      <>
+                        {order.createdById || order.work ? (
+                          <Link className="btn-editar-pedido" to={`/empleado/supervision?pedido=${encodeURIComponent(order.id)}`}>Gestionar</Link>
+                        ) : (
+                          <button className="btn-editar-pedido" onClick={() => handleEdit(order)}>Editar</button>
+                        )}
+                        <button className="btn-eliminar-pedido" onClick={() => handleArchive(order.id, true)}>Eliminar</button>
+                      </>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -415,10 +678,13 @@ export default function Orders() {
               <button
                 className="btn-guardar-pedido"
                 onClick={handleSave}
+                disabled={saving}
               >
-                {editingId !== null
-                  ? 'Guardar cambios'
-                  : 'Agregar pedido'}
+                {saving
+                  ? 'Guardando...'
+                  : editingId !== null
+                    ? 'Guardar cambios'
+                    : 'Agregar pedido'}
               </button>
             </>
           }
@@ -455,22 +721,83 @@ export default function Orders() {
             </p>
           )}
 
-          <label className="label-pedido">
-            Total
-          </label>
+          {editingId === null && (
+            <>
+              <label className="label-pedido">
+                Modalidad
+              </label>
 
-          <input
-            className="input-pedido"
-            type="number"
-            name="total"
-            value={form.total}
-            onChange={handleChange}
-            placeholder="85000"
-          />
+              <select
+                className="input-pedido"
+                name="fulfillmentMethod"
+                value={form.fulfillmentMethod}
+                onChange={handleChange}
+              >
+                <option value="delivery">Domicilio</option>
+                <option value="pickup">Retiro en tienda</option>
+              </select>
 
-          <label className="label-pedido">
-            Estado
-          </label>
+              {form.fulfillmentMethod === 'delivery' && (
+                <>
+                  <label className="label-pedido">
+                    Dirección de entrega
+                  </label>
+
+                  <input
+                    className="input-pedido"
+                    type="text"
+                    name="deliveryAddress"
+                    value={form.deliveryAddress}
+                    onChange={handleChange}
+                    placeholder="Calle 45 #12-30, Bogotá"
+                    maxLength={500}
+                  />
+                </>
+              )}
+
+              <label className="label-pedido">
+                Producto
+              </label>
+
+              <select
+                className="input-pedido"
+                name="productId"
+                value={form.productId}
+                onChange={handleChange}
+              >
+                <option value="">Selecciona un producto</option>
+                {products.map((product) => (
+                  <option key={product.id} value={product.id}>
+                    {product.name} — ${Number(product.price ?? 0).toLocaleString()} (stock {product.stock ?? 0})
+                  </option>
+                ))}
+              </select>
+
+              <label className="label-pedido">
+                Cantidad
+              </label>
+
+              <input
+                className="input-pedido"
+                type="number"
+                min={1}
+                name="quantity"
+                value={form.quantity}
+                onChange={handleChange}
+              />
+
+              <p className="mensaje-pedidos">
+                El total y el envío los calcula el servidor con el precio del
+                catálogo; no se envían desde el navegador.
+              </p>
+            </>
+          )}
+
+          {editingId !== null && (
+            <>
+              <label className="label-pedido">
+                Estado
+              </label>
 
           <select
             className="input-pedido"
@@ -481,6 +808,9 @@ export default function Orders() {
             <option value="pending">
               Pendiente
             </option>
+            <option value="paid" disabled={editingOrder?.status !== 'paid' && editingOrder?.status !== 'preparing'}>Pagado</option>
+            <option value="preparing" disabled={!isPaidOrder && form.status !== 'preparing'}>En preparación</option>
+            <option value="returned" disabled>Devuelto</option>
             <option value="shipped">
               En camino
             </option>
@@ -491,6 +821,8 @@ export default function Orders() {
               Cancelado
             </option>
           </select>
+            </>
+          )}
 
           {editingId !== null && (
             <div style={{ marginTop: 16 }}>
@@ -507,7 +839,6 @@ export default function Orders() {
                 <input
                   className="input-pedido"
                   placeholder="Ej: REGRESO10"
-                  maxLength={50}
                   value={discountCode}
                   onChange={(e) =>
                     setDiscountCode(e.target.value)
@@ -520,9 +851,10 @@ export default function Orders() {
                   onClick={() =>
                     handleApplyDiscount(editingId)
                   }
+                  disabled={applyingDiscount}
                   style={{ whiteSpace: 'nowrap' }}
                 >
-                  Aplicar
+                  {applyingDiscount ? 'Aplicando...' : 'Aplicar'}
                 </button>
               </div>
 
@@ -541,6 +873,51 @@ export default function Orders() {
             </div>
           )}
         </Modal>
+      )}
+
+      {claimOrder && (
+        <Modal
+          titulo={claimOrder.action === 'claim' ? 'Iniciar preparación' : 'Deshacer preparación'}
+          onClose={closeClaim}
+          footer={
+            <>
+              <button className="btn-cancelar-pedido" onClick={closeClaim} disabled={claiming}>Cancelar</button>
+              <button className="btn-guardar-pedido" onClick={confirmClaim} disabled={claiming}>
+                {claiming ? 'Confirmando...' : claimOrder.action === 'claim' ? 'Iniciar preparación' : 'Deshacer preparación'}
+              </button>
+            </>
+          }
+        >
+          <p>{claimOrder.action === 'claim'
+            ? 'El pedido se asignará a tu cuenta y pasará a preparación si el pago y los productos cumplen las validaciones. Continúa solo si vas a gestionarlo.'
+            : 'El pedido volverá a Pagado y quedará sin responsable. El pago y la reserva no se modificarán. Solo se permitirá si la recogida aún no ha comenzado y no hay envío.'}</p>
+        </Modal>
+      )}
+
+      {saveErrorNotice && (
+        <div className="success-notice-overlay notificaciones-superadmin">
+          <section
+            className="confirm-delete-dialog success-notice-dialog"
+            role="alert"
+            aria-live="assertive"
+          >
+            <header className="confirm-delete-header">
+              <span className="success-notice-icon" aria-hidden="true">!</span>
+              <h2>{saveErrorNotice.title}</h2>
+              <button
+                type="button"
+                className="confirm-delete-close"
+                aria-label="Cerrar notificación"
+                onClick={() => setSaveErrorNotice(null)}
+              >
+                ×
+              </button>
+            </header>
+            <div className="confirm-delete-body success-notice-body">
+              <p className="success-notice-message">{saveErrorNotice.message}</p>
+            </div>
+          </section>
+        </div>
       )}
     </>
   );

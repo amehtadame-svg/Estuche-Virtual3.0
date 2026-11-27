@@ -336,3 +336,94 @@
   font-size: 13px;
   color: var(--danger);
 }
+/* Confirmación de desactivación: solo afecta este diálogo. */
+.sa-desactivar-modal .modal-box {
+  max-width: 500px;
+  overflow: hidden;
+}
+
+.sa-desactivar-modal .modal-header {
+  padding: 22px 24px;
+}
+
+.sa-desactivar-modal .modal-titulo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 18px;
+}
+
+.sa-desactivar-modal .modal-titulo::before {
+  content: '';
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  border-radius: 13px;
+  background-color: var(--accent-bg);
+  border: 1px solid var(--accent-border);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%23b026ea' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M16 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2'/%3E%3Ccircle cx='10.5' cy='7' r='4'/%3E%3Cpath d='M17 11h5'/%3E%3C/svg%3E");
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.sa-desactivar-modal .modal-body { padding: 24px; }
+.sa-desactivar-content { display: grid; gap: 12px; }
+.sa-desactivar-content .sa-desactivar-question {
+  margin: 0;
+  color: var(--text-h);
+  font-size: 16px;
+  line-height: 1.55;
+}
+.sa-desactivar-content .sa-desactivar-description {
+  margin: 0;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.55;
+}
+.sa-desactivar-history {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--accent-border);
+  border-radius: 14px;
+  background: var(--accent-bg);
+}
+.sa-desactivar-history-icon {
+  display: grid;
+  flex: 0 0 26px;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  border: 1px solid var(--accent-border);
+  border-radius: 50%;
+  color: var(--accent);
+  font-size: 15px;
+  font-weight: 700;
+}
+.sa-desactivar-history strong { color: var(--text-h); font-size: 14px; }
+.sa-desactivar-history p {
+  margin: 5px 0 0;
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.sa-desactivar-modal .modal-footer { padding: 0 24px 24px; border: 0; }
+.sa-desactivar-modal .modal-footer button { min-height: 44px; border-radius: 12px; font-weight: 700; }
+.sa-desactivar-modal button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+/* El botón de confirmación usa la gama morada del sitio. */
+.sa-desactivar-modal .btn-eliminar-confirm-sa {
+  color: var(--on-accent, #fff);
+  background: var(--gradient-accent, linear-gradient(135deg, #aa3bff, #6d28d9));
+  border: 1px solid var(--accent-border);
+}
+.sa-desactivar-modal .btn-eliminar-confirm-sa:hover { opacity: 0.88; }
+
+/* Mismo estilo para la confirmación de cambios guardados. */
+.sa-guardado-modal .modal-titulo::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%23b026ea' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='m8 12 3 3 5-6'/%3E%3C/svg%3E");
+}
+.sa-guardado-modal .modal-footer { justify-content: flex-end; }
+.sa-guardado-modal .modal-footer button { flex: 0 1 180px; }
+.sa-desactivar-modal .btn-cancelar-sa:disabled { opacity: 0.6; cursor: not-allowed; }

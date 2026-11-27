@@ -5,7 +5,6 @@ import { useAuth } from '../../hooks/useAuth';
 import { API, authHeaders } from '../../api/api';
 import { notify } from '../../lib/notifications';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
-import { roleLabel } from '../../lib/statusLabels';
 import './SuperAdminDashboard.css';
 
 const chartTooltip = {
@@ -45,42 +44,54 @@ interface RoleCount {
   total: number;
 }
 
+const roleLabel: Record<string, string> = {
+  superadmin: 'Superadmin',
+  admin: 'Administrador',
+  employee: 'Empleado',
+  delivery: 'Repartidor',
+  client: 'Cliente',
+};
+
 export default function SuperAdminDashboard() {
   const { user } = useAuth();
   const [summary, setSummary] = useState<Summary | null>(null);
   const [reports, setReports] = useState<Report[]>([]);
   const [rolesCount, setRolesCount] = useState<RoleCount[]>([]);
   const [loading, setLoading] = useState(true);
+  const [unavailable, setUnavailable] = useState({ summary: false, reports: false, users: false });
 
   useEffect(() => {
     const load = async () => {
       setLoading(true);
       const headers = authHeaders();
+      const read = async (url: string): Promise<unknown> => {
+        try {
+          const response = await fetch(url, { headers });
+          if (!response.ok) return null;
+          return await response.json();
+        } catch {
+          return null;
+        }
+      };
       try {
-        const [r1, r2, r3] = await Promise.all([
-          fetch(`${API.reports}/summary`, { headers }),
-          fetch(API.reports, { headers }),
-          fetch(API.users, { headers }),
+        const [summaryData, reportsData, usersData] = await Promise.all([
+          read(`${API.reports}/summary`), read(API.reports), read(API.users),
         ]);
-
-        if (r1.ok) setSummary(await r1.json());
-        if (r2.ok) {
-          const reportRows = await r2.json();
-          if (Array.isArray(reportRows)) setReports(reportRows);
+        const summaryOk = !!summaryData && typeof summaryData === 'object' && !Array.isArray(summaryData);
+        const reportsOk = Array.isArray(reportsData);
+        const usersOk = Array.isArray(usersData);
+        if (summaryOk) setSummary(summaryData as Summary);
+        if (reportsOk) setReports(reportsData as Report[]);
+        if (usersOk) {
+          const count: Record<string, number> = {};
+          (usersData as Array<{ role?: string }>).forEach((u) => {
+            const role = u.role ?? 'client';
+            count[role] = (count[role] || 0) + 1;
+          });
+          setRolesCount(Object.entries(count).map(([role, total]) => ({ role, total })));
         }
-        if (r3.ok) {
-          const users: Array<{ role?: string }> = await r3.json();
-          if (Array.isArray(users)) {
-            const count: Record<string, number> = {};
-            users.forEach((u) => {
-              const r = u.role ?? 'client';
-              count[r] = (count[r] || 0) + 1;
-            });
-            setRolesCount(Object.entries(count).map(([role, total]) => ({ role, total })));
-          }
-        }
-      } catch {
-        notify.error('No se pudieron cargar los indicadores del sistema.');
+        setUnavailable({ summary: !summaryOk, reports: !reportsOk, users: !usersOk });
+        if (!summaryOk || !reportsOk || !usersOk) notify.error('Algunos indicadores no se pudieron cargar. Vuelve a abrir el panel para intentarlo nuevamente.');
       } finally {
         setLoading(false);
       }
@@ -116,12 +127,12 @@ export default function SuperAdminDashboard() {
         <div>
           <h1 className="sa-title">Panel SuperAdmin</h1>
           <p className="sa-subtitle">
-            Bienvenido, <strong>{user?.name}</strong> — indicadores consolidados en tiempo real
+            Bienvenido, <strong>{user?.name}</strong> — resumen de indicadores del sistema
           </p>
         </div>
         <div className="sa-badge">
           <span className="sa-badge-dot" />
-          Sistema activo
+          Panel de administración
         </div>
       </div>
 
@@ -129,6 +140,7 @@ export default function SuperAdminDashboard() {
         <p className="sa-loading">Cargando datos del sistema...</p>
       ) : (
         <>
+          {unavailable.summary && <p className="sa-no-data" role="alert">No se pudo cargar el resumen de indicadores.</p>}
           {summary && (
             <div className="sa-stats-grid">
               {stats.map((s) => (
@@ -147,7 +159,7 @@ export default function SuperAdminDashboard() {
             <div className="sa-left">
               <div className="sa-chart-section">
                 <h2 className="sa-section-heading">Ventas vs Pagos (últimos 6 días)</h2>
-                {last6.length > 0 ? (
+                {unavailable.reports ? <p className="sa-no-data">No se pudieron cargar los reportes.</p> : last6.length > 0 ? (
                   <ResponsiveContainer width="100%" height={220}>
                     <AreaChart data={last6}>
                       <defs>
@@ -176,7 +188,7 @@ export default function SuperAdminDashboard() {
 
               <div className="sa-chart-section">
                 <h2 className="sa-section-heading">Pedidos por día (últimos 6 días)</h2>
-                {last6.length > 0 ? (
+                {unavailable.reports ? <p className="sa-no-data">No se pudieron cargar los reportes.</p> : last6.length > 0 ? (
                   <ResponsiveContainer width="100%" height={200}>
                     <BarChart data={last6}>
                       <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
@@ -198,7 +210,7 @@ export default function SuperAdminDashboard() {
             <div className="sa-right">
               <div className="sa-chart-section">
                 <h2 className="sa-section-heading">Usuarios por rol</h2>
-                {rolesCount.length === 0 ? (
+                {unavailable.users ? <p className="sa-no-data">No se pudieron cargar los usuarios.</p> : rolesCount.length === 0 ? (
                   <p className="sa-no-data">Sin usuarios registrados</p>
                 ) : (
                   <div className="sa-roles-list">
