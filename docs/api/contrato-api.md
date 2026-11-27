@@ -432,6 +432,24 @@ resolución es definitiva: repetirla → **409**.
 
 ---
 
+### 6.4 Qué se guarda y qué es simulación (B-02)
+
+| Dato | ¿Se guarda? | Dónde / por qué |
+| --- | --- | --- |
+| Método elegido por el cliente | **Sí** | `Payout.method` = `tarjeta` \| `pse` \| `nequi` |
+| Método del pago en tienda | **Sí** | `Payout.method` = `cash` \| `card` (personal de tienda) |
+| Monto, moneda, estado | **Sí** | `Payout.amount`, `currency`, `status` |
+| Número de tarjeta, CVV, OTP, claves Nequi | **No** | El formulario ni los pide: el checkout lo advierte en pantalla |
+| Datos bancarios PSE | **No** | No hay redirección a un banco real |
+| Token de la pasarela | **Sí, sintético** | `Payout.gatewayToken` = huella del intento, no un token real |
+| Identificador del intento | **Sí** | `Payout.transactionId` (`requestKey`), único e idempotente |
+
+**Simulación:** todo el cobro. `POST /api/payments/demo/checkout` está
+bloqueado fuera de desarrollo (`ENABLE_PAYMENT_SIMULATION` + entorno no
+productivo). El **pago en tienda** (`POST /api/employee/orders/:id/store-payment`)
+no procesa tarjetas: registra un cobro que ya ocurrió físicamente y sincroniza
+el recibo.
+
 ## 7. Recibos — `/api/receipts` (todo bajo `verifyToken`)
 
 | Método | Ruta | Roles | Notas |
@@ -603,7 +621,103 @@ dinero efectivamente pagado se toma de `Payout` aprobados y de `Receipt` en
 
 ---
 
-## 12. Otros módulos (referencia rápida)
+## 12. Módulos agregados en `main` (posteriores al contrato inicial)
+
+Estos módulos llegaron con la integración de `main` y **no** estaban en la
+primera versión del contrato. Todos usan `verifyToken` salvo que se indique.
+
+### 12.1 Lista de deseos — `/api/lista-deseos`
+
+| Método | Ruta | Rol | Entrada | Éxito | Errores |
+| --- | --- | --- | --- | --- | --- |
+| `GET` | `/` | cualquiera autenticado | — | `200` array de productos | `401` |
+| `POST` | `/` | cualquiera autenticado | `{ productId: uuid }` (`.strict()`) | `201` | `400` producto inexistente o ya guardado, `401` |
+| `DELETE` | `/:productId` | cualquiera autenticado | — | `204` | `401`, `404` |
+
+**Efecto:** favoritos privados por usuario. No toca stock, pedidos ni cupones.
+
+### 12.2 Soporte (hilos) — `/api/support`
+
+| Método | Ruta | Rol | Entrada | Éxito | Errores |
+| --- | --- | --- | --- | --- | --- |
+| `GET` | `/threads` | autenticado | — | `200` hilos propios (staff: los asignados) | `401` |
+| `GET` | `/threads/:id` | autenticado + dueño | — | `200` hilo con mensajes | `403`, `404` |
+| `POST` | `/threads` | autenticado | `{ subject, body }` | `201` | `400`, `429` (límite de escritura) |
+| `POST` | `/threads/:id/messages` | autenticado + dueño | `{ body }` | `201` | `400`, `403`, `429` |
+
+**Efecto:** solo mensajería. No modifica pedidos.
+
+### 12.3 Operaciones de supervisión — `/api/supervision` (`verifyAdmin`)
+
+| Método | Ruta | Entrada | Éxito | Efecto |
+| --- | --- | --- | --- | --- |
+| `GET` | `/employees` | — | `200` | lista de empleados |
+| `GET` | `/orders?page=&scope=supervision` | — | `200` | pedidos en supervisión |
+| `POST` | `/orders/:id/resolve` | `{ note }` | `200` | resuelve la incidencia |
+| `POST` | `/orders/:id/reassign` | `{ note, assigneeId }` | `200` | reasigna el pedido |
+| `POST` | `/orders/:id/cancel` | `{ note }` | `200` | cancela y **libera el stock** |
+| `POST` | `/orders/:id/simulate-payment` | `{ requestKey, result }` | `200` | simula el pago |
+| `GET` | `/movements` \| `/activity` | `?page=` | `200` | auditoría paginada |
+
+**Errores:** `400` consulta inválida, `403` sin rol, `404` pedido inexistente,
+`409` estado incompatible.
+
+### 12.4 Repartidor — `/api/delivery` (rol `delivery` obligatorio)
+
+| Método | Ruta | Entrada | Éxito | Efecto |
+| --- | --- | --- | --- | --- |
+| `GET` | `/pending-orders` | — | `200` | pedidos sin asignar |
+| `POST` | `/pending-orders/:id/claim` | cuerpo vacío | `200` | el repartidor se autoasigna |
+| `GET` | `/despatches` | — | `200` | envíos en tránsito propios |
+| `POST` | `/despatches/:id/confirm` | cuerpo vacío | `200` | confirma la entrega |
+
+**Errores:** `403` si el rol no es `delivery` o el despacho es de otro
+repartidor, `404`, `409` si ya fue confirmado. **Nota:** las rutas con
+"cuerpo vacío" rechazan cualquier campo enviado.
+
+### 12.5 Recogida por el cliente — `/api/client`
+
+| Método | Ruta | Rol | Éxito | Efecto |
+| --- | --- | --- | --- | --- |
+| `GET` | `/my-pickups` | autenticado | `200` pedidos listos para recoger | — |
+| `POST` | `/orders/:id/pickup-code` | dueño del pedido | `200` `{ code }` | emite el código de recogida |
+
+**Errores:** `403` pedido ajeno, `404`, `409` pedido no listo, `429` (10/min).
+El código tiene 16 caracteres hexadecimales y se valida en
+`POST /api/employee/orders/:id/pickup` junto con el nombre de quien recoge.
+
+### 12.6 Operaciones nuevas de empleado — `/api/employee`
+
+Requieren rol `employee` o `supervisor` (`assertStaff`).
+
+| Método | Ruta | Entrada | Efecto |
+| --- | --- | --- | --- |
+| `GET` | `/summary` | — | resumen del turno |
+| `GET` | `/customers?q=` \| `/products?q=` | — | búsqueda para crear pedidos |
+| `GET` | `/orders?page=&scope=` | — | lista paginada |
+| `POST` | `/orders` | `{ requestKey, customerId, fulfillmentMethod, address?, details[1..100] }` | crea pedido + recibo y **reserva stock** |
+| `GET` | `/orders/:id` | — | detalle |
+| `POST` | `/orders/:id/claim` | cuerpo vacío | toma el pedido |
+| `PATCH` | `/orders/:id/picking` | `{ items: [{ detailId, pickedQuantity }] }` | confirma el empaque **por producto** |
+| `POST` | `/orders/:id/pack` | — | cierra el empaque |
+| `POST` | `/orders/:id/incident` | `{ note }` | reporta incidencia |
+| `POST` | `/orders/:id/pickup` | `{ code, recipientName }` | entrega en tienda |
+| `POST` | `/orders/:id/store-payment` | `{ requestKey, method, … }` | registra **pago en tienda** |
+| `POST` | `/inventory` | `{ requestKey, productId, type, quantity, reason }` | movimiento de inventario |
+
+**Validaciones del alta de pedido** (`POST /orders`):
+`fulfillmentMethod` en `delivery|pickup`; `address` obligatoria (8–500) **solo**
+en domicilio; `details` con 1..100 líneas y `quantity` entera 1..100000; el
+cuerpo es `.strict()`. El stock se bloquea con `FOR UPDATE` y se descuenta con
+`deletedAt: null`, así que **no se venden productos eliminados**.
+
+**Efectos sobre stock:** descuento al crear (`type: 'out'`), devolución al
+cancelar o rechazar el pago, y ajuste manual vía `POST /inventory`.
+
+---
+
+## 13. Otros módulos (referencia rápida)
+
 
 | Módulo | Base | Autenticación | Notas |
 | --- | --- | --- | --- |
@@ -619,7 +733,7 @@ dinero efectivamente pagado se toma de `Payout` aprobados y de `Receipt` en
 
 ---
 
-## 13. Pendientes y límites conocidos
+## 14. Pendientes y límites conocidos
 
 1. **Contacto** ya tiene endpoint real (`POST /api/pqr/contact`) y crea un PQR.
    No envía un correo independiente: la notificación ocurre cuando el staff
@@ -631,5 +745,11 @@ dinero efectivamente pagado se toma de `Payout` aprobados y de `Receipt` en
 3. **Paginación**: los listados no paginan. Con volúmenes grandes de pedidos o
    movimientos habrá que añadir `page`/`limit` (cambio compatible si se mantiene
    el array como respuesta por defecto).
-4. **OpenAPI**: este Markdown es la fuente de verdad. Si se requiere
+4. **Cupones en la edición de pedidos**: `PUT /api/orders/:id` valida el cupón
+   (vigencia, estado, compra mínima, usos) y **consume** un uso, igual que el
+   checkout. Antes se guardaba cualquier `promotionalCodeId` sin validar.
+5. **Vigencia de cupones**: se compara por **día calendario de Colombia**
+   (`America/Bogota`), no por UTC. Un cupón que vence hoy sigue siendo válido
+   hasta la medianoche local.
+6. **OpenAPI**: este Markdown es la fuente de verdad. Si se requiere
    `openapi.yaml` para generadores de clientes, se puede derivar de aquí.

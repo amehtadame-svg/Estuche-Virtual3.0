@@ -46,6 +46,8 @@ test(
   let deletedProductId: string | undefined;
   let couponId: string | undefined;
   let otherCouponId: string | undefined;
+  let staleCouponId: string | undefined;
+  let adminId: string | undefined;
 
   try {
     const user = await db.user.create({
@@ -59,6 +61,19 @@ test(
       },
     });
     const token = jwt.sign({ id: user.id, role: 'client' }, process.env.JWT_SECRET!);
+
+    // El PUT de pedidos exige rol admin y un usuario real en la BD.
+    const admin = await db.user.create({
+      data: {
+        email: `${run}@admin.orders.test`,
+        fullName: 'Admin regresión',
+        role: 'admin',
+        hashedPassword: 'not-a-login-password',
+        isActive: true,
+      },
+    });
+    adminId = admin.id;
+    const adminToken = jwt.sign({ id: admin.id, role: 'admin' }, process.env.JWT_SECRET!);
 
     const product = await db.product.create({
       data: { name: `Regresión ${run}`, price: '1000.00', cost: '500.00', stock: 10 },
@@ -238,6 +253,42 @@ test(
     const couponUntouched = await db.promotionalCode.findUnique({ where: { id: coupon.id } });
     assert.equal(couponUntouched!.currentUses, 1, 'el segundo intento no consume el cupón');
 
+    // ── A-05: editar el pedido (PUT) no puede saltarse la validación ─────
+    const staleCoupon = await db.promotionalCode.create({
+      data: {
+        code: `VIEJO${run.slice(0, 6)}`.toUpperCase(),
+        type: 'fixed',
+        value: '100.00',
+        minPurchase: '0.00',
+        startDate: new Date('2020-01-01'),
+        endDate: new Date('2099-01-01'),
+        maxUses: 10,
+        currentUses: 0,
+        active: false,
+      },
+    });
+    staleCouponId = staleCoupon.id;
+
+    const editable = await post({
+      deliveryAddress: 'Calle 1 #2-3, Bogotá',
+      details: [{ productId, quantity: 1 }],
+    });
+    const editableOrder = await editable.json();
+
+    const viaPut = await fetch(`${base}/api/orders/${editableOrder.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
+      body: JSON.stringify({ promotionalCodeId: staleCoupon.id }),
+    });
+    assert.equal(viaPut.status, 400, 'un cupón inactivo no puede colarse por PUT');
+    assert.match((await viaPut.json()).message, /no está activo/);
+
+    const staleAfter = await db.promotionalCode.findUnique({ where: { id: staleCoupon.id } });
+    assert.equal(staleAfter!.currentUses, 0, 'el cupón inválido no consume usos');
+
+    const unchanged = await db.order.findUnique({ where: { id: editableOrder.id } });
+    assert.equal(unchanged!.promotionalCodeId, null, 'el pedido no queda con cupón');
+
   } finally {
     if (server.listening) {
       server.closeAllConnections();
@@ -263,7 +314,8 @@ test(
       where: { id: { in: [productId, deletedProductId].filter(Boolean) } },
     });
     await db.promotionalCode.deleteMany({
-      where: { id: { in: [couponId, otherCouponId].filter(Boolean) as string[] } },
+      where: { id: { in: [couponId, otherCouponId, staleCouponId].filter(Boolean) as string[] } },
     });
+    if (adminId) await db.user.deleteMany({ where: { id: adminId } });
   }
 });

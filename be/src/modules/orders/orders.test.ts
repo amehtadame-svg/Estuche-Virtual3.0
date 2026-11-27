@@ -932,3 +932,127 @@ test(
     assert.strictEqual(calls.couponUpdates.length, 1, 'el cupón se consume una vez');
   }
 );
+
+// ─── A-05: cambiar el cupón desde la edición no puede saltarse la validación ──
+test(
+  'A-05: la edición rechaza un cupón vencido o inactivo',
+  async () => {
+    const consumed: string[] = [];
+
+    const { tx } = fakeTx({
+      order: {
+        findUnique: async () => ({
+          id: 'order-1',
+          promotionalCodeId: null,
+          shippingCost: 0,
+          details: [{ unitPrice: 100, quantity: 2 }],
+        }),
+        update: async (args: any) => ({ id: 'order-1', ...args.data }),
+      },
+      promotionalCode: {
+        findUnique: async () => ({
+          id: 'promo-muerto',
+          code: 'VIEJO',
+          active: false,
+          type: 'percentage',
+          value: 10,
+          minPurchase: 0,
+          startDate: new Date('2020-01-01'),
+          endDate: new Date('2099-01-01'),
+          maxUses: 10,
+          currentUses: 0,
+        }),
+        updateMany: async () => {
+          consumed.push('promo-muerto');
+          return { count: 1 };
+        },
+      },
+    });
+    stubTransaction(tx);
+
+    await assert.rejects(
+      orderService.update('order-1', { promotionalCodeId: 'promo-muerto' }),
+      (err: HttpError) =>
+        err.status === 400 && /no está activo/i.test(err.message)
+    );
+
+    assert.deepStrictEqual(consumed, [], 'no debe consumir un cupón inválido');
+  }
+);
+
+test(
+  'A-05: la edición consume el cupón válido y recalcula el total',
+  async () => {
+    const { tx, calls } = fakeTx({
+      order: {
+        findUnique: async () => ({
+          id: 'order-1',
+          promotionalCodeId: null,
+          shippingCost: 10000,
+          details: [{ unitPrice: 100, quantity: 2 }],
+        }),
+        update: async (args: any) => {
+          calls.orderCreate = args;
+          return { id: 'order-1', ...args.data };
+        },
+      },
+      promotionalCode: {
+        findUnique: async () => ({
+          id: 'promo-ok',
+          code: 'ESTUCHE10',
+          active: true,
+          type: 'percentage',
+          value: 10,
+          minPurchase: 0,
+          startDate: new Date('2020-01-01'),
+          endDate: new Date('2099-01-01'),
+          maxUses: 10,
+          currentUses: 0,
+        }),
+        updateMany: async () => ({ count: 1 }),
+      },
+    });
+    stubTransaction(tx);
+
+    await orderService.update('order-1', { promotionalCodeId: 'promo-ok' });
+
+    // subtotal 200, 10% => 180, + envío 10000 => 10180
+    assert.strictEqual(
+      Number(calls.orderCreate?.data?.total),
+      10180,
+      'el total debe recalcularse con el descuento y conservar el envío'
+    );
+    assert.strictEqual(calls.orderCreate?.data?.promotionalCodeId, 'promo-ok');
+  }
+);
+
+test(
+  'A-05: no se puede volver a aplicar el mismo cupón al mismo pedido',
+  async () => {
+    const { tx } = fakeTx({
+      order: {
+        findUnique: async () => ({
+          id: 'order-1',
+          promotionalCodeId: 'promo-ok',
+          shippingCost: 0,
+          details: [{ unitPrice: 100, quantity: 1 }],
+        }),
+      },
+      promotionalCode: {
+        findUnique: async () => ({
+          id: 'promo-ok', code: 'ESTUCHE10', active: true, type: 'percentage',
+          value: 10, minPurchase: 0, startDate: new Date('2020-01-01'),
+          endDate: new Date('2099-01-01'), maxUses: 10, currentUses: 1,
+        }),
+        updateMany: async () => ({ count: 1 }),
+      },
+    });
+    stubTransaction(tx);
+
+    await assert.rejects(
+      orderService.update('order-1', { promotionalCodeId: 'promo-ok' }),
+      (err: HttpError) =>
+        err.status === 400 && /ya tiene ese cupón/i.test(err.message)
+    );
+  }
+);

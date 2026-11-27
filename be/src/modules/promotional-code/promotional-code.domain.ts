@@ -1,5 +1,6 @@
 import { Prisma } from '@prisma/client';
 import { badRequest } from '../../lib/errors';
+import { toDateKey } from '../../lib/reportDate';
 
 export const normalizeCoupon = (code: string) => code.normalize('NFKC').trim();
 interface Coupon {
@@ -10,9 +11,12 @@ interface Coupon {
 export function assertCoupon(promo: Coupon | null, subtotal?: number): asserts promo is Coupon {
   if (!promo) throw badRequest('No encontramos ese cupón. Revisa el código e intenta de nuevo.');
   if (!promo.active) throw badRequest('Este cupón no está activo.');
-  const today = new Date().toISOString().slice(0, 10);
-  if (today < promo.startDate.toISOString().slice(0, 10)) throw badRequest('Este cupón aún no está disponible.');
-  if (today > promo.endDate.toISOString().slice(0, 10)) throw badRequest('Este cupón ha expirado.');
+  // La vigencia se compara por día calendario en Colombia, igual que los
+  // reportes. Con `toISOString()` un cupón que vence hoy se rechazaba como
+  // expirado a partir de las 19:00 (hora de Bogotá).
+  const today = toDateKey(new Date()) ?? '';
+  if (today < (toDateKey(promo.startDate) ?? '')) throw badRequest('Este cupón aún no está disponible.');
+  if (today > (toDateKey(promo.endDate) ?? '')) throw badRequest('Este cupón ha expirado.');
   const minimum = Number(promo.minPurchase ?? 0);
   if (subtotal !== undefined && subtotal < minimum) throw badRequest(`Este cupón requiere al menos $${minimum.toLocaleString('es-CO')} en productos. Te faltan $${(minimum - subtotal).toLocaleString('es-CO')}.`, { minimumPurchase: minimum, missingAmount: minimum - subtotal });
   if (promo.maxUses !== null && (promo.currentUses ?? 0) >= promo.maxUses) throw badRequest('Este cupón alcanzó su límite de usos.');

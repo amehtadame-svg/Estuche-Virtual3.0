@@ -432,6 +432,49 @@ export const orderService = {
     return atomic(async (tx) => {
       await assertUnmanaged(tx, id);
 
+      // A-05: cambiar el cupón desde la edición NO puede saltarse la
+      // validación (vigencia, estado, compra mínima, usos). Antes se guardaba
+      // cualquier `promotionalCodeId` que llegara en el cuerpo.
+      if (rest.promotionalCodeId) {
+        const order = await tx.order.findUnique({
+          where: { id, deletedAt: null },
+          include: {
+            details: { select: { unitPrice: true, quantity: true } },
+          },
+        });
+
+        if (!order) {
+          throw notFound('Pedido no encontrado.');
+        }
+
+        // No se puede poner el mismo cupón dos veces (ni consumirlo de nuevo).
+        if (order.promotionalCodeId === rest.promotionalCodeId) {
+          throw badRequest('Este pedido ya tiene ese cupón aplicado.');
+        }
+
+        const subtotal = order.details.reduce(
+          (sum, line) =>
+            sum.plus(new Prisma.Decimal(line.unitPrice).mul(line.quantity)),
+          new Prisma.Decimal(0)
+        );
+
+        const promo = await consumeCoupon(
+          tx,
+          rest.promotionalCodeId,
+          subtotal.toNumber()
+        );
+
+        // Se recalcula el total con el descuento. El envío ya está en el
+        // pedido y no cambia: el umbral se mide sobre el subtotal sin cupón.
+        rest.promotionalCodeId = promo.id;
+        rest.total = Prisma.Decimal.max(
+          0,
+          subtotal.minus(couponDiscount(subtotal, promo))
+        )
+          .plus(new Prisma.Decimal(order.shippingCost))
+          .toDecimalPlaces(2);
+      }
+
       return tx.order.update({
         where: {
           id,

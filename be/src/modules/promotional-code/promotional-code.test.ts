@@ -82,3 +82,50 @@ test('No cotiza productos eliminados ni cantidades sin stock', async () => {
   db.product.findMany = async () => [];
   await assert.rejects(promotionalCodeService.quote('ESTUCHE10', [{ productId: 'missing', quantity: 1 }], { id: 'buyer', role: 'client' }), invalid(/Actualiza tu carrito/));
 });
+
+// ─── Vigencia por día calendario de Colombia ────────────────────────────
+test('A-05: un cupón que vence hoy sigue válido a las 20:00 de Bogotá', async () => {
+  // A las 20:00 de Bogotá ya es el día siguiente en UTC: con la comparación
+  // anterior (toISOString) el cupón se rechazaba como expirado 5 horas antes.
+  const bogota = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Bogota', year: 'numeric', month: '2-digit', day: '2-digit',
+  });
+  const now = new Date();
+  const today = bogota.format(now);
+
+  promo.startDate = new Date(`${today}T00:00:00-05:00`);
+  promo.endDate = new Date(`${today}T23:59:59-05:00`);
+
+  const result = await promotionalCodeService.validate('ESTUCHE10', 50000);
+  assert.equal(result.id, 'coupon', 'el cupón del día debe seguir siendo válido');
+});
+
+test('A-05: un cupón vencido ayer se rechaza', async () => {
+  const bogota = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Bogota', year: 'numeric', month: '2-digit', day: '2-digit',
+  });
+  const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+  promo.startDate = new Date('2020-01-01T00:00:00-05:00');
+  promo.endDate = new Date(`${bogota.format(yesterday)}T23:59:59-05:00`);
+
+  await assert.rejects(
+    promotionalCodeService.validate('ESTUCHE10', 50000),
+    invalid(/expirado/i)
+  );
+});
+
+test('A-05: un cupón que empieza mañana todavía no está disponible', async () => {
+  const bogota = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Bogota', year: 'numeric', month: '2-digit', day: '2-digit',
+  });
+  const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+  promo.startDate = new Date(`${bogota.format(tomorrow)}T00:00:00-05:00`);
+  promo.endDate = new Date('2099-01-01T00:00:00-05:00');
+
+  await assert.rejects(
+    promotionalCodeService.validate('ESTUCHE10', 50000),
+    invalid(/no está disponible/i)
+  );
+});
