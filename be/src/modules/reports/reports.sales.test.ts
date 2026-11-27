@@ -4,6 +4,7 @@ import { Prisma } from '@prisma/client';
 import { prisma } from '../../lib/prisma';
 import { orderService } from '../orders/orders.service';
 import { reportService } from './reports.service';
+import { toDateKey } from '../../lib/reportDate';
 
 /**
  * B-03: ¿una venta nueva aparece en los reportes?
@@ -72,7 +73,8 @@ test('B-03: una venta nueva alimenta los reportes del día sin pasos manuales', 
   db.user.findMany = async () => [];
 
   const rows = await reportService.list();
-  const today = new Date().toISOString().slice(0, 10);
+  // El reporte agrupa por día calendario en Colombia (America/Bogota).
+  const today = toDateKey(new Date())!;
   const row = rows.find((item) => item.date === today);
 
   assert.ok(row, 'debe existir la fila del día de la venta');
@@ -99,7 +101,7 @@ test('B-03: un pedido cancelado cuenta como cancelado y no suma venta', async ()
   db.user.findMany = async () => [];
 
   const rows = await reportService.list();
-  const row = rows.find((item) => item.date === today.toISOString().slice(0, 10));
+  const row = rows.find((item) => item.date === toDateKey(today));
 
   assert.ok(row);
   assert.equal(row!.canceledOrders, 1);
