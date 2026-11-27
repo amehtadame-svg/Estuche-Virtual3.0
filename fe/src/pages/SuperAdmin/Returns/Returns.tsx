@@ -29,6 +29,8 @@ const statusTone: Record<string, string> = {
   refunded: 'tone-info',
 };
 
+const conditionLabels: Record<string, string> = { good: 'Bueno', damaged: 'Dañado', modified: 'Modificado', incomplete: 'Incompleto' };
+
 const filters: { value: string; label: string }[] = [
   { value: 'all', label: 'Todos' },
   { value: 'requested', label: 'Solicitada' },
@@ -55,6 +57,9 @@ export default function Returns() {
   const [creating, setCreating] = useState(false);
   const [newReturn, setNewReturn] = useState({ orderId: '', productId: '', quantity: '1', reason: '' });
   const [saving, setSaving] = useState(false);
+  const [resolving, setResolving] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [returns, setReturns] = useState<OrderReturn[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [selected, setSelected] = useState<OrderReturn | null>(null);
@@ -63,11 +68,15 @@ export default function Returns() {
   const headers = authHeaders();
 
   const load = async () => {
+    setLoading(true);
     try {
       const res = await fetch(API.returns, { headers });
       if (!res.ok) throw new Error();
-      setReturns(await res.json());
-    } catch { notify.error('No se pudieron cargar las devoluciones.'); }
+      const data: unknown = await res.json();
+      if (!Array.isArray(data)) throw new Error();
+      setReturns(data);
+      setLoadError(false);
+    } catch { setLoadError(true); } finally { setLoading(false); }
   };
 
   useEffect(() => {
@@ -102,7 +111,13 @@ export default function Returns() {
   };
 
   const handleResolve = async () => {
-    if (!selected) return;
+    if (!selected || resolving) return;
+    if (form.refund.trim() === '' || !Number.isFinite(Number(form.refund)) || Number(form.refund) < 0) {
+      notify.error('Ingresa un monto de reembolso válido, igual o mayor que cero.');
+      return;
+    }
+    setResolving(true);
+    try {
     const successMessage = selected.status === 'requested'
       ? 'Solicitud de devolución resuelta exitosamente.'
       : 'Devolución actualizada exitosamente.';
@@ -123,11 +138,18 @@ export default function Returns() {
     if (!response) return;
     closeModal();
     await load();
+    } finally { setResolving(false); }
   };
 
   const createReturn = async () => {
     if (!newReturn.orderId || !newReturn.productId || !Number.isInteger(Number(newReturn.quantity)) || Number(newReturn.quantity) < 1 || newReturn.reason.trim().length < 3) {
       notify.error('Selecciona pedido y producto, una cantidad válida y un motivo de al menos 3 caracteres.');
+      return;
+    }
+    const selectedDetail = orders.find(order => order.id === newReturn.orderId)?.details.filter(detail => detail.productId === newReturn.productId);
+    const purchased = selectedDetail?.reduce((sum, detail) => sum + detail.quantity, 0) ?? 0;
+    if (Number(newReturn.quantity) > purchased) {
+      notify.error('La cantidad no puede superar las unidades compradas.');
       return;
     }
     setSaving(true);
@@ -151,6 +173,7 @@ export default function Returns() {
         <div className="devoluciones-topbar">
           <h2 className="titulo-devoluciones">Gestión de Devoluciones</h2>
           <button className="btn-guardar-dev" onClick={() => setCreating(true)}>+ Nueva devolución</button>
+        </div>
           <div className="devoluciones-filtros">
             {filters.map((f) => (
               <button
@@ -162,9 +185,10 @@ export default function Returns() {
               </button>
             ))}
           </div>
-        </div>
 
-        <div className="table-wrapper">
+        {loading && <p role="status">Cargando devoluciones...</p>}
+        {loadError && <p role="alert">No se pudieron cargar las devoluciones. <button type="button" onClick={load}>Reintentar</button></p>}
+        {!loading && !loadError && <div className="table-wrapper">
           <table className="tabla-devoluciones">
             <thead>
               <tr>
@@ -193,7 +217,7 @@ export default function Returns() {
                   <td>{d.quantity}</td>
                   <td className="motivo-dev">{d.reason}</td>
                   <td>
-                    <span className={`badge-producto-dev badge-producto-${d.productCondition}`}>{d.productCondition}</span>
+                    <span className={`badge-producto-dev badge-producto-${d.productCondition}`}>{conditionLabels[d.productCondition] ?? d.productCondition ?? '—'}</span>
                   </td>
                   <td className="reembolso-dev">{Number(d.refund) > 0 ? `$${Number(d.refund).toLocaleString()}` : '—'}</td>
                   <td>{d.requestedAt?.slice(0, 10) ?? '—'}</td>
@@ -211,7 +235,7 @@ export default function Returns() {
               ))}
             </tbody>
           </table>
-        </div>
+        </div>}
 
         {creating && (
           <Modal titulo="Nueva devolución" onClose={() => { if (!saving) setCreating(false); }} footer={<>
@@ -220,79 +244,50 @@ export default function Returns() {
           </>}>
             <p>Selecciona un pedido entregado y el producto que se desea devolver. Registrar una solicitud no realiza un reembolso ni modifica el inventario.</p>
             <label htmlFor="return-order">Pedido entregado</label>
-            <select id="return-order" value={newReturn.orderId} onChange={e => setNewReturn({ ...newReturn, orderId: e.target.value, productId: '' })}>
+            <select id="return-order" value={newReturn.orderId} onChange={e => setNewReturn({ ...newReturn, orderId: e.target.value, productId: '', quantity: '1' })}>
               <option value="">Selecciona un pedido</option>
               {orders.map(order => <option key={order.id} value={order.id}>PED-{shortReference(order.id)} · {order.customer?.fullName}</option>)}
             </select>
             <label htmlFor="return-product">Producto</label>
-            <select id="return-product" value={newReturn.productId} onChange={e => setNewReturn({ ...newReturn, productId: e.target.value })}>
+            <select id="return-product" disabled={!selectedOrder} value={newReturn.productId} onChange={e => setNewReturn({ ...newReturn, productId: e.target.value, quantity: '1' })}>
               <option value="">Selecciona un producto</option>
               {selectedOrder?.details.map(detail => <option key={detail.productId} value={detail.productId}>{detail.product.name} · {detail.quantity} uds.</option>)}
             </select>
             <label htmlFor="return-quantity">Cantidad</label>
-            <input id="return-quantity" type="number" min="1" max="100000" step="1" value={newReturn.quantity} onChange={e => setNewReturn({ ...newReturn, quantity: e.target.value })} />
+            <input id="return-quantity" type="number" min="1" max={selectedOrder?.details.filter(detail => detail.productId === newReturn.productId).reduce((sum, detail) => sum + detail.quantity, 0) || 100000} step="1" value={newReturn.quantity} onChange={e => setNewReturn({ ...newReturn, quantity: e.target.value })} />
             <label htmlFor="return-reason">Motivo</label>
             <textarea id="return-reason" className="input-dev" maxLength={50} rows={6} value={newReturn.reason} onChange={e => setNewReturn({ ...newReturn, reason: e.target.value })} />
             <small>{newReturn.reason.length}/50 caracteres</small>
           </Modal>
         )}
-        {/* Modal */}
         {modalOpen && selected && (
-          <div className="modal-overlay-dev" onClick={closeModal}>
-            <div className="modal-devoluciones" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-header-dev">
-                <h3 className="modal-titulo-dev">Resolver devolución #{shortReference(selected.id)}</h3>
-                <button className="modal-cerrar-dev" onClick={closeModal}>
-                  ✕
-                </button>
-              </div>
-
-              <div className="modal-body-dev">
-                <div className="dev-info-card">
-                  <p>
-                    <strong>Cliente:</strong> {selected.customer.fullName}
-                  </p>
-                  <p>
-                    <strong>Producto:</strong> {selected.product.name}
-                  </p>
-                  <p>
-                    <strong>Cantidad:</strong> {selected.quantity}
-                  </p>
-                  <p>
-                    <strong>Motivo:</strong> {selected.reason}
-                  </p>
-                </div>
-
-                <p>La resolución registra el estado; no ejecuta un reembolso ni modifica el inventario automáticamente.</p>
-                <p className="label-dev">Resolución</p>
-                <select className="input-dev" name="status" value={form.status} onChange={handleChange}>
-                  <option value="approved">Aprobar</option>
-                  <option value="rejected">Rechazar</option>
-                  <option value="refunded">Reembolsada</option>
-                </select>
-
-                <p className="label-dev">Estado del producto</p>
-                <select className="input-dev" name="productCondition" value={form.productCondition} onChange={handleChange}>
-                  <option value="good">Bueno</option>
-                  <option value="damaged">Dañado</option>
-                  <option value="modified">Modificado</option>
-                  <option value="incomplete">Incompleto</option>
-                </select>
-
-                <p className="label-dev">Monto de reembolso</p>
-                <input className="input-dev" name="refund" type="number" value={form.refund} onChange={handleChange} placeholder="0" />
-              </div>
-
-              <div className="modal-footer-dev">
-                <button className="btn-cancelar-dev" onClick={closeModal}>
-                  Cancelar
-                </button>
-                <button className="btn-guardar-dev" onClick={handleResolve}>
-                  Confirmar resolución
-                </button>
-              </div>
+          <Modal titulo={`Resolver devolución #${shortReference(selected.id)}`} onClose={() => { if (!resolving) closeModal(); }} footer={<>
+            <button className="btn-cancelar-dev" disabled={resolving} onClick={closeModal}>Cancelar</button>
+            <button className="btn-guardar-dev" disabled={resolving} onClick={handleResolve}>{resolving ? 'Guardando...' : 'Confirmar resolución'}</button>
+          </>}>
+            <div className="dev-info-card">
+              <p><strong>Cliente:</strong> {selected.customer.fullName}</p>
+              <p><strong>Producto:</strong> {selected.product.name}</p>
+              <p><strong>Cantidad:</strong> {selected.quantity}</p>
+              <p><strong>Motivo:</strong> {selected.reason}</p>
             </div>
-          </div>
+            <p>La resolución registra el estado; no ejecuta un reembolso ni modifica el inventario automáticamente.</p>
+            <label htmlFor="return-status">Resolución</label>
+            <select id="return-status" name="status" value={form.status} onChange={handleChange}>
+              <option value="approved">Aprobar</option>
+              <option value="rejected">Rechazar</option>
+              <option value="refunded">Reembolsada</option>
+            </select>
+            <label htmlFor="return-condition">Estado del producto</label>
+            <select id="return-condition" name="productCondition" value={form.productCondition} onChange={handleChange}>
+              <option value="good">Bueno</option>
+              <option value="damaged">Dañado</option>
+              <option value="modified">Modificado</option>
+              <option value="incomplete">Incompleto</option>
+            </select>
+            <label htmlFor="return-refund">Monto de reembolso registrado</label>
+            <input id="return-refund" name="refund" type="number" min="0" step="any" value={form.refund} onChange={handleChange} />
+          </Modal>
         )}
       </div>
     </>

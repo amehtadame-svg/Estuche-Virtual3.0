@@ -1,0 +1,149 @@
+/* Lenguaje visual compartido por las secciones de superadministración. */
+:is(.sa-dashboard, .descuentos-page, .pagos-page, .devoluciones-page, .reportes-page, .usuariossa-page) {
+  width: min(1320px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 32px 0 56px;
+  font-family: var(--sans);
+}
+:is(.sa-topbar, .descuentos-topbar, .pagos-topbar, .devoluciones-topbar, .reportes-topbar, .usuariossa-topbar) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding-top: 10px;
+}
+:is(.sa-title, .titulo-descuentos, .titulo-pagos, .titulo-devoluciones, .titulo-reportes, .titulo-usuariossa) {
+  margin: 0;
+  color: var(--text-h);
+  font-size: 28px;
+  font-weight: 700;
+}
+:is(.pagos-filtros, .devoluciones-filtros, .filtros-rol) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.devoluciones-filtros { margin-bottom: 20px; }
+:is(.btn-filtro-pago, .btn-filtro-dev, .btn-filtro-rol) {
+  min-height: 36px;
+  padding: 7px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font: 600 13px var(--sans);
+  cursor: pointer;
+}
+:is(.btn-filtro-activo, .btn-filtro-dev-activo, .btn-filtro-rol-activo),
+:is(.btn-filtro-activo, .btn-filtro-dev-activo, .btn-filtro-rol-activo):hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+:is(.btn-nuevo-descuento, .btn-nuevo-usuariossa, .btn-guardar-dev, .btn-guardar-descuento, .btn-guardar-sa, .reportes-btn-filtrar) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 9px 16px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: var(--gradient-accent);
+  color: var(--on-accent);
+  font: 600 14px var(--sans);
+  cursor: pointer;
+}
+:is(.descuentos-page, .usuariossa-page, .devoluciones-page) :is(.btn-toggle-descuento, .btn-editar-descuento, .btn-editar-usuariossa, .btn-resolver-dev) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 6px 12px;
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius-sm);
+  background: var(--accent-bg);
+  color: var(--accent-text);
+  font: 600 13px var(--sans);
+  white-space: nowrap;
+}
+:is(.btn-cancelar-dev, .btn-cancelar-descuento, .btn-cancelar-sa, .reportes-btn-limpiar) {
+  min-height: 40px;
+  padding: 9px 16px;
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--accent-text);
+  font: 600 14px var(--sans);
+}
+:is(.sa-dashboard, .descuentos-page, .pagos-page, .devoluciones-page, .reportes-page, .usuariossa-page) :is(button, a, input, select, textarea):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+:is(.sa-dashboard, .descuentos-page, .pagos-page, .devoluciones-page, .reportes-page, .usuariossa-page) button:disabled { opacity: .55; cursor: not-allowed; }
+:is(.descuentos-page, .pagos-page, .devoluciones-page, .reportes-page, .usuariossa-page) .table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+:is(.descuentos-page, .pagos-page, .devoluciones-page, .reportes-page, .usuariossa-page) table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: auto;
+  font-size: 14px;
+}
+:is(.descuentos-page, .pagos-page, .devoluciones-page, .reportes-page, .usuariossa-page) table :is(th, td) {
+  padding: 12px 14px;
+  text-align: left;
+  vertical-align: middle;
+}
+:is(.descuentos-page, .pagos-page, .devoluciones-page, .reportes-page, .usuariossa-page) table th {
+  width: auto;
+  background: var(--bg-subtle);
+  color: var(--text);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.descuentos-page .tabla-descuentos td.acciones-descuento { text-align: left; white-space: nowrap; }
+.devoluciones-page .tabla-devoluciones td.motivo-dev { min-width: 150px; white-space: normal; overflow-wrap: anywhere; }
+.badge-producto-good { background: var(--success-bg); color: var(--success); }
+.badge-producto-damaged { background: var(--danger-bg); color: var(--danger); }
+.badge-producto-modified { background: var(--warning-bg); color: var(--warning); }
+.badge-producto-incomplete { background: var(--info-bg); color: var(--info); }
+.devoluciones-page .modal-body :is(input, select, textarea) {
+  width: 100%;
+  padding: 9px 12px;
+  margin-bottom: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text-h);
+  font: inherit;
+}
+.devoluciones-page .modal-body p { margin: 0 0 16px; }
+.devoluciones-page .dev-info-card p { margin: 0; }
+@media (max-width: 900px) {
+  :is(.sa-dashboard, .descuentos-page, .pagos-page, .devoluciones-page, .reportes-page, .usuariossa-page) {
+    width: calc(100% - 28px);
+    padding: 20px 0 40px;
+  }
+}
+@media (max-width: 600px) {
+  :is(.descuentos-page, .pagos-page, .devoluciones-page, .reportes-page, .usuariossa-page) table { min-width: 800px; }
+  :is(.descuentos-page, .pagos-page, .devoluciones-page, .reportes-page, .usuariossa-page) table thead { display: table-header-group; }
+  :is(.descuentos-page, .pagos-page, .devoluciones-page, .reportes-page, .usuariossa-page) table tbody tr { display: table-row; padding: 0; }
+  :is(.descuentos-page, .pagos-page, .devoluciones-page, .reportes-page, .usuariossa-page) table td { display: table-cell; padding: 12px 14px; }
+  .descuentos-page .tabla-descuentos td.acciones-descuento { display: table-cell; }
+}
+/* Los anchos automáticos evitan comprimir correo, fechas y acciones. */
+.devoluciones-page .tabla-devoluciones,
+.descuentos-page .tabla-descuentos { table-layout: auto; min-width: 900px; }
+.devoluciones-page .tabla-devoluciones thead th,
+.descuentos-page .tabla-descuentos thead th { width: auto; }
+.devoluciones-page .tabla-devoluciones thead th,
+.devoluciones-page .tabla-devoluciones tbody td,
+.descuentos-page .tabla-descuentos thead th,
+.descuentos-page .tabla-descuentos tbody td { padding: 12px 14px; text-align: left; }

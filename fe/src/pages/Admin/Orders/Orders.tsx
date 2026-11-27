@@ -526,6 +526,7 @@ export default function Orders() {
               Administra los pedidos registrados
             </p>
           </div>
+          <div className="pedidos-topbar-actions">
           <button className="btn-editar-pedido" onClick={() => {
             const next = !showArchived;
             showArchivedRef.current = next;
@@ -534,11 +535,9 @@ export default function Orders() {
           }}>
             {showArchived ? 'Ver pedidos' : 'Ver archivados'}
           </button>
-        </div>
-
-        <div style={{ margin: '12px 0' }}>
-          <Link className="btn-guardar-pedido" to="/empleado/nuevo">+ Crear pedido</Link>{' '}
+          <Link className="btn-guardar-pedido" to="/empleado/nuevo">+ Crear pedido</Link>
           <Link className="btn-editar-pedido" to="/empleado/supervision">Supervisar pedidos operativos</Link>
+          </div>
         </div>
         {message && (
           <div className="mensaje-pedidos">
@@ -637,7 +636,7 @@ export default function Orders() {
                     </select>}
                   </td>
 
-                  <td>
+                  <td className="acciones-pedido">
                     {showArchived ? (
                       <button className="btn-editar-pedido" onClick={() => handleArchive(order.id, false)}>Restaurar</button>
                     ) : (

@@ -351,3 +351,41 @@
     white-space: nowrap;
   }
 }
+/* Acciones agrupadas y alineadas sin competir con el título. */
+.pedidos-page .pedidos-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.pedidos-topbar-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.pedidos-page .pedidos-topbar-actions > * {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 9px 14px;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  text-align: center;
+}
+.pedidos-page .tabla-pedidos tbody td:last-child > * {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 3px;
+  min-height: 34px;
+  white-space: nowrap;
+}
+@media (max-width: 600px) {
+  .pedidos-topbar-actions { justify-content: flex-start; width: 100%; }
+}
