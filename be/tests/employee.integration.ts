@@ -451,6 +451,10 @@ test(
             'admin',
             `/order-details/${linea.id}`,
             {
+              // `updateOrderDetailSchema` extiende el `create`, así que exige
+              // las claves del artículo arriba Y el snapshot en `expected`.
+              orderId: lineaDb!.orderId,
+              productId: lineaDb!.productId,
               quantity: 1,
               unitPrice: Number(lineaDb!.unitPrice),
               expected: {
