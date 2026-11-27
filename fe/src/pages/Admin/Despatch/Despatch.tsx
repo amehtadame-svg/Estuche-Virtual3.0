@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import ReferenceSelect from '../../../components/ui/ReferenceSelect';
 import { shortReference } from '../../../lib/reference';
 import { useState, useEffect, useRef } from 'react';
@@ -143,14 +144,6 @@ export default function Despatch() {
     } catch {
       // Si no se puede cargar, se conserva la dirección que escriba la persona.
     }
-  };
-
-  const openNewModal = () => {
-    orderLookupRef.current += 1;
-    setFormError('');
-    setForm(emptyForm);
-    setEditingId(null);
-    setModalOpen(true);
   };
 
   const closeModal = () => {
@@ -324,16 +317,14 @@ export default function Despatch() {
             </h2>
 
             <p className="subtitulo-usuarios">
-              Administra los envíos registrados
+              Consulta los envíos registrados. Para preparar un pedido pagado, usa el flujo de operaciones.
+              Al tomarlo, tu cuenta queda como responsable de su preparación; el repartidor lo toma después para la entrega.
             </p>
           </div>
 
-          <button
-            className="btn-nuevo-envio"
-            onClick={openNewModal}
-          >
-            + Nuevo envío
-          </button>
+          <Link className="btn-nuevo-envio" to="/empleado/cola">
+            Preparar pedidos
+          </Link>
         </div>
 
         <div className="envio-vistas">

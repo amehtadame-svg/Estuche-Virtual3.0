@@ -511,3 +511,16 @@
 @media (min-width: 1248px) {
   .envios-page > .envios-topbar { column-gap: 0; }
 }
+
+/* El acceso reutiliza la cola de operaciones, conservando el estilo de botón. */
+.envios-page .btn-nuevo-envio {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  text-decoration: none;
+}
+.envios-page .btn-nuevo-envio:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
