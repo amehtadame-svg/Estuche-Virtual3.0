@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { Mail, Phone, Send, MapPin, Clock, Truck } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
-import { CONTACT_EMAIL, CONTACT_PHONE, INSTAGRAM_URL, WHATSAPP_URL } from "../../lib/contact";
+import { CONTACT_EMAIL, CONTACT_PHONE, FACEBOOK_URL, INSTAGRAM_URL, WHATSAPP_URL } from "../../lib/contact";
 import "./Footer.css";
 
 export default function Footer() {
@@ -55,7 +55,7 @@ export default function Footer() {
             <a href={INSTAGRAM_URL} target="_blank" rel="noreferrer" aria-label="Instagram de Estuche Virtual">
               Ig
             </a>
-            <a href="https://facebook.com" target="_blank" rel="noreferrer">
+            <a href={FACEBOOK_URL} target="_blank" rel="noreferrer" aria-label="Facebook de Estuche Virtual">
               Fb
             </a>
             <a

@@ -27,6 +27,7 @@ test('Encabezado y datos de contacto del cliente', async () => {
     assert.equal(document.querySelector('[aria-label="Buscar productos"]'), null);
     assert.ok(document.querySelector('a[href="/catalogo"]'), 'El acceso al catálogo se conserva');
     assert.equal(document.querySelector('[aria-label="Instagram de Estuche Virtual"]')?.getAttribute('href'), 'https://www.instagram.com/cfazz_384/');
+    assert.equal(document.querySelector('[aria-label="Facebook de Estuche Virtual"]')?.getAttribute('href'), 'https://www.facebook.com/miguelstevechaconramirez/');
     assert.equal(document.querySelector('[aria-label="WhatsApp de Estuche Virtual"]')?.getAttribute('href'), 'https://wa.me/573219276622');
     assert.equal(document.querySelectorAll('a[href="mailto:estuchevirtual272@gmail.com"]').length, 2);
     assert.equal((document.body.textContent!.match(/\+57 321 927 6622/g) ?? []).length, 2);
