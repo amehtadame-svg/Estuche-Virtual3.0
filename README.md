@@ -38,6 +38,8 @@ Desarrollar una plataforma web integral que optimice la compra y venta de útile
 
 ## Tecnologías
 
+**Este repositorio corresponde al cuarto backend** de la línea de evolución del programa (versión 1.6 de Estuche Virtual): reescritura en Express + TypeScript con Prisma, consolidada tras la unificación de estilos y la documentación de criterios de entrega. La **API del cuarto backend** está documentada en [docs/API.md](docs/API.md); la reflexión comparativa con las versiones previas y la deuda técnica priorizada están en [docs/REFLEXION_4_BACKENDS.md](docs/REFLEXION_4_BACKENDS.md).
+
 - Frontend: React, TypeScript y Vite.
 - Backend: Node.js, Express y TypeScript.
 - Acceso a datos y migraciones: Prisma.

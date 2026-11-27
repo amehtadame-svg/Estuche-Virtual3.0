@@ -30,9 +30,9 @@ Todavía no hay constancia de que estas comprobaciones se hayan realizado. El Co
 |---|---|---|
 | Tablero y Scrum | Exportación o capturas autorizadas con sprint, fechas, historias, puntos, tareas, responsables, estados y evidencia de planning poker real. | 2, 13 |
 | Reunión y feedback | Acta real con participantes, fecha, retroalimentación, acuerdos y responsables aceptados. | 13 |
-| Cuatro backends | Repositorios o commits exactos de cada versión; criterios de comparación acordados y función del cuarto backend. | 11, 14 |
+| Cuatro backends | [Reflexión comparativa y deuda priorizada](REFLEXION_4_BACKENDS.md): cuarto backend identificado (versión 1.6) y deuda DT-01…DT-09 priorizada. Pendiente: referencia exacta de los tres backends previos y ratificación de prioridades. | 11, 14 |
 | Modelos | Revisión de MER/MR frente a `be/prisma/schema.prisma`, casos de uso, clases y diagrama de arquitectura, con validación de responsables. | 1, 5 |
-| Defectos | Reproducir los hallazgos en la versión actual y registrar tickets reales con pasos, evidencia, severidad, estado y vínculo a prueba de regresión. | 9 |
+| Defectos | **Registrados como issues reales en GitHub** (#103–#107, abiertos, con severidad/prioridad/estado en el cuerpo). Las etiquetas se crearon, pero la token usada no permite asignarlas ni cerrar issues (403); pendiente: etiquetar con permisos de escritura, reproducir en la versión actual, revisión real y cierre con regresión vinculada. | 9 |
 | IoT, si se busca bonificación | Código del prototipo, dispositivo, protocolo, demostración del envío y recepción de datos. | 6 |
 
 Las [issues de GitHub](https://github.com/amehtadame-svg/Estuche-Virtual3.0/issues) son un sistema disponible, pero las revisadas el 27-11-2026 no tenían etiquetas; no se ha comprobado que los hallazgos históricos estén registrados allí. No crear tickets ni atribuir severidad o responsables como hechos sin reproducirlos y acordar el proceso.

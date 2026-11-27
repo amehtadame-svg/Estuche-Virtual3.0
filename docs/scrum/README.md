@@ -3,7 +3,8 @@
 Este directorio contiene **plantillas y propuestas**, no actas ni capturas históricas. No se recibió exportación, captura o acceso al tablero; tampoco se registraron estimaciones, sprint planning, retrospectiva ni feedback reales. No atribuir fechas, puntos, aceptación o tareas a integrantes sin evidencia.
 
 - [Product Backlog propuesto](PRODUCT_BACKLOG.md): trabajo identificado a partir de la auditoría, pendiente de priorización por el equipo.
-- [Sprint Backlog y estimación](SPRINT_BACKLOG.md): plantilla; no existe un sprint comprobado en este archivo.
+- [Sprint Backlog y estimación](SPRINT_BACKLOG.md): **propuesta** de sprint con tareas concretas, responsables propuestos y estimación propuesta; no existe un sprint comprobado ni una sesión de planificación real.
+- [Asignación de tareas y división del trabajo](ASIGNACION_TAREAS.md): evidencia real de contribuciones por PR, roles declarados y distribución observada.
 - [Retrospectiva y feedback](RETROSPECTIVA.md): guía para registrar una reunión real.
 - [Matriz de evidencias](../matriz-evidencias.md): estado del criterio y enlaces.
 

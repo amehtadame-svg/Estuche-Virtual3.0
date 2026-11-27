@@ -1,5 +1,7 @@
 # API — referencia de operaciones principales
 
+**API del cuarto backend** de Estuche Virtual (versión 1.6). Esta es la interfaz de programación del backend actual del programa; la reflexión comparativa con las versiones previas está en [REFLEXION_4_BACKENDS.md](REFLEXION_4_BACKENDS.md).
+
 **Base:** inspección estática de `6af297a`, 26-11-2026; fila de favoritos añadida posteriormente en esta rama. Referencia parcial pendiente de validación de Franck; para lista y condiciones completas consultar [`app.ts`](../be/src/app.ts) y los `*.routes.ts`, schemas y servicios de cada módulo. No es una especificación OpenAPI completa ni garantiza funcionamiento integral.
 
 La base relativa es `/api`. Las rutas protegidas requieren `Authorization: Bearer <token>`; se consulta el rol vigente en BD. Cada ruta y servicio aplica además sus reglas de rol y propiedad; no asumir que todas las rutas comparten permisos. Nunca incluir tokens en evidencias. Errores y esquema preciso deben verificarse en la ruta concreta.
