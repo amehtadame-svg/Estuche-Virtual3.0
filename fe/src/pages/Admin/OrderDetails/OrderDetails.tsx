@@ -200,6 +200,7 @@ export default function OrderDetails() {
           <p className="detalle-pedidos-cargando">Cargando artículos...</p>
         ) : (
           <>
+            <div className="table-wrapper">
             <table className="tabla-detalle-pedidos">
               <thead>
                 <tr>
@@ -237,6 +238,7 @@ export default function OrderDetails() {
                 })}
               </tbody>
             </table>
+            </div>
 
 
 

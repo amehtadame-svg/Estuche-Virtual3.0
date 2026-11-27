@@ -611,7 +611,7 @@ export default function EmployeeWorkspace() {
   );
 
   return (
-    <main className={`emp-shell ${user?.role === 'superadmin' ? 'sa-operaciones' : ''}`}>
+    <main className="emp-shell staff-workspace">
       <header className="emp-heading">
         <div>
           <span className="emp-eyebrow">

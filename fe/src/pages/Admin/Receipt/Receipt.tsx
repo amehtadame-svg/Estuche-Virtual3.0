@@ -296,7 +296,8 @@ export default function Receipt() {
             Cargando recibos...
           </p>
         ) : (
-          <table className="tabla-facturas">
+          <div className="table-wrapper">
+            <table className="tabla-facturas">
             <thead>
               <tr>
                 <th>N° Recibo</th>
@@ -404,6 +405,7 @@ export default function Receipt() {
               ))}
             </tbody>
           </table>
+            </div>
         )}
       </div>
 

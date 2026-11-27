@@ -207,6 +207,7 @@ const AdminDashboard = () => {
                 Ver todos <ArrowRight size={14} />
               </Link>
             </div>
+            <div className="table-wrapper">
             <table className="tabla-resumen">
               <thead>
                 <tr>
@@ -241,6 +242,7 @@ const AdminDashboard = () => {
                 )}
               </tbody>
             </table>
+            </div>
           </div>
         </div>
 
