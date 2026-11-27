@@ -10,7 +10,7 @@
 > **Importante:** el parche **solo agrega y endurece validaciones**. No se
 > reescribió ningún módulo de un compañero: `payments.service.ts` cambia 7
 > líneas, `employee.service.ts` **6 líneas añadidas** y `pqr.*` solo recibe
-> código nuevo al final. El detalle está en §5.
+> código nuevo al final. El detalle está en la sección 5.
 
 ---
 
@@ -43,10 +43,10 @@
 
 | # | Punto pedido | ¿Se cumple? | Detalle |
 | --- | --- | --- | --- |
-| B-01 | Acordar cómo funcionará **contacto** (endpoint real o PQR) | ✅ **Sí** | Se decidió **registrar un PQR** `petition` real en vez de un correo suelto. Antes el formulario solo mostraba "¡Mensaje enviado!" sin guardar nada. Hoy el frontend usa `POST /api/pqr` y el backend también expone `POST /api/pqr/contact` con el mismo destino (ver §9 del contrato) |
+| B-01 | Acordar cómo funcionará **contacto** (endpoint real o PQR) | ✅ **Sí** | Se decidió **registrar un PQR** `petition` real en vez de un correo suelto. Antes el formulario solo mostraba "¡Mensaje enviado!" sin guardar nada. Hoy el frontend usa `POST /api/pqr` y el backend también expone `POST /api/pqr/contact` con el mismo destino (ver la sección 9 del contrato) |
 | B-02 | Definir **qué métodos de pago se guardan** y qué es simulación | ✅ **Sí** | Se guarda solo `Payout.method` (`tarjeta`/`pse`/`nequi`). **Ningún** dato financiero. Todo el cobro es simulación y está bloqueado en producción |
 | B-03 | Comprobar si **una venta nueva actualiza los reportes** | ✅ **Sí, verificado** | Prueba `reports.sales.test.ts`: una venta nueva entra en `totalSold`, `productsSold` y `totalOrders` del día; un pedido cancelado solo cuenta como cancelado |
-| B-04 | Documentar cualquier función que no alcance a quedar incluida | ✅ **Sí** | §13 de `docs/api/contrato-api.md`: paginación ausente y `openapi.yaml` pendiente |
+| B-04 | Documentar cualquier función que no alcance a quedar incluida | ✅ **Sí** | Sección 13 de `docs/api/contrato-api.md`: paginación ausente y `openapi.yaml` pendiente |
 
 **Conclusión B: 4/4 cubiertos.**
 
@@ -59,14 +59,14 @@
 | Exigido | ¿Está? | Sección |
 | --- | --- | --- |
 | Método y ruta reales | ✅ | Todo el documento (verificado contra los `*.routes.ts`) |
-| Autenticación y roles | ✅ | §0.1 (`verifyToken`, `verifyAdmin`, `verifySuperAdmin`) |
+| Autenticación y roles | ✅ | Sección 0.1 (`verifyToken`, `verifyAdmin`, `verifySuperAdmin`) |
 | Datos de entrada | ✅ | Tablas por endpoint |
 | Respuesta exitosa | ✅ | Ejemplos JSON por endpoint |
-| Errores esperados | ✅ | §0.2 + tabla por endpoint |
-| Efectos sobre stock, pedidos y cupones | ✅ | §3 "Efectos" y §6, §8 |
+| Errores esperados | ✅ | Sección 0.2 + tabla por endpoint |
+| Efectos sobre stock, pedidos y cupones | ✅ | Sección 3 "Efectos" y secciones 6 y 8 |
 | Entregable PR | ✅ | PR #95 |
 | Pruebas de regresión | ✅ | 20 pruebas nuevas + 1 suite de integración |
-| Evidencia de resultados | ✅ | §6 de este informe |
+| Evidencia de resultados | ✅ | Sección 6 de este informe |
 
 **Conclusión C: 7/7 cubiertos.**
 

@@ -76,7 +76,7 @@ de variables, **sin secretos**, con instrucciones de generación
 
 ### 1.5 Variables necesarias (documentado)
 
-Inventario completo en `docs/INSTALACION_Y_DESPLIEGUE.md` §3:
+Inventario completo en `docs/INSTALACION_Y_DESPLIEGUE.md` sección 3:
 
 - **Raíz (obligatorias):** `SUPABASE_DATABASE_URL`, `JWT_SECRET`.
 - **Backend:** `DATABASE_URL`, `JWT_SECRET` (≥32, validado al arrancar),
@@ -116,8 +116,8 @@ El backend ahora **falla al arrancar con mensaje claro** si falta algo
 | Seed bloqueado contra Supabase | ✅ (`ALLOW_SEED_SUPABASE`) |
 | Ambiente de pruebas separado (`*_test`, aborta si apunta a otra base) | ✅ |
 | Secrets de CI sin literales | ✅ |
-| Rotación de credenciales históricas | ⏳ **Pendiente de coordinación con el equipo (§1.2)** |
-| Protección de rama `main` | ⏳ Ver §3 |
+| Rotación de credenciales históricas | ⏳ **Pendiente de coordinación con el equipo (sección 1.2)** |
+| Protección de rama `main` | ⏳ Ver sección 3 |
 | Limpieza de historial (`git filter-repo`) | ⏳ Opcional, después de rotar |
 
 ---
