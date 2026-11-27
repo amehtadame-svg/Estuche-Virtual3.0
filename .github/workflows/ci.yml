@@ -142,4 +142,12 @@ jobs:
         run: pnpm prisma migrate deploy
 
       - name: Suites de integración
-        run: pnpm test:integration
+        run: pnpm test:integration 2>&1 | tee /tmp/integration.log
+
+      # TEMPORAL: los logs del job no son descargables; publicar el detalle.
+      - name: Publicar fallos como anotaciones
+        if: failure()
+        run: |
+          grep -E "^not ok|error:|AssertionError|expected|actual|ERROR" /tmp/integration.log | head -80 | while IFS= read -r line; do
+            echo "::error::$line"
+          done
