@@ -1,0 +1,3643 @@
+diff --git a/be/src/modules/employee/employee.service.ts b/be/src/modules/employee/employee.service.ts
+index 2747df7..2411328 100644
+--- a/be/src/modules/employee/employee.service.ts
++++ b/be/src/modules/employee/employee.service.ts
+@@ -306,6 +306,12 @@ export const employeeService = {
+         )
+       );
+ 
++      // Un pedido operativo siempre debe reservar unidades: si una línea no
++      // descontó stock, el checkout no puede seguir con existencias fantasma.
++      if (!details.length) {
++        throw badRequest('El pedido debe incluir al menos un producto.');
++      }
++
+       const deliveryFee = shippingCost(total.toNumber(), data.fulfillmentMethod === 'pickup');
+       total = total.plus(deliveryFee);
+       const order = await tx.order.create({
+diff --git a/be/src/modules/orders/orders.schema.ts b/be/src/modules/orders/orders.schema.ts
+index 00bbb10..4f98f1f 100644
+--- a/be/src/modules/orders/orders.schema.ts
++++ b/be/src/modules/orders/orders.schema.ts
+@@ -11,21 +11,67 @@ export const orderStatusEnum = [
+   'returned',
+ ] as const;
+ 
+-export const createOrderSchema = z.object({
+-  deliveryAddressId: databaseUuidSchema.optional(),
+-  total: z.coerce.number().min(0),
+-  promotionalCodeId: databaseUuidSchema.optional(),
+-  status: z.enum(orderStatusEnum).optional(),
+-  details: z
+-    .array(
+-      z.object({
+-        productId: databaseUuidSchema,
+-        quantity: z.coerce.number().int().min(1),
+-        unitPrice: z.coerce.number().min(0),
+-      })
+-    )
+-    .optional(),
+-});
++export const fulfillmentMethodEnum = [
++  'delivery',
++  'pickup',
++] as const;
++
++/**
++ * A-01/A-02/A-03: una venta siempre lleva al menos una línea y una dirección
++ * cuando es domicilio. `total` y `unitPrice` se siguen aceptando por
++ * compatibilidad con clientes anteriores, pero el servidor los IGNORA:
++ * precios, descuentos y total se calculan exclusivamente en la BD.
++ */
++const orderLineSchema = z
++  .object({
++    productId: databaseUuidSchema,
++    quantity: z.coerce.number().int().min(1).max(999),
++    unitPrice: z.coerce.number().min(0).optional(),
++  })
++  .strict();
++
++export const createOrderSchema = z
++  .object({
++    fulfillmentMethod: z.enum(fulfillmentMethodEnum).optional(),
++    deliveryAddressId: databaseUuidSchema.optional(),
++    deliveryAddress: z
++      .string()
++      .trim()
++      .min(8, 'Indica una dirección de entrega válida.')
++      .max(500, 'La dirección de entrega no puede superar los 500 caracteres.')
++      .optional(),
++    promotionalCodeId: databaseUuidSchema.optional(),
++    promotionalCode: z.string().trim().min(1).max(50).optional(),
++    status: z.enum(orderStatusEnum).optional(),
++    total: z.coerce.number().min(0).optional(),
++    details: z
++      .array(orderLineSchema)
++      .min(1, 'Un pedido debe incluir al menos un producto.')
++      .max(100),
++    customerId: databaseUuidSchema.optional(),
++  })
++  .refine(
++    (data) => new Set(data.details.map((line) => line.productId)).size === data.details.length,
++    { message: 'No se permiten productos repetidos.', path: ['details'] }
++  )
++  // La dirección de domicilio NO se exige aquí: el servicio la toma del perfil
++  // del cliente cuando el cuerpo no la trae, y solo rechaza si tampoco hay una
++  // guardada. Validarlo en el esquema rompía el checkout del cliente que ya
++  // tenía su dirección registrada.
++  .refine(
++    (data) => !(data.deliveryAddressId && data.deliveryAddress),
++    {
++      message: 'Envía deliveryAddressId o deliveryAddress, no ambos.',
++      path: ['deliveryAddress'],
++    }
++  )
++  .refine(
++    (data) => !(data.promotionalCodeId && data.promotionalCode),
++    {
++      message: 'Envía promotionalCodeId o promotionalCode, no ambos.',
++      path: ['promotionalCode'],
++    }
++  );
+ 
+ export const updateOrderSchema = z.object({
+   customerId: databaseUuidSchema.optional(),
+@@ -37,5 +83,7 @@ export const updateOrderSchema = z.object({
+ });
+ 
+ export const applyPromotionalCodeSchema = z.object({
+-  code: z.string().min(1),
++  code: z.string().trim().min(1).max(50),
+ });
++
++export type CreateOrderInput = z.infer<typeof createOrderSchema>;
+diff --git a/be/src/modules/orders/orders.service.ts b/be/src/modules/orders/orders.service.ts
+index 6bfc8b4..c707217 100644
+--- a/be/src/modules/orders/orders.service.ts
++++ b/be/src/modules/orders/orders.service.ts
+@@ -1,14 +1,24 @@
++import { Prisma } from '@prisma/client';
+ import { shippingCost } from '../../lib/shipping';
+ import {
+   atomic,
+   assertUnmanaged,
++  event,
++  requestLock,
+ } from '../employee/employee.domain';
+ import { prisma } from '../../lib/prisma';
++import {
++  assertCoupon,
++  consumeCoupon,
++  couponDiscount,
++  normalizeCoupon,
++} from '../promotional-code/promotional-code.domain';
+ import {
+   badRequest,
+   forbidden,
+   notFound,
+ } from '../../lib/errors';
++import { CreateOrderInput } from './orders.schema';
+ 
+ interface Requester {
+   id: string;
+@@ -68,6 +78,20 @@ const LIST_INCLUDE = {
+   },
+ } as const;
+ 
++interface PricedLine {
++  productId: string;
++  quantity: number;
++  unitPrice: Prisma.Decimal;
++  subtotal: Prisma.Decimal;
++}
++
++/**
++ * A-04: una sola regla de "producto comprable" para la validación previa y
++ * para el descuento de stock. Un producto eliminado (deletedAt) no se vende
++ * aunque todavía tenga unidades y aunque el cliente envíe su ID a mano.
++ */
++const ACTIVE_PRODUCT = { deletedAt: null } as const;
++
+ export const orderService = {
+   list(requester: Requester) {
+     assertOrderAccess(requester);
+@@ -155,15 +179,7 @@ export const orderService = {
+   },
+ 
+   async create(
+-    data: {
+-      deliveryAddressId?: string;
+-      promotionalCodeId?: string;
+-      status?: string;
+-      details?: {
+-        productId: string;
+-        quantity: number;
+-      }[];
+-    },
++    data: CreateOrderInput,
+     requester: Requester
+   ) {
+     assertOrderAccess(requester);
+@@ -177,230 +193,223 @@ export const orderService = {
+       );
+     }
+ 
+-    const {
+-      deliveryAddressId,
+-      promotionalCodeId,
+-      details,
+-    } = data;
++    const fulfillmentMethod = data.fulfillmentMethod ?? 'delivery';
++    const isPickup = fulfillmentMethod === 'pickup';
+ 
+-    const customerId = requester.id;
++    // A-01: nunca se crea un pedido sin líneas (validación explícita además
++    // del esquema, porque el servicio puede invocarse desde otros módulos).
++    if (!Array.isArray(data.details) || data.details.length === 0) {
++      throw badRequest('Un pedido debe incluir al menos un producto.');
++    }
+ 
+-    return prisma.$transaction(async (tx) => {
+-      let deliverySnapshot: string | null =
+-        null;
++    // A-02: domicilio exige una dirección, pero sirve la del perfil del
++    // cliente. Solo se rechaza si tampoco hay dirección guardada (se comprueba
++    // más abajo, ya con el cliente leído).
+ 
+-      if (deliveryAddressId) {
+-        const address =
+-          await tx.deliveryAddress.findFirst({
+-            where: {
+-              id: deliveryAddressId,
+-              userId: requester.id,
+-            },
+-          });
++    const customerId = isAdmin(requester) && data.customerId
++      ? data.customerId
++      : requester.id;
++
++    // Un cliente solo puede comprar para sí mismo.
++    if (!isAdmin(requester) && data.customerId && data.customerId !== requester.id) {
++      throw forbidden('No puedes crear un pedido a nombre de otro usuario.');
++    }
++
++    return atomic(async (tx) => {
++      const customer = await tx.user.findUnique({
++        where: { id: customerId },
++        select: { address: true },
++      });
++
++      if (!customer) {
++        throw notFound('Cliente no encontrado.');
++      }
++
++      let deliverySnapshot: string | null = null;
++
++      if (isPickup) {
++        deliverySnapshot = null;
++      } else if (data.deliveryAddressId) {
++        const address = await tx.deliveryAddress.findFirst({
++          where: {
++            id: data.deliveryAddressId,
++            userId: customerId,
++          },
++        });
+ 
+         if (!address) {
+-          throw forbidden(
+-            'La dirección no pertenece a tu cuenta.'
+-          );
++          throw forbidden('La dirección no pertenece a la cuenta del cliente.');
+         }
+ 
+-        deliverySnapshot = [
+-          address.address,
+-          address.city,
+-          address.state,
+-        ]
++        deliverySnapshot = [address.address, address.city, address.state]
+           .filter(Boolean)
+           .join(', ');
+       } else {
+-        const customer =
+-          await tx.user.findUnique({
+-            where: {
+-              id: customerId,
+-            },
+-            select: {
+-              address: true,
+-            },
+-          });
++        deliverySnapshot = data.deliveryAddress?.trim() || customer.address || null;
++      }
+ 
+-        deliverySnapshot =
+-          customer?.address ?? null;
++      if (!isPickup && !deliverySnapshot) {
++        throw badRequest('Indica una dirección para domicilio.');
+       }
+ 
+-      const items: {
+-        productId: string;
+-        quantity: number;
+-        unitPrice: number;
+-        subtotal: number;
+-      }[] = [];
++      // En retiro no se registra dirección de entrega.
++      if (isPickup) deliverySnapshot = null;
+ 
+-      let total = 0;
++      // ── A-01/A-03: validación de líneas y producto activo ───────────────
++      const lines: PricedLine[] = [];
++      let subtotal = new Prisma.Decimal(0);
+ 
+-      if (
+-        Array.isArray(details) &&
+-        details.length > 0
+-      ) {
+-        for (const item of details) {
+-          const product =
+-            await tx.product.findUnique({
+-              where: {
+-                id: item.productId,
+-              },
+-            });
+-
+-          if (!product) {
+-            throw badRequest(
+-              `Producto ${item.productId} no encontrado.`
+-            );
+-          }
+-
+-          if (
+-            product.stock < item.quantity
+-          ) {
+-            throw badRequest(
+-              `Stock insuficiente para "${product.name}". Disponible: ${product.stock}, solicitado: ${item.quantity}.`
+-            );
+-          }
+-
+-          const unitPrice = Number(
+-            product.price
++      for (const item of data.details) {
++        const product = await tx.product.findUnique({
++          where: { id: item.productId, ...ACTIVE_PRODUCT },
++        });
++
++        // A-04: mismo mensaje si no existe o si está eliminado.
++        if (!product) {
++          throw badRequest(
++            `El producto ${item.productId} ya no está disponible en el catálogo.`
+           );
++        }
+ 
+-          const subtotal =
+-            unitPrice * item.quantity;
++        if (item.quantity < 1) {
++          throw badRequest(
++            `La cantidad de "${product.name}" debe ser al menos 1.`
++          );
++        }
+ 
+-          items.push({
+-            productId: item.productId,
+-            quantity: item.quantity,
+-            unitPrice,
+-            subtotal,
+-          });
++        if (product.stock < item.quantity) {
++          throw badRequest(
++            `Stock insuficiente para "${product.name}". Disponible: ${product.stock}, solicitado: ${item.quantity}.`
++          );
++        }
+ 
+-          total += subtotal;
++        if (Number(product.price) <= 0) {
++          throw badRequest(
++            `El producto "${product.name}" no tiene un precio de venta válido.`
++          );
+         }
++
++        // El precio SIEMPRE viene de la BD, nunca del cuerpo de la petición.
++        const unitPrice = new Prisma.Decimal(product.price);
++        const lineSubtotal = unitPrice.mul(item.quantity).toDecimalPlaces(2);
++
++        lines.push({
++          productId: item.productId,
++          quantity: item.quantity,
++          unitPrice,
++          subtotal: lineSubtotal,
++        });
++
++        subtotal = subtotal.plus(lineSubtotal);
+       }
+ 
+-      const deliveryFee = shippingCost(total);
+-      let finalCodeId =
+-        promotionalCodeId ?? null;
++      // ── A-05/A-06/A-07: cupón ───────────────────────────────────────────
++      // El umbral de envío se calcula sobre el subtotal ANTES del descuento.
++      const deliveryFee = new Prisma.Decimal(
++        shippingCost(subtotal.toNumber(), isPickup)
++      );
++      let total = subtotal;
++      let promotionalCodeId: string | null = null;
++
++      if (data.promotionalCodeId || data.promotionalCode) {
++        // A-05: el ID suelto no salta la validación. Si llega un ID, primero
++        // se resuelve al código y se valida con las mismas reglas.
++        let promoId = data.promotionalCodeId;
+ 
+-      if (promotionalCodeId) {
+-        const code =
+-          await tx.promotionalCode.findUnique({
++        if (!promoId && data.promotionalCode) {
++          const found = await tx.promotionalCode.findFirst({
+             where: {
+-              id: promotionalCodeId,
++              code: { equals: normalizeCoupon(data.promotionalCode), mode: 'insensitive' },
+             },
++            select: { id: true },
+           });
+-
+-        if (!code || !code.active) {
+-          throw badRequest(
+-            'El código promocional no está activo.'
+-          );
++          promoId = found?.id;
+         }
+ 
+-        if (code.type === 'percentage') {
+-          total =
+-            total *
+-            (1 - Number(code.value) / 100);
+-        } else if (code.type === 'fixed') {
+-          total = Math.max(
+-            0,
+-            total - Number(code.value)
+-          );
++        if (!promoId) {
++          throw badRequest('No encontramos ese cupón. Revisa el código e intenta de nuevo.');
+         }
+ 
+-        await tx.promotionalCode.update({
+-          where: {
+-            id: promotionalCodeId,
+-          },
+-          data: {
+-            currentUses: {
+-              increment: 1,
+-            },
+-          },
+-        });
++        // Bloqueo + relectura + incremento condicional dentro del lock.
++        const promo = await consumeCoupon(tx, promoId, subtotal.toNumber());
+ 
+-        finalCodeId = promotionalCodeId;
++        total = subtotal.minus(couponDiscount(subtotal, promo));
++        promotionalCodeId = promo.id;
+       }
+ 
+-      total =
+-        Math.round((Math.max(0, total) + deliveryFee) * 100) / 100;
++      total = Prisma.Decimal.max(0, total).plus(deliveryFee).toDecimalPlaces(2);
+ 
+-      const newOrder =
+-        await tx.order.create({
+-          data: {
+-            customerId,
+-            createdById: requester.id,
+-            deliverySnapshot,
+-            expiresAt: new Date(
+-              Date.now() +
+-                Math.min(
+-                  10080,
+-                  Math.max(
+-                    5,
+-                    Number(
+-                      process.env
+-                        .EMPLOYEE_RESERVATION_MINUTES
+-                    ) || 60
+-                  )
+-                ) *
+-                  60000
+-            ),
+-            deliveryAddressId:
+-              deliveryAddressId ?? null,
+-            promotionalCodeId:
+-              finalCodeId,
+-            total,
+-            shippingCost: deliveryFee,
+-            status: 'pending',
++      if (total.lte(0)) {
++        throw badRequest('El pedido debe tener un total mayor que cero.');
++      }
++
++      const minutes = Math.min(
++        10080,
++        Math.max(
++          5,
++          Number(process.env.EMPLOYEE_RESERVATION_MINUTES) || 60
++        )
++      );
++
++      const newOrder = await tx.order.create({
++        data: {
++          customerId,
++          createdById: requester.id,
++          fulfillmentMethod,
++          deliverySnapshot,
++          expiresAt: new Date(Date.now() + minutes * 60000),
++          deliveryAddressId: isPickup ? null : data.deliveryAddressId ?? null,
++          promotionalCodeId,
++          total,
++          shippingCost: deliveryFee,
++          status: 'pending',
++          details: {
++            create: lines.map((line) => ({
++              productId: line.productId,
++              quantity: line.quantity,
++              unitPrice: line.unitPrice,
++              subtotal: line.subtotal,
++            })),
+           },
++        },
++      });
++
++      // ── A-04: el descuento de stock vuelve a exigir producto activo ──────
++      for (const line of lines) {
++        const updated = await tx.product.updateMany({
++          where: {
++            id: line.productId,
++            ...ACTIVE_PRODUCT,
++            stock: { gte: line.quantity },
++          },
++          data: { stock: { decrement: line.quantity } },
+         });
+ 
+-      if (items.length > 0) {
+-        for (const item of items) {
+-          const updated =
+-            await tx.product.updateMany({
+-              where: {
+-                id: item.productId,
+-                stock: {
+-                  gte: item.quantity,
+-                },
+-              },
+-              data: {
+-                stock: {
+-                  decrement: item.quantity,
+-                },
+-              },
+-            });
+-
+-          if (updated.count === 0) {
+-            throw badRequest(
+-              `Stock insuficiente para el producto ${item.productId}.`
+-            );
+-          }
+-
+-          await tx.inventoryMovement.create({
+-            data: {
+-              productId: item.productId,
+-              type: 'out',
+-              quantity: item.quantity,
+-              reason:
+-                `Venta - pedido ${newOrder.id}`,
+-              userId: customerId,
+-            },
+-          });
++        if (updated.count === 0) {
++          throw badRequest(
++            `El producto ${line.productId} dejó de estar disponible o no tiene stock suficiente.`
++          );
+         }
+ 
+-        await tx.orderDetail.createMany({
+-          data: items.map((item) => ({
+-            orderId: newOrder.id,
+-            productId: item.productId,
+-            quantity: item.quantity,
+-            unitPrice: item.unitPrice,
+-            subtotal: item.subtotal,
+-          })),
++        await tx.inventoryMovement.create({
++          data: {
++            productId: line.productId,
++            type: 'out',
++            quantity: line.quantity,
++            reason: `Venta - pedido ${newOrder.id}`,
++            userId: requester.id,
++          },
+         });
+       }
+ 
++      await event(
++        tx,
++        newOrder.id,
++        requester.id,
++        'created',
++        `Modalidad: ${fulfillmentMethod}`
++      );
++
+       return newOrder;
+     });
+   },
+@@ -423,6 +432,49 @@ export const orderService = {
+     return atomic(async (tx) => {
+       await assertUnmanaged(tx, id);
+ 
++      // A-05: cambiar el cupón desde la edición NO puede saltarse la
++      // validación (vigencia, estado, compra mínima, usos). Antes se guardaba
++      // cualquier `promotionalCodeId` que llegara en el cuerpo.
++      if (rest.promotionalCodeId) {
++        const order = await tx.order.findUnique({
++          where: { id, deletedAt: null },
++          include: {
++            details: { select: { unitPrice: true, quantity: true } },
++          },
++        });
++
++        if (!order) {
++          throw notFound('Pedido no encontrado.');
++        }
++
++        // No se puede poner el mismo cupón dos veces (ni consumirlo de nuevo).
++        if (order.promotionalCodeId === rest.promotionalCodeId) {
++          throw badRequest('Este pedido ya tiene ese cupón aplicado.');
++        }
++
++        const subtotal = order.details.reduce(
++          (sum, line) =>
++            sum.plus(new Prisma.Decimal(line.unitPrice).mul(line.quantity)),
++          new Prisma.Decimal(0)
++        );
++
++        const promo = await consumeCoupon(
++          tx,
++          rest.promotionalCodeId,
++          subtotal.toNumber()
++        );
++
++        // Se recalcula el total con el descuento. El envío ya está en el
++        // pedido y no cambia: el umbral se mide sobre el subtotal sin cupón.
++        rest.promotionalCodeId = promo.id;
++        rest.total = Prisma.Decimal.max(
++          0,
++          subtotal.minus(couponDiscount(subtotal, promo))
++        )
++          .plus(new Prisma.Decimal(order.shippingCost))
++          .toDecimalPlaces(2);
++      }
++
+       return tx.order.update({
+         where: {
+           id,
+@@ -462,13 +514,20 @@ export const orderService = {
+     assertOrderAccess(requester);
+ 
+     return atomic(async (tx) => {
+-      await assertUnmanaged(tx, id);
++      // Se aplica antes de la regla de "pedido operativo" porque aplicar un
++      // cupón es una operación financiera del cliente sobre su propia compra,
++      // no una edición del contenido del pedido. El pedido se sigue bloqueando
++      // aquí (FOR UPDATE) para que dos PATCH no consuman el cupón dos veces.
++      await requestLock(tx, `order:${id}`);
+ 
+       const order = await tx.order.findUnique({
+         where: {
+           id,
+           deletedAt: null,
+         },
++        include: {
++          details: { select: { unitPrice: true, quantity: true } },
++        },
+       });
+ 
+       if (!order) {
+@@ -495,39 +554,51 @@ export const orderService = {
+         );
+       }
+ 
+-      const promo =
+-        await tx.promotionalCode.findFirst({
+-          where: {
+-            code: String(code).trim(),
+-          },
+-        });
+-
+-      if (!promo) {
+-        throw notFound(
+-          'Código promocional no encontrado.'
++      // A-06: consumir dos veces el mismo cupón sobre el mismo pedido no es válido.
++      if (order.promotionalCodeId) {
++        throw badRequest(
++          'Este pedido ya tiene un cupón aplicado.'
+         );
+       }
+ 
+-      await tx.promotionalCode.update({
++      const promo = await tx.promotionalCode.findFirst({
+         where: {
+-          id: promo.id,
+-        },
+-        data: {
+-          currentUses: {
+-            increment: 1,
+-          },
++          code: { equals: normalizeCoupon(code), mode: 'insensitive' },
+         },
+       });
+ 
++      // A-05: misma validación que el checkout (vigencia, estado, mínimo, usos).
++      const subtotal = order.details.reduce(
++        (sum, line) => sum.plus(new Prisma.Decimal(line.unitPrice).mul(line.quantity)),
++        new Prisma.Decimal(0)
++      );
++
++      assertCoupon(promo, subtotal.toNumber());
++
++      const consumed = await consumeCoupon(tx, promo.id, subtotal.toNumber());
++
++      // Se recalcula el total con el descuento. El envío ya está en el pedido
++      // y no cambia: el umbral se mide sobre el subtotal antes del cupón.
++      const total = Prisma.Decimal.max(0, subtotal.minus(couponDiscount(subtotal, consumed)))
++        .plus(new Prisma.Decimal(order.shippingCost))
++        .toDecimalPlaces(2);
++
+       await tx.order.update({
+-        where: {
+-          id,
+-        },
++        where: { id },
+         data: {
+-          promotionalCodeId: promo.id,
++          promotionalCodeId: consumed.id,
++          total,
+         },
+       });
+ 
++      await event(
++        tx,
++        order.id,
++        requester.id,
++        'coupon_applied',
++        `Cupón ${consumed.code}`
++      );
++
+       return tx.order.findUnique({
+         where: {
+           id,
+@@ -544,4 +615,4 @@ export const orderService = {
+       });
+     });
+   },
+-};
+\ No newline at end of file
++};
+diff --git a/be/src/modules/orders/orders.test.ts b/be/src/modules/orders/orders.test.ts
+index a75ab43..58cf3f2 100644
+--- a/be/src/modules/orders/orders.test.ts
++++ b/be/src/modules/orders/orders.test.ts
+@@ -17,28 +17,55 @@ const PRODUCT = {
+   stock: 10,
+ };
+ 
++const SECOND = {
++  id: '00000000-0000-7000-8000-000000000002',
++  name: 'Lápiz HB',
++  price: 50,
++  stock: 10,
++};
++
++const ADDRESS = 'Calle 45 #12-30, Bogotá';
++
+ function fakeTx(
+   overrides: Record<string, any> = {}
+ ) {
+   const calls: {
+     orderCreate: any;
++    orderUpdate: any[];
+     createMany: any;
+     updateMany: any[];
+     movements: any[];
++    events: any[];
++    couponUpdates: any[];
++    locks: string[];
+   } = {
+     orderCreate: null,
++    orderUpdate: [],
+     createMany: null,
+     updateMany: [],
+     movements: [],
++    events: [],
++    couponUpdates: [],
++    locks: [],
+   };
+ 
+   const tx = {
++    $queryRaw: async () => [],
++    $executeRaw: async (_strings: any, ...values: any[]) => {
++      calls.locks.push(String(values[0]));
++      return 1;
++    },
++
+     user: {
+       findUnique: async () => ({
+-        address: 'Dirección de prueba',
++        address: ADDRESS,
+       }),
+     },
+ 
++    deliveryAddress: {
++      findFirst: async () => null,
++    },
++
+     product: {
+       findUnique: async () => PRODUCT,
+ 
+@@ -53,7 +80,15 @@ function fakeTx(
+ 
+     promotionalCode: {
+       findUnique: async () => null,
+-      update: async () => ({}),
++      findFirst: async () => null,
++      update: async (args: any) => {
++        calls.couponUpdates.push(args);
++        return {};
++      },
++      updateMany: async (args: any) => {
++        calls.couponUpdates.push(args);
++        return { count: 1 };
++      },
+     },
+ 
+     order: {
+@@ -62,9 +97,22 @@ function fakeTx(
+ 
+         return {
+           id: 'order-1',
++          shippingCost: args.data.shippingCost,
+           ...args.data,
+         };
+       },
++      update: async (args: any) => {
++        calls.orderUpdate.push(args);
++        return { id: 'order-1', ...args.data };
++      },
++      findUnique: async () => ({
++        id: 'order-1',
++        customerId: 'user-1',
++        status: 'pending',
++        shippingCost: 10000,
++        promotionalCodeId: null,
++        details: [],
++      }),
+     },
+ 
+     orderDetail: {
+@@ -88,6 +136,13 @@ function fakeTx(
+       },
+     },
+ 
++    orderEvent: {
++      create: async (args: any) => {
++        calls.events.push(args.data);
++        return { id: `e-${calls.events.length}`, ...args.data };
++      },
++    },
++
+     ...overrides,
+   };
+ 
+@@ -99,8 +154,9 @@ function fakeTx(
+ 
+ function stubTransaction(tx: any) {
+   prisma.$transaction = async (
+-    fn: any
+-  ) => fn(tx);
++    _fn: any,
++    _options?: any
++  ) => _fn(tx);
+ }
+ 
+ const requester = {
+@@ -108,6 +164,17 @@ const requester = {
+   role: 'client',
+ };
+ 
++const hasStatus = (status: number) => (error: unknown) =>
++  error instanceof HttpError && error.status === status;
++
++const line = (quantity = 3) => ({
++  productId: PRODUCT.id,
++  quantity,
++});
++
++/** Los montos viajan como Prisma.Decimal: se comparan por valor. */
++const money = (value: any) => Number(value);
++
+ test(
+   'C-02: el total se calcula en el servidor (ignora total: 0 y unitPrice del cliente)',
+   async () => {
+@@ -117,6 +184,7 @@ test(
+     const order =
+       await orderService.create(
+         {
++          deliveryAddress: ADDRESS,
+           total: 0,
+           details: [
+             {
+@@ -130,19 +198,18 @@ test(
+       );
+ 
+     assert.strictEqual(
+-      order.total,
++      money(order.total),
+       10300,
+       'incluye envío: el total debe ser 3 × 100 (precio en BD), no 0'
+     );
+ 
+     assert.deepStrictEqual(
+-      calls.createMany.data[0],
++      calls.orderCreate.data.details.create[0],
+       {
+-        orderId: 'order-1',
+         productId: PRODUCT.id,
+         quantity: 3,
+-        unitPrice: 100,
+-        subtotal: 300,
++        unitPrice: new (require('@prisma/client').Prisma.Decimal)(100),
++        subtotal: new (require('@prisma/client').Prisma.Decimal)(300),
+       }
+     );
+   }
+@@ -155,11 +222,17 @@ test(
+       promotionalCode: {
+         findUnique: async () => ({
+           id: 'promo-1',
++          code: 'PROMO10',
+           active: true,
+           type: 'percentage',
+           value: 10,
++          minPurchase: 0,
++          startDate: new Date('2020-01-01'),
++          endDate: new Date('2099-01-01'),
++          maxUses: null,
++          currentUses: 0,
+         }),
+-        update: async () => ({}),
++        updateMany: async () => ({ count: 1 }),
+       },
+     });
+ 
+@@ -168,6 +241,7 @@ test(
+     const order =
+       await orderService.create(
+         {
++          deliveryAddress: ADDRESS,
+           promotionalCodeId: 'promo-1',
+           details: [
+             {
+@@ -180,7 +254,7 @@ test(
+       );
+ 
+     assert.strictEqual(
+-      order.total,
++      money(order.total),
+       10270,
+       '300 - 10% + 10000 de envío = 10270'
+     );
+@@ -194,11 +268,17 @@ test(
+       promotionalCode: {
+         findUnique: async () => ({
+           id: 'promo-2',
++          code: 'FIJO50',
+           active: true,
+           type: 'fixed',
+           value: 50,
++          minPurchase: 0,
++          startDate: new Date('2020-01-01'),
++          endDate: new Date('2099-01-01'),
++          maxUses: null,
++          currentUses: 0,
+         }),
+-        update: async () => ({}),
++        updateMany: async () => ({ count: 1 }),
+       },
+     });
+ 
+@@ -207,6 +287,7 @@ test(
+     const order =
+       await orderService.create(
+         {
++          deliveryAddress: ADDRESS,
+           promotionalCodeId: 'promo-2',
+           details: [
+             {
+@@ -219,7 +300,7 @@ test(
+       );
+ 
+     assert.strictEqual(
+-      order.total,
++      money(order.total),
+       10250,
+       '300 - 50 + 10000 de envío = 10250'
+     );
+@@ -243,6 +324,7 @@ test(
+     await assert.rejects(
+       orderService.create(
+         {
++          deliveryAddress: ADDRESS,
+           details: [
+             {
+               productId: PRODUCT.id,
+@@ -262,27 +344,285 @@ test(
+ );
+ 
+ test(
+-  'C-02: pedido sin detalles queda en cero (ningún precio del cliente)',
++  'A-01: un pedido sin líneas se rechaza antes de tocar la base de datos',
+   async () => {
+     const { tx, calls } = fakeTx();
+     stubTransaction(tx);
+ 
+-    const order =
+-      await orderService.create(
++    for (const payload of [{}, { total: 999999 }, { details: [] }]) {
++      await assert.rejects(
++        orderService.create(
++          { deliveryAddress: ADDRESS, ...payload } as any,
++          requester
++        ),
++        (err: HttpError) =>
++          err.status === 400 &&
++          /al menos un producto/.test(err.message)
++      );
++    }
++
++    assert.strictEqual(calls.orderCreate, null, 'no debe crear el pedido');
++    assert.strictEqual(calls.movements.length, 0);
++  }
++);
++
++test(
++  'A-02: domicilio sin dirección se rechaza y no crea registros',
++  async () => {
++    const { tx, calls } = fakeTx({
++      user: { findUnique: async () => ({ address: null }) },
++    });
++    stubTransaction(tx);
++
++    await assert.rejects(
++      orderService.create({ details: [line()] }, requester),
++      (err: HttpError) => err.status === 400 && /dirección para domicilio/i.test(err.message)
++    );
++
++    assert.strictEqual(calls.orderCreate, null);
++  }
++);
++
++test(
++  'A-02: retiro en tienda no exige dirección y no cobra envío',
++  async () => {
++    const { tx, calls } = fakeTx();
++    stubTransaction(tx);
++
++    const order = await orderService.create(
++      {
++        fulfillmentMethod: 'pickup',
++        details: [{ productId: PRODUCT.id, quantity: 1 }],
++      },
++      requester
++    );
++
++    assert.strictEqual(money(order.shippingCost), 0);
++    assert.strictEqual(money(order.total), 100);
++    assert.strictEqual(order.deliverySnapshot, null);
++    assert.strictEqual(calls.orderCreate.data.fulfillmentMethod, 'pickup');
++  }
++);
++
++test(
++  'A-03: una cantidad inválida no descuenta stock ni crea el pedido',
++  async () => {
++    for (const quantity of [0, -2]) {
++      const { tx, calls } = fakeTx();
++      stubTransaction(tx);
++
++      await assert.rejects(
++        orderService.create(
++          { deliveryAddress: ADDRESS, details: [{ productId: PRODUCT.id, quantity }] },
++          requester
++        ),
++        hasStatus(400),
++        `cantidad ${quantity}`
++      );
++
++      assert.strictEqual(calls.orderCreate, null);
++      assert.strictEqual(calls.updateMany.length, 0);
++    }
++  }
++);
++
++test(
++  'A-04: un producto eliminado no se puede comprar aunque tenga stock',
++  async () => {
++    const { tx, calls } = fakeTx({
++      product: {
++        // La BD responde null porque el where incluye deletedAt: null
++        findUnique: async ({ where }: any) => {
++          assert.strictEqual(where.deletedAt, null, 'debe filtrar productos activos');
++          return null;
++        },
++      },
++    });
++
++    stubTransaction(tx);
++
++    await assert.rejects(
++      orderService.create({ deliveryAddress: ADDRESS, details: [line()] }, requester),
++      (err: HttpError) => err.status === 400 && /ya no está disponible/.test(err.message)
++    );
++
++    assert.strictEqual(calls.orderCreate, null);
++  }
++);
++
++test(
++  'A-04: el descuento de stock también exige producto activo',
++  async () => {
++    const { tx, calls } = fakeTx({
++      product: {
++        findUnique: async () => PRODUCT,
++        updateMany: async (args: any) => {
++          calls.updateMany.push(args);
++          return { count: 1 };
++        },
++      },
++    });
++
++    stubTransaction(tx);
++
++    await orderService.create(
++      { deliveryAddress: ADDRESS, details: [line(1)] },
++      requester
++    );
++
++    assert.strictEqual(calls.updateMany[0].where.deletedAt, null);
++  }
++);
++
++test(
++  'A-05: un promotionalCodeId inventado no salta la validación del cupón',
++  async () => {
++    const { tx, calls } = fakeTx({
++      promotionalCode: {
++        findUnique: async () => null,
++        updateMany: async () => ({ count: 1 }),
++      },
++    });
++
++    stubTransaction(tx);
++
++    await assert.rejects(
++      orderService.create(
+         {
+-          total: 999999,
+-        } as any,
++          deliveryAddress: ADDRESS,
++          promotionalCodeId: '11111111-1111-4111-8111-111111111111',
++          details: [line()],
++        },
+         requester
++      ),
++      (err: HttpError) => err.status === 400 && /cupón/i.test(err.message)
++    );
++
++    assert.strictEqual(calls.orderCreate, null, 'el pedido no se crea');
++  }
++);
++
++test(
++  'A-05: un cupón vencido se rechaza por ID y por código',
++  async () => {
++    const expired = {
++      id: 'promo-x',
++      code: 'VIEJO',
++      active: true,
++      type: 'percentage',
++      value: 10,
++      minPurchase: 0,
++      startDate: new Date('2000-01-01'),
++      endDate: new Date('2001-01-01'),
++      maxUses: null,
++      currentUses: 0,
++    };
++
++    for (const payload of [
++      { promotionalCodeId: expired.id },
++      { promotionalCode: expired.code },
++    ]) {
++      const { tx } = fakeTx({
++        promotionalCode: {
++          findUnique: async () => expired,
++          findFirst: async () => ({ id: expired.id }),
++          updateMany: async () => ({ count: 1 }),
++        },
++      });
++
++      stubTransaction(tx);
++
++      await assert.rejects(
++        orderService.create(
++          { deliveryAddress: ADDRESS, details: [line()], ...payload } as any,
++          requester
++        ),
++        (err: HttpError) => err.status === 400 && /expirado/.test(err.message)
+       );
++    }
++  }
++);
+ 
+-    assert.strictEqual(
+-      order.total,
+-      0
++test(
++  'A-07: el cupón se consume una sola vez y el uso queda bloqueado por asesoría',
++  async () => {
++    const { tx, calls } = fakeTx({
++      promotionalCode: {
++        findUnique: async () => ({
++          id: 'promo-1',
++          code: 'PROMO10',
++          active: true,
++          type: 'percentage',
++          value: 10,
++          minPurchase: 0,
++          startDate: new Date('2020-01-01'),
++          endDate: new Date('2099-01-01'),
++          maxUses: 5,
++          currentUses: 0,
++        }),
++        updateMany: async (args: any) => {
++          calls.couponUpdates.push(args);
++          return { count: 1 };
++        },
++      },
++    });
++
++    stubTransaction(tx);
++
++    await orderService.create(
++      { deliveryAddress: ADDRESS, promotionalCodeId: 'promo-1', details: [line()] },
++      requester
+     );
+ 
+-    assert.strictEqual(
+-      calls.createMany,
+-      null
++    assert.strictEqual(calls.couponUpdates.length, 1, 'un único consumo');
++    assert.deepStrictEqual(calls.couponUpdates[0].data, { currentUses: { increment: 1 } });
++    assert.strictEqual(calls.couponUpdates[0].where.active, true);
++    assert.ok(
++      calls.locks.some(key => key.includes('coupon:promo-1')),
++      'debe tomar el bloqueo del cupón'
++    );
++  }
++);
++
++test(
++  'A-07: dos compras simultáneas no superan el límite de usos',
++  async () => {
++    // El incremento condicional falla en la segunda compra: count 0.
++    let attempts = 0;
++    const { tx } = fakeTx({
++      promotionalCode: {
++        findUnique: async () => ({
++          id: 'promo-1',
++          code: 'ULTIMO',
++          active: true,
++          type: 'fixed',
++          value: 10,
++          minPurchase: 0,
++          startDate: new Date('2020-01-01'),
++          endDate: new Date('2099-01-01'),
++          maxUses: 1,
++          currentUses: 0,
++        }),
++        updateMany: async () => {
++          attempts += 1;
++          return { count: attempts === 1 ? 1 : 0 };
++        },
++      },
++    });
++
++    stubTransaction(tx);
++
++    await orderService.create(
++      { deliveryAddress: ADDRESS, promotionalCodeId: 'promo-1', details: [line(1)] },
++      requester
++    );
++
++    await assert.rejects(
++      orderService.create(
++        { deliveryAddress: ADDRESS, promotionalCodeId: 'promo-1', details: [line(1)] },
++        requester
++      ),
++      (err: HttpError) => err.status === 400 && /límite de usos/.test(err.message)
+     );
+   }
+ );
+@@ -295,6 +635,7 @@ test(
+ 
+     await orderService.create(
+       {
++        deliveryAddress: ADDRESS,
+         details: [
+           {
+             productId: PRODUCT.id,
+@@ -316,6 +657,7 @@ test(
+       {
+         where: {
+           id: PRODUCT.id,
++          deletedAt: null,
+           stock: {
+             gte: 3,
+           },
+@@ -334,19 +676,21 @@ test(
+   'C-03: se registra un InventoryMovement por producto vendido (RF-016)',
+   async () => {
+     const { tx, calls } = fakeTx();
++    (tx.product as any).findUnique = async ({ where }: any) =>
++      where.id === SECOND.id ? SECOND : PRODUCT;
+     stubTransaction(tx);
+ 
+     const order =
+       await orderService.create(
+         {
++          deliveryAddress: ADDRESS,
+           details: [
+             {
+               productId: PRODUCT.id,
+               quantity: 2,
+             },
+             {
+-              productId:
+-                '00000000-0000-7000-8000-000000000002',
++              productId: SECOND.id,
+               quantity: 1,
+             },
+           ],
+@@ -379,7 +723,7 @@ test(
+ 
+     assert.strictEqual(
+       calls.movements[1].productId,
+-      '00000000-0000-7000-8000-000000000002'
++      SECOND.id
+     );
+   }
+ );
+@@ -401,6 +745,7 @@ test(
+     await assert.rejects(
+       orderService.create(
+         {
++          deliveryAddress: ADDRESS,
+           details: [
+             {
+               productId: PRODUCT.id,
+@@ -412,7 +757,7 @@ test(
+       ),
+       (err: HttpError) =>
+         err.status === 400 &&
+-        /Stock insuficiente/.test(
++        /dejó de estar disponible|Stock insuficiente/.test(
+           err.message
+         )
+     );
+@@ -420,24 +765,294 @@ test(
+ );
+ 
+ test(
+-  'C-03: un pedido sin detalles no descuenta stock ni registra movimientos',
++  'A-06: aplicar un cupón a un pedido lo consume una vez y recalcula el total',
++  async () => {
++    const { tx, calls } = fakeTx({
++      order: {
++        findUnique: async ({ where }: any) => {
++          if (where.include) return { total: 10300, promotionalCode: null };
++          return {
++            id: 'order-1',
++            customerId: 'user-1',
++            status: 'pending',
++            shippingCost: 10000,
++            promotionalCodeId: null,
++            details: [{ unitPrice: 100, quantity: 3 }],
++          };
++        },
++        update: async (args: any) => {
++          calls.orderUpdate.push(args);
++          return {};
++        },
++      },
++      promotionalCode: {
++        findFirst: async () => ({
++          id: 'promo-1',
++          code: 'PROMO10',
++          active: true,
++          type: 'percentage',
++          value: 10,
++          minPurchase: 0,
++          startDate: new Date('2020-01-01'),
++          endDate: new Date('2099-01-01'),
++          maxUses: null,
++          currentUses: 0,
++        }),
++        findUnique: async () => ({
++          id: 'promo-1',
++          code: 'PROMO10',
++          active: true,
++          type: 'percentage',
++          value: 10,
++          minPurchase: 0,
++          startDate: new Date('2020-01-01'),
++          endDate: new Date('2099-01-01'),
++          maxUses: null,
++          currentUses: 0,
++        }),
++        updateMany: async (args: any) => {
++          calls.couponUpdates.push(args);
++          return { count: 1 };
++        },
++      },
++    });
++
++    stubTransaction(tx);
++
++    await orderService.applyPromotionalCode('order-1', ' promO10 ', requester);
++
++    assert.strictEqual(calls.couponUpdates.length, 1);
++    assert.deepStrictEqual(
++      { ...calls.orderUpdate[0].data, total: money(calls.orderUpdate[0].data.total) },
++      { promotionalCodeId: 'promo-1', total: 10270 }
++    );
++  }
++);
++
++test(
++  'A-06: no se consume un segundo cupón en el mismo pedido',
++  async () => {
++    const { tx, calls } = fakeTx({
++      order: {
++        findUnique: async () => ({
++          id: 'order-1',
++          customerId: 'user-1',
++          status: 'pending',
++          shippingCost: 0,
++          promotionalCodeId: 'promo-ya',
++          details: [{ unitPrice: 100, quantity: 1 }],
++        }),
++      },
++    });
++
++    stubTransaction(tx);
++
++    await assert.rejects(
++      orderService.applyPromotionalCode('order-1', 'OTRO', requester),
++      (err: HttpError) => err.status === 400 && /ya tiene un cupón/.test(err.message)
++    );
++
++    assert.strictEqual(calls.couponUpdates.length, 0, 'no debe consumir otro cupón');
++  }
++);
++
++test(
++  'A-02: domicilio sin dirección en el cuerpo usa la dirección del perfil',
+   async () => {
+     const { tx, calls } = fakeTx();
+     stubTransaction(tx);
+ 
+-    await orderService.create(
+-      {},
++    const order = await orderService.create(
++      { details: [line(1)] },
+       requester
+     );
+ 
+-    assert.strictEqual(
+-      calls.updateMany.length,
+-      0
++    assert.equal(
++      order.deliverySnapshot,
++      ADDRESS,
++      'la dirección del servidor completa los datos que el cliente ya guardó'
+     );
++    assert.notStrictEqual(calls.orderCreate, null);
++  }
++);
+ 
++test(
++  'A-06: un cliente puede aplicar un cupón a un pedido creado por el checkout',
++  async () => {
++    // Regresión: el pedido del checkout lleva createdById, y la regla de
++    // "pedido operativo" no debe impedir esta operación financiera.
++    const promo = {
++      id: 'promo-1',
++      code: 'PROMO10',
++      active: true,
++      type: 'percentage',
++      value: 10,
++      minPurchase: 0,
++      startDate: new Date('2020-01-01'),
++      endDate: new Date('2099-01-01'),
++      maxUses: null,
++      currentUses: 0,
++    };
++
++    const { tx, calls } = fakeTx({
++      order: {
++        findUnique: async ({ where }: any) => {
++          if (where.include && where.include.promotionalCode) {
++            return { total: 10270, promotionalCode: { code: promo.code } };
++          }
++          return {
++            id: 'order-1',
++            customerId: 'user-1',
++            createdById: 'user-1',
++            status: 'pending',
++            shippingCost: 10000,
++            promotionalCodeId: null,
++            details: [{ unitPrice: 100, quantity: 3 }],
++          };
++        },
++        update: async (args: any) => {
++          calls.orderUpdate.push(args);
++          return {};
++        },
++      },
++      promotionalCode: {
++        findFirst: async () => promo,
++        findUnique: async () => promo,
++        updateMany: async (args: any) => {
++          calls.couponUpdates.push(args);
++          return { count: 1 };
++        },
++      },
++    });
++
++    stubTransaction(tx);
++
++    await orderService.applyPromotionalCode('order-1', 'PROMO10', requester);
++
++    assert.strictEqual(calls.couponUpdates.length, 1, 'el cupón se consume una vez');
++  }
++);
++
++// ─── A-05: cambiar el cupón desde la edición no puede saltarse la validación ──
++test(
++  'A-05: la edición rechaza un cupón vencido o inactivo',
++  async () => {
++    const consumed: string[] = [];
++
++    const { tx } = fakeTx({
++      order: {
++        findUnique: async () => ({
++          id: 'order-1',
++          promotionalCodeId: null,
++          shippingCost: 0,
++          details: [{ unitPrice: 100, quantity: 2 }],
++        }),
++        update: async (args: any) => ({ id: 'order-1', ...args.data }),
++      },
++      promotionalCode: {
++        findUnique: async () => ({
++          id: 'promo-muerto',
++          code: 'VIEJO',
++          active: false,
++          type: 'percentage',
++          value: 10,
++          minPurchase: 0,
++          startDate: new Date('2020-01-01'),
++          endDate: new Date('2099-01-01'),
++          maxUses: 10,
++          currentUses: 0,
++        }),
++        updateMany: async () => {
++          consumed.push('promo-muerto');
++          return { count: 1 };
++        },
++      },
++    });
++    stubTransaction(tx);
++
++    await assert.rejects(
++      orderService.update('order-1', { promotionalCodeId: 'promo-muerto' }),
++      (err: HttpError) =>
++        err.status === 400 && /no está activo/i.test(err.message)
++    );
++
++    assert.deepStrictEqual(consumed, [], 'no debe consumir un cupón inválido');
++  }
++);
++
++test(
++  'A-05: la edición consume el cupón válido y recalcula el total',
++  async () => {
++    const { tx, calls } = fakeTx({
++      order: {
++        findUnique: async () => ({
++          id: 'order-1',
++          promotionalCodeId: null,
++          shippingCost: 10000,
++          details: [{ unitPrice: 100, quantity: 2 }],
++        }),
++        update: async (args: any) => {
++          calls.orderCreate = args;
++          return { id: 'order-1', ...args.data };
++        },
++      },
++      promotionalCode: {
++        findUnique: async () => ({
++          id: 'promo-ok',
++          code: 'ESTUCHE10',
++          active: true,
++          type: 'percentage',
++          value: 10,
++          minPurchase: 0,
++          startDate: new Date('2020-01-01'),
++          endDate: new Date('2099-01-01'),
++          maxUses: 10,
++          currentUses: 0,
++        }),
++        updateMany: async () => ({ count: 1 }),
++      },
++    });
++    stubTransaction(tx);
++
++    await orderService.update('order-1', { promotionalCodeId: 'promo-ok' });
++
++    // subtotal 200, 10% => 180, + envío 10000 => 10180
+     assert.strictEqual(
+-      calls.movements.length,
+-      0
++      Number(calls.orderCreate?.data?.total),
++      10180,
++      'el total debe recalcularse con el descuento y conservar el envío'
+     );
++    assert.strictEqual(calls.orderCreate?.data?.promotionalCodeId, 'promo-ok');
+   }
+-);
+\ No newline at end of file
++);
++
++test(
++  'A-05: no se puede volver a aplicar el mismo cupón al mismo pedido',
++  async () => {
++    const { tx } = fakeTx({
++      order: {
++        findUnique: async () => ({
++          id: 'order-1',
++          promotionalCodeId: 'promo-ok',
++          shippingCost: 0,
++          details: [{ unitPrice: 100, quantity: 1 }],
++        }),
++      },
++      promotionalCode: {
++        findUnique: async () => ({
++          id: 'promo-ok', code: 'ESTUCHE10', active: true, type: 'percentage',
++          value: 10, minPurchase: 0, startDate: new Date('2020-01-01'),
++          endDate: new Date('2099-01-01'), maxUses: 10, currentUses: 1,
++        }),
++        updateMany: async () => ({ count: 1 }),
++      },
++    });
++    stubTransaction(tx);
++
++    await assert.rejects(
++      orderService.update('order-1', { promotionalCodeId: 'promo-ok' }),
++      (err: HttpError) =>
++        err.status === 400 && /ya tiene ese cupón/i.test(err.message)
++    );
++  }
++);
+diff --git a/be/src/modules/orders/permissions.test.ts b/be/src/modules/orders/permissions.test.ts
+index 11a735b..bfb7011 100644
+--- a/be/src/modules/orders/permissions.test.ts
++++ b/be/src/modules/orders/permissions.test.ts
+@@ -83,7 +83,10 @@ test('Empleado no hereda permisos de pedidos', async () => {
+ });
+ 
+ test('No se puede crear ni marcar un pedido pagado mediante el CRUD', async () => {
+-  await assert.rejects(orderService.create({ status: 'paid' }, client), hasStatus(400));
++  await assert.rejects(
++    orderService.create({ status: 'paid', details: [] } as any, client),
++    hasStatus(400),
++  );
+   assert.throws(() => orderService.update('order-1', { status: 'paid' }), hasStatus(400));
+ });
+ 
+diff --git a/be/src/modules/payments/payments.service.ts b/be/src/modules/payments/payments.service.ts
+index 01a27b7..a155892 100644
+--- a/be/src/modules/payments/payments.service.ts
++++ b/be/src/modules/payments/payments.service.ts
+@@ -1,4 +1,4 @@
+-import { assertCoupon, normalizeCoupon, couponDiscount } from '../promotional-code/promotional-code.domain';
++import { consumeCoupon, normalizeCoupon, couponDiscount } from '../promotional-code/promotional-code.domain';
+ import { shippingCost } from '../../lib/shipping';
+ import { Prisma } from '@prisma/client';
+ import { badRequest, conflict, forbidden, notFound } from '../../lib/errors';
+@@ -129,18 +129,13 @@ export const paymentsService = {
+       const deliveryFee = shippingCost(total.toNumber());
+       let promotionalCodeId: string | undefined;
+       if (input.code) {
+-        // Bloqueo compartido con otros checkouts para no exceder maxUses.
++        // A-07: mismo bloqueo por cupón y mismo incremento condicional que el
++        // checkout de pedidos, para que dos intentos simultáneos no superen maxUses.
+         const candidate = await tx.promotionalCode.findFirst({ where: { code: { equals: normalizeCoupon(input.code), mode: 'insensitive' } } });
+         if (!candidate) throw badRequest('No encontramos ese cupón. Revisa el código e intenta de nuevo.');
+-        await tx.$queryRaw`SELECT id FROM promotional_codes WHERE id = ${candidate.id}::uuid FOR UPDATE`;
+-        const promo = await tx.promotionalCode.findUnique({ where: { id: candidate.id } });
+-        assertCoupon(promo, total.toNumber());
+-        if (!promo) throw badRequest('No encontramos ese cupón.');
++        const promo = await consumeCoupon(tx, candidate.id, total.toNumber());
+         total = total.minus(couponDiscount(total, promo));
+         promotionalCodeId = promo.id;
+-        await tx.promotionalCode.update({
+-          where: { id: promo.id }, data: { currentUses: (promo.currentUses ?? 0) + 1 },
+-        });
+       }
+       total = Prisma.Decimal.max(0, total).plus(deliveryFee).toDecimalPlaces(2);
+       if (total.lte(0)) throw badRequest('La demostración requiere un total mayor que cero.');
+diff --git a/be/src/modules/payments/payments.test.ts b/be/src/modules/payments/payments.test.ts
+index 3fe9074..eb753e1 100644
+--- a/be/src/modules/payments/payments.test.ts
++++ b/be/src/modules/payments/payments.test.ts
+@@ -75,6 +75,15 @@ beforeEach(() => {
+   db.shopping.upsert = async ({ create }: any) => { state.cartRestored += create.quantity; return create; };
+   db.promotionalCode.findFirst = async () => state.promo;
+   db.promotionalCode.findUnique = async () => state.promo;
++  // A-07: el consumo del cupón es un incremento CONDICIONAL (updateMany), no
++  // un update ciego. El doble debe reflejar esa semántica real.
++  db.promotionalCode.updateMany = async ({ where, data }: any) => {
++    if (!state.promo || state.promo.id !== where.id) return { count: 0 };
++    if (where.active === true && !state.promo.active) return { count: 0 };
++    if (where.currentUses?.lt !== undefined && (state.promo.currentUses ?? 0) >= where.currentUses.lt) return { count: 0 };
++    state.promo = { ...state.promo, currentUses: (state.promo.currentUses ?? 0) + (data.currentUses?.increment ?? 0) };
++    return { count: 1 };
++  };
+   db.promotionalCode.update = async ({ data }: any) => { state.promo = { ...state.promo, ...data }; return state.promo; };
+ });
+ 
+diff --git a/be/src/modules/pqr/contact.schema.ts b/be/src/modules/pqr/contact.schema.ts
+new file mode 100644
+index 0000000..f779995
+--- /dev/null
++++ b/be/src/modules/pqr/contact.schema.ts
+@@ -0,0 +1,33 @@
++import { z } from 'zod';
++
++/**
++ * B-01: el formulario público de Contacto deja de ser una simulación.
++ *
++ * El mensaje se guarda como un PQR de tipo `petition` a nombre del cliente,
++ * de modo que el equipo lo atiende con el mismo flujo y los mismos tiempos de
++ * respuesta que el resto de solicitudes. Requiere sesión de cliente: si el
++ * visitante no ha iniciado sesión, el frontend lo envía a /login.
++ */
++export const contactTopicValues = [
++  'pedido',
++  'producto',
++  'envio',
++  'devolucion',
++  'otro',
++] as const;
++
++export const createContactMessageSchema = z
++  .object({
++    name: z.string().trim().min(2, 'Escribe tu nombre.').max(150),
++    email: z.string().trim().toLowerCase().email('Ingresa un correo electrónico válido.').max(255),
++    topic: z.enum(contactTopicValues).optional(),
++    subject: z.string().trim().min(5, 'Escribe un asunto de al menos 5 caracteres.').max(160).optional(),
++    message: z
++      .string()
++      .trim()
++      .min(20, 'Describe tu solicitud con al menos 20 caracteres.')
++      .max(5000),
++  })
++  .strict();
++
++export type ContactMessageInput = z.infer<typeof createContactMessageSchema>;
+diff --git a/be/src/modules/pqr/pqr.controller.ts b/be/src/modules/pqr/pqr.controller.ts
+index f2f145f..f8918d5 100644
+--- a/be/src/modules/pqr/pqr.controller.ts
++++ b/be/src/modules/pqr/pqr.controller.ts
+@@ -1,6 +1,6 @@
+ import { Request, Response } from 'express';
+ import { asyncHandler } from '../../middlewares/asyncHandler';
+-import { pqrService, PqrActor } from './pqr.service';
++import { contactService, pqrService, PqrActor } from './pqr.service';
+ 
+ const actorFrom = (req: Request) => (req as any).user as PqrActor;
+ 
+@@ -22,4 +22,8 @@ export const createPqr = asyncHandler(async (req: Request, res: Response) => {
+ export const updatePqr = asyncHandler(async (req: Request, res: Response) => {
+   const request = await pqrService.update(req.params.id, req.body, actorFrom(req));
+   return res.json(request);
+-});
+\ No newline at end of file
++});
++export const createContactMessage = asyncHandler(async (req: Request, res: Response) => {
++  const message = await contactService.submit(req.body, actorFrom(req));
++  return res.status(201).json(message);
++});
+diff --git a/be/src/modules/pqr/pqr.routes.ts b/be/src/modules/pqr/pqr.routes.ts
+index 9f33174..7b76d64 100644
+--- a/be/src/modules/pqr/pqr.routes.ts
++++ b/be/src/modules/pqr/pqr.routes.ts
+@@ -1,9 +1,12 @@
+ import { Router } from 'express';
++import { rateLimit } from 'express-rate-limit';
+ import { verifyAdmin, verifyToken } from '../../middlewares/auth.middleware';
+ import { validate } from '../../middlewares/validate';
+ import { uuidParam } from '../../lib/schemas';
+ import { createPqrSchema, updatePqrSchema } from './pqr.schema';
++import { createContactMessageSchema } from './contact.schema';
+ import {
++  createContactMessage,
+   createPqr,
+   getPqr,
+   listPqr,
+@@ -17,6 +20,14 @@ router.use(verifyToken);
+ router.get('/', listPqr);
+ router.get('/:id', validate({ params: uuidParam }), getPqr);
+ router.post('/', validate({ body: createPqrSchema }), createPqr);
++
++// B-01: formulario público de Contacto → PQR de tipo petición.
++router.post(
++  '/contact',
++  rateLimit({ windowMs: 60000, limit: 10, standardHeaders: true, legacyHeaders: false }),
++  validate({ body: createContactMessageSchema }),
++  createContactMessage,
++);
+ router.patch(
+   '/:id',
+   verifyAdmin,
+diff --git a/be/src/modules/pqr/pqr.service.ts b/be/src/modules/pqr/pqr.service.ts
+index d729d37..8c2a858 100644
+--- a/be/src/modules/pqr/pqr.service.ts
++++ b/be/src/modules/pqr/pqr.service.ts
+@@ -103,3 +103,66 @@ export const pqrService = {
+     return updated;
+   },
+ };
++
++/**
++ * B-01: mensaje del formulario público de Contacto.
++ *
++ * Se convierte en un PQR `petition` del cliente autenticado, reutilizando el
++ * bloqueo por cliente, la detección de duplicados y el límite de un envío por
++ * minuto del módulo de PQR. El nombre y el correo del formulario quedan
++ * registrados en el cuerpo para trazabilidad, pero la cuenta que responde es
++ * la del usuario autenticado (no se puede suplantar a otra persona).
++ */
++export const contactService = {
++  async submit(
++    data: { name: string; email: string; topic?: string; subject?: string; message: string },
++    actor: PqrActor
++  ) {
++    if (actor.role !== 'client') {
++      throw forbidden('Inicia sesión como cliente para enviar un mensaje de contacto.');
++    }
++
++    const user = await prisma.user.findUnique({
++      where: { id: actor.id },
++      select: { fullName: true, email: true },
++    });
++
++    if (!user) throw notFound('Usuario no encontrado.');
++
++    const topicLabel: Record<string, string> = {
++      pedido: 'Consulta sobre pedido',
++      producto: 'Información de producto',
++      envio: 'Envíos y entregas',
++      devolucion: 'Devoluciones',
++      otro: 'Otro',
++    };
++
++    const subject = (
++      data.subject?.trim() ||
++      topicLabel[data.topic ?? 'otro'] ||
++      'Mensaje de contacto'
++    ).slice(0, 160);
++
++    const description = [
++      `Contacto: ${data.name.trim()} <${data.email}>`,
++      topicLabel[data.topic ?? 'otro'] ? `Asunto: ${topicLabel[data.topic ?? 'otro']}` : null,
++      '',
++      data.message.trim(),
++    ]
++      .filter((part) => part !== null)
++      .join('\n');
++
++    const pqr = await pqrService.create(
++      { type: 'petition', subject, description },
++      actor
++    );
++
++    return {
++      id: pqr.id,
++      // Prisma aplica @default(received); el doble de pruebas puede omitirlo.
++      status: pqr.status ?? 'received',
++      createdAt: pqr.createdAt,
++      message: 'Recibimos tu mensaje. Puedes seguir su respuesta en Mis PQR.',
++    };
++  },
++};
+diff --git a/be/src/modules/pqr/pqr.test.ts b/be/src/modules/pqr/pqr.test.ts
+index 5f44f2f..6c60afb 100644
+--- a/be/src/modules/pqr/pqr.test.ts
++++ b/be/src/modules/pqr/pqr.test.ts
+@@ -5,7 +5,7 @@ import type { AddressInfo } from 'node:net';
+ import jwt from 'jsonwebtoken';
+ import { prisma } from '../../lib/prisma';
+ import { HttpError } from '../../lib/errors';
+-import { pqrService } from './pqr.service';
++import { contactService, pqrService } from './pqr.service';
+ import app from '../../app';
+ 
+ const db = prisma as any;
+@@ -59,3 +59,34 @@ test('HTTP: el límite persiste en servidor, informa Retry-After y mantiene dupl
+     assert.ok(Number(limited.headers.get('retry-after')) > 0);
+   } finally { server.closeAllConnections(); await new Promise<void>(resolve => server.close(() => resolve())); }
+ });
++
++test('B-01: el formulario de contacto crea un PQR de petición del cliente autenticado', async () => {
++  const result = await contactService.submit(
++    {
++      name: 'Ana Pérez',
++      email: 'ana@example.com',
++      topic: 'envio',
++      message: 'Quisiera saber cuándo llegará mi pedido a Medellín.',
++    },
++    actor
++  );
++
++  assert.equal(result.status, 'received');
++  const stored = rows[0];
++  assert.equal(stored.type, 'petition');
++  assert.equal(stored.customerId, actor.id);
++  assert.equal(stored.subject, 'Envíos y entregas');
++  assert.match(stored.description, /Ana Pérez/);
++  assert.match(stored.description, /ana@example\.com/);
++  assert.match(stored.description, /Medellín/);
++});
++
++test('B-01: un usuario que no es cliente no puede enviar el formulario de contacto', async () => {
++  await assert.rejects(
++    contactService.submit(
++      { name: 'X', email: 'x@example.com', message: 'Mensaje de prueba suficientemente largo.' },
++      { id: actor.id, role: 'employee' }
++    ),
++    (error: unknown) => error instanceof HttpError && error.status === 403
++  );
++});
+diff --git a/be/src/modules/promotional-code/promotional-code.domain.ts b/be/src/modules/promotional-code/promotional-code.domain.ts
+index d3d3768..ec29b42 100644
+--- a/be/src/modules/promotional-code/promotional-code.domain.ts
++++ b/be/src/modules/promotional-code/promotional-code.domain.ts
+@@ -1,5 +1,6 @@
+ import { Prisma } from '@prisma/client';
+ import { badRequest } from '../../lib/errors';
++import { toDateKey } from '../../lib/reportDate';
+ 
+ export const normalizeCoupon = (code: string) => code.normalize('NFKC').trim();
+ interface Coupon {
+@@ -10,9 +11,12 @@ interface Coupon {
+ export function assertCoupon(promo: Coupon | null, subtotal?: number): asserts promo is Coupon {
+   if (!promo) throw badRequest('No encontramos ese cupón. Revisa el código e intenta de nuevo.');
+   if (!promo.active) throw badRequest('Este cupón no está activo.');
+-  const today = new Date().toISOString().slice(0, 10);
+-  if (today < promo.startDate.toISOString().slice(0, 10)) throw badRequest('Este cupón aún no está disponible.');
+-  if (today > promo.endDate.toISOString().slice(0, 10)) throw badRequest('Este cupón ha expirado.');
++  // La vigencia se compara por día calendario en Colombia, igual que los
++  // reportes. Con `toISOString()` un cupón que vence hoy se rechazaba como
++  // expirado a partir de las 19:00 (hora de Bogotá).
++  const today = toDateKey(new Date()) ?? '';
++  if (today < (toDateKey(promo.startDate) ?? '')) throw badRequest('Este cupón aún no está disponible.');
++  if (today > (toDateKey(promo.endDate) ?? '')) throw badRequest('Este cupón ha expirado.');
+   const minimum = Number(promo.minPurchase ?? 0);
+   if (subtotal !== undefined && subtotal < minimum) throw badRequest(`Este cupón requiere al menos $${minimum.toLocaleString('es-CO')} en productos. Te faltan $${(minimum - subtotal).toLocaleString('es-CO')}.`, { minimumPurchase: minimum, missingAmount: minimum - subtotal });
+   if (promo.maxUses !== null && (promo.currentUses ?? 0) >= promo.maxUses) throw badRequest('Este cupón alcanzó su límite de usos.');
+@@ -23,3 +27,43 @@ export function couponDiscount(subtotal: Prisma.Decimal, promo: { type: string;
+   const amount = promo.type === 'percentage' ? subtotal.mul(Number(promo.value)).div(100) : new Prisma.Decimal(Number(promo.value));
+   return Prisma.Decimal.min(subtotal, amount).toDecimalPlaces(2);
+ }
++
++const COUPON_LOCK = (id: string) => `coupon:${id}`;
++
++/**
++ * A-07: consumo del cupón a prueba de concurrencia.
++ *
++ * 1. Bloqueo de asesoría por cupón: serializa dos checkouts simultáneos del
++ *    mismo código, incluso si llegan desde procesos distintos.
++ * 2. Relectura dentro del bloqueo (el estado que se validó antes del lock
++ *    puede haber cambiado).
++ * 3. Incremento condicional (`currentUses < maxUses`): segunda barrera por si
++ *    el lock no se tomó (tests unitarios sin PostgreSQL, por ejemplo).
++ *
++ * Devuelve el cupón ya validado y con el uso consumido UNA sola vez.
++ */
++export async function consumeCoupon(
++  tx: Prisma.TransactionClient,
++  id: string,
++  subtotal: number
++) {
++  await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${COUPON_LOCK(id)}, 0))`;
++
++  const promo = await tx.promotionalCode.findUnique({ where: { id } });
++  assertCoupon(promo, subtotal);
++
++  const consumed = await tx.promotionalCode.updateMany({
++    where: {
++      id: promo.id,
++      active: true,
++      ...(promo.maxUses !== null ? { currentUses: { lt: promo.maxUses } } : {}),
++    },
++    data: { currentUses: { increment: 1 } },
++  });
++
++  if (consumed.count !== 1) {
++    throw badRequest('Este cupón alcanzó su límite de usos.');
++  }
++
++  return promo;
++}
+diff --git a/be/src/modules/promotional-code/promotional-code.test.ts b/be/src/modules/promotional-code/promotional-code.test.ts
+index 2ce1029..2893bb7 100644
+--- a/be/src/modules/promotional-code/promotional-code.test.ts
++++ b/be/src/modules/promotional-code/promotional-code.test.ts
+@@ -82,3 +82,50 @@ test('No cotiza productos eliminados ni cantidades sin stock', async () => {
+   db.product.findMany = async () => [];
+   await assert.rejects(promotionalCodeService.quote('ESTUCHE10', [{ productId: 'missing', quantity: 1 }], { id: 'buyer', role: 'client' }), invalid(/Actualiza tu carrito/));
+ });
++
++// ─── Vigencia por día calendario de Colombia ────────────────────────────
++test('A-05: un cupón que vence hoy sigue válido a las 20:00 de Bogotá', async () => {
++  // A las 20:00 de Bogotá ya es el día siguiente en UTC: con la comparación
++  // anterior (toISOString) el cupón se rechazaba como expirado 5 horas antes.
++  const bogota = new Intl.DateTimeFormat('en-CA', {
++    timeZone: 'America/Bogota', year: 'numeric', month: '2-digit', day: '2-digit',
++  });
++  const now = new Date();
++  const today = bogota.format(now);
++
++  promo.startDate = new Date(`${today}T00:00:00-05:00`);
++  promo.endDate = new Date(`${today}T23:59:59-05:00`);
++
++  const result = await promotionalCodeService.validate('ESTUCHE10', 50000);
++  assert.equal(result.id, 'coupon', 'el cupón del día debe seguir siendo válido');
++});
++
++test('A-05: un cupón vencido ayer se rechaza', async () => {
++  const bogota = new Intl.DateTimeFormat('en-CA', {
++    timeZone: 'America/Bogota', year: 'numeric', month: '2-digit', day: '2-digit',
++  });
++  const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
++
++  promo.startDate = new Date('2020-01-01T00:00:00-05:00');
++  promo.endDate = new Date(`${bogota.format(yesterday)}T23:59:59-05:00`);
++
++  await assert.rejects(
++    promotionalCodeService.validate('ESTUCHE10', 50000),
++    invalid(/expirado/i)
++  );
++});
++
++test('A-05: un cupón que empieza mañana todavía no está disponible', async () => {
++  const bogota = new Intl.DateTimeFormat('en-CA', {
++    timeZone: 'America/Bogota', year: 'numeric', month: '2-digit', day: '2-digit',
++  });
++  const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
++
++  promo.startDate = new Date(`${bogota.format(tomorrow)}T00:00:00-05:00`);
++  promo.endDate = new Date('2099-01-01T00:00:00-05:00');
++
++  await assert.rejects(
++    promotionalCodeService.validate('ESTUCHE10', 50000),
++    invalid(/no está disponible/i)
++  );
++});
+diff --git a/be/src/modules/reports/reports.sales.test.ts b/be/src/modules/reports/reports.sales.test.ts
+new file mode 100644
+index 0000000..bfba3c6
+--- /dev/null
++++ b/be/src/modules/reports/reports.sales.test.ts
+@@ -0,0 +1,110 @@
++import { test } from 'node:test';
++import assert from 'node:assert/strict';
++import { Prisma } from '@prisma/client';
++import { prisma } from '../../lib/prisma';
++import { orderService } from '../orders/orders.service';
++import { reportService } from './reports.service';
++import { toDateKey } from '../../lib/reportDate';
++
++/**
++ * B-03: ¿una venta nueva aparece en los reportes?
++ *
++ * Prueba de regresión de punta a punta con dobles de Prisma: la orden creada
++ * por POST /api/orders entra en el cálculo de /api/reports sin pasos manuales.
++ * La consulta de reportes lee `orders` filtrando `deletedAt: null` y cuenta
++ * `total` en totalSold y las unidades en productsSold.
++ */
++const db = prisma as any;
++
++test('B-03: una venta nueva alimenta los reportes del día sin pasos manuales', async () => {
++  const stored: any[] = [];
++
++  // ── Doble de la transacción de pedidos ─────────────────────────────────
++  db.$transaction = async (fn: any) => fn({
++    $queryRaw: async () => [],
++    $executeRaw: async () => 1,
++    user: { findUnique: async () => ({ address: 'Calle 1 #2-3' }) },
++    product: {
++      findUnique: async () => ({
++        id: 'product-1',
++        name: 'Cuaderno',
++        price: new Prisma.Decimal(100),
++        stock: 10,
++      }),
++      updateMany: async () => ({ count: 1 }),
++    },
++    order: {
++      create: async ({ data }: any) => {
++        const order = {
++          id: 'order-1',
++          orderDate: new Date(),
++          status: data.status,
++          total: data.total,
++          deletedAt: null,
++          details: data.details.create,
++        };
++        stored.push(order);
++        return order;
++      },
++    },
++    inventoryMovement: { create: async () => ({}) },
++    orderEvent: { create: async () => ({}) },
++    promotionalCode: {},
++  });
++
++  const created = await orderService.create(
++    {
++      deliveryAddress: 'Calle 1 #2-3, Bogotá',
++      details: [{ productId: 'product-1', quantity: 2 }],
++    },
++    { id: 'client-1', role: 'client' }
++  );
++
++  assert.equal(Number(created.total), 10200, '200 + 10000 de envío');
++
++  // ── Doble de las consultas del reporte ─────────────────────────────────
++  db.order.findMany = async ({ where }: any) => {
++    assert.equal(where.deletedAt, null, 'el reporte ignora pedidos eliminados');
++    return stored;
++  };
++  db.receipt.findMany = async () => [];
++  db.payout.findMany = async () => [];
++  db.orderReturn.findMany = async () => [];
++  db.user.findMany = async () => [];
++
++  const rows = await reportService.list();
++  // El reporte agrupa por día calendario en Colombia (America/Bogota).
++  const today = toDateKey(new Date())!;
++  const row = rows.find((item) => item.date === today);
++
++  assert.ok(row, 'debe existir la fila del día de la venta');
++  assert.equal(row!.totalOrders, 1);
++  assert.equal(row!.totalSold, 10200);
++  assert.equal(row!.productsSold, 2);
++});
++
++test('B-03: un pedido cancelado cuenta como cancelado y no suma venta', async () => {
++  const today = new Date();
++
++  db.order.findMany = async () => [
++    {
++      id: 'order-canceled',
++      orderDate: today,
++      status: 'canceled',
++      total: 5000,
++      details: [{ quantity: 1 }],
++    },
++  ];
++  db.receipt.findMany = async () => [];
++  db.payout.findMany = async () => [];
++  db.orderReturn.findMany = async () => [];
++  db.user.findMany = async () => [];
++
++  const rows = await reportService.list();
++  const row = rows.find((item) => item.date === toDateKey(today));
++
++  assert.ok(row);
++  assert.equal(row!.canceledOrders, 1);
++  assert.equal(row!.totalSold, 0);
++  assert.equal(row!.productsSold, 0);
++});
+diff --git a/be/tests/orders-regression.integration.ts b/be/tests/orders-regression.integration.ts
+new file mode 100644
+index 0000000..9902320
+--- /dev/null
++++ b/be/tests/orders-regression.integration.ts
+@@ -0,0 +1,326 @@
++import { test } from 'node:test';
++import assert from 'node:assert/strict';
++import { randomUUID } from 'node:crypto';
++import { createServer } from 'node:http';
++import type { AddressInfo } from 'node:net';
++import jwt from 'jsonwebtoken';
++
++/**
++ * Regresión de los fallos prioritarios de la sección A contra PostgreSQL REAL:
++ * - A-01: pedido vacío rechazado, sin dejar registros.
++ * - A-02: domicilio sin dirección rechazado; retiro sin dirección aceptado.
++ * - A-03: cantidades inválidas rechazadas.
++ * - A-04: producto eliminado no comprable (ni por ID).
++ * - A-05/A-06/A-07: cupón validado, consumido una sola vez, límite respetado
++ *   incluso con dos checkouts simultáneos (bloqueo de asesoría real).
++ */
++
++const target = process.env.EMPLOYEE_TEST_DATABASE_URL;
++const url = target ? new URL(target) : null;
++
++const safe =
++  !!url &&
++  ['postgres:', 'postgresql:'].includes(url.protocol) &&
++  ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname) &&
++  url.pathname.endsWith('_test');
++
++if (safe) {
++  process.env.DATABASE_URL = target;
++  process.env.NODE_ENV = 'test';
++  process.env.ENABLE_PAYMENT_SIMULATION = 'true';
++  process.env.JWT_SECRET = 'orders-regression-integration-test-only-2026';
++}
++
++const { prisma: db } = require('../src/lib/prisma');
++const app = require('../src/app').default;
++
++// Si el runner ejecuta varios *.integration.ts en un mismo proceso, este
++// archivo debe omitirse en vez de abortar las demás suites.
++test(
++  'Regresión de pedidos y cupones contra PostgreSQL real',
++  { skip: !safe && 'EMPLOYEE_TEST_DATABASE_URL no apunta a una base local *_test' },
++  async () => {
++  const run = randomUUID();
++  const server = createServer(app);
++  let productId: string | undefined;
++  let deletedProductId: string | undefined;
++  let couponId: string | undefined;
++  let otherCouponId: string | undefined;
++  let staleCouponId: string | undefined;
++  let adminId: string | undefined;
++
++  try {
++    const user = await db.user.create({
++      data: {
++        email: `${run}@orders.test`,
++        fullName: 'Cliente regresión',
++        role: 'client',
++        hashedPassword: 'not-a-login-password',
++        isActive: true,
++        address: 'Calle 1 #2-3, Bogotá',
++      },
++    });
++    const token = jwt.sign({ id: user.id, role: 'client' }, process.env.JWT_SECRET!);
++
++    // El PUT de pedidos exige rol admin y un usuario real en la BD.
++    const admin = await db.user.create({
++      data: {
++        email: `${run}@admin.orders.test`,
++        fullName: 'Admin regresión',
++        role: 'admin',
++        hashedPassword: 'not-a-login-password',
++        isActive: true,
++      },
++    });
++    adminId = admin.id;
++    const adminToken = jwt.sign({ id: admin.id, role: 'admin' }, process.env.JWT_SECRET!);
++
++    const product = await db.product.create({
++      data: { name: `Regresión ${run}`, price: '1000.00', cost: '500.00', stock: 10 },
++    });
++    productId = product.id;
++
++    const coupon = await db.promotionalCode.create({
++      data: {
++        code: `REG${run.slice(0, 8)}`.toUpperCase(),
++        type: 'percentage',
++        value: '10.00',
++        minPurchase: '0.00',
++        startDate: new Date('2020-01-01'),
++        endDate: new Date('2099-01-01'),
++        maxUses: 1,
++        currentUses: 0,
++        active: true,
++      },
++    });
++    couponId = coupon.id;
++
++    await new Promise<void>((resolve, reject) => {
++      server.once('error', reject);
++      server.listen(0, '127.0.0.1', resolve);
++    });
++    const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
++
++    const post = (body: unknown) =>
++      fetch(`${base}/api/orders`, {
++        method: 'POST',
++        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
++        body: JSON.stringify(body),
++      });
++
++    // ── A-01: pedido vacío ───────────────────────────────────────────────
++    for (const payload of [{}, { details: [] }, { total: 5000 }]) {
++      const response = await post(payload);
++      assert.equal(response.status, 400, `payload vacío ${JSON.stringify(payload)}`);
++    }
++    assert.equal(await db.order.count({ where: { customerId: user.id } }), 0,
++      'un pedido inválido no debe crear registros');
++
++    // ── A-02: domicilio sin dirección / retiro sin dirección ─────────────
++    await db.user.update({ where: { id: user.id }, data: { address: null } });
++
++    const noAddress = await post({ details: [{ productId: product.id, quantity: 1 }] });
++    assert.equal(noAddress.status, 400);
++    assert.match((await noAddress.json()).message, /dirección/i);
++
++    // Con dirección en el perfil, el domicilio no necesita enviarla de nuevo.
++    await db.user.update({ where: { id: user.id }, data: { address: 'Calle 1 #2-3, Bogotá' } });
++    const fromProfile = await post({ details: [{ productId: product.id, quantity: 1 }] });
++    assert.equal(fromProfile.status, 201, 'usa la dirección del perfil');
++    assert.match((await fromProfile.json()).deliverySnapshot, /Calle 1/);
++
++    const pickup = await post({
++      fulfillmentMethod: 'pickup',
++      details: [{ productId: product.id, quantity: 1 }],
++    });
++    assert.equal(pickup.status, 201, 'el retiro no exige domicilio');
++    const pickupOrder = await pickup.json();
++    assert.equal(Number(pickupOrder.shippingCost), 0);
++
++    // ── A-03: cantidades inválidas ───────────────────────────────────────
++    for (const quantity of [0, -1]) {
++      const response = await post({
++        deliveryAddress: 'Calle 1 #2-3, Bogotá',
++        details: [{ productId: product.id, quantity }],
++      });
++      assert.equal(response.status, 400, `cantidad ${quantity}`);
++    }
++
++    // ── A-04: producto eliminado ─────────────────────────────────────────
++    const deletedProduct = await db.product.create({
++      data: {
++        name: `Eliminado ${run}`,
++        price: '1000.00',
++        cost: '500.00',
++        stock: 10,
++        deletedAt: new Date(),
++      },
++    });
++    deletedProductId = deletedProduct.id;
++
++    const deleted = await post({
++      deliveryAddress: 'Calle 1 #2-3, Bogotá',
++      details: [{ productId: deletedProduct.id, quantity: 1 }],
++    });
++    assert.equal(deleted.status, 400);
++    assert.match((await deleted.json()).message, /ya no está disponible/);
++    const deletedRow = await db.product.findUnique({ where: { id: deletedProduct.id } });
++    assert.equal(deletedRow!.stock, 10, 'el stock del producto eliminado no cambia');
++
++    // ── A-04: la condición sigue activa al descontar stock ───────────────
++    const stillAlive = await post({
++      deliveryAddress: 'Calle 1 #2-3, Bogotá',
++      details: [{ productId: productId, quantity: 2 }],
++    });
++    assert.equal(stillAlive.status, 201);
++    const sold = await db.product.findUnique({ where: { id: productId } });
++    assert.equal(sold!.stock, 6, '10 − 1 (retiro) − 1 (perfil) − 2 (domicilio) = 6');
++
++    // ── A-07: dos checkouts simultáneos con maxUses = 1 ──────────────────
++    const race = await Promise.all([
++      post({
++        deliveryAddress: 'Calle 1 #2-3, Bogotá',
++        promotionalCodeId: coupon.id,
++        details: [{ productId, quantity: 1 }],
++      }),
++      post({
++        deliveryAddress: 'Calle 1 #2-3, Bogotá',
++        promotionalCodeId: coupon.id,
++        details: [{ productId, quantity: 1 }],
++      }),
++    ]);
++
++    const accepted = race.filter((response) => response.status === 201);
++    const rejected = race.filter((response) => response.status === 400);
++    assert.equal(accepted.length, 1, 'solo una compra puede usar el último uso');
++    assert.equal(rejected.length, 1, 'la otra se rechaza con 400');
++    assert.match((await rejected[0].json()).message, /límite de usos/);
++
++    const afterRace = await db.promotionalCode.findUnique({ where: { id: coupon.id } });
++    assert.equal(afterRace!.currentUses, 1, 'el cupón se consume exactamente una vez');
++
++    // ── A-05: el ID suelto no salta la validación ────────────────────────
++    await db.promotionalCode.update({ where: { id: coupon.id }, data: { active: false } });
++    const inactive = await post({
++      deliveryAddress: 'Calle 1 #2-3, Bogotá',
++      promotionalCodeId: coupon.id,
++      details: [{ productId, quantity: 1 }],
++    });
++    assert.equal(inactive.status, 400);
++    assert.match((await inactive.json()).message, /no está activo/);
++
++    // ── A-06: el mismo pedido no acepta dos cupones ──────────────────────
++    await db.promotionalCode.update({ where: { id: coupon.id }, data: { active: true } });
++    const other = await db.promotionalCode.create({
++      data: {
++        code: `OTRO${run.slice(0, 6)}`.toUpperCase(),
++        type: 'fixed',
++        value: '100.00',
++        minPurchase: '0.00',
++        startDate: new Date('2020-01-01'),
++        endDate: new Date('2099-01-01'),
++        maxUses: null,
++        currentUses: 0,
++        active: true,
++      },
++    });
++
++    otherCouponId = other.id;
++
++    const target = await post({
++      deliveryAddress: 'Calle 1 #2-3, Bogotá',
++      details: [{ productId, quantity: 1 }],
++    });
++    const targetOrder = await target.json();
++
++    const first = await fetch(`${base}/api/orders/${targetOrder.id}/apply-code`, {
++      method: 'PATCH',
++      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
++      body: JSON.stringify({ code: other.code }),
++    });
++    assert.equal(first.status, 200);
++    const applied = await first.json();
++    assert.equal(Number(applied.total), Number(targetOrder.total) - 100);
++
++    const second = await fetch(`${base}/api/orders/${targetOrder.id}/apply-code`, {
++      method: 'PATCH',
++      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
++      body: JSON.stringify({ code: coupon.code }),
++    });
++    assert.equal(second.status, 400);
++    assert.match((await second.json()).message, /ya tiene un cupón/);
++
++    const couponUntouched = await db.promotionalCode.findUnique({ where: { id: coupon.id } });
++    assert.equal(couponUntouched!.currentUses, 1, 'el segundo intento no consume el cupón');
++
++    // ── A-05: editar el pedido (PUT) no puede saltarse la validación ─────
++    const staleCoupon = await db.promotionalCode.create({
++      data: {
++        code: `VIEJO${run.slice(0, 6)}`.toUpperCase(),
++        type: 'fixed',
++        value: '100.00',
++        minPurchase: '0.00',
++        startDate: new Date('2020-01-01'),
++        endDate: new Date('2099-01-01'),
++        maxUses: 10,
++        currentUses: 0,
++        active: false,
++      },
++    });
++    staleCouponId = staleCoupon.id;
++
++    const editable = await post({
++      deliveryAddress: 'Calle 1 #2-3, Bogotá',
++      details: [{ productId, quantity: 1 }],
++    });
++    const editableOrder = await editable.json();
++
++    // La edición general (PUT) está reservada a pedidos sin flujo operativo:
++    // `assertUnmanaged` rechaza con 409 todo pedido con `createdById`. Para
++    // ejercitar la validación del cupón se simula un pedido heredado.
++    await db.order.update({ where: { id: editableOrder.id }, data: { createdById: null } });
++
++    const viaPut = await fetch(`${base}/api/orders/${editableOrder.id}`, {
++      method: 'PUT',
++      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
++      body: JSON.stringify({ promotionalCodeId: staleCoupon.id }),
++    });
++    assert.equal(viaPut.status, 400, 'un cupón inactivo no puede colarse por PUT');
++    assert.match((await viaPut.json()).message, /no está activo/);
++
++    const staleAfter = await db.promotionalCode.findUnique({ where: { id: staleCoupon.id } });
++    assert.equal(staleAfter!.currentUses, 0, 'el cupón inválido no consume usos');
++
++    const unchanged = await db.order.findUnique({ where: { id: editableOrder.id } });
++    assert.equal(unchanged!.promotionalCodeId, null, 'el pedido no queda con cupón');
++
++  } finally {
++    if (server.listening) {
++      server.closeAllConnections();
++      await new Promise<void>((resolve) => server.close(() => resolve()));
++    }
++
++    // Limpieza: el orden respeta las claves foráneas.
++    if (productId || deletedProductId) {
++      await db.inventoryMovement.deleteMany({
++        where: { productId: { in: [productId, deletedProductId].filter(Boolean) } },
++      });
++      await db.orderDetail.deleteMany({
++        where: { productId: { in: [productId, deletedProductId].filter(Boolean) } },
++      });
++    }
++    const user = await db.user.findFirst({ where: { email: `${run}@orders.test` } });
++    if (user) {
++      await db.orderEvent.deleteMany({ where: { order: { customerId: user.id } } });
++      await db.order.deleteMany({ where: { customerId: user.id } });
++      await db.user.delete({ where: { id: user.id } });
++    }
++    await db.product.deleteMany({
++      where: { id: { in: [productId, deletedProductId].filter(Boolean) } },
++    });
++    await db.promotionalCode.deleteMany({
++      where: { id: { in: [couponId, otherCouponId, staleCouponId].filter(Boolean) as string[] } },
++    });
++    if (adminId) await db.user.deleteMany({ where: { id: adminId } });
++  }
++});
+diff --git a/docs/api/contrato-api.md b/docs/api/contrato-api.md
+new file mode 100644
+index 0000000..39a99f8
+--- /dev/null
++++ b/docs/api/contrato-api.md
+@@ -0,0 +1,755 @@
++# Contrato de API — Estuche Virtual
++
++| Campo | Valor |
++| --- | --- |
++| Versión del documento | 1.0 |
++| Fecha | 2026-11-26 |
++| Base local | `http://localhost:4000` (`PORT` en `be/.env`) |
++| Prefijo | `/api` |
++| Formato | JSON UTF-8; montos como número decimal (`12345.67`), moneda **COP** |
++| Autenticación | `Authorization: Bearer <JWT>` |
++| Última revisión de código | `be/src/app.ts` + rutas de cada módulo |
++
++Este documento es el contrato que consume el frontend (Paula). Describe método,
++ruta, autenticación, entradas, respuesta, errores y **efectos sobre stock,
++pedidos y cupones**. Todo lo aquí escrito se verificó leyendo el router real,
++no la documentación previa.
++
++---
++
++## 0. Convenciones
++
++### 0.1 Autenticación y roles
++
++El middleware `verifyToken` (`be/src/middlewares/auth.middleware.ts`):
++
++1. Exige `Authorization: Bearer <token>`, si no → **401** `{ "message": "Token requerido" }`.
++2. Verifica el JWT con `JWT_SECRET`, si falla → **401** `{ "message": "Token inválido o expirado" }`.
++3. **Vuelve a leer el usuario en la base de datos.** Si no existe, está inactivo
++   o tiene `deletedAt`, → **401** `{ "message": "Cuenta no disponible" }`.
++4. Copia en `req.user` el `id`, `name`, `email` y el **rol vigente de la BD**
++   (no el del token). Un token viejo con rol elevado no escala privilegios.
++
++Roles: `client`, `employee`, `admin`, `superadmin`.
++
++| Guarda | Roles admitidos | Respuesta si falla |
++| --- | --- | --- |
++| `verifyToken` | cualquier usuario activo | 401 |
++| `verifyAdmin` | `admin`, `superadmin` | 403 `{ "message": "Acceso restringido a administradores" }` |
++| `verifySuperAdmin` | `superadmin` | 403 `{ "message": "Acceso restringido a superadmin" }` |
++
++### 0.2 Forma de los errores
++
++Todos los errores pasan por `errorHandler` (`be/src/middlewares/error.middleware.ts`).
++Los errores de negocio se ven así:
++
++```json
++{ "ok": false, "message": "Un pedido debe incluir al menos un producto." }
++```
++
++Con datos extra cuando aplica (`minimumPurchase`, `missingAmount`,
++`available`, `requested`, `existingId`, `retryAfter`). Si el status es 429 y hay
++`retryAfter`, se envía además la cabecera `Retry-After` (segundos).
++
++Los errores de validación de Zod los produce el middleware `validate` y tienen
++otra forma:
++
++```json
++{
++  "message": "Indica una dirección para domicilio.",
++  "errors": [{ "path": ["deliveryAddress"], "message": "…" }]
++}
++```
++
++Un fallo no controlado responde **500** `{ "ok": false, "message": "Error interno del servidor" }`.
++
++| Código | Significado en esta API |
++| --- | --- |
++| 400 | Datos inválidos o regla de negocio incumplida (stock, cupón, estado, dirección) |
++| 401 | Sin token, token inválido o cuenta no disponible |
++| 403 | Rol insuficiente, o el recurso pertenece a otro usuario |
++| 404 | El recurso no existe (o está eliminado lógicamente) |
++| 409 | Conflicto: duplicado, operación ya resuelta, recurso bloqueado |
++| 423 | Cuenta bloqueada por intentos fallidos |
++| 429 | Límite de peticiones (`Retry-After` cuando aplica) |
++| 503 | `/api/health/ready` con la base de datos caída |
++
++### 0.3 Listas, paginación y borrado lógico
++
++- Los listados devuelven un **array JSON plano**, sin envoltorio `data`.
++- No hay paginación por query string: se devuelve todo lo visible para el rol.
++  Para pedidos el orden es `orderDate desc`; para PQR, `createdAt desc`.
++- Los recursos con borrado lógico (productos, pedidos, usuarios) **no se
++  destruyen**: se marca `deletedAt` y desaparecen de los listados y de las
++  consultas. Un pedido eliminado ya no aparece en reportes.
++- `DELETE` con éxito responde **204** sin cuerpo (pedidos, productos, usuarios,
++  categorías, códigos promocionales). Recibos y devoluciones **no se eliminan**.
++
++### 0.4 Idempotencia
++
++Las operaciones de pago y de creación de pedido operativo aceptan una llave de
++idempotencia en el cuerpo (`requestKey`, UUID v4). Repetir la misma petición con
++la misma llave devuelve el resultado original en vez de duplicar el efecto. Si
++la llave ya existe con **otro** contenido → **409**.
++
++---
++
++## 1. Estado del servicio
++
++### `GET /api/health` — público
++
++```json
++{
++  "status": "ok",
++  "service": "estuche-virtual-api",
++  "env": "development",
++  "uptimeSeconds": 42,
++  "timestamp": "2026-11-26T15:00:00.000Z"
++}
++```
++
++### `GET /api/health/ready` — público
++
++`200` → `{ "status": "ready", "database": "up", "timestamp": "…" }`
++`503` → `{ "status": "not-ready", "database": "down", "timestamp": "…" }`
++
++---
++
++## 2. Autenticación — `/api/auth`
++
++Rate limit global del router: `RATE_LIMIT_MAX` (10) por `RATE_LIMIT_WINDOW_MS`
++(15 min). Al excederse → **429** `{ "message": "Demasiados intentos. Intenta de nuevo más tarde." }`.
++
++### `POST /api/auth/register` — público
++
++Entrada: `email`, `password`, `fullName` y, según el esquema, `phone`/`address`.
++Respuesta **201**: usuario creado y token de sesión.
++
++### `POST /api/auth/login` — público
++
++Entrada: `email`, `password`.
++Respuesta **200**: `{ "token": "…", "user": { "id", "email", "fullName", "role" } }`.
++
++| Error | Cuándo |
++| --- | --- |
++| 401 | Credenciales incorrectas |
++| 423 | Cuenta bloqueada (`lockedUntil`) |
++| 403 | Cuenta inactiva o eliminada |
++
++### `GET /api/auth/me` — `verifyToken`
++
++Respuesta **200**: datos del usuario autenticado (`role` vigente de la BD).
++
++### `POST /api/auth/forgot-password`, `/verify-reset-token`, `/reset-password` — públicos
++
++Flujo de recuperación por correo. `forgot-password` no revela si el correo
++existe (responde igual en ambos casos).
++
++---
++
++## 3. Pedidos — `/api/orders`
++
++Router completo bajo `verifyToken`. `assertOrderAccess` limita a
++`client`, `admin` y `superadmin` (**403** para `employee`).
++
++### `GET /api/orders`
++
++- `client` → solo sus pedidos (`customerId = req.user.id`).
++- `admin`/`superadmin` → todos.
++- Siempre filtra `deletedAt: null`.
++
++Respuesta **200**: array de pedidos con `details`, `work`, `customer`,
++`driver`, `deliveryAddress`, `promotionalCode`.
++
++### `GET /api/orders/:id`
++
++**200** con el detalle (incluye `receipt.receiptNumber`, `receipt.paymentStatus`
++y los `gateway` de sus pagos; **nunca** tokens de pago).
++`404` si no existe o está eliminado. `403` si es de otro cliente.
++
++### `POST /api/orders` — crea una venta
++
++Esta es la ruta que crea pedidos de venta. **Todos los montos los calcula el
++servidor**; `total` y `unitPrice` del cliente se aceptan por compatibilidad y se
++ignoran.
++
++Entrada:
++
++```json
++{
++  "fulfillmentMethod": "delivery",
++  "deliveryAddress": "Calle 45 #12-30, Bogotá",
++  "details": [
++    { "productId": "00000000-0000-7000-8000-000000000001", "quantity": 2 }
++  ],
++  "promotionalCode": "REGRESO10"
++}
++```
++
++| Campo | Tipo | Obligatorio | Regla |
++| --- | --- | --- | --- |
++| `details` | array | **Sí** | ≥ 1 línea, ≤ 100, sin `productId` repetidos |
++| `details[].productId` | UUID | **Sí** | Debe ser un producto **activo** (`deletedAt = null`) |
++| `details[].quantity` | entero | **Sí** | 1–999 y ≤ stock disponible |
++| `fulfillmentMethod` | `delivery` \| `pickup` | No (default `delivery`) | — |
++| `deliveryAddress` | string | Sí si `delivery` y el perfil no tiene dirección | 8–500 caracteres; si falta se usa la del perfil |
++| `deliveryAddressId` | UUID | Alternativa | Debe pertenecer al cliente |
++| `promotionalCode` | string | No | Se valida completo (vigencia, estado, mínimo, usos) |
++| `promotionalCodeId` | UUID | Alternativa | **No** salta la validación: se resuelve y valida igual |
++| `customerId` | UUID | Solo admin | Un `client` no puede crear pedidos para otro usuario |
++| `status` | string | No | Debe ser `pending`; cualquier otro → 400 |
++
++Respuesta **201**:
++
++```json
++{
++  "id": "…",
++  "customerId": "…",
++  "status": "pending",
++  "total": "10270.00",
++  "shippingCost": "10000.00",
++  "fulfillmentMethod": "delivery",
++  "deliverySnapshot": "Calle 45 #12-30, Bogotá",
++  "promotionalCodeId": null,
++  "expiresAt": "2026-11-26T16:00:00.000Z"
++}
++```
++
++Efectos (dentro de **una sola transacción**; si algo falla no queda nada escrito):
++
++1. Se crea el `Order` en `pending` con `expiresAt` (reserva).
++2. Por cada línea: se descuenta `stock` con `UPDATE … WHERE stock >= cantidad AND deleted_at IS NULL`
++   y se registra un `InventoryMovement` de tipo `out`.
++3. Si hay cupón: se consume **un** uso (`currentUses + 1`).
++4. Se escribe un `OrderEvent` `created`.
++
++Errores esperados:
++
++| Status | Mensaje | Causa |
++| --- | --- | --- |
++| 400 | `Un pedido debe incluir al menos un producto.` | `details` vacío o ausente |
++| 400 | `Indica una dirección para domicilio.` | `delivery`, sin dirección en el cuerpo **y** sin dirección en el perfil |
++| 400 | `El producto … ya no está disponible en el catálogo.` | Producto inexistente o eliminado |
++| 400 | `Stock insuficiente para "…"…` | Cantidad > stock |
++| 400 | `El producto … dejó de estar disponible o no tiene stock suficiente.` | Carrera de stock al descontar |
++| 400 | `No encontramos ese cupón…` / `Este cupón ha expirado.` / `…no está activo.` / `…alcanzó su límite de usos.` / `…requiere al menos $…` | Cupón inválido |
++| 400 | `El pedido debe tener un total mayor que cero.` | Descuento total |
++| 403 | `No puedes crear un pedido a nombre de otro usuario.` | `customerId` ajeno |
++| 403 | `La dirección no pertenece a la cuenta del cliente.` | `deliveryAddressId` ajeno |
++
++### `PUT /api/orders/:id` — `verifyAdmin`
++
++Actualiza `customerId`, `driverId`, `promotionalCodeId`, `deliveryAddressId`,
++`total`, `status`. **400** si `status = "paid"`: ese estado solo lo pone el flujo
++de pagos. **409** si el pedido lo gestiona un empleado (`OrderWork`).
++
++### `DELETE /api/orders/:id` — `verifyAdmin`
++
++Borrado lógico (**204**). **409** si el pedido está bajo gestión de empleado.
++
++### `PATCH /api/orders/:id/apply-code`
++
++Aplica un cupón a un pedido **pendiente** ya creado.
++
++Entrada: `{ "code": "REGRESO10" }` (se normaliza: se recortan espacios y se
++ignora mayúsculas).
++
++Respuesta **200**: el pedido con `promotionalCode { code, value, type }`.
++
++Reglas:
++- El pedido debe ser del cliente o el solicitante ser admin.
++- Solo en `pending`.
++- Aplica también a pedidos creados por el checkout, aunque tengan
++  `createdById` (esa marca solo restringe la *edición* del contenido, no esta
++  operación financiera).
++- **Un pedido admite un único cupón**: si ya tiene uno → 400 `Este pedido ya tiene un cupón aplicado.`
++- Se validan vigencia, estado, compra mínima y usos disponibles.
++- El uso se consume **una sola vez** por pedido (`currentUses + 1`).
++- El `total` se recalcula: `subtotal (precios de BD) − descuento + shippingCost`.
++  El envío **no** cambia: el umbral de envío gratis se mide sobre el subtotal
++  antes del cupón.
++
++| Status | Causa |
++| --- | --- |
++| 400 | Cupón inválido / pedido no pendiente / cupón ya aplicado |
++| 403 | Pedido ajeno |
++| 404 | Pedido o cupón inexistente |
++| 409 | Pedido gestionado por un empleado |
++
++---
++
++## 4. Carrito — `/api/shopping` (todo bajo `verifyToken`)
++
++| Método | Ruta | Entrada | Respuesta |
++| --- | --- | --- | --- |
++| GET | `/api/shopping` | — | 200: ítems con `product` (nombre, precio, stock, imágenes) |
++| POST | `/api/shopping` | `{ productId, quantity? }` | 200/201: ítem creado o incrementado |
++| PUT | `/api/shopping/:productId` | `{ quantity }` | 200: ítem actualizado; `quantity = 0` lo elimina y responde 200 |
++| DELETE | `/api/shopping/:productId` | — | 200 |
++| DELETE | `/api/shopping/clear` | — | 200, vacía el carrito |
++
++Reglas: solo productos activos (`400` `Este producto ya no está disponible.`),
++cantidad acumulada ≤ `min(999, stock)` (`400` `No hay suficientes unidades…`),
++y bloqueo por `cart:<userId>:<productId>` para evitar dobles clics.
++
++---
++
++## 5. Códigos promocionales — `/api/promotional-codes`
++
++### `POST /api/promotional-codes/validate` — `verifyToken` (cliente incluido)
++
++Dos modos:
++
++1. **Cotización con carrito** (recomendado por el frontend):
++
++```json
++{ "code": "REGRESO10", "items": [{ "productId": "…", "quantity": 2 }] }
++```
++
++Respuesta **200**:
++
++```json
++{
++  "code": "REGRESO10",
++  "type": "percentage",
++  "value": 10,
++  "subtotal": 60000,
++  "discountAmount": 6000,
++  "shippingCost": 10000,
++  "total": 64000
++}
++```
++
++2. **Validación con total explícito**: `{ "code": "…", "total": 60000 }` → **200**
++   con el cupón. Este modo es orientativo: el cobro siempre se recalcula en el
++   checkout.
++
++**Validar NO consume usos.** Solo el checkout (`POST /api/orders` o
++`POST /api/payments/demo/checkout`) los consume.
++
++Errores (**400**, todos con `message` descriptivo): inexistente,
++inactivo, fuera de vigencia, por debajo de la compra mínima (incluye
++`minimumPurchase` y `missingAmount`), sin usos disponibles, descuento mal
++configurado, producto eliminado o sin stock (`Actualiza tu carrito…`).
++
++### `POST /api/promotional-codes/apply` — `verifyToken`
++
++Compatibilidad: valida el código y devuelve `{ "id": "…" }`. **No** consume usos
++ni modifica pedidos. Para aplicar de verdad usa `PATCH /api/orders/:id/apply-code`.
++
++### Resto del módulo — `verifySuperAdmin`
++
++| Método | Ruta | Respuesta |
++| --- | --- | --- |
++| GET | `/` | 200: todos los cupones |
++| POST | `/` | 201: `code, description?, type, value, minPurchase?, startDate, endDate, maxUses?, active?` |
++| PUT | `/:id` | 200: cupón actualizado |
++| PATCH | `/:id/toggle` | 200: alterna `active` |
++| DELETE | `/:id` | 204 |
++
++---
++
++## 6. Pagos (demostración académica) — `/api/payments`
++
++> **Advertencia:** es una **simulación**. No hay cobro real, no se piden números
++> de tarjeta, CVV, claves ni credenciales financieras. Requiere
++> `ENABLE_PAYMENT_SIMULATION=true` y `NODE_ENV` `development` o `test`; en
++> producción responde deshabilitado.
++
++Router bajo `verifyToken` + rate limit de 60 peticiones/minuto (**429**
++`Demasiados intentos de pago. Espera un minuto.`).
++
++### `GET /api/payments/config`
++
++```json
++{
++  "enabled": true,
++  "simulated": true,
++  "currency": "COP",
++  "shipping": {
++    "deliveryFee": 10000,
++    "freeFrom": 120000,
++    "basis": "subtotal_before_discount"
++  }
++}
++```
++
++### `POST /api/payments/demo/checkout`
++
++```json
++{
++  "requestKey": "22222222-2222-4222-8222-222222222222",
++  "method": "tarjeta",
++  "outcome": "approved",
++  "address": "Calle de prueba 123, Bogotá",
++  "phone": "3001234567",
++  "code": "REGRESO10",
++  "items": [{ "productId": "…", "quantity": 2 }]
++}
++```
++
++- `method`: `tarjeta` | `pse` | `nequi`. **Es una etiqueta de la simulación**: no
++  se guarda ningún dato de medio de pago, solo el nombre del método en
++  `Payout.method`.
++- `outcome`: `approved` | `rejected` | `pending`.
++- `items`: 1–100 líneas, sin productos repetidos, cantidades 1–999.
++- `phone`: celular colombiano de 10 dígitos (`^3\d{9}$`).
++- `requestKey`: UUID; es la llave de idempotencia.
++
++Respuesta **200**:
++
++```json
++{
++  "simulated": true,
++  "message": "Demostración académica: no hubo ningún cobro real.",
++  "reference": "DEMO-22222222-2222-4222-8222-222222222222",
++  "status": "approved",
++  "method": "tarjeta",
++  "amount": "12500.25",
++  "shippingCost": "10000.00",
++  "currency": "COP",
++  "orderId": "…",
++  "orderStatus": "paid",
++  "receiptNumber": 100,
++  "expiresAt": null
++}
++```
++
++Efectos: crea `Order` + `OrderDetail` + `Receipt` + `ReceiptItem` + `Payout`,
++descuenta stock, registra movimientos `out`, vacía el carrito de esos productos
++y actualiza `User.phone`/`User.address`. Un cupón consume **un** uso.
++
++Errores: 400 (producto no disponible, stock, cupón, total ≤ 0), 403 (rol),
++404 (pago ajeno), 409 (`La reserva venció o el pedido ya no admite pagos.`,
++`El pedido requiere revisión financiera.`, referencia de otro intento).
++
++### `GET /api/payments/demo/:key` y `POST /api/payments/demo/:key/resolve`
++
++Consulta y resuelve un intento propio (`{ "outcome": "approved" | "rejected" }`).
++Aprobar deja el pedido `paid`; rechazar lo pasa a `canceled`, **devuelve el
++stock**, registra movimientos `in` y restaura el carrito para reintentar. La
++resolución es definitiva: repetirla → **409**.
++
++---
++
++### 6.4 Qué se guarda y qué es simulación (B-02)
++
++| Dato | ¿Se guarda? | Dónde / por qué |
++| --- | --- | --- |
++| Método elegido por el cliente | **Sí** | `Payout.method` = `tarjeta` \| `pse` \| `nequi` |
++| Método del pago en tienda | **Sí** | `Payout.method` = `cash` \| `card` (personal de tienda) |
++| Monto, moneda, estado | **Sí** | `Payout.amount`, `currency`, `status` |
++| Número de tarjeta, CVV, OTP, claves Nequi | **No** | El formulario ni los pide: el checkout lo advierte en pantalla |
++| Datos bancarios PSE | **No** | No hay redirección a un banco real |
++| Token de la pasarela | **Sí, sintético** | `Payout.gatewayToken` = huella del intento, no un token real |
++| Identificador del intento | **Sí** | `Payout.transactionId` (`requestKey`), único e idempotente |
++
++**Simulación:** todo el cobro. `POST /api/payments/demo/checkout` está
++bloqueado fuera de desarrollo (`ENABLE_PAYMENT_SIMULATION` + entorno no
++productivo). El **pago en tienda** (`POST /api/employee/orders/:id/store-payment`)
++no procesa tarjetas: registra un cobro que ya ocurrió físicamente y sincroniza
++el recibo.
++
++## 7. Recibos — `/api/receipts` (todo bajo `verifyToken`)
++
++| Método | Ruta | Roles | Notas |
++| --- | --- | --- | --- |
++| GET | `/api/receipts` | autenticado | Listado con cliente, empleado y pedido |
++| POST | `/api/receipts` | client/admin/superadmin | Cliente solo de pedidos propios |
++| PUT | `/api/receipts/:id` | autenticado | No editable si tiene pagos |
++| DELETE | `/api/receipts/:id` | — | **409**: eliminación deshabilitada |
++
++Reglas del servidor:
++
++- `total` y `customerId` de un recibo ligado a pedido se toman **del pedido**;
++  el valor enviado en la petición se ignora.
++- Un recibo nuevo siempre nace `pending`: enviar `paymentStatus: "paid"` → **400**.
++- `paymentStatus` y `employeeId` **no** se cambian por esta vía → **400**
++  (`El estado financiero solo puede cambiar desde el flujo de pagos.`).
++- Un recibo con pagos registrados → **409** (`No se puede editar un recibo con pagos…`).
++- Un pedido admite **un** recibo; el segundo intento → **409**
++  (`El pedido ya tiene un recibo asociado.`).
++- Cliente sin `orderId` propio → **403** (`Los clientes deben indicar un pedido propio.`).
++
++---
++
++## 8. Inventario — `/api/inventory` (`verifyToken` + `verifyAdmin`)
++
++| Método | Ruta | Entrada |
++| --- | --- | --- |
++| GET | `/api/inventory/movements` | — |
++| GET | `/api/inventory/outbound/reasons` | — |
++| POST | `/api/inventory/inbound` | `{ productId, quantity, reasonDetail? }` |
++| POST | `/api/inventory/outbound` | `{ productId, quantity, reasonDetail }` |
++
++- Cantidades enteras > 0. `reasonDetail` de al menos 3 caracteres.
++- Solo productos activos: un producto eliminado → **404**
++  `Producto no encontrado en el catálogo activo.`
++- Descuento atómico con `WHERE stock >= cantidad AND deleted_at IS NULL`: si no
++  alcanza → **400** con `available` y `requested`.
++- Cada movimiento queda auditado con el usuario que lo hizo.
++
++---
++
++## 9. Contacto — `/api/pqr/contact` (B-01)
++
++**Decisión acordada:** el formulario público de Contacto **no** usa un envío de
++correo suelto; se registra como **PQR de tipo `petition`** del cliente
++autenticado. Así entra al mismo flujo, SLA y bandeja que el resto de PQR, y el
++cliente puede seguir la respuesta en *Mis PQR*.
++
++`POST /api/pqr/contact` — `verifyToken`, rol `client` (rate limit 10/min).
++
++```json
++{
++  "name": "Ana Pérez",
++  "email": "ana@example.com",
++  "topic": "envio",
++  "subject": "Pedido retrasado",
++  "message": "Quisiera saber cuándo llegará mi pedido a Medellín."
++}
++```
++
++| Campo | Regla |
++| --- | --- |
++| `name` | 2–150 |
++| `email` | correo válido, ≤ 255 |
++| `topic` | `pedido` \| `producto` \| `envio` \| `devolucion` \| `otro` |
++| `subject` | 5–160, opcional (si falta se usa la etiqueta del tema) |
++| `message` | 20–5000 |
++
++Respuesta **201**:
++
++```json
++{
++  "id": "…",
++  "status": "received",
++  "createdAt": "2026-11-26T15:00:00.000Z",
++  "message": "Recibimos tu mensaje. Puedes seguir su respuesta en Mis PQR."
++}
++```
++
++Errores: 401 sin sesión; 403 si el rol no es `client`; 409 si es idéntico a un
++PQR reciente; 429 si se envía otro en el mismo minuto (con `Retry-After`).
++
++> **Para el frontend:** si no hay sesión, la página redirige a `/login`. El correo
++> del formulario se guarda en el cuerpo del PQR para trazabilidad, pero la
++> cuenta dueña del PQR es siempre la sesión autenticada.
++
++### Resto de PQR — `/api/pqr`
++
++| Método | Ruta | Roles | Notas |
++| --- | --- | --- | --- |
++| GET | `/` | client (propios) / admin / superadmin (todos) | `createdAt desc` |
++| GET | `/:id` | dueño o staff | 403 si es de otra persona |
++| POST | `/` | `client` | `{ type, subject, description }`; anti-duplicado y 1/min |
++| PATCH | `/:id` | `admin`/`superadmin` | `{ status, response? }`; notifica por correo |
++
++`type`: `petition` | `complaint` | `claim`.
++`status`: `received` | `in_progress` | `answered` | `closed`.
++
++---
++
++## 10. Operaciones de empleado — `/api/employee`
++
++Router bajo `verifyToken`; las rutas de gestión exigen rol de staff
++(`employee`, `admin`, `superadmin`). Es el flujo operativo real (recepción,
++picking, empaque, despacho, retiro en tienda), separado del CRUD administrativo.
++
++| Método | Ruta | Notas |
++| --- | --- | --- |
++| GET | `/my-pickups` | Pedidos de retiro del cliente autenticado |
++| POST | `/orders/:id/pickup-code` | Código de retiro (rate limit 10/min) |
++| GET | `/summary` | Resumen operativo |
++| GET | `/drivers`, `/employees` | Catálogos |
++| GET | `/orders` | Cola operativa |
++| POST | `/orders` | Crea pedido con `requestKey` (idempotente) |
++| GET | `/orders/:id` | Detalle operativo |
++| POST | `/orders/:id/claim` | Toma el pedido |
++| PATCH | `/orders/:id/picking` | `{ items: [{ detailId, pickedQuantity }] }` |
++| POST | `/orders/:id/pack`, `/incident`, `/resolve`, `/reassign` | Empaque e incidencias |
++| POST | `/orders/:id/dispatch` | Despacho a domicilio |
++| POST | `/orders/:id/pickup` | Entrega en tienda |
++| POST | `/orders/:id/cancel` | Cancela y libera stock |
++| POST | `/orders/:id/simulate-payment` | Pago simulado de demostración |
++| POST | `/inventory` | Movimiento de inventario operativo |
++
++**Regla de dirección (A-02 aplicada al flujo operativo):** en `POST /orders`,
++`fulfillmentMethod: "delivery"` exige `address` (8–500 caracteres) y
++`fulfillmentMethod: "pickup"` **no** la exige. La misma regla vive en
++`newEmployeeOrder` y se prueba en `despatch.address.test.ts`.
++
++Mientras un pedido tenga `OrderWork`, el CRUD de `/api/orders` no puede
++modificarlo ni eliminarlo (**409**).
++
++---
++
++## 11. Reportes — `/api/reports`
++
++### `GET /api/reports/admin-dashboard` — `verifyToken` + `verifyAdmin`
++
++Totales para el panel administrativo.
++
++### `GET /api/reports` y `GET /api/reports/summary` — `verifySuperAdmin`
++
++Filtros opcionales `from` y `to` (`YYYY-MM-DD`; `from > to` → **400**).
++
++Respuesta **200** (una fila por día):
++
++```json
++{
++  "id": "report-2026-11-26",
++  "date": "2026-11-26",
++  "totalOrders": 3,
++  "deliveredOrders": 1,
++  "canceledOrders": 0,
++  "totalSold": 45200,
++  "totalPaid": 45200,
++  "totalRefunded": 0,
++  "productsSold": 7,
++  "newCustomers": 1
++}
++```
++
++**¿Una venta nueva actualiza los reportes?** Sí, sin pasos manuales. El cálculo
++lee `orders` (con `deletedAt: null`) y `receipts`/`payouts`/`returns` en el
++momento de la consulta. Un pedido `pending` ya suma en `totalOrders`,
++`totalSold` y `productsSold`; `canceled` solo cuenta en `canceledOrders`; el
++dinero efectivamente pagado se toma de `Payout` aprobados y de `Receipt` en
++`paid`, evitando el doble conteo. Verificado con
++`be/src/modules/reports/reports.sales.test.ts`.
++
++---
++
++## 12. Módulos agregados en `main` (posteriores al contrato inicial)
++
++Estos módulos llegaron con la integración de `main` y **no** estaban en la
++primera versión del contrato. Todos usan `verifyToken` salvo que se indique.
++
++### 12.1 Lista de deseos — `/api/lista-deseos`
++
++| Método | Ruta | Rol | Entrada | Éxito | Errores |
++| --- | --- | --- | --- | --- | --- |
++| `GET` | `/` | cualquiera autenticado | — | `200` array de productos | `401` |
++| `POST` | `/` | cualquiera autenticado | `{ productId: uuid }` (`.strict()`) | `201` | `400` producto inexistente o ya guardado, `401` |
++| `DELETE` | `/:productId` | cualquiera autenticado | — | `204` | `401`, `404` |
++
++**Efecto:** favoritos privados por usuario. No toca stock, pedidos ni cupones.
++
++### 12.2 Soporte (hilos) — `/api/support`
++
++| Método | Ruta | Rol | Entrada | Éxito | Errores |
++| --- | --- | --- | --- | --- | --- |
++| `GET` | `/threads` | autenticado | — | `200` hilos propios (staff: los asignados) | `401` |
++| `GET` | `/threads/:id` | autenticado + dueño | — | `200` hilo con mensajes | `403`, `404` |
++| `POST` | `/threads` | autenticado | `{ subject, body }` | `201` | `400`, `429` (límite de escritura) |
++| `POST` | `/threads/:id/messages` | autenticado + dueño | `{ body }` | `201` | `400`, `403`, `429` |
++
++**Efecto:** solo mensajería. No modifica pedidos.
++
++### 12.3 Operaciones de supervisión — `/api/supervision` (`verifyAdmin`)
++
++| Método | Ruta | Entrada | Éxito | Efecto |
++| --- | --- | --- | --- | --- |
++| `GET` | `/employees` | — | `200` | lista de empleados |
++| `GET` | `/orders?page=&scope=supervision` | — | `200` | pedidos en supervisión |
++| `POST` | `/orders/:id/resolve` | `{ note }` | `200` | resuelve la incidencia |
++| `POST` | `/orders/:id/reassign` | `{ note, assigneeId }` | `200` | reasigna el pedido |
++| `POST` | `/orders/:id/cancel` | `{ note }` | `200` | cancela y **libera el stock** |
++| `POST` | `/orders/:id/simulate-payment` | `{ requestKey, result }` | `200` | simula el pago |
++| `GET` | `/movements` \| `/activity` | `?page=` | `200` | auditoría paginada |
++
++**Errores:** `400` consulta inválida, `403` sin rol, `404` pedido inexistente,
++`409` estado incompatible.
++
++### 12.4 Repartidor — `/api/delivery` (rol `delivery` obligatorio)
++
++| Método | Ruta | Entrada | Éxito | Efecto |
++| --- | --- | --- | --- | --- |
++| `GET` | `/pending-orders` | — | `200` | pedidos sin asignar |
++| `POST` | `/pending-orders/:id/claim` | cuerpo vacío | `200` | el repartidor se autoasigna |
++| `GET` | `/despatches` | — | `200` | envíos en tránsito propios |
++| `POST` | `/despatches/:id/confirm` | cuerpo vacío | `200` | confirma la entrega |
++
++**Errores:** `403` si el rol no es `delivery` o el despacho es de otro
++repartidor, `404`, `409` si ya fue confirmado. **Nota:** las rutas con
++"cuerpo vacío" rechazan cualquier campo enviado.
++
++### 12.5 Recogida por el cliente — `/api/client`
++
++| Método | Ruta | Rol | Éxito | Efecto |
++| --- | --- | --- | --- | --- |
++| `GET` | `/my-pickups` | autenticado | `200` pedidos listos para recoger | — |
++| `POST` | `/orders/:id/pickup-code` | dueño del pedido | `200` `{ code }` | emite el código de recogida |
++
++**Errores:** `403` pedido ajeno, `404`, `409` pedido no listo, `429` (10/min).
++El código tiene 16 caracteres hexadecimales y se valida en
++`POST /api/employee/orders/:id/pickup` junto con el nombre de quien recoge.
++
++### 12.6 Operaciones nuevas de empleado — `/api/employee`
++
++Requieren rol `employee` o `supervisor` (`assertStaff`).
++
++| Método | Ruta | Entrada | Efecto |
++| --- | --- | --- | --- |
++| `GET` | `/summary` | — | resumen del turno |
++| `GET` | `/customers?q=` \| `/products?q=` | — | búsqueda para crear pedidos |
++| `GET` | `/orders?page=&scope=` | — | lista paginada |
++| `POST` | `/orders` | `{ requestKey, customerId, fulfillmentMethod, address?, details[1..100] }` | crea pedido + recibo y **reserva stock** |
++| `GET` | `/orders/:id` | — | detalle |
++| `POST` | `/orders/:id/claim` | cuerpo vacío | toma el pedido |
++| `PATCH` | `/orders/:id/picking` | `{ items: [{ detailId, pickedQuantity }] }` | confirma el empaque **por producto** |
++| `POST` | `/orders/:id/pack` | — | cierra el empaque |
++| `POST` | `/orders/:id/incident` | `{ note }` | reporta incidencia |
++| `POST` | `/orders/:id/pickup` | `{ code, recipientName }` | entrega en tienda |
++| `POST` | `/orders/:id/store-payment` | `{ requestKey, method, … }` | registra **pago en tienda** |
++| `POST` | `/inventory` | `{ requestKey, productId, type, quantity, reason }` | movimiento de inventario |
++
++**Validaciones del alta de pedido** (`POST /orders`):
++`fulfillmentMethod` en `delivery|pickup`; `address` obligatoria (8–500) **solo**
++en domicilio; `details` con 1..100 líneas y `quantity` entera 1..100000; el
++cuerpo es `.strict()`. El stock se bloquea con `FOR UPDATE` y se descuenta con
++`deletedAt: null`, así que **no se venden productos eliminados**.
++
++**Efectos sobre stock:** descuento al crear (`type: 'out'`), devolución al
++cancelar o rechazar el pago, y ajuste manual vía `POST /inventory`.
++
++---
++
++## 13. Otros módulos (referencia rápida)
++
++
++| Módulo | Base | Autenticación | Notas |
++| --- | --- | --- | --- |
++| Productos | `/api/products` | GET público; escritura `verifyAdmin` | `DELETE` = borrado lógico; los eliminados no salen en catálogo ni se pueden comprar |
++| Categorías | `/api/categories` | GET público; escritura `verifyAdmin` | — |
++| Combos | `/api/combos` | `verifyToken` + `verifyAdmin` | — |
++| Proveedores | `/api/providers` | `verifyToken` + `verifyAdmin` | — |
++| Despachos | `/api/despatches` | `verifyToken` + `verifyAdmin` | `address` opcional, ≤ 500 caracteres |
++| Detalle de pedido | `/api/order-details` | `verifyToken` + `verifyAdmin` | CRUD administrativo |
++| Payouts | `/api/payouts` | `verifyToken` + `verifySuperAdmin` | `PATCH /:id/status` |
++| Devoluciones | `/api/returns` | `verifyToken` | Crear: `client` (propias) o `superadmin`; resolver: `superadmin` |
++| Usuarios | `/api/users` | `verifyToken` (+`verifyAdmin` / `verifySuperAdmin`) | — |
++
++---
++
++## 14. Pendientes y límites conocidos
++
++1. **Contacto** ya tiene endpoint real (`POST /api/pqr/contact`) y crea un PQR.
++   No envía un correo independiente: la notificación ocurre cuando el staff
++   responde el PQR.
++2. **Métodos de pago**: se guarda solo el identificador del método
++   (`tarjeta`/`pse`/`nequi`) en `Payout.method`. **No** se guardan números de
++   tarjeta, CVV, OTP ni credenciales bancarias: toda la pasarela es simulación
++   académica deshabilitada en producción.
++3. **Paginación**: los listados no paginan. Con volúmenes grandes de pedidos o
++   movimientos habrá que añadir `page`/`limit` (cambio compatible si se mantiene
++   el array como respuesta por defecto).
++4. **Cupones en la edición de pedidos**: `PUT /api/orders/:id` valida el cupón
++   (vigencia, estado, compra mínima, usos) y **consume** un uso, igual que el
++   checkout. Antes se guardaba cualquier `promotionalCodeId` sin validar.
++5. **Vigencia de cupones**: se compara por **día calendario de Colombia**
++   (`America/Bogota`), no por UTC. Un cupón que vence hoy sigue siendo válido
++   hasta la medianoche local.
++6. **OpenAPI**: este Markdown es la fuente de verdad. Si se requiere
++   `openapi.yaml` para generadores de clientes, se puede derivar de aquí.
+diff --git a/fe/src/pages/Admin/Orders/Orders.tsx b/fe/src/pages/Admin/Orders/Orders.tsx
+index b0d0609..7c285da 100644
+--- a/fe/src/pages/Admin/Orders/Orders.tsx
++++ b/fe/src/pages/Admin/Orders/Orders.tsx
+@@ -18,11 +18,22 @@ const statusTone: Record<string, string> = {
+ 
+ const emptyForm = {
+   customerId: '',
++  productId: '',
++  quantity: '1',
++  deliveryAddress: '',
++  fulfillmentMethod: 'delivery',
+   total: '',
+   status: 'pending',
+   promotionalCodeId: '',
+ };
+ 
++interface ProductOption {
++  id: string;
++  name: string;
++  price: number | null;
++  stock: number | null;
++}
++
+ interface Customer {
+   id: string;
+   fullName: string;
+@@ -53,6 +64,7 @@ export default function Orders() {
+   const [loading, setLoading] = useState(true);
+   const [discountCode, setDiscountCode] = useState('');
+   const [discountApplied, setDiscountApplied] = useState<string | null>(null);
++  const [products, setProducts] = useState<ProductOption[]>([]);
+ 
+   const loadOrders = () => {
+     fetch(API.orders, { headers: authHeaders() })
+@@ -93,9 +105,21 @@ export default function Orders() {
+     }
+   };
+ 
++  const loadProducts = async () => {
++    try {
++      const response = await fetch(API.products, { headers: authHeaders() });
++      const data = await response.json().catch(() => null);
++      if (!response.ok) throw new Error();
++      setProducts(Array.isArray(data) ? data : []);
++    } catch {
++      notify.error('No se pudieron cargar los productos para el pedido.');
++    }
++  };
++
+   useEffect(() => {
+     loadOrders();
+     loadCustomers();
++    loadProducts();
+   }, []);
+ 
+   const showMessage = (text: string) => {
+@@ -121,19 +145,51 @@ export default function Orders() {
+   };
+ 
+   const handleSave = async () => {
+-    if (!form.customerId || !form.total) {
+-      showMessage('Por favor completa todos los campos.');
++    // A-01/A-02: el backend exige al menos un producto y dirección si es domicilio.
++    if (!form.customerId) {
++      showMessage('Selecciona un cliente.');
+       return;
+     }
+ 
+-    const body = {
+-      customerId: form.customerId,
+-      total: Number(form.total),
+-      status: form.status,
+-      ...(form.promotionalCodeId
+-        ? { promotionalCodeId: form.promotionalCodeId }
+-        : {}),
+-    };
++    if (editingId === null) {
++      if (!form.productId) {
++        showMessage('Selecciona al menos un producto.');
++        return;
++      }
++
++      const quantity = Number(form.quantity);
++
++      if (!Number.isInteger(quantity) || quantity < 1) {
++        showMessage('La cantidad debe ser un número entero mayor que cero.');
++        return;
++      }
++
++      if (form.fulfillmentMethod === 'delivery' && !form.deliveryAddress.trim()) {
++        showMessage('Indica la dirección de entrega para el domicilio.');
++        return;
++      }
++    }
++
++    const body = editingId === null
++      ? {
++          customerId: form.customerId,
++          fulfillmentMethod: form.fulfillmentMethod,
++          ...(form.fulfillmentMethod === 'delivery'
++            ? { deliveryAddress: form.deliveryAddress.trim() }
++            : {}),
++          details: [
++            { productId: form.productId, quantity: Number(form.quantity) },
++          ],
++          ...(form.promotionalCodeId
++            ? { promotionalCodeId: form.promotionalCodeId }
++            : {}),
++        }
++      : {
++          status: form.status,
++          ...(form.promotionalCodeId
++            ? { promotionalCodeId: form.promotionalCodeId }
++            : {}),
++        };
+ 
+     const editing = editingId !== null;
+ 
+@@ -160,10 +216,10 @@ export default function Orders() {
+ 
+   const handleEdit = (order: Order) => {
+     setForm({
++      ...emptyForm,
+       customerId: String(order.customerId ?? ''),
+       total: String(order.total ?? ''),
+       status: order.status ?? 'pending',
+-      promotionalCodeId: '',
+     });
+ 
+     setEditingId(order.id);
+@@ -455,22 +511,83 @@ export default function Orders() {
+             </p>
+           )}
+ 
+-          <label className="label-pedido">
+-            Total
+-          </label>
++          {editingId === null && (
++            <>
++              <label className="label-pedido">
++                Modalidad
++              </label>
+ 
+-          <input
+-            className="input-pedido"
+-            type="number"
+-            name="total"
+-            value={form.total}
+-            onChange={handleChange}
+-            placeholder="85000"
+-          />
++              <select
++                className="input-pedido"
++                name="fulfillmentMethod"
++                value={form.fulfillmentMethod}
++                onChange={handleChange}
++              >
++                <option value="delivery">Domicilio</option>
++                <option value="pickup">Retiro en tienda</option>
++              </select>
++
++              {form.fulfillmentMethod === 'delivery' && (
++                <>
++                  <label className="label-pedido">
++                    Dirección de entrega
++                  </label>
++
++                  <input
++                    className="input-pedido"
++                    type="text"
++                    name="deliveryAddress"
++                    value={form.deliveryAddress}
++                    onChange={handleChange}
++                    placeholder="Calle 45 #12-30, Bogotá"
++                    maxLength={500}
++                  />
++                </>
++              )}
+ 
+-          <label className="label-pedido">
+-            Estado
+-          </label>
++              <label className="label-pedido">
++                Producto
++              </label>
++
++              <select
++                className="input-pedido"
++                name="productId"
++                value={form.productId}
++                onChange={handleChange}
++              >
++                <option value="">Selecciona un producto</option>
++                {products.map((product) => (
++                  <option key={product.id} value={product.id}>
++                    {product.name} — ${Number(product.price ?? 0).toLocaleString()} (stock {product.stock ?? 0})
++                  </option>
++                ))}
++              </select>
++
++              <label className="label-pedido">
++                Cantidad
++              </label>
++
++              <input
++                className="input-pedido"
++                type="number"
++                min={1}
++                name="quantity"
++                value={form.quantity}
++                onChange={handleChange}
++              />
++
++              <p className="mensaje-pedidos">
++                El total y el envío los calcula el servidor con el precio del
++                catálogo; no se envían desde el navegador.
++              </p>
++            </>
++          )}
++
++          {editingId !== null && (
++            <>
++              <label className="label-pedido">
++                Estado
++              </label>
+ 
+           <select
+             className="input-pedido"
+@@ -491,6 +608,8 @@ export default function Orders() {
+               Cancelado
+             </option>
+           </select>
++            </>
++          )}
+ 
+           {editingId !== null && (
+             <div style={{ marginTop: 16 }}>
+diff --git a/fe/src/pages/Contact/Contact.css b/fe/src/pages/Contact/Contact.css
+index b610520..f5073e0 100644
+--- a/fe/src/pages/Contact/Contact.css
++++ b/fe/src/pages/Contact/Contact.css
+@@ -235,3 +235,19 @@
+     padding: 22px 18px;
+   }
+ }
++
++/* B-01: aviso de sesión requerida para registrar el mensaje de contacto. */
++.contacto-nota {
++  margin: 0;
++  padding: 10px 14px;
++  border: 1px solid color-mix(in srgb, var(--info, #2563eb) 25%, transparent);
++  border-radius: 10px;
++  background: color-mix(in srgb, var(--info, #2563eb) 8%, transparent);
++  color: var(--text-muted, #475569);
++  font-size: 0.9rem;
++}
++
++.contacto-nota a {
++  color: var(--info, #2563eb);
++  font-weight: 600;
++}
+diff --git a/fe/src/pages/Contact/Contact.tsx b/fe/src/pages/Contact/Contact.tsx
+index 52e23a4..c3591da 100644
+--- a/fe/src/pages/Contact/Contact.tsx
++++ b/fe/src/pages/Contact/Contact.tsx
+@@ -1,5 +1,8 @@
+ import AccountNav from '../../components/layout/AccountNav';
+ import { useState, type FormEvent } from 'react';
++import { Link, useNavigate } from 'react-router-dom';
++import { API, authHeaders } from '../../api/api';
++import { useAuth } from '../../hooks/useAuth';
+ import { AlertCircle, Clock, MailCheck, MapPin, Phone } from 'lucide-react';
+ import './Contact.css';
+ 
+@@ -7,23 +10,68 @@ export default function Contact() {
+   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' });
+   const [sent, setSent] = useState(false);
+   const [error, setError] = useState('');
++  const [sending, setSending] = useState(false);
++  const { user } = useAuth();
++  const navigate = useNavigate();
+ 
+   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+     setForm({ ...form, [e.target.name]: e.target.value });
+     setError('');
+   };
+ 
+-  const handleSubmit = (event?: FormEvent) => {
++  // B-01: el mensaje se guarda como PQR del cliente en el servidor.
++  const handleSubmit = async (event?: FormEvent) => {
+     event?.preventDefault();
++    if (sending) return;
++
+     if (!form.name || !form.email || !form.message) {
+       setError('Por favor completa los campos obligatorios.');
+       return;
+     }
++
+     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+       setError('Ingresa un correo electrónico válido.');
+       return;
+     }
+-    setSent(true);
++
++    if (!user) {
++      navigate('/login', { state: { from: '/Contacto' } });
++      return;
++    }
++
++    if (form.message.trim().length < 20) {
++      setError('Cuéntanos un poco más: al menos 20 caracteres.');
++      return;
++    }
++
++    setError('');
++    setSending(true);
++
++    try {
++      const response = await fetch(`${API.pqr}/contact`, {
++        method: 'POST',
++        headers: authHeaders(),
++        body: JSON.stringify({
++          name: form.name.trim(),
++          email: form.email.trim(),
++          topic: form.subject || 'otro',
++          message: form.message.trim(),
++        }),
++      });
++
++      const data = await response.json().catch(() => null);
++
++      if (!response.ok) {
++        setError(data?.message || 'No pudimos enviar tu mensaje. Intenta de nuevo.');
++        return;
++      }
++
++      setSent(true);
++    } catch {
++      setError('No pudimos enviar tu mensaje. Revisa tu conexión e intenta de nuevo.');
++    } finally {
++      setSending(false);
++    }
+   };
+ 
+   const contactInfo = [
+@@ -114,8 +162,15 @@ export default function Contact() {
+               </p>
+             )}
+ 
+-            <button type="submit" className="contacto-btn-primary">
+-              Enviar mensaje
++            {!user && (
++              <p className="contacto-nota">
++                Para registrar tu mensaje y poder responderte necesitas{' '}
++                <Link to="/login">iniciar sesión</Link>.
++              </p>
++            )}
++
++            <button type="submit" className="contacto-btn-primary" disabled={sending}>
++              {sending ? 'Enviando…' : 'Enviar mensaje'}
+             </button>
+           </form>
+         </div>
