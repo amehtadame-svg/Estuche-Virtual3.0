@@ -275,6 +275,11 @@ test(
     });
     const editableOrder = await editable.json();
 
+    // La edición general (PUT) está reservada a pedidos sin flujo operativo:
+    // `assertUnmanaged` rechaza con 409 todo pedido con `createdById`. Para
+    // ejercitar la validación del cupón se simula un pedido heredado.
+    await db.order.update({ where: { id: editableOrder.id }, data: { createdById: null } });
+
     const viaPut = await fetch(`${base}/api/orders/${editableOrder.id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${adminToken}` },
