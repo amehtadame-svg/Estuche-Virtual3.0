@@ -135,3 +135,63 @@ Pruebas de regresión nuevas:
 | Los fallos ya no se reproducen | ✅ cada uno tiene prueba que lo intenta reproducir y falla si vuelve |
 | Las pruebas pasan | ✅ 148 backend + 35 frontend + integración |
 | Paula puede consumir las operaciones | ✅ contrato en `docs/api/contrato-api.md` con ruta, roles, entradas, respuestas, errores y efectos |
+
+---
+
+## 8. Auditoría posterior a la integración de `main` (29 commits)
+
+Después de actualizar la rama con `main` (favoritos, soporte, supervisión,
+reparto, pagos en tienda, empaque por producto, día calendario de Colombia) se
+volvió a auditar el listado **completo** contra el código, buscando rutas nuevas
+que se saltaran las validaciones.
+
+### 8.1 Lo que ya se cumplía y se mantiene
+
+| Punto | Verificación |
+| --- | --- |
+| A-01 pedidos vacíos | `details.min(1)` en `orders.schema.ts`, guarda en `orders.service.ts:202` y en `employee.service.ts:312` |
+| A-02 cantidades | entero 1..999 sin repetidos (cliente) y 1..100000 (empleado) |
+| A-03 sin registros si falla | validación antes de la transacción; el `PUT` valida antes de escribir |
+| A-04 dirección | domicilio: cuerpo → `deliveryAddressId` → perfil; retiro sin dirección y envío $0 |
+| A-05 producto eliminado | `deletedAt: null` en la lectura **y** en el `updateMany` de stock, en los 3 flujos que crean pedidos (`orders`, `employee`, `payments`) |
+| A-06 cupón validado y único | `consumeCoupon` en `orders` (crear y aplicar), `payments` y ahora `orders.update` |
+| A-07 concurrencia | `pg_advisory_xact_lock` + `updateMany WHERE currentUses < maxUses` |
+| Recibos | 9/9 en verde, `receipt.service.ts` sin cambios; ninguna prueba borrada |
+| B-01 contacto | `POST /api/pqr/contact` sigue registrado en `pqr.routes.ts` |
+| C contrato | existía, pero **no cubría** los módulos nuevos |
+
+### 8.2 Fallos nuevos encontrados y corregidos
+
+1. **El cupón se guardaba sin validar al editar un pedido.**
+   `PUT /api/orders/:id` aceptaba cualquier `promotionalCodeId` y no recalculaba
+   el total. Ahora valida con `consumeCoupon` (vigencia, estado, compra mínima,
+   usos), consume **un** uso, rechaza repetir el mismo cupón y recalcula el total
+   conservando el envío.
+
+2. **Cupones rechazados 5 horas antes de vencer.**
+   `assertCoupon` comparaba con `toISOString()` (UTC). A las 20:00 de Bogotá ya
+   es el día siguiente en UTC, así que un cupón que vencía hoy se reportaba como
+   "expirado". Ahora usa `toDateKey` (`America/Bogota`), el mismo criterio que
+   los reportes.
+
+3. **Contrato desactualizado.**
+   Faltaban los módulos que llegaron con `main`. Se añadió la sección 12
+   (lista de deseos, soporte, supervisión, reparto, recogida por el cliente y
+   operaciones nuevas de empleado) y la 6.4 (qué se guarda del pago).
+
+### 8.3 Pruebas nuevas de esta ronda
+
+| Archivo | Pruebas |
+| --- | --- |
+| `be/src/modules/promotional-code/promotional-code.test.ts` | 3 (vence hoy / venció ayer / empieza mañana, en hora de Bogotá) |
+| `be/src/modules/orders/orders.test.ts` | 3 (cupón inválido por edición, cupón válido recalcula total, no repetir cupón) |
+| `be/tests/orders-regression.integration.ts` | 1 bloque real (cupón inactivo no entra por `PUT`) |
+
+### 8.4 Resultado
+
+| Suite | Resultado |
+| --- | --- |
+| Backend | **166/166** |
+| Frontend | **48/48**, lint 0 errores, build ✅ |
+| Integración PostgreSQL | ✅ |
+| CI PR #95 | Backend ✅ · Frontend ✅ · Integración ✅ · GitGuardian ✅ |
