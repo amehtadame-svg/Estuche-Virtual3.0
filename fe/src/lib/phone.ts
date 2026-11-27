@@ -7,4 +7,3 @@ export function splitPhone(value: string) {
 export function validPhone(value: string) {
   return value === '' || /^\+\d{1,3} \d{10}$/.test(value) || /^\d{10}$/.test(value);
 }
-

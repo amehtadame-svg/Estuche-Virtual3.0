@@ -1,9 +1,10 @@
+import FavoriteButton from '../../components/wishlist/FavoriteButton';
+import { useCanShop } from '../../hooks/useCanShop';
 import { productImage } from "../../lib/productImage";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
   Check,
-  Heart,
   Search,
   ShoppingBag,
   Star,
@@ -65,6 +66,7 @@ const money = (value: number) => `$ ${Number(value).toLocaleString("es-CO")}`;
 const catLabel = (name: string) => DISPLAY_CAT[name] ?? name;
 
 export default function Catalog() {
+  const canShop = useCanShop();
   const { add } = useCart();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -75,7 +77,6 @@ export default function Catalog() {
   const [sort, setSort] = useState("relevant");
   const [maxPrice, setMaxPrice] = useState(0);
   const [onlyOffers, setOnlyOffers] = useState(false);
-  const [loved, setLoved] = useState<string[]>([]);
   const [toast, setToast] = useState<{ id: string; name: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -329,7 +330,6 @@ export default function Catalog() {
                 const oldPrice = discount
                   ? Math.round(Number(item.price) / (1 - discount))
                   : null;
-                const isLoved = loved.includes(item.id);
                 const reviews = Math.max(24, item.stock * 4);
                 const cat = item.category?.name ?? "Otros";
 
@@ -356,23 +356,8 @@ export default function Catalog() {
                           ¡Quedan {item.stock}!
                         </span>
                       )}
-                      <button
-                        type="button"
-                        className={`catalog-heart ${isLoved ? "on" : ""}`}
-                        aria-label="Guardar"
-                        onClick={() =>
-                          setLoved((prev) =>
-                            prev.includes(item.id)
-                              ? prev.filter((id) => id !== item.id)
-                              : [...prev, item.id],
-                          )
-                        }
-                      >
-                        <Heart
-                          size={15}
-                          fill={isLoved ? "#c026f5" : "none"}
-                        />
-                      </button>
+                      <FavoriteButton productId={item.id} productName={item.name} className="catalog-heart" />
+                      {canShop && (
                       <button
                         type="button"
                         className="catalog-add"
@@ -381,6 +366,7 @@ export default function Catalog() {
                       >
                         <ShoppingBag size={15} /> Agregar al carrito
                       </button>
+                      )}
                     </div>
                     <div className="catalog-content">
                       <p>
@@ -413,7 +399,7 @@ export default function Catalog() {
         </section>
       </div>
 
-      {toast && (
+      {canShop && toast && (
         <div className="catalog-toast" role="status">
           <span>
             <Check size={16} />

@@ -1,6 +1,5 @@
 import { shippingCost } from '../../lib/shipping';
 import { Prisma } from '@prisma/client';
-import { randomBytes } from 'node:crypto';
 import { prisma } from '../../lib/prisma';
 import {
   badRequest,
@@ -342,6 +341,7 @@ export const employeeService = {
               employeeId: actor.id,
               total,
               paymentStatus: 'pending',
+              receiptItems: { create: details.map(({ productId, quantity, unitPrice, subtotal }) => ({ productId, quantity, unitPrice, subtotal })) },
             },
           },
         },
@@ -743,7 +743,7 @@ export const employeeService = {
           item.pickedQuantity > detail.quantity
         ) {
           throw badRequest(
-            'Cantidad recogida inválida.'
+            'Cantidad de productos inválida.'
           );
         }
 
@@ -765,7 +765,7 @@ export const employeeService = {
       );
 
       return {
-        message: 'Recogida guardada.',
+        message: 'Confirmación de producto guardada.',
       };
     });
   },
@@ -795,7 +795,7 @@ export const employeeService = {
         )
       ) {
         throw conflict(
-          'Completa la recogida y resuelve las incidencias antes de empacar.'
+          'Confirma todos los productos y resuelve las incidencias antes de empacar.'
         );
       }
 
@@ -866,327 +866,6 @@ export const employeeService = {
       return {
         message:
           'Incidencia registrada. Administración debe resolverla; no se descontó más inventario.',
-      };
-    });
-  },
-
-  async resolve(
-    id: string,
-    note: string,
-    actor: Actor
-  ) {
-    assertSupervisor(actor);
-
-    return atomic(async (tx) => {
-      const order = await lockOrder(tx, id);
-
-      assertOperational(order);
-
-      if (order.work?.status !== 'blocked') {
-        throw conflict(
-          'No hay incidencia bloqueante.'
-        );
-      }
-
-      await tx.orderWork.update({
-        where: {
-          orderId: id,
-        },
-        data: {
-          status: 'picking',
-          incident: null,
-        },
-      });
-
-      await event(
-        tx,
-        id,
-        actor.id,
-        'incident_resolved',
-        note
-      );
-
-      return {
-        message:
-          'Incidencia resuelta; revisa la recogida antes de empacar.',
-      };
-    });
-  },
-
-  async reassign(
-    id: string,
-    assigneeId: string,
-    note: string,
-    actor: Actor
-  ) {
-    assertSupervisor(actor);
-
-    return atomic(async (tx) => {
-      const order = await lockOrder(tx, id);
-
-      assertOperational(order);
-
-      if (
-        !order.work ||
-        !['picking', 'packed', 'blocked'].includes(
-          order.work.status
-        )
-      ) {
-        throw conflict(
-          'No es posible reasignar este pedido.'
-        );
-      }
-
-      const employee = await tx.user.findFirst({
-        where: {
-          id: assigneeId,
-          role: 'employee',
-          isActive: true,
-          deletedAt: null,
-        },
-      });
-
-      if (!employee) {
-        throw badRequest(
-          'Selecciona un empleado activo.'
-        );
-      }
-
-      await tx.orderWork.update({
-        where: {
-          orderId: id,
-        },
-        data: {
-          assigneeId,
-          pickupCodeHash: null,
-        },
-      });
-
-      await event(
-        tx,
-        id,
-        actor.id,
-        'reassigned',
-        `${order.work.assigneeId} -> ${assigneeId}: ${note}`.slice(
-          0,
-          500
-        )
-      );
-
-      return {
-        message: 'Responsable actualizado.',
-      };
-    });
-  },
-
-  async dispatch(
-    id: string,
-    driverId: string,
-    actor: Actor
-  ) {
-    return atomic(async (tx) => {
-      const order = await lockOrder(tx, id);
-
-      assertOwner(order, actor);
-
-      if (
-        order.work!.status === 'dispatched' &&
-        order.status === 'shipped'
-      ) {
-        if (order.driverId !== driverId) {
-          throw conflict(
-            'El pedido ya fue despachado con otro repartidor.'
-          );
-        }
-
-        return {
-          message: 'Despacho ya registrado.',
-        };
-      }
-
-      assertOperational(order);
-
-      if (
-        order.fulfillmentMethod !== 'delivery' ||
-        order.work!.status !== 'packed'
-      ) {
-        throw conflict(
-          'El pedido debe ser de domicilio y estar empacado.'
-        );
-      }
-
-      const address =
-        order.deliverySnapshot ||
-        (
-          await tx.deliveryAddress.findUnique({
-            where: {
-              id:
-                order.deliveryAddressId ??
-                '00000000-0000-4000-8000-000000000000',
-            },
-          })
-        )?.address;
-
-      if (!address) {
-        throw conflict(
-          'El pedido no tiene dirección de entrega.'
-        );
-      }
-
-      const driver = await tx.user.findFirst({
-        where: {
-          id: driverId,
-          role: 'delivery',
-          isActive: true,
-          deletedAt: null,
-        },
-      });
-
-      if (!driver) {
-        throw badRequest(
-          'Selecciona un repartidor activo.'
-        );
-      }
-
-      if (
-        await tx.despatch.count({
-          where: {
-            orderId: id,
-          },
-        })
-      ) {
-        throw conflict(
-          'El pedido ya tiene un envío; requiere revisión administrativa.'
-        );
-      }
-
-      await tx.despatch.create({
-        data: {
-          orderId: id,
-          driverId,
-          address,
-          status: 'in_transit',
-        },
-      });
-
-      await tx.orderWork.update({
-        where: {
-          orderId: id,
-        },
-        data: {
-          status: 'dispatched',
-          completedAt: new Date(),
-        },
-      });
-
-      await tx.order.update({
-        where: {
-          id,
-        },
-        data: {
-          status: 'shipped',
-          driverId,
-        },
-      });
-
-      await event(
-        tx,
-        id,
-        actor.id,
-        'dispatched',
-        `Repartidor: ${driver.fullName}`
-      );
-
-      return {
-        message:
-          'Entrega al repartidor registrada; no equivale a entrega al cliente.',
-      };
-    });
-  },
-
-  async customerPickups(actor: Actor) {
-    if (actor.role !== 'client') {
-      throw forbidden();
-    }
-
-    const orders = await prisma.order.findMany({
-      where: {
-        customerId: actor.id,
-        deletedAt: null,
-        fulfillmentMethod: 'pickup',
-      },
-      select: {
-        id: true,
-        total: true,
-        status: true,
-        orderDate: true,
-        work: {
-          select: {
-            status: true,
-          },
-        },
-      },
-      orderBy: {
-        orderDate: 'desc',
-      },
-      take: 50,
-    });
-
-    return orders;
-  },
-
-  async issuePickupCode(
-    id: string,
-    actor: Actor
-  ) {
-    if (actor.role !== 'client') {
-      throw forbidden(
-        'Solo el cliente comprador obtiene el código.'
-      );
-    }
-
-    return atomic(async (tx) => {
-      const order = await lockOrder(tx, id);
-
-      if (order.customerId !== actor.id) {
-        throw forbidden();
-      }
-
-      assertOperational(order);
-
-      if (
-        order.fulfillmentMethod !== 'pickup' ||
-        order.work?.status !== 'packed'
-      ) {
-        throw conflict(
-          'El retiro todavía no está listo.'
-        );
-      }
-
-      const code = randomBytes(8)
-        .toString('hex')
-        .toUpperCase();
-
-      await tx.orderWork.update({
-        where: {
-          orderId: id,
-        },
-        data: {
-          pickupCodeHash: fingerprint(code),
-        },
-      });
-
-      await event(
-        tx,
-        id,
-        actor.id,
-        'pickup_code_issued'
-      );
-
-      return {
-        code,
-        message:
-          'Muestra este código al retirar. Generar otro invalida el anterior.',
       };
     });
   },
@@ -1386,12 +1065,13 @@ export const employeeService = {
 
   async movements(
     actor: Actor,
-    page: number
+    page: number, team = false
   ) {
     assertStaff(actor);
+    if (team) assertSupervisor(actor);
 
     return prisma.inventoryMovement.findMany({
-      where: isSupervisor(actor)
+      where: team
         ? {}
         : {
             userId: actor.id,
@@ -1425,12 +1105,13 @@ export const employeeService = {
 
   async activity(
     actor: Actor,
-    page: number
+    page: number, team = false
   ) {
     assertStaff(actor);
+    if (team) assertSupervisor(actor);
 
     return prisma.orderEvent.findMany({
-      where: isSupervisor(actor)
+      where: team
         ? {}
         : {
             actorId: actor.id,
@@ -1456,123 +1137,5 @@ export const employeeService = {
     });
   },
 
-  async cancel(
-    id: string,
-    note: string,
-    actor: Actor | null,
-    expiredOnly = false
-  ) {
-    if (actor) {
-      assertSupervisor(actor);
-    } else if (!expiredOnly) {
-      throw forbidden();
-    }
 
-    return atomic(async (tx) => {
-      const order = await lockOrder(tx, id);
-
-      if (!order.createdById) {
-        throw conflict(
-          'Esta operación requiere un pedido con registro de creador; los pedidos históricos necesitan revisión.'
-        );
-      }
-
-      if (order.stockReleasedAt) {
-        return {
-          message: 'Reserva ya liberada.',
-        };
-      }
-
-      if (
-        order.status !== 'pending' ||
-        order.work ||
-        order.receipt?.payouts.some(
-          (payment) =>
-            payment.status === 'approved' ||
-            payment.status === 'refunded'
-        )
-      ) {
-        throw conflict(
-          'No se puede cancelar automáticamente un pedido con pago o preparación.'
-        );
-      }
-
-      if (
-        expiredOnly &&
-        (
-          !order.expiresAt ||
-          order.expiresAt > new Date()
-        )
-      ) {
-        throw conflict(
-          'La reserva no ha vencido.'
-        );
-      }
-
-      for (
-        const detail of [...order.details].sort(
-          (a, b) =>
-            a.productId.localeCompare(
-              b.productId
-            )
-        )
-      ) {
-        await tx.product.update({
-          where: {
-            id: detail.productId,
-          },
-          data: {
-            stock: {
-              increment: detail.quantity,
-            },
-          },
-        });
-
-        await tx.inventoryMovement.create({
-          data: {
-            productId: detail.productId,
-            type: 'in',
-            quantity: detail.quantity,
-            userId: actor?.id,
-            reason:
-              `Liberación de reserva ${id}`,
-          },
-        });
-      }
-
-      await tx.order.update({
-        where: {
-          id,
-        },
-        data: {
-          status: 'canceled',
-          stockReleasedAt: new Date(),
-        },
-      });
-
-      if (order.receipt) {
-        await tx.receipt.update({
-          where: {
-            id: order.receipt.id,
-          },
-          data: {
-            paymentStatus: 'voided',
-          },
-        });
-      }
-
-      await event(
-        tx,
-        id,
-        actor?.id ?? null,
-        expiredOnly ? 'expired' : 'canceled',
-        note
-      );
-
-      return {
-        message:
-          'Pedido cancelado y reserva liberada una sola vez.',
-      };
-    });
-  },
 };

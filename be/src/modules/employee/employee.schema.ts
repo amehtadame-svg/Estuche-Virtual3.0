@@ -164,3 +164,4 @@ export type NewEmployeeOrder = z.infer<
 export type InventoryInput = z.infer<
   typeof inventorySchema
 >;
+export const storePaymentSchema = z.object({ requestKey: z.string().uuid(), method: z.enum(['cash', 'card']) }).strict();

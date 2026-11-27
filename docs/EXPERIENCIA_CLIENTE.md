@@ -1,5 +1,7 @@
 # Experiencia del cliente y entrega — 26/11/2026
 
+> Registro previo, pendiente de validación de Paula para el commit actual. Los resultados históricos de esta página no acreditan la versión más reciente; consultar [ejecución identificada](evidencias/pruebas/README.md). Antes de migrar una BD compartida, confirmar destino, autorización y respaldo con Cristian.
+
 ## Navegación
 - El cliente inicia sesión en `/`. El panel de cliente fue eliminado; `/cliente`
   solo redirige a Inicio para no romper marcadores anteriores.
@@ -28,9 +30,10 @@ Con las variables de entorno de la instalación configuradas:
 
 ```sh
 cd be
-npx prisma migrate deploy
-npx prisma generate
-npm run build
+pnpm exec prisma generate
+# Solo después de verificar DATABASE_URL y respaldo:
+# pnpm exec prisma migrate deploy
+pnpm build
 ```
 
 La migración `20261126160000_order_shipping_cost` agrega una columna con valor
@@ -51,13 +54,7 @@ Después, reiniciar backend y frontend (también en Codespaces).
 
 ## Comprobaciones
 
-```sh
-npm run build --prefix fe
-npm run lint --prefix fe
-npm test --prefix fe
-npm run build --prefix be
-npm test --prefix be
-```
+Consultar comandos y resultados por commit en [evidencias de pruebas](evidencias/pruebas/README.md).
 
 Las pruebas unitarias/HTTP usan dobles de Prisma. Las de integración PostgreSQL
 requieren una base de pruebas y las migraciones aplicadas; no usar producción.
@@ -82,9 +79,8 @@ con ID por defecto desde Prisma, aunque listar datos sí funcionara.
 La migración `20261126180000_uuid_v7_search_path` reemplaza la función con una
 implementación que usa `pg_catalog.gen_random_uuid` nativo (PostgreSQL >= 13),
 conserva UUID v7 y fija `search_path=pg_catalog`. No modifica ninguna fila ni ID
-existente. La misma corrección ya fue aplicada al proyecto activo conectado.
-`prisma migrate deploy` puede ejecutarla de nuevo sin cambiar datos; conserva
-además el historial de Prisma en instalaciones que despliegan desde este repo.
+existente. Una nota histórica previa afirma que la corrección se aplicó al proyecto conectado; esta revisión no confirmó ese estado remoto.
+`prisma migrate deploy` registra las migraciones aplicadas; confirmar el destino, historial y respaldo antes de ejecutarlo, pues modifica el esquema.
 
 El frontend serializa las operaciones del carrito, espera confirmación antes de
 mostrar el alta y no borra el carrito para fingir una recuperación. Las altas por

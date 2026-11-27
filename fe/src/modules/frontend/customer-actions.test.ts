@@ -156,14 +156,29 @@ test('Acciones de cliente: carrito, cupón, PQR y navegación', async t => {
       await act(async () => release());
       assert.match(document.querySelector('[role="status"]')!.textContent!, /Recibimos tu solicitud/);
     });
-    await t.test('Header sin contacto/pedidos/PQR; Mi cuenta conserva los accesos y añade devoluciones', async () => {
+    await t.test('Header y Mi cuenta conservan accesos del cliente y devoluciones', async () => {
       globalThis.fetch = async () => json([]);
       function Navigation() { return h('div', null, h(Header), h(AccountNav)); }
       await mount(Navigation);
       const header = document.querySelector('header')!;
-      for (const target of ['/Contacto', '/mis-pedidos', '/cliente/pqr']) assert.equal(header.querySelector(`a[href="${target}"]`), null);
+      for (const target of ['/Contacto', '/mis-pedidos', '/cliente/pqr']) assert.ok(header.querySelector(`a[href="${target}"]`), `Falta ${target} en el encabezado`);
       const nav = document.querySelector('.account-nav')!;
       for (const target of ['/Contacto', '/mis-pedidos', '/cliente/pqr', '/mis-devoluciones']) assert.ok(nav.querySelector(`a[href="${target}"]`));
+    });
+    await t.test('Empleado y repartidor no cargan ni modifican el carrito y no ven enlaces públicos restringidos', async () => {
+      let requests = 0;
+      globalThis.fetch = async () => { requests++; return json([]); };
+      for (const role of ['employee', 'delivery']) {
+        user.role = role;
+        await mount(Header);
+        const header = document.querySelector('header')!;
+        for (const target of ['/Contacto', '/Nosotros']) assert.ok(!header.querySelector(`a[href="${target}"]`));
+        assert.ok(!header.querySelector('.cart-btn'));
+        await act(async () => { assert.equal(await cart.add(product), false); assert.equal(await cart.clear(), false); });
+        assert.equal(cart.totalItems, 0);
+      }
+      assert.equal(requests, 0);
+      user.role = 'client';
     });
     await t.test('Devoluciones tiene estado vacío y no ofrece pedidos que aún no se entregaron', async () => {
       globalThis.fetch = async url => String(url).endsWith('/orders') ? json([{ id: 'order', status: 'paid' }]) : json([]);

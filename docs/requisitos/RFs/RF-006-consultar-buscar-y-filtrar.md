@@ -31,7 +31,7 @@ El sistema debe permitir que cualquier usuario consulte el catálogo de producto
 
 | ID | Regla |
 |----|--------|
-| RN-001 | Solo se mostrarán productos activos y aprobados. |
+| RN-001 | Solo se mostrarán productos que no estén eliminados lógicamente. |
 | RN-002 | La búsqueda podrá realizarse por nombre del producto. |
 | RN-003 | El sistema permitirá filtrar por categoría. |
 | RN-004 | El sistema permitirá ordenar los productos por precio o nombre. |

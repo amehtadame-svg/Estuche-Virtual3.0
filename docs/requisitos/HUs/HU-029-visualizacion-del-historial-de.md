@@ -23,7 +23,7 @@
 
 **Como** administrador del negocio, director financiero o auditor de costos y precios, responsable del resguardo de los márgenes de ganancia, supervisión de la inflación y auditoría de decisiones comerciales,  
 **quiero** consultar una línea de tiempo cronológica y detallada de todas las variaciones de precios de venta comerciales y costos de adquisición asignados a un producto a lo largo de su ciclo de vida, especificando fecha y hora del cambio, valor anterior, valor nuevo, porcentaje de ajuste y usuario autorizador,  
-**para** auditar las modificaciones tarifarias ejecutadas en el sistema, analizar el impacto del incremento de costos de proveedores sobre el precio final al público, justificar la evolución de las utilidades en estados financieros históricos y verificar el estricto cumplimiento de las políticas de precios fijadas por la empresa.
+**para** auditar las modificaciones tarifarias ejecutadas en el sistema, analizar el impacto del incremento de costos de adquisición sobre el precio final al público, justificar la evolución de las utilidades en estados financieros históricos y verificar el estricto cumplimiento de las políticas de precios fijadas por la empresa.
 
 ---
 

@@ -1,10 +1,11 @@
+import FavoriteButton from '../../components/wishlist/FavoriteButton';
+import { useCanShop } from '../../hooks/useCanShop';
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
   ArrowUpRight,
   Check,
-  Heart,
   RotateCcw,
   Send,
   ShieldCheck,
@@ -145,6 +146,7 @@ const apiImage = (product?: ApiProduct | null) =>
   null;
 
 export default function Home() {
+  const canShop = useCanShop();
   const { add } = useCart();
   const [categories, setCategories] = useState<{ id: string; name: string; _count: { products: number } }[]>([]);
   const [categoriesError, setCategoriesError] = useState(false);
@@ -152,7 +154,6 @@ export default function Home() {
   const [tab, setTab] = useState<"destacados" | "ofertas" | "nuevos">(
     "destacados",
   );
-  const [loved, setLoved] = useState<string[]>([]);
   const [toast, setToast] = useState<{ id: string; name: string } | null>(null);
   const [email, setEmail] = useState("");
   const [joined, setJoined] = useState(false);
@@ -416,7 +417,6 @@ export default function Home() {
               const oldPrice = guide.discount
                 ? Math.round(Number(product.price) / (1 - guide.discount))
                 : null;
-              const isLoved = loved.includes(product.id);
               return (
                 <article className="arena-product" key={product.id}>
                   <div className="product-media">
@@ -430,20 +430,8 @@ export default function Home() {
                       />
                     </Link>
                     <span className="product-badge">{guide.badge}</span>
-                    <button
-                      type="button"
-                      className={`product-heart ${isLoved ? "on" : ""}`}
-                      aria-label="Guardar"
-                      onClick={() =>
-                        setLoved((prev) =>
-                          prev.includes(product.id)
-                            ? prev.filter((id) => id !== product.id)
-                            : [...prev, product.id],
-                        )
-                      }
-                    >
-                      <Heart size={15} fill={isLoved ? "var(--accent)" : "none"} />
-                    </button>
+                    <FavoriteButton productId={product.id} productName={product.name} className="product-heart" />
+                    {canShop && (
                     <button
                       type="button"
                       className="product-add"
@@ -451,6 +439,7 @@ export default function Home() {
                     >
                       <ShoppingBag size={15} /> Agregar al carrito
                     </button>
+                    )}
                   </div>
                   <div className="product-content">
                     <p>
@@ -660,7 +649,7 @@ export default function Home() {
         )}
       </section>
 
-      {toast && (
+      {canShop && toast && (
         <div className="cart-toast" role="status">
           <span className="cart-toast-check">
             <Check size={16} />

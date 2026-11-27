@@ -293,7 +293,7 @@
   border-radius: 50% !important;
   background: rgba(20, 16, 28, 0.55);
   color: #fff;
-  opacity: 0;
+  opacity: 1;
   transform: none !important;
 }
 
@@ -519,3 +519,5 @@ body:not(.dark-mode) .catalog-clear {
 /* El panel tiene su propio desplazamiento, sin esperar al final de la página. */
 .catalog-sidebar { max-height: calc(100dvh - 110px); overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
 @media (max-width: 760px) { .catalog-sidebar { position: static; max-height: none; overflow: visible; } .catalog-cats { max-height: 240px; overflow-y: auto; overscroll-behavior: contain; } }
+
+.catalog-heart:focus-visible { opacity: 1; outline: 3px solid var(--accent-text); outline-offset: 2px; }

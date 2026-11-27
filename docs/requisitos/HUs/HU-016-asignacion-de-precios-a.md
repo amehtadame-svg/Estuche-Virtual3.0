@@ -23,7 +23,7 @@
 
 **Como** administrador general del sistema o fijador de políticas de precios comerciales, responsable de la gestión de tarifas de venta al público, competitividad de mercado y resguardo del margen operativo,  
 **quiero** contar con una funcionalidad ágil y segura para actualizar y asignar nuevos precios comerciales de venta a cualquier producto del catálogo, ya sea de forma individual desde la ficha del artículo o masiva desde el listado general,  
-**para** adaptar oportunamente las tarifas comerciales ante incrementos en los costos de adquisición notificados por los proveedores, implementar cambios de precio estratégicos por campañas temporales o descuentos de temporada, mantener actualizado el margen de rentabilidad previsto y garantizar que todos los terminales de venta (POS) apliquen de forma inmediata e insoslayable los precios oficiales vigentes.
+**para** adaptar oportunamente las tarifas comerciales ante incrementos en los costos de adquisición, implementar cambios de precio estratégicos por campañas temporales o descuentos de temporada, mantener actualizado el margen de rentabilidad previsto y garantizar que todos los terminales de venta (POS) apliquen de forma inmediata e insoslayable los precios oficiales vigentes.
 
 ---
 

@@ -55,7 +55,7 @@
 
 | Método | Ruta | Descripción |
 |--------|------|-------------|
-| DELETE | `/api/v1/products/{id}` | Desactiva o remueve el producto |
+| DELETE | `/api/products/{id}` | Desactiva o remueve el producto |
 
 ---
 

@@ -55,7 +55,7 @@
 
 | Método | Ruta | Descripción |
 |--------|------|-------------|
-| POST | `/api/v1/users` | Crea un usuario y le asigna un rol |
+| POST | `/api/users` | Crea un usuario y le asigna un rol |
 
 ---
 

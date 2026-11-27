@@ -105,7 +105,7 @@ export const productService = {
               productId: product.id,
               type: 'in',
               quantity: stock,
-              reason: 'Stock inicial de registro de producto (HU-001)',
+              reason: 'Stock inicial de registro de producto',
               userId: userId ?? null,
             },
           });

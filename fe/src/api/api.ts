@@ -52,6 +52,7 @@ export const API = {
   despatches: `${BASE}/api/despatches`,
   receipts: `${BASE}/api/receipts`,
   shopping: `${BASE}/api/shopping`,
+  wishlist: `${BASE}/api/lista-deseos`,
   promotionalCodes: `${BASE}/api/promotional-codes`,
   payouts: `${BASE}/api/payouts`,
   payments: `${BASE}/api/payments`,

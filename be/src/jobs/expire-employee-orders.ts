@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import { prisma } from '../lib/prisma';
-import { employeeService } from '../modules/employee/employee.service';
+import { supervisionService } from '../modules/supervision/supervision.service';
 
 /**
  * Libera las reservas de empleados vencidas (pending sin pago y con
@@ -33,7 +33,7 @@ export async function expireEmployeeOrders(): Promise<number> {
 
   for (const order of orders) {
     try {
-      await employeeService.cancel(
+      await supervisionService.cancel(
         order.id,
         'Reserva vencida sin pago.',
         null,

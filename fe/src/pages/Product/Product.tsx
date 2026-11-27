@@ -1,3 +1,6 @@
+import FavoriteButton from '../../components/wishlist/FavoriteButton';
+import '../Wishlist/Wishlist.css';
+import { useCanShop } from '../../hooks/useCanShop';
 import { productImage } from "../../lib/productImage";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
@@ -42,6 +45,7 @@ interface Product {
 const money = (value: number) => `$ ${Number(value).toLocaleString("es-CO")}`;
 
 export default function Product() {
+  const canShop = useCanShop();
   const { id } = useParams();
   const navigate = useNavigate();
   const { add, items } = useCart();
@@ -200,7 +204,7 @@ export default function Product() {
               : "Sin stock"}
           </p>
 
-          <div className="pd-actions">
+          {canShop && <div className="pd-actions">
             <div className="pd-qty">
               <button
                 type="button"
@@ -239,8 +243,10 @@ export default function Product() {
             >
               <Sparkles size={16} /> Comprar ya
             </button>
-          </div>
-          {inCart > 0 && <p className="pd-incart">{inCart} en tu carrito</p>}
+          </div>}
+          {canShop && inCart > 0 && <p className="pd-incart">{inCart} en tu carrito</p>}
+
+          <FavoriteButton productId={product.id} productName={product.name} className="pd-favorite" />
 
           <div className="pd-perks">
             <article>

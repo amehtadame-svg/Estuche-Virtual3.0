@@ -135,6 +135,8 @@ model User {
   combosCreated      Combo[]
   pqrRequests        PqrRequest[]        @relation("PqrCustomer")
   pqrResponses       PqrRequest[]        @relation("PqrResponder")
+  supportThreads     SupportThread[]     @relation("SupportCreator")
+  supportMessages    SupportMessage[]    @relation("SupportSender")
 
   @@index([lockedUntil], map: "idx_users_locked_until")
   @@index([deletedAt], map: "idx_users_deleted_at")
@@ -624,4 +626,31 @@ model OrderEvent {
   @@index([orderId, createdAt])
   @@index([actorId, createdAt])
   @@map("order_events")
+}
+
+model SupportThread {
+  id        String           @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  creatorId String           @map("creator_id") @db.Uuid
+  subject   String           @db.VarChar(150)
+  createdAt DateTime         @default(now()) @map("created_at")
+  updatedAt DateTime         @default(now()) @updatedAt @map("updated_at")
+  creator   User             @relation("SupportCreator", fields: [creatorId], references: [id], onDelete: Restrict)
+  messages  SupportMessage[]
+
+  @@index([creatorId, updatedAt])
+  @@index([updatedAt])
+  @@map("support_threads")
+}
+
+model SupportMessage {
+  id        String        @id @default(dbgenerated("uuid_generate_v7()")) @db.Uuid
+  threadId  String        @map("thread_id") @db.Uuid
+  senderId  String        @map("sender_id") @db.Uuid
+  body      String        @db.VarChar(2000)
+  createdAt DateTime      @default(now()) @map("created_at")
+  thread    SupportThread @relation(fields: [threadId], references: [id], onDelete: Restrict)
+  sender    User          @relation("SupportSender", fields: [senderId], references: [id], onDelete: Restrict)
+
+  @@index([threadId, createdAt])
+  @@map("support_messages")
 }

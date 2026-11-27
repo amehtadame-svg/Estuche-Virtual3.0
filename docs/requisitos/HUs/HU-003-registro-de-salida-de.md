@@ -55,7 +55,7 @@
 
 | Método | Ruta | Descripción |
 |--------|------|-------------|
-| POST | `/api/v1/inventory/outbound` | Registra la salida y resta del stock |
+| POST | `/api/inventory/outbound` | Registra la salida y resta del stock |
 
 ---
 

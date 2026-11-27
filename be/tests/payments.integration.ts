@@ -15,7 +15,7 @@ process.env.ENABLE_PAYMENT_SIMULATION = 'true';
 
 const { prisma: db } = require('../src/lib/prisma');
 const { paymentsService } = require('../src/modules/payments/payments.service');
-const { employeeService } = require('../src/modules/employee/employee.service');
+const { supervisionService } = require('../src/modules/supervision/supervision.service');
 
 test('Pagos académicos: idempotencia y carreras con transacciones reales', async (t) => {
   const run = randomUUID();
@@ -92,7 +92,7 @@ test('Pagos académicos: idempotencia y carreras con transacciones reales', asyn
       const body = input();
       const payment = await paymentsService.checkout(body, actor);
       await db.order.update({ where: { id: payment.orderId }, data: { expiresAt: new Date(0) } });
-      await employeeService.cancel(payment.orderId, 'Prueba de vencimiento académico', null, true);
+      await supervisionService.cancel(payment.orderId, 'Prueba de vencimiento académico', null, true);
       await assert.rejects(paymentsService.resolve(body.requestKey, 'approved', actor), (err: any) => err.status === 409);
       const order = await db.order.findUniqueOrThrow({ where: { id: payment.orderId } });
       assert.equal(order.status, 'canceled');

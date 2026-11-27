@@ -33,11 +33,13 @@ interface ServerItem {
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
   const userId = user?.id;
+  const blocked = user?.role === 'employee' || user?.role === 'delivery';
+  const scopeKey = `${userId ?? 'guest'}:${user?.role ?? 'guest'}`;
   const [items, setItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(Boolean(userId));
   const [pending, setPending] = useState(0);
   const [error, setError] = useState('');
-  const scope = useRef(userId);
+  const scope = useRef(scopeKey);
   const queue = useRef<Promise<unknown>>(Promise.resolve());
   const lastNotice = useRef({ text: '', at: 0 });
   const enqueue = useCallback(<T,>(operation: () => Promise<T>) => {
@@ -47,8 +49,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const loadFromDb = useCallback(() => enqueue(async () => {
-    if (scope.current !== userId) return false;
-    if (!userId) { setItems([]); setError(''); setLoading(false); return true; }
+    if (scope.current !== scopeKey) return false;
+    if (!userId || blocked) { setItems([]); setError(''); setLoading(false); return true; }
     setLoading(true);
     setError('');
     try {
@@ -56,7 +58,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       if (!response.ok) throw new Error();
       const data: ServerItem[] = await response.json();
       if (!Array.isArray(data)) throw new Error();
-      if (scope.current !== userId) return false;
+      if (scope.current !== scopeKey) return false;
       setItems(data.map(item => ({ id: item.productId, quantity: item.quantity,
         name: item.product?.name ?? 'Producto no disponible', price: Number(item.product?.price ?? 0),
         category: item.product?.category?.name ?? '', icon: '📦',
@@ -64,24 +66,25 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       })));
       return true;
     } catch {
-      if (scope.current === userId) setError('No se pudo cargar tu carrito. Verifica tu conexión e intenta nuevamente.');
+      if (scope.current === scopeKey) setError('No se pudo cargar tu carrito. Verifica tu conexión e intenta nuevamente.');
       return false;
-    } finally { if (scope.current === userId) setLoading(false); }
-  }), [userId, enqueue]);
+    } finally { if (scope.current === scopeKey) setLoading(false); }
+  }), [userId, blocked, scopeKey, enqueue]);
 
   useEffect(() => {
-    scope.current = userId;
+    scope.current = scopeKey;
     lastNotice.current = { text: '', at: 0 };
     setItems([]);
     setError('');
     void loadFromDb();
-  }, [userId, loadFromDb]);
+  }, [scopeKey, loadFromDb]);
 
   function mutate(url: string, method: string, body: unknown, update: (previous: CartItem[]) => CartItem[]) {
+    if (blocked) return Promise.resolve(false);
     const headers = authHeaders();
     setPending(count => count + 1);
     return enqueue(async () => {
-      if (scope.current !== userId) return false;
+      if (scope.current !== scopeKey) return false;
       try {
         if (userId) {
           const response = await fetch(url, { method, headers, ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
@@ -90,12 +93,12 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
             throw new Error(data.message || (response.status === 401 ? 'Tu sesión venció. Inicia sesión nuevamente.' : 'No pudimos guardar el cambio del carrito. Intenta nuevamente.'));
           }
         }
-        if (scope.current !== userId) return false;
+        if (scope.current !== scopeKey) return false;
         setItems(update);
         setError('');
         return true;
       } catch (reason) {
-        if (scope.current !== userId) return false;
+        if (scope.current !== scopeKey) return false;
         const text = reason instanceof Error && !(reason instanceof TypeError) ? reason.message : 'No hay conexión con el servidor. Tu carrito no ha cambiado.';
         if (lastNotice.current.text !== text || Date.now() - lastNotice.current.at > 5000) {
           notify.error(text, 'No se pudo actualizar el carrito');

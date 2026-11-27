@@ -1,10 +1,15 @@
+import Wishlist from './pages/Wishlist/Wishlist';
+import { WishlistProvider } from './context/WishlistContext';
 import CustomerReturns from './pages/Returns/CustomerReturns';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import EmployeeWorkspace from './pages/Employee/EmployeeWorkspace';
-import CustomerPickups from './pages/Employee/CustomerPickups';
+import AdminSupport from './pages/Support/AdminSupport';
+import DeliveryWorkspace from './pages/Delivery/DeliveryWorkspace';
+import CustomerPickups from './pages/Client/CustomerPickups';
 import AccessDenied from './pages/AccessDenied/AccessDenied';
+import CartAccess from './components/ui/CartAccess';
 import ProtectedRoute from './components/ui/ProtectedRoute';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
@@ -52,6 +57,7 @@ function App() {
     <AuthProvider>
       <ToastProvider>
         <CartProvider>
+          <WishlistProvider>
           <BrowserRouter>
             <Header />
 
@@ -61,7 +67,7 @@ function App() {
               <Route path="/register" element={<Register />} />
               <Route path="/catalogo" element={<Catalogo />} />
               <Route path="/producto/:id" element={<Producto />} />
-              <Route path="/carrito" element={<Carrito />} />
+              <Route path="/carrito" element={<CartAccess><Carrito /></CartAccess>} />
               <Route path="/Contacto" element={<Contacto />} />
               <Route path="/Nosotros" element={<Nosotros />} />
               <Route path="/no-acceso" element={<AccessDenied />} />
@@ -95,6 +101,7 @@ function App() {
                   element={<CustomerPickups />}
                 />
                 <Route path="/mis-devoluciones" element={<CustomerReturns />} />
+                <Route path="/mis-favoritos" element={<Wishlist />} />
                 <Route
                   path="/cliente/pqr"
                   element={<ClientPqr />}
@@ -118,13 +125,15 @@ function App() {
                 />
               </Route>
 
+              <Route element={<ProtectedRoute allowedRoles={['delivery']} />}><Route path="/repartidor" element={<DeliveryWorkspace />} /></Route>
+
               <Route element={<ProtectedRoute allowedRoles={['client', 'admin', 'superadmin']} />}>
                 <Route path="/mis-pedidos" element={<MyOrders />} />
                 <Route path="/pedidos/:id" element={<OrderStatus />} />
               </Route>
 
               <Route element={<ProtectedRoute />}>
-                <Route path="/Pago" element={<Pago />} />
+                <Route path="/Pago" element={<CartAccess><Pago /></CartAccess>} />
                 <Route path="/perfil" element={<Profile />} />
               </Route>
 
@@ -179,6 +188,7 @@ function App() {
                   path="/admin/detallepedidos"
                   element={<DetallePedidos />}
                 />
+                <Route path="/admin/soporte" element={<AdminSupport />} />
                 <Route
                   path="/admin/pqr"
                   element={<AdminPqr />}
@@ -221,6 +231,7 @@ function App() {
 
             <Footer />
           </BrowserRouter>
+          </WishlistProvider>
         </CartProvider>
       </ToastProvider>
     </AuthProvider>

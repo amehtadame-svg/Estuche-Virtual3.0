@@ -10,7 +10,7 @@
 
 ## Descripción
 
-El sistema debe permitir que los proveedores actualicen la información de los productos registrados y que los administradores puedan modificar cualquier producto cuando sea necesario.
+El sistema debe permitir que los administradores actualicen la información de los productos registrados cuando sea necesario.
 
 ---
 
@@ -32,7 +32,7 @@ El sistema debe permitir que los proveedores actualicen la información de los p
 
 | ID | Regla |
 |----|--------|
-| RN-001 | Solo el proveedor propietario o un administrador podrán editar el producto. |
+| RN-001 | Solo un administrador autorizado podrá editar el producto. |
 | RN-002 | El nombre del producto no podrá quedar vacío. |
 | RN-003 | El precio deberá ser mayor que cero. |
 | RN-004 | La cantidad disponible no podrá ser negativa. |

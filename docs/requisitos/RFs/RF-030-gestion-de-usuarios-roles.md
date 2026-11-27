@@ -10,7 +10,7 @@
 
 ## Descripción
 
-El sistema debe permitir a un administrador consultar todos los usuarios registrados, cambiar su rol (cliente, proveedor, repartidor, administrador) y activar o desactivar su acceso.
+El sistema debe permitir a un administrador consultar todos los usuarios registrados, cambiar su rol (cliente, empleado, repartidor, administrador y superadministrador) y activar o desactivar su acceso.
 
 ---
 

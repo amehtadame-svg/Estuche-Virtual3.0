@@ -5,5 +5,8 @@ export function shortReference(id: string | null | undefined) {
 export const orderReference = (id: string | null | undefined) => `PED-${shortReference(id)}`;
 
 export function referenceText(value: string | null | undefined) {
-  return (value ?? '').replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, shortReference);
+  const displayValue = value === 'Stock inicial de registro de producto (HU-001)'
+    ? 'Stock inicial de registro de producto'
+    : (value ?? '');
+  return displayValue.replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, shortReference);
 }

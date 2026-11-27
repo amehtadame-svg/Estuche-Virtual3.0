@@ -30,7 +30,7 @@
 ## Criterios de Aceptación
 
 ### CA-001.1 — Formulario completo de alta con validación de campos obligatorios
-- **Dado que** me encuentro autenticado con credenciales de administrador e ingreso al módulo de inventarios en la ruta (`/inventory/products/new`),
+- **Dado que** me encuentro autenticado con credenciales de administrador e ingreso al módulo de inventarios en `/admin/productos` y abro «+ Nuevo producto»,
 - **cuando** el navegador termina de renderizar todos los componentes del formulario,
 - **entonces** debo visualizar claramente los campos requeridos: Nombre comercial del producto, Código SKU/Barras único, Categoría asignada, Costo de adquisición, Precio de venta al público y Stock inicial, cada uno acompañado de un indicador visual de campo obligatorio (*) y un mensaje tooltip explicativo.
 
@@ -55,7 +55,7 @@
 
 | Método | Ruta | Descripción |
 |--------|------|-------------|
-| POST | `/api/v1/products` | Guarda los datos del nuevo producto en la BD |
+| POST | `/api/products` | Guarda los datos del nuevo producto en la BD |
 
 ---
 
@@ -64,3 +64,24 @@
 - Operación envuelta en transacción mediante `ProductService`.
 - Validación de unicidad sobre el campo de búsqueda rápida `name` indexado.
 - El campo `stock` debe inicializarse en la entidad `Product` garantizando restricciones de integridad (`CHECK stock >= 0`).
+
+## Contraste técnico de rutas y guardado
+
+- Pantalla: /admin/productos, mediante «+ Nuevo producto».
+- API de creación: POST /api/products; exige sesión y verifyAdmin.
+- verifyAdmin admite los roles admin y superadmin.
+- En el manejador revisado, una respuesta exitosa provoca llamadas
+  a loadProducts(), closeModal() y notify.success().
+- Diferencia pendiente: CA-001.4 exige redirigir a /inventory,
+  pero el manejador revisado no realiza esa redirección.
+- Se conserva el criterio original hasta resolver esa diferencia.
+- No se verificaron is_active, transacción, unicidad ni CHECK de stock.
+- Inspección estática: no demuestra ejecución completa ni cambia el estado de la HU.
+
+### Fuentes
+
+- [Montaje API](../../../be/src/app.ts).
+- [Router](../../../be/src/modules/products/products.routes.ts).
+- [Rutas frontend](../../../fe/src/App.tsx).
+- [Formulario y guardado](../../../fe/src/pages/Admin/Products/Products.tsx).
+- [Autorización](../../../be/src/middlewares/auth.middleware.ts).

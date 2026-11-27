@@ -14,7 +14,7 @@
 
 **ESTUCHE VIRTUAL** es una plataforma e-commerce para la comercialización de útiles escolares y artículos de papelería, diseñada para gestionar de manera eficiente productos, pedidos y usuarios dentro de un entorno digital.
 
-El sistema facilita la interacción entre clientes, proveedores y administradores, permitiendo la automatización de procesos comerciales, el control de inventario en tiempo real y el seguimiento de pedidos. Su propósito es modernizar la gestión tradicional de papelerías mediante una solución accesible, intuitiva y segura.
+El sistema facilita la interacción entre clientes, empleados, repartidores y administradores, permitiendo la automatización de procesos comerciales, el control de inventario en tiempo real y el seguimiento de pedidos. Su propósito es modernizar la gestión tradicional de papelerías mediante una solución accesible, intuitiva y segura.
 
 ---
 
@@ -26,7 +26,7 @@ Desarrollar una plataforma web integral que optimice la compra y venta de útile
 
 ## Objetivos Específicos
 
-- Implementar un sistema de gestión de usuarios con autenticación y control de roles (Administrador, Proveedor y Cliente).
+- Implementar un sistema de gestión de usuarios con autenticación y control de roles (Cliente, Empleado, Repartidor, Administrador y Superadministrador).
 - Diseñar e integrar un catálogo dinámico de productos que permita visualizar información detallada y disponibilidad en tiempo real.
 - Desarrollar un carrito de compras funcional que facilite el proceso de selección y adquisición de productos.
 - Permitir el seguimiento de pedidos, brindando información actualizada sobre el estado de las compras.
@@ -38,16 +38,30 @@ Desarrollar una plataforma web integral que optimice la compra y venta de útile
 
 ## Tecnologías
 
-- Frontend: React.js
-- Backend: Node.js / Express
-- Base de datos: Postgress
-- Control de versiones: Git & GitHub  
+- Frontend: React, TypeScript y Vite.
+- Backend: Node.js, Express y TypeScript.
+- Acceso a datos y migraciones: Prisma.
+- Base de datos: PostgreSQL; configuración de conexión con Supabase.
+- Gestión de paquetes: pnpm.
+- Control de versiones: Git y GitHub.
 
 ## Roles
 
-- Administrador: gestiona usuarios, productos y pedidos  
-- Proveedor: registra y actualiza productos  
-- Cliente: explora, compra y consulta pedidos  
+Roles definidos en el modelo de datos:
+
+- Cliente: `client`.
+- Empleado: `employee`.
+- Repartidor: `delivery`.
+- Administrador: `admin`.
+- Superadministrador: `superadmin`.
+
+El middleware verifica la sesión y consulta el rol vigente en la base de datos.
+`verifyAdmin` admite admin y superadmin; `verifySuperAdmin` solo superadmin.
+Los permisos concretos también dependen de las rutas y servicios.
+Esta lista no certifica un panel o recorrido completo para cada rol.
+
+Fuentes: [modelo Prisma](be/prisma/schema.prisma) y
+[middleware de autenticación](be/src/middlewares/auth.middleware.ts).
 
 ---
 
@@ -72,19 +86,32 @@ Desarrollar una plataforma web integral que optimice la compra y venta de útile
 
 ## Estructura del Proyecto
 
-<p align="center">
+```text
+Estuche-Virtual3.0/
+|-- be/            # Backend Express + Prisma (TypeScript)
+|   |-- src/       # API, servicios y pruebas por módulo
+|   |-- prisma/    # Esquema y migraciones
+|   `-- tests/     # Pruebas de integración
+|-- fe/            # Frontend React + Vite (TypeScript)
+|   `-- src/       # Interfaz React y enrutamiento
+|-- docs/          # Requisitos, documentación y evidencias
+|-- .github/       # CI (build, tests y PostgreSQL de pruebas) y workflows
+|-- docker-compose.yml
+`-- README.md
+```
 
-<pre>
-estuche-virtual/
-├── fe/              # Frontend React + Vite (TypeScript)
-├── be/              # Backend Express + Prisma (TypeScript)
-├── db/              # Scripts de inicialización de la base de datos
-├── docs/            # Documentación del proyecto
-├── .github/         # CI (build + tests + PostgreSQL de pruebas)
-└── README.md        # Información general del proyecto
-</pre>
+Consulta el [índice documental](docs/README.md).
 
-</p>
+### Evidencias y límites de la entrega
+
+- [Matriz de criterios](docs/matriz-evidencias.md): transcripción de 14 puntos; la foto original no está disponible para cotejo.
+- [Modelos y revisión pendiente](docs/MODELOS_Y_VALIDACION.md) y [API de operaciones principales](docs/API.md).
+- [Guía de instalación y despliegue](docs/INSTALACION_Y_DESPLIEGUE.md): Compose es de desarrollo y ejecuta migraciones sobre la base configurada. Verificar destino y respaldo antes de arrancar.
+- [Plan de pruebas](docs/PLAN_PRUEBAS.md), [resultados reales de `6af297a`](docs/evidencias/pruebas/README.md) y [hallazgos locales](docs/REGISTRO_DEFECTOS.md). Backend 144/144, frontend 42/42 e integración aislada 40/40; lint con 5 advertencias. No equivalen a aceptación del equipo.
+- [Scrum: propuestas y evidencia pendiente](docs/scrum/README.md); [guion de 15 minutos](docs/GUION_PRESENTACION.md).
+
+El checkout es una **simulación académica** sin cobro bancario; el pago en tienda es un registro separado. Los diagramas de datos son parciales. Franck, Paula y Cristian aún deben validar sus respectivas áreas; no se ha acreditado un despliegue ni recorrido completo de interfaz.
+
 
 ---
 
@@ -93,16 +120,15 @@ estuche-virtual/
 ```bash
 git clone https://github.com/amehtadame-svg/Estuche-Virtual3.0.git
 cd Estuche-Virtual3.0
-cp .env-example .env        # rellena SUPABASE_DATABASE_URL y JWT_SECRET
-docker compose up --build   # backend :4000 · frontend :5173
-curl http://localhost:4000/api/health
+cp .env-example .env        # rellena SUPABASE_DATABASE_URL y JWT_SECRET de forma privada
+# Antes de iniciar: verifica destino de BD, autorización y respaldo.
+# docker compose up --build # aplica migraciones sobre la BD configurada
 ```
 
-Guía completa (instalación nativa, variables de entorno, pruebas, despliegue a
-producción y flujo de Git): **[docs/INSTALACION_Y_DESPLIEGUE.md](./docs/INSTALACION_Y_DESPLIEGUE.md)**
+Guía técnica de desarrollo, variables, pruebas y precauciones de despliegue (validación pendiente): **[docs/INSTALACION_Y_DESPLIEGUE.md](./docs/INSTALACION_Y_DESPLIEGUE.md)**
 
 - Pasarela académica (PSE, tarjeta y Nequi, sin cobros reales): **[docs/PAGOS_DEMOSTRACION.md](./docs/PAGOS_DEMOSTRACION.md)**
-- Informe de pruebas (102 pruebas, fecha/entorno/commit): **[docs/INFORME_PRUEBAS.md](./docs/INFORME_PRUEBAS.md)**
+- Informe histórico de pruebas (102 pruebas, otro commit): **[docs/INFORME_PRUEBAS.md](./docs/INFORME_PRUEBAS.md)**
 - Auditoría de seguridad y rotación de credenciales: **[docs/SEGURIDAD_ENTORNO.md](./docs/SEGURIDAD_ENTORNO.md)**
 - Reglas del equipo (RT/RH): **[docs/restricciones.md](./docs/restricciones.md)**
 
@@ -117,11 +143,11 @@ En desarrollo
 ## Contribuciones
 
 1. Crea una rama desde `dev` (`git checkout -b fix/mi-cambio dev`).
-2. Usa la **convención de commits** (`fix(be): descripción…`) — ver guía §10.
+2. Propón una convención de commits clara (`fix(be): descripción…`); la política debe acordarse con el equipo.
 3. Ejecuta `pnpm lint` (fe) y `pnpm test` (be) antes de abrir el PR.
 4. Abre un pull request: la CI debe quedar **verde** y recibir revisión.
 
-Nunca se hace push directo a `main` ni force-push (RH-002).
+Estas son prácticas propuestas; consultar [contradicciones de política de ramas](docs/requisitos/contradicciones.md). No está verificada la protección de `main`.
 
 ---
 

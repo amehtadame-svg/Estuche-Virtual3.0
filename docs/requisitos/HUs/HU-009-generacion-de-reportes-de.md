@@ -1,57 +1,24 @@
-<!--
-  ¿Qué? Historia de usuario que describe la generación de reportes de compras a proveedores.
-  ¿Para qué? Formalizar el control del gasto en reabastecimiento de inventario.
-  ¿Impacto? Permite evaluar el desempeño de proveedores y el costo de reposición.
--->
-
-# HU-009 — Generación de reportes de compras
-
-## Identificación
+# HU-009 — Consulta de ingresos de inventario
 
 | Campo | Valor |
-|-------|-------|
-| **ID** | HU-009 |
-| **Título** | Generación de reportes de compras |
-| **Módulo** | Reportes |
-| **Prioridad** | Media |
-| **Estado** | Por Implementar |
-| **RF asociados** | RF-016|
-
----
+|---|---|
+| Módulo | Inventario |
+| Prioridad | Media |
+| Estado | Implementado en el flujo revisado; validación de aceptación pendiente |
+| RF asociados | RF-016 |
 
 ## Historia
 
-**Como** administrador del negocio, encargado de finanzas o tesorero, responsable del control de egresos, fiscalización de presupuestos e inversión de capital en inventario,  
-**quiero** emitir informes detallados y consolidados con el histórico de compras de mercancía recibidas dentro de un intervalo de fechas específico, incluyendo filtros por proveedor emisor y estado de entrega,  
-**para** controlar con precisión las salidas de capital destinadas al abastecimiento del almacén, auditar el volumen de compras efectuado a cada distribuidor comercial, evaluar la evolución de los costos unitarios de adquisición y mantener un balance financiero transparente entre egresos e ingresos.
+**Como** administrador, **quiero** consultar el historial de ingresos de mercancía, **para** revisar los movimientos que incrementaron las existencias.
 
----
+## Criterios de aceptación
 
+1. En Ingresos se muestra una lista de movimientos de entrada con el producto, cantidad, fecha y motivo cuando esté disponible.
+2. Cada fila corresponde a un movimiento; un producto puede aparecer más de una vez.
+3. La consulta requiere una cuenta con permisos administrativos.
 
-## Criterios de Aceptación
+## Rutas y alcance
 
-### CA-009.1 — Filtro combinado de reporte de compras por fechas y proveedor
-- **Dado que** accedo al módulo de reportes de compras (`/reports/purchases`),
-- **cuando** selecciono un rango de fechas y (opcionalmente) elijo un proveedor específico en el menú desplegable,
-- **entonces** el sistema consulta y genera el informe consolidado correspondiente.
+`GET /api/inventory/movements?type=in` alimenta el historial. Evidencia: `be/src/modules/inventory/inventory.routes.ts`, `fe/src/pages/Admin/Inventory/InventoryInbound.tsx`.
 
-### CA-009.2 — Consolidado de montos y volumen de compras
-- **Dado que** se procesan los datos del reporte de compras,
-- **cuando** los resultados se muestran en pantalla,
-- **entonces** debo visualizar: Monto Total Invertido en Compras, Número de Órdenes Recibidas y Cantidad de Productos Incorporados.
-
-### CA-009.3 — Detalle modal explicativo por orden de compra
-- **Dado que** reviso la tabla de órdenes de compra incluidas en el reporte,
-- **cuando** hago clic sobre una orden específica,
-- **entonces** el sistema debe abrir una ventana modal con el desglose de productos adquiridos, sus cantidades y los costos unitarios negociados.
-
-### CA-009.4 — Restablecimiento de los parámetros de búsqueda del reporte
-- **Dado que** he aplicado filtros en la consulta de compras,
-- **cuando** presiono el botón "Limpiar Filtros",
-- **entonces** el formulario restaura las fechas por defecto del mes actual, elimina el filtro de proveedor y refresca los datos.
-
----
-
-## Notas técnicas
-- Agrupación por proveedor (`supplier_id`) y fecha.
-- Procesamiento del campo `cost_price` en la tabla de recepciones o lotes de compra para mayor exactitud financiera.
+Este historial no equivale a un reporte financiero de compras ni certifica filtros por fechas o exportación. No se alteraron los movimientos existentes.
