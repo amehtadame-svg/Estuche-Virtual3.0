@@ -5,7 +5,7 @@ import type { AddressInfo } from 'node:net';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../../lib/prisma';
 import { HttpError } from '../../lib/errors';
-import { pqrService } from './pqr.service';
+import { contactService, pqrService } from './pqr.service';
 import app from '../../app';
 
 const db = prisma as any;
@@ -58,4 +58,35 @@ test('HTTP: el límite persiste en servidor, informa Retry-After y mantiene dupl
     assert.equal(limited.status, 429);
     assert.ok(Number(limited.headers.get('retry-after')) > 0);
   } finally { server.closeAllConnections(); await new Promise<void>(resolve => server.close(() => resolve())); }
+});
+
+test('B-01: el formulario de contacto crea un PQR de petición del cliente autenticado', async () => {
+  const result = await contactService.submit(
+    {
+      name: 'Ana Pérez',
+      email: 'ana@example.com',
+      topic: 'envio',
+      message: 'Quisiera saber cuándo llegará mi pedido a Medellín.',
+    },
+    actor
+  );
+
+  assert.equal(result.status, 'received');
+  const stored = rows[0];
+  assert.equal(stored.type, 'petition');
+  assert.equal(stored.customerId, actor.id);
+  assert.equal(stored.subject, 'Envíos y entregas');
+  assert.match(stored.description, /Ana Pérez/);
+  assert.match(stored.description, /ana@example\.com/);
+  assert.match(stored.description, /Medellín/);
+});
+
+test('B-01: un usuario que no es cliente no puede enviar el formulario de contacto', async () => {
+  await assert.rejects(
+    contactService.submit(
+      { name: 'X', email: 'x@example.com', message: 'Mensaje de prueba suficientemente largo.' },
+      { id: actor.id, role: 'employee' }
+    ),
+    (error: unknown) => error instanceof HttpError && error.status === 403
+  );
 });

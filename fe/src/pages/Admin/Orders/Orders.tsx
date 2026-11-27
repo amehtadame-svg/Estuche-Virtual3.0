@@ -28,10 +28,21 @@ const orderStatusText: Record<string, string> = {
 
 const emptyForm = {
   customerId: '',
+  productId: '',
+  quantity: '1',
+  deliveryAddress: '',
+  fulfillmentMethod: 'delivery',
   total: '',
   status: 'pending',
   promotionalCodeId: '',
 };
+
+interface ProductOption {
+  id: string;
+  name: string;
+  price: number | null;
+  stock: number | null;
+}
 
 interface Customer {
   id: string;
@@ -76,6 +87,7 @@ export default function Orders() {
   const listRequest = useRef(0);
   const [discountCode, setDiscountCode] = useState('');
   const [discountApplied, setDiscountApplied] = useState<string | null>(null);
+  const [products, setProducts] = useState<ProductOption[]>([]);
   const editingOrder = editingId === null
     ? undefined
     : orders.find((order) => order.id === editingId);
@@ -128,9 +140,21 @@ export default function Orders() {
     }
   };
 
+  const loadProducts = async () => {
+    try {
+      const response = await fetch(API.products, { headers: authHeaders() });
+      const data = await response.json().catch(() => null);
+      if (!response.ok) throw new Error();
+      setProducts(Array.isArray(data) ? data : []);
+    } catch {
+      notify.error('No se pudieron cargar los productos para el pedido.');
+    }
+  };
+
   useEffect(() => {
     loadOrders();
     loadCustomers();
+    loadProducts();
   }, []);
 
   useEffect(() => {
@@ -266,6 +290,36 @@ export default function Orders() {
   };
 
   const handleSave = async () => {
+    // ── A-01/A-02 (Franck): el backend exige líneas y dirección en domicilio ──
+    if (!form.customerId) {
+      showSaveError('Selecciona un cliente.');
+      return;
+    }
+
+    if (editingId === null) {
+      if (!form.productId) {
+        showSaveError('Selecciona al menos un producto.');
+        return;
+      }
+
+      const quantity = Number(form.quantity);
+
+      if (!Number.isInteger(quantity) || quantity < 1) {
+        showSaveError('La cantidad debe ser un número entero mayor que cero.');
+        return;
+      }
+
+      if (form.fulfillmentMethod === 'delivery' && !form.deliveryAddress.trim()) {
+        showSaveError('Indica la dirección de entrega para el domicilio.');
+        return;
+      }
+
+      if (form.status !== 'pending') {
+        showSaveError('Los pedidos nuevos deben quedar pendientes. El pago y la preparación se registran después.', 'No se creó el pedido');
+        return;
+      }
+    }
+
     if (!form.customerId || !form.total) {
       showSaveError('Completa el cliente y el total antes de guardar.');
       return;
@@ -303,14 +357,30 @@ export default function Orders() {
       return;
     }
 
-    const body = {
-      customerId: form.customerId,
-      total: newTotal,
-      status: form.status,
-      ...(form.promotionalCodeId
-        ? { promotionalCodeId: form.promotionalCodeId }
-        : {}),
-    };
+    // Crear exige líneas y dirección (A-01/A-02); editar solo manda lo
+    // permitido (el total lo recalcula el servidor cuando hay cupón).
+    const body = editingId === null
+      ? {
+          customerId: form.customerId,
+          fulfillmentMethod: form.fulfillmentMethod,
+          ...(form.fulfillmentMethod === 'delivery'
+            ? { deliveryAddress: form.deliveryAddress.trim() }
+            : {}),
+          details: [
+            { productId: form.productId, quantity: Number(form.quantity) },
+          ],
+          ...(form.promotionalCodeId
+            ? { promotionalCodeId: form.promotionalCodeId }
+            : {}),
+        }
+      : {
+          customerId: form.customerId,
+          total: newTotal,
+          status: form.status,
+          ...(form.promotionalCodeId
+            ? { promotionalCodeId: form.promotionalCodeId }
+            : {}),
+        };
 
     const editing = editingId !== null;
 
@@ -356,10 +426,10 @@ export default function Orders() {
 
   const handleEdit = (order: Order) => {
     setForm({
+      ...emptyForm,
       customerId: String(order.customerId ?? ''),
       total: String(order.total ?? ''),
       status: order.status ?? 'pending',
-      promotionalCodeId: '',
     });
 
     setEditingId(order.id);
@@ -651,22 +721,83 @@ export default function Orders() {
             </p>
           )}
 
-          <label className="label-pedido">
-            Total
-          </label>
+          {editingId === null && (
+            <>
+              <label className="label-pedido">
+                Modalidad
+              </label>
 
-          <input
-            className="input-pedido"
-            type="number"
-            name="total"
-            value={form.total}
-            onChange={handleChange}
-            placeholder="85000"
-          />
+              <select
+                className="input-pedido"
+                name="fulfillmentMethod"
+                value={form.fulfillmentMethod}
+                onChange={handleChange}
+              >
+                <option value="delivery">Domicilio</option>
+                <option value="pickup">Retiro en tienda</option>
+              </select>
 
-          <label className="label-pedido">
-            Estado
-          </label>
+              {form.fulfillmentMethod === 'delivery' && (
+                <>
+                  <label className="label-pedido">
+                    Dirección de entrega
+                  </label>
+
+                  <input
+                    className="input-pedido"
+                    type="text"
+                    name="deliveryAddress"
+                    value={form.deliveryAddress}
+                    onChange={handleChange}
+                    placeholder="Calle 45 #12-30, Bogotá"
+                    maxLength={500}
+                  />
+                </>
+              )}
+
+              <label className="label-pedido">
+                Producto
+              </label>
+
+              <select
+                className="input-pedido"
+                name="productId"
+                value={form.productId}
+                onChange={handleChange}
+              >
+                <option value="">Selecciona un producto</option>
+                {products.map((product) => (
+                  <option key={product.id} value={product.id}>
+                    {product.name} — ${Number(product.price ?? 0).toLocaleString()} (stock {product.stock ?? 0})
+                  </option>
+                ))}
+              </select>
+
+              <label className="label-pedido">
+                Cantidad
+              </label>
+
+              <input
+                className="input-pedido"
+                type="number"
+                min={1}
+                name="quantity"
+                value={form.quantity}
+                onChange={handleChange}
+              />
+
+              <p className="mensaje-pedidos">
+                El total y el envío los calcula el servidor con el precio del
+                catálogo; no se envían desde el navegador.
+              </p>
+            </>
+          )}
+
+          {editingId !== null && (
+            <>
+              <label className="label-pedido">
+                Estado
+              </label>
 
           <select
             className="input-pedido"
@@ -690,6 +821,8 @@ export default function Orders() {
               Cancelado
             </option>
           </select>
+            </>
+          )}
 
           {editingId !== null && (
             <div style={{ marginTop: 16 }}>

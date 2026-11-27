@@ -82,3 +82,42 @@ test('No cotiza productos eliminados ni cantidades sin stock', async () => {
   db.product.findMany = async () => [];
   await assert.rejects(promotionalCodeService.quote('ESTUCHE10', [{ productId: 'missing', quantity: 1 }], { id: 'buyer', role: 'client' }), invalid(/Actualiza tu carrito/));
 });
+
+// ─── Vigencia por día calendario ────────────────────────────────────────
+// Convención del proyecto: `startDate`/`endDate` se guardan como MEDIANOCHE UTC
+// del día elegido en el formulario. "Hoy" se mide en Colombia.
+const bogotaDay = (offsetDays = 0) =>
+  new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Bogota', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).format(new Date(Date.now() + offsetDays * 24 * 60 * 60 * 1000));
+
+const storedDay = (offsetDays = 0) => new Date(`${bogotaDay(offsetDays)}T00:00:00.000Z`);
+
+test('A-05: un cupón que vence hoy sigue válido hasta la medianoche local', async () => {
+  // Antes fallaba desde las 19:00 de Bogotá, porque "hoy" se medía en UTC.
+  promo.startDate = storedDay(-10);
+  promo.endDate = storedDay(0);
+
+  const result = await promotionalCodeService.validate('ESTUCHE10', 50000);
+  assert.equal(result.id, 'coupon', 'el cupón del día debe seguir siendo válido');
+});
+
+test('A-05: un cupón vencido ayer se rechaza', async () => {
+  promo.startDate = storedDay(-10);
+  promo.endDate = storedDay(-1);
+
+  await assert.rejects(
+    promotionalCodeService.validate('ESTUCHE10', 50000),
+    invalid(/expirado/i)
+  );
+});
+
+test('A-05: un cupón que empieza mañana todavía no está disponible', async () => {
+  promo.startDate = storedDay(1);
+  promo.endDate = storedDay(30);
+
+  await assert.rejects(
+    promotionalCodeService.validate('ESTUCHE10', 50000),
+    invalid(/no está disponible/i)
+  );
+});

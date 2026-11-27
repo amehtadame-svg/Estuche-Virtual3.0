@@ -83,10 +83,13 @@ test('Empleado no hereda permisos de pedidos', async () => {
   );
 });
 
-test('El CRUD no marca pagado y verifica un pedido pagado sin cambios', async () => {
-  await assert.rejects(orderService.create({ status: 'paid' }, client), hasStatus(400));
+test('No se puede crear ni marcar un pedido pagado mediante el CRUD', async () => {
+  // A-01 (Franck): un pedido sin líneas se rechaza antes de tocar la base.
+  await assert.rejects(orderService.create({ status: 'paid' } as any, client), hasStatus(400));
 
-  // La operación usa una transacción asíncrona. Esta simulación no accede a la base.
+  // Protección de Paula: ni creando ni editando se puede poner `paid`, y una
+  // edición idéntica no escribe. La transacción se simula porque la prueba no
+  // accede a la base real.
   const originalTransaction = db.$transaction;
   let current: { id: string; status: string; total: number; createdById: string | null; work: { id: string } | null } =
     { id: 'order-1', status: 'pending', total: 100, createdById: null, work: null };
@@ -96,6 +99,9 @@ test('El CRUD no marca pagado y verifica un pedido pagado sin cambios', async ()
     order: {
       findUnique: async () => current,
       update: async () => { writes++; return current; },
+    },
+    orderDetail: {
+      findMany: async () => [{ unitPrice: 100, quantity: 1 }],
     },
   };
   db.$transaction = async (fn: any) => fn(tx);

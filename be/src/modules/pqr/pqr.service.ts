@@ -152,3 +152,66 @@ export const pqrService = {
     return outcome.updated;
   },
 };
+
+/**
+ * B-01: mensaje del formulario público de Contacto.
+ *
+ * Se convierte en un PQR `petition` del cliente autenticado, reutilizando el
+ * bloqueo por cliente, la detección de duplicados y el límite de un envío por
+ * minuto del módulo de PQR. El nombre y el correo del formulario quedan
+ * registrados en el cuerpo para trazabilidad, pero la cuenta que responde es
+ * la del usuario autenticado (no se puede suplantar a otra persona).
+ */
+export const contactService = {
+  async submit(
+    data: { name: string; email: string; topic?: string; subject?: string; message: string },
+    actor: PqrActor
+  ) {
+    if (actor.role !== 'client') {
+      throw forbidden('Inicia sesión como cliente para enviar un mensaje de contacto.');
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: actor.id },
+      select: { fullName: true, email: true },
+    });
+
+    if (!user) throw notFound('Usuario no encontrado.');
+
+    const topicLabel: Record<string, string> = {
+      pedido: 'Consulta sobre pedido',
+      producto: 'Información de producto',
+      envio: 'Envíos y entregas',
+      devolucion: 'Devoluciones',
+      otro: 'Otro',
+    };
+
+    const subject = (
+      data.subject?.trim() ||
+      topicLabel[data.topic ?? 'otro'] ||
+      'Mensaje de contacto'
+    ).slice(0, 160);
+
+    const description = [
+      `Contacto: ${data.name.trim()} <${data.email}>`,
+      topicLabel[data.topic ?? 'otro'] ? `Asunto: ${topicLabel[data.topic ?? 'otro']}` : null,
+      '',
+      data.message.trim(),
+    ]
+      .filter((part) => part !== null)
+      .join('\n');
+
+    const pqr = await pqrService.create(
+      { type: 'petition', subject, description },
+      actor
+    );
+
+    return {
+      id: pqr.id,
+      // Prisma aplica @default(received); el doble de pruebas puede omitirlo.
+      status: pqr.status ?? 'received',
+      createdAt: pqr.createdAt,
+      message: 'Recibimos tu mensaje. Puedes seguir su respuesta en Mis PQR.',
+    };
+  },
+};
