@@ -43,7 +43,7 @@
 
 | # | Punto pedido | ¿Se cumple? | Detalle |
 | --- | --- | --- | --- |
-| B-01 | Acordar cómo funcionará **contacto** (endpoint real o PQR) | ✅ **Sí** | Se decidió **endpoint real que crea un PQR** `petition`: `POST /api/pqr/contact`. Antes el formulario solo mostraba "¡Mensaje enviado!" sin guardar nada |
+| B-01 | Acordar cómo funcionará **contacto** (endpoint real o PQR) | ✅ **Sí** | Se decidió **registrar un PQR** `petition` real en vez de un correo suelto. Antes el formulario solo mostraba "¡Mensaje enviado!" sin guardar nada. Hoy el frontend usa `POST /api/pqr` y el backend también expone `POST /api/pqr/contact` con el mismo destino (ver §9 del contrato) |
 | B-02 | Definir **qué métodos de pago se guardan** y qué es simulación | ✅ **Sí** | Se guarda solo `Payout.method` (`tarjeta`/`pse`/`nequi`). **Ningún** dato financiero. Todo el cobro es simulación y está bloqueado en producción |
 | B-03 | Comprobar si **una venta nueva actualiza los reportes** | ✅ **Sí, verificado** | Prueba `reports.sales.test.ts`: una venta nueva entra en `totalSold`, `productsSold` y `totalOrders` del día; un pedido cancelado solo cuenta como cancelado |
 | B-04 | Documentar cualquier función que no alcance a quedar incluida | ✅ **Sí** | §13 de `docs/api/contrato-api.md`: paginación ausente y `openapi.yaml` pendiente |
@@ -187,25 +187,7 @@ que se saltaran las validaciones.
 | `be/src/modules/orders/orders.test.ts` | 3 (cupón inválido por edición, cupón válido recalcula total, no repetir cupón) |
 | `be/tests/orders-regression.integration.ts` | 1 bloque real (cupón inactivo no entra por `PUT`) |
 
-### 8.4 Integración con la rama de Paula (`develop`)
-
-El merge se resolvió **conservando ambos lados**; ningún trabajo se descartó.
-
-| Archivo | Qué se conservó |
-| --- | --- |
-| `orders.service.ts` | Todas las guardas de Paula (`FOR UPDATE`, `sinCambios`, 409 si está pagado, `assertUnmanaged`) y **después** la validación de cupón (A-05) |
-| `permissions.test.ts` | Ambas pruebas, unidas |
-| `Admin/Orders/Orders.tsx` | A-01/A-02 para crear pedido + alertas de total pagado de Paula al editar |
-| `Contact/Contact.tsx` | Versión de Paula (endpoint real `POST /api/pqr`, distingue 401/403 y evita doble envío) |
-| `order-details` | Se adoptó el esquema de Paula (`.strict()` + snapshot `expected`) |
-
-Una sola prueba de integración quedó desactualizada respecto al esquema nuevo de
-`order-details`: enviaba `{ quantity: 1 }` y el validador —correctamente— respondía
-400 antes de llegar al servicio. Se ajustó la **petición de la prueba** (no el
-código ni el esquema) para enviar el snapshot `expected`, de modo que el 409 de
-pedido operativo se sigue comprobando de verdad. No se borró ninguna prueba.
-
-### 8.5 Resultado
+### 8.4 Resultado
 
 | Suite | Resultado |
 | --- | --- |

@@ -491,14 +491,49 @@ Reglas del servidor:
 
 ---
 
-## 9. Contacto — `/api/pqr/contact` (B-01)
+## 9. Contacto (B-01) — dos rutas, una sola decisión
 
-**Decisión acordada:** el formulario público de Contacto **no** usa un envío de
-correo suelto; se registra como **PQR de tipo `petition`** del cliente
-autenticado. Así entra al mismo flujo, SLA y bandeja que el resto de PQR, y el
-cliente puede seguir la respuesta en *Mis PQR*.
+El formulario de Contacto **no** envía correos sueltos: registra una **PQR de
+tipo `petition`** del cliente autenticado. Así entra al mismo flujo, SLA y
+bandeja que el resto de PQR, y el cliente la sigue en *Mis PQR*.
 
-`POST /api/pqr/contact` — `verifyToken`, rol `client` (rate limit 10/min).
+Existen dos rutas con ese efecto:
+
+| Ruta | Cuerpo | Uso |
+| --- | --- | --- |
+| `POST /api/pqr` | `{ type, subject, description }` | **La que usa el frontend hoy** (`fe/src/pages/Contact/Contact.tsx`) |
+| `POST /api/pqr/contact` | `{ name, email, topic, subject?, message }` | Alternativa compatible que enriquece el texto con tema y correo de contacto |
+
+Ambas exigen `verifyToken` (rol `client`).
+
+### 9.1 `POST /api/pqr` — la que está en uso
+
+```json
+{
+  "type": "petition",
+  "subject": "Pedido retrasado",
+  "description": "Quisiera saber cuándo llegará mi pedido a Medellín."
+}
+```
+
+| Campo | Regla |
+| --- | --- |
+| `type` | `petition` \| `complaint` \| `claim` |
+| `subject` | 5–160 |
+| `description` | 20–5000 |
+
+Respuesta **201** con el PQR creado (`status: "received"`).
+Errores: **401** sin sesión o token vencido; **403** si el rol no es `client`;
+**409** si es idéntico a un PQR reciente; **429** si envía otro en el mismo
+minuto (con cabecera `Retry-After`).
+
+> **Para el frontend:** si no hay sesión, la página debe llevar a `/login`. La
+> cuenta dueña del PQR es siempre la de la sesión, no un correo escrito a mano.
+
+### 9.2 `POST /api/pqr/contact` — alternativa
+
+Mismo destino (un PQR `petition`), con rate limit 10/min. Traduce el tema y el
+correo del formulario al asunto y cuerpo del PQR.
 
 ```json
 {
@@ -518,23 +553,7 @@ cliente puede seguir la respuesta en *Mis PQR*.
 | `subject` | 5–160, opcional (si falta se usa la etiqueta del tema) |
 | `message` | 20–5000 |
 
-Respuesta **201**:
-
-```json
-{
-  "id": "…",
-  "status": "received",
-  "createdAt": "2026-11-26T15:00:00.000Z",
-  "message": "Recibimos tu mensaje. Puedes seguir su respuesta en Mis PQR."
-}
-```
-
-Errores: 401 sin sesión; 403 si el rol no es `client`; 409 si es idéntico a un
-PQR reciente; 429 si se envía otro en el mismo minuto (con `Retry-After`).
-
-> **Para el frontend:** si no hay sesión, la página redirige a `/login`. El correo
-> del formulario se guarda en el cuerpo del PQR para trazabilidad, pero la
-> cuenta dueña del PQR es siempre la sesión autenticada.
+Mismos códigos de error que 9.1.
 
 ### Resto de PQR — `/api/pqr`
 
